@@ -3,6 +3,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/utils/category_budget_utils.dart';
 import 'package:flowpaisa/features/categories/domain/category_budget_models.dart';
 import 'package:flowpaisa/shared/models/date_range_state.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:uuid/uuid.dart';
 
 class CategoriesRepository {
@@ -453,6 +454,40 @@ class CategoriesRepository {
       budgetAmount: budgetAmountForPeriod(category, range),
       transactionCount: stats.transactionCount,
     );
+  }
+
+  /// Live snapshot for [categoryUuid] in [range]: updates when matching
+  /// transactions change or the category row changes (e.g. budget fields).
+  Stream<CategoryBudgetSnapshot> watchCategoryBudgetSnapshot(
+    String categoryUuid,
+    DateRangeState range,
+  ) {
+    final startDate =
+        DateTime(range.startDate.year, range.startDate.month, range.startDate.day);
+    final endDate = DateTime(
+        range.endDate.year, range.endDate.month, range.endDate.day, 23, 59, 59);
+
+    final transactions$ = (_database.select(_database.transactions)
+          ..where((t) => t.categoryUuid.equals(categoryUuid))
+          ..where((t) => t.date.isBetweenValues(startDate, endDate))
+          ..where((t) => t.isDeleted.equals(false))
+          ..where((t) => t.processedDate.isNotNull()))
+        .watch();
+
+    final category$ = (_database.select(_database.categories)
+          ..where((c) => c.uuid.equals(categoryUuid)))
+        .watchSingleOrNull();
+
+    return Rx.combineLatest2<List<Transaction>, Category?, Category?>(
+      transactions$,
+      category$,
+      (_, cat) => cat,
+    ).asyncMap((cat) async {
+      if (cat == null) {
+        throw Exception('Category not found');
+      }
+      return getCategoryBudgetSnapshot(categoryUuid, range);
+    });
   }
 
   /// Batch net amounts for list rows (same period for all).

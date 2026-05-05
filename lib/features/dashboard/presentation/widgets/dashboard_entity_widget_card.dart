@@ -13,7 +13,6 @@ import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_d
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/category_details_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
-import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
@@ -114,15 +113,15 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
         );
       case DashboardWidgetKind.category:
         final isPremium = ref.watch(premiumProvider).isPremium;
-        final async = ref.watch(categoryStatisticsProvider(uuid));
-        final budgetAsync = ref.watch(categoryDetailBudgetProvider(uuid));
+        final snapshotAsync =
+            ref.watch(categoryDetailBudgetSnapshotStreamProvider(uuid));
         final symbol = ref.watch(currencySymbolProvider);
         final decimals = ref.watch(currencyDecimalPlacesProvider);
 
-        return async.when(
+        return snapshotAsync.when(
           skipLoadingOnRefresh: true,
-          data: (stats) {
-            final cat = stats.category;
+          data: (snap) {
+            final cat = snap.category;
             final isCategoryLocked = !isPremium &&
                 !cat.isDefault &&
                 (cat.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
@@ -132,28 +131,27 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
                 : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
 
             Widget? progressChild;
-            budgetAsync.whenData((snap) {
-              if (snap.hasBudget) {
-                progressChild = Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: DualAmountProgressBar(
-                    key: ValueKey('entity-cat-budget-$uuid'),
-                    leftLabel: isExpense
-                        ? l10n.budgetBarUsed
-                        : l10n.budgetBarProgress,
-                    leftAmount: snap.netAmount > 0 ? snap.netAmount : 0.0,
-                    rightLabel: l10n.remaining,
-                    rightAmount: snap.remainingOrGap > 0 ? snap.remainingOrGap : 0.0,
-                    symbol: symbol,
-                    decimals: decimals,
-                    filledColor: snap.progressRatio > 1
-                        ? AppColors.expenseColor
-                        : color,
-                    compact: true,
-                  ),
-                );
-              }
-            });
+            if (snap.hasBudget) {
+              progressChild = Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: DualAmountProgressBar(
+                  key: ValueKey('entity-cat-budget-$uuid'),
+                  leftLabel: isExpense
+                      ? l10n.budgetBarUsed
+                      : l10n.budgetBarProgress,
+                  leftAmount: snap.netAmount > 0 ? snap.netAmount : 0.0,
+                  rightLabel: l10n.remaining,
+                  rightAmount:
+                      snap.remainingOrGap > 0 ? snap.remainingOrGap : 0.0,
+                  symbol: symbol,
+                  decimals: decimals,
+                  filledColor: snap.progressRatio > 1
+                      ? AppColors.expenseColor
+                      : color,
+                  compact: true,
+                ),
+              );
+            }
 
             return _buildCard(
               context,
@@ -178,8 +176,8 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               ),
               title: LocalizationHelper.getLocalizedCategoryName(
                   context, cat.name),
-              subtitle: '${stats.transactionCount} ${l10n.transactions}',
-              amount: stats.totalAmount,
+              subtitle: '${snap.transactionCount} ${l10n.transactions}',
+              amount: snap.netAmount.abs(),
               isExpense: isExpense,
               color: color,
               onTap: () => _openCategory(context, uuid),
@@ -187,6 +185,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
               titleColumnExtra: progressChild,
               isLocked: isCategoryLocked,
               contentKey: ValueKey('entity-cat-content-col-$uuid'),
+              amountKey: ValueKey('entity-cat-amount-$uuid'),
             );
           },
           loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-cat-loading-$uuid')),

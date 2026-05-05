@@ -126,6 +126,14 @@ final categoryDetailBudgetProvider = FutureProvider.autoDispose
   return repo.getCategoryBudgetSnapshot(categoryUuid, range);
 });
 
+/// Same data as [categoryDetailBudgetProvider], but updates when transactions or the category row change.
+final categoryDetailBudgetSnapshotStreamProvider = StreamProvider.autoDispose
+    .family<CategoryBudgetSnapshot, String>((ref, categoryUuid) {
+  final range = ref.watch(categoryBudgetDateRangeProvider);
+  final repo = ref.watch(categoriesRepositoryProvider);
+  return repo.watchCategoryBudgetSnapshot(categoryUuid, range);
+});
+
 /// Net amounts for all categories of [type] in the current category budget period.
 final categoryNetAmountsForListProvider =
     StreamProvider.family<Map<String, double>, String>((ref, type) {
