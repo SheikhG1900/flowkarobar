@@ -102,31 +102,33 @@ final payablesListTotalProvider =
 // Paginated payables provider
 class PayablesPaginatedNotifier
     extends Notifier<PaginatedState<PayableWithLinkedData>> {
+  PayablesPaginatedNotifier(this.status);
+
+  final String status;
+
   StreamSubscription<List<PayableWithLinkedData>>? _subscription;
   late PayablesRepository _repository;
-  String? _status;
-  bool _isInitialized = false;
   PayableFilters _filters = PayableFilters();
+  bool _acceptStreamUpdates = true;
 
   @override
   PaginatedState<PayableWithLinkedData> build() {
-    _repository = ref.watch(payablesRepositoryProvider);
+    _acceptStreamUpdates = true;
+    _repository = ref.read(payablesRepositoryProvider);
+    ref.onDispose(() {
+      _acceptStreamUpdates = false;
+      _subscription?.cancel();
+      _subscription = null;
+    });
+    Future.microtask(() => _loadInitial());
     return PaginatedState<PayableWithLinkedData>(
       items: [],
       isLoading: true,
     );
   }
 
-  void initialize(String status) {
-    if (_isInitialized && _status == status) return;
-    _status = status;
-    _isInitialized = true;
-    // Load initial data asynchronously
-    Future.microtask(() => _loadInitial());
-  }
-
   Future<void> _loadInitial() async {
-    if (_status == null) return;
+    if (!ref.mounted) return;
     state = state.copyWith(isLoading: true, error: null);
 
     try {
@@ -135,31 +137,32 @@ class PayablesPaginatedNotifier
       initialItems =
           await _repository.getPayablesWithLinkedDataFilteredPaginated(
         filters: _filters,
-        status: _status!,
+        status: status,
         limit: state.pageSize,
         offset: 0,
       );
 
+      if (!ref.mounted || !_acceptStreamUpdates) return;
+
       state = state.replaceItems(initialItems,
           hasMore: initialItems.length == state.pageSize);
+
+      if (!ref.mounted || !_acceptStreamUpdates) return;
 
       // Watch for real-time updates to loaded items
       _subscription?.cancel();
       _subscription = _repository
           .watchPayablesWithLinkedDataFilteredPaginated(
         filters: _filters,
-        status: _status!,
+        status: status,
         limit: initialItems.length > state.pageSize
             ? initialItems.length
             : state.pageSize,
         offset: 0,
       )
-          .listen((updatedItems) {
-        if (!state.isLoadingMore) {
-          state = state.copyWith(items: updatedItems);
-        }
-      });
+          .listen(_applyStreamPage);
     } catch (e) {
+      if (!ref.mounted) return;
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -167,7 +170,18 @@ class PayablesPaginatedNotifier
     }
   }
 
+  void _applyStreamPage(List<PayableWithLinkedData> updatedItems) {
+    if (!_acceptStreamUpdates) return;
+    try {
+      if (!ref.mounted) return;
+      if (!state.isLoadingMore) {
+        state = state.copyWith(items: updatedItems);
+      }
+    } catch (_) {}
+  }
+
   Future<void> loadMore() async {
+    if (!_acceptStreamUpdates || !ref.mounted) return;
     if (state.isLoadingMore || !state.hasMore) return;
 
     state = state.copyWith(isLoadingMore: true);
@@ -176,10 +190,12 @@ class PayablesPaginatedNotifier
       final List<PayableWithLinkedData> newItems;
       newItems = await _repository.getPayablesWithLinkedDataFilteredPaginated(
         filters: _filters,
-        status: _status!,
+        status: status,
         limit: state.pageSize,
         offset: state.currentOffset,
       );
+
+      if (!ref.mounted) return;
 
       if (newItems.isEmpty) {
         state = state.copyWith(
@@ -197,19 +213,16 @@ class PayablesPaginatedNotifier
         _subscription = _repository
             .watchPayablesWithLinkedDataFilteredPaginated(
           filters: _filters,
-          status: _status!,
+          status: status,
           limit: state.items.length > state.pageSize
               ? state.items.length
               : state.pageSize,
           offset: 0,
         )
-            .listen((updatedItems) {
-          if (!state.isLoadingMore) {
-            state = state.copyWith(items: updatedItems);
-          }
-        });
+            .listen(_applyStreamPage);
       }
     } catch (e) {
+      if (!ref.mounted) return;
       state = state.copyWith(
         isLoadingMore: false,
         error: e.toString(),
@@ -240,8 +253,4 @@ class PayablesPaginatedNotifier
 final payablesPaginatedProvider = NotifierProvider.family<
     PayablesPaginatedNotifier,
     PaginatedState<PayableWithLinkedData>,
-    String>((status) {
-  final notifier = PayablesPaginatedNotifier();
-  notifier.initialize(status);
-  return notifier;
-});
+    String>(PayablesPaginatedNotifier.new);

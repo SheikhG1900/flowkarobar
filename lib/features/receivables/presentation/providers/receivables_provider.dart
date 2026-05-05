@@ -100,31 +100,35 @@ final receivablesListTotalProvider =
 // Paginated receivables provider
 class ReceivablesPaginatedNotifier
     extends Notifier<PaginatedState<ReceivableWithLinkedData>> {
+  ReceivablesPaginatedNotifier(this.status);
+
+  /// Tab key: PENDING, RECEIVED, OVERDUE, etc. (from [NotifierProvider.family]).
+  final String status;
+
   StreamSubscription<List<ReceivableWithLinkedData>>? _subscription;
   late ReceivablesRepository _repository;
-  String? _status;
-  bool _isInitialized = false;
   ReceivableFilters _filters = ReceivableFilters();
+  /// Cleared in [Ref.onDispose] before cancel; stream may still deliver one event during Phoenix/rebirth.
+  bool _acceptStreamUpdates = true;
 
   @override
   PaginatedState<ReceivableWithLinkedData> build() {
-    _repository = ref.watch(receivablesRepositoryProvider);
+    _acceptStreamUpdates = true;
+    _repository = ref.read(receivablesRepositoryProvider);
+    ref.onDispose(() {
+      _acceptStreamUpdates = false;
+      _subscription?.cancel();
+      _subscription = null;
+    });
+    Future.microtask(() => _loadInitial());
     return PaginatedState<ReceivableWithLinkedData>(
       items: [],
       isLoading: true,
     );
   }
 
-  void initialize(String status) {
-    if (_isInitialized && _status == status) return;
-    _status = status;
-    _isInitialized = true;
-    // Load initial data asynchronously
-    Future.microtask(() => _loadInitial());
-  }
-
   Future<void> _loadInitial() async {
-    if (_status == null) return;
+    if (!ref.mounted) return;
     state = state.copyWith(isLoading: true, error: null);
 
     try {
@@ -132,31 +136,32 @@ class ReceivablesPaginatedNotifier
       final List<ReceivableWithLinkedData> initialItems;
       initialItems = await _repository.getReceivablesWithLinkedDataFilteredPaginated(
         filters: _filters,
-        status: _status!,
+        status: status,
         limit: state.pageSize,
         offset: 0,
       );
 
+      if (!ref.mounted || !_acceptStreamUpdates) return;
+
       state = state.replaceItems(initialItems,
           hasMore: initialItems.length == state.pageSize);
+
+      if (!ref.mounted || !_acceptStreamUpdates) return;
 
       // Watch for real-time updates to loaded items
       _subscription?.cancel();
       _subscription = _repository
           .watchReceivablesWithLinkedDataFilteredPaginated(
         filters: _filters,
-        status: _status!,
+        status: status,
         limit: initialItems.length > state.pageSize
             ? initialItems.length
             : state.pageSize,
         offset: 0,
       )
-          .listen((updatedItems) {
-        if (!state.isLoadingMore) {
-          state = state.copyWith(items: updatedItems);
-        }
-      });
+          .listen(_applyStreamPage);
     } catch (e) {
+      if (!ref.mounted) return;
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -164,7 +169,20 @@ class ReceivablesPaginatedNotifier
     }
   }
 
+  void _applyStreamPage(List<ReceivableWithLinkedData> updatedItems) {
+    if (!_acceptStreamUpdates) return;
+    try {
+      if (!ref.mounted) return;
+      if (!state.isLoadingMore) {
+        state = state.copyWith(items: updatedItems);
+      }
+    } catch (_) {
+      // Ref/state invalid after dispose (e.g. app rebirth while Drift emits).
+    }
+  }
+
   Future<void> loadMore() async {
+    if (!_acceptStreamUpdates || !ref.mounted) return;
     if (state.isLoadingMore || !state.hasMore) return;
 
     state = state.copyWith(isLoadingMore: true);
@@ -173,10 +191,12 @@ class ReceivablesPaginatedNotifier
       final List<ReceivableWithLinkedData> newItems;
       newItems = await _repository.getReceivablesWithLinkedDataFilteredPaginated(
         filters: _filters,
-        status: _status!,
+        status: status,
         limit: state.pageSize,
         offset: state.currentOffset,
       );
+
+      if (!ref.mounted) return;
 
       if (newItems.isEmpty) {
         state = state.copyWith(
@@ -194,19 +214,16 @@ class ReceivablesPaginatedNotifier
         _subscription = _repository
             .watchReceivablesWithLinkedDataFilteredPaginated(
           filters: _filters,
-          status: _status!,
+          status: status,
           limit: state.items.length > state.pageSize
               ? state.items.length
               : state.pageSize,
           offset: 0,
         )
-            .listen((updatedItems) {
-          if (!state.isLoadingMore) {
-            state = state.copyWith(items: updatedItems);
-          }
-        });
+            .listen(_applyStreamPage);
       }
     } catch (e) {
+      if (!ref.mounted) return;
       state = state.copyWith(
         isLoadingMore: false,
         error: e.toString(),
@@ -237,8 +254,4 @@ class ReceivablesPaginatedNotifier
 final receivablesPaginatedProvider = NotifierProvider.family<
     ReceivablesPaginatedNotifier,
     PaginatedState<ReceivableWithLinkedData>,
-    String>((status) {
-  final notifier = ReceivablesPaginatedNotifier();
-  notifier.initialize(status);
-  return notifier;
-});
+    String>(ReceivablesPaginatedNotifier.new);

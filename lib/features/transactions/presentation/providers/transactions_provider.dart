@@ -155,6 +155,7 @@ class TransactionsPaginatedNotifier
     extends Notifier<PaginatedState<TransactionWithDetails>> {
   StreamSubscription<List<TransactionWithDetails>>? _subscription;
   late TransactionsRepository _repository;
+  bool _acceptStreamUpdates = true;
 
   @override
   PaginatedState<TransactionWithDetails> build() {
@@ -162,10 +163,13 @@ class TransactionsPaginatedNotifier
     // every re-run. Watching it would re-invoke [build], return a fresh empty
     // [PaginatedState], and wipe the list (logo / loading flash) whenever the
     // database or cashbook graph updates.
+    _acceptStreamUpdates = true;
     _repository = ref.read(transactionsRepositoryProvider);
 
     ref.onDispose(() {
+      _acceptStreamUpdates = false;
       _subscription?.cancel();
+      _subscription = null;
     });
 
     // Load initial data asynchronously
@@ -184,6 +188,7 @@ class TransactionsPaginatedNotifier
 
     // Do not set isLoading: true if we already have items to prevent flickering
     if (state.items.isEmpty) {
+      if (!ref.mounted) return;
       state = state.copyWith(isLoading: true, error: null);
     }
 
@@ -197,6 +202,8 @@ class TransactionsPaginatedNotifier
         limit: state.pageSize,
         offset: 0,
       );
+
+      if (!ref.mounted) return;
 
       state = state.replaceItems(initialItems,
           hasMore: initialItems.length == state.pageSize);
@@ -215,12 +222,9 @@ class TransactionsPaginatedNotifier
       _subscription = stream
           .distinct((prev, next) => const ListEquality().equals(prev, next))
           .debounceTime(const Duration(milliseconds: 100))
-          .listen((updatedItems) {
-        if (!state.isLoadingMore) {
-          state = state.copyWith(items: updatedItems);
-        }
-      });
+          .listen(_applyStreamPage);
     } catch (e) {
+      if (!ref.mounted) return;
       state = state.copyWith(
         isLoading: false,
         error: e.toString(),
@@ -228,7 +232,18 @@ class TransactionsPaginatedNotifier
     }
   }
 
+  void _applyStreamPage(List<TransactionWithDetails> updatedItems) {
+    if (!_acceptStreamUpdates) return;
+    try {
+      if (!ref.mounted) return;
+      if (!state.isLoadingMore) {
+        state = state.copyWith(items: updatedItems);
+      }
+    } catch (_) {}
+  }
+
   Future<void> loadMore() async {
+    if (!_acceptStreamUpdates || !ref.mounted) return;
     if (state.isLoadingMore || !state.hasMore) return;
 
     state = state.copyWith(isLoadingMore: true);
@@ -241,6 +256,8 @@ class TransactionsPaginatedNotifier
         limit: state.pageSize,
         offset: state.currentOffset,
       );
+
+      if (!ref.mounted) return;
 
       if (newItems.isEmpty) {
         state = state.copyWith(
@@ -266,13 +283,10 @@ class TransactionsPaginatedNotifier
         _subscription = stream
             .distinct((prev, next) => const ListEquality().equals(prev, next))
             .debounceTime(const Duration(milliseconds: 100))
-            .listen((updatedItems) {
-          if (!state.isLoadingMore) {
-            state = state.copyWith(items: updatedItems);
-          }
-        });
+            .listen(_applyStreamPage);
       }
     } catch (e) {
+      if (!ref.mounted) return;
       state = state.copyWith(
         isLoadingMore: false,
         error: e.toString(),
