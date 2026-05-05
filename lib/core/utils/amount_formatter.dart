@@ -57,4 +57,24 @@ class AmountFormatter {
         ? '($currency$formattedAmount)'
         : '$currency$formattedAmount';
   }
+
+  /// Units / quantity: no decimals when the value is a whole number; otherwise
+  /// minimal decimal digits (trailing zeros stripped).
+  static String formatQuantity(double quantity, {int maxDecimals = 8}) {
+    if (quantity.isNaN || quantity.isInfinite) return '0';
+    final isNegative = quantity < 0;
+    final q = quantity.abs();
+    final String body;
+    if ((q - q.roundToDouble()).abs() < 1e-9) {
+      body = q.round().toString();
+    } else {
+      var s = q.toStringAsFixed(maxDecimals);
+      if (s.contains('.')) {
+        s = s.replaceFirst(RegExp(r'0+$'), '');
+        s = s.replaceFirst(RegExp(r'\.$'), '');
+      }
+      body = s;
+    }
+    return isNegative ? '-$body' : body;
+  }
 }

@@ -4273,6 +4273,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get itemizedDetails => 'Itemized Details';
 
   @override
+  String itemizedHeaderQuantityLabel(String quantity) {
+    return '$quantity units';
+  }
+
+  @override
   String get unitPrice => 'Unit Price';
 
   @override

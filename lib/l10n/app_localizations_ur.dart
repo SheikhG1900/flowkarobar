@@ -4290,6 +4290,11 @@ class AppLocalizationsUr extends AppLocalizations {
   String get itemizedDetails => 'آئٹم وار تفصیلات';
 
   @override
+  String itemizedHeaderQuantityLabel(String quantity) {
+    return '$quantity یونٹ';
+  }
+
+  @override
   String get unitPrice => 'یونٹ کی قیمت';
 
   @override

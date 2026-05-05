@@ -1651,6 +1651,12 @@
   "dashboardHeroCombineNoSummary": "राशि लोड करने के लिए एक बार खोलें।",
   "dashboardHeroCombineNoOthers": "शामिल करने के लिए कोई अन्य कैशबुक नहीं है।",
   "itemizedDetails": "मदवार विवरण",
+  "itemizedHeaderQuantityLabel": "{quantity} इकाई",
+  "@itemizedHeaderQuantityLabel": {
+    "placeholders": {
+      "quantity": {"type": "String"}
+    }
+  },
   "unitPrice": "इकाई मूल्य",
   "unitsQuantity": "इकाई/मात्रा",
   "price": "मूल्य",

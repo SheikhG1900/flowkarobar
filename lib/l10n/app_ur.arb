@@ -1651,6 +1651,12 @@
   "dashboardHeroCombineNoSummary": "رقم لوڈ کرنے کے لیے ایک بار کھولیں۔",
   "dashboardHeroCombineNoOthers": "شامل کرنے کے لیے کوئی دوسری کیش بُک نہیں۔",
   "itemizedDetails": "آئٹم وار تفصیلات",
+  "itemizedHeaderQuantityLabel": "{quantity} یونٹ",
+  "@itemizedHeaderQuantityLabel": {
+    "placeholders": {
+      "quantity": {"type": "String"}
+    }
+  },
   "unitPrice": "یونٹ کی قیمت",
   "unitsQuantity": "یونٹ/مقدار",
   "price": "قیمت",

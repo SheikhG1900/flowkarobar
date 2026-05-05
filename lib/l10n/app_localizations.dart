@@ -7799,6 +7799,12 @@ abstract class AppLocalizations {
   /// **'Itemized Details'**
   String get itemizedDetails;
 
+  /// No description provided for @itemizedHeaderQuantityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{quantity} units'**
+  String itemizedHeaderQuantityLabel(String quantity);
+
   /// No description provided for @unitPrice.
   ///
   /// In en, this message translates to:

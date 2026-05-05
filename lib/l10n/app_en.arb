@@ -2202,6 +2202,12 @@
   "dashboardHeroCombineNoSummary": "Open once to load amounts.",
   "dashboardHeroCombineNoOthers": "There are no other cashbooks to include.",
   "itemizedDetails": "Itemized Details",
+  "itemizedHeaderQuantityLabel": "{quantity} units",
+  "@itemizedHeaderQuantityLabel": {
+    "placeholders": {
+      "quantity": {"type": "String"}
+    }
+  },
   "unitPrice": "Unit Price",
   "unitsQuantity": "Units/Qty",
   "price": "Price",

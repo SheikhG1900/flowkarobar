@@ -860,6 +860,62 @@ class TransactionDetailsDialog extends ConsumerWidget {
     );
   }
 
+  /// Theme-aware pill for itemized amount / quantity summaries.
+  static (Color, Color) _tabularBadgeColors(ThemeData theme, bool forAmount) {
+    final scheme = theme.colorScheme;
+    if (forAmount) {
+      return (scheme.primaryContainer, scheme.onPrimaryContainer);
+    }
+    return (scheme.tertiaryContainer, scheme.onTertiaryContainer);
+  }
+
+  static Widget _tabularMetricBadge(
+    ThemeData theme, {
+    IconData? icon,
+    required String text,
+    required bool forAmount,
+    TextDirection? textDirection,
+    /// Header totals keep icons; per-line amount badge is text-only.
+    bool showIcon = true,
+  }) {
+    final (bg, fg) = _tabularBadgeColors(theme, forAmount);
+    final outlineAlpha = theme.brightness == Brightness.dark ? 0.32 : 0.16;
+    const iconSize = 14.0;
+    const hPad = 8.0;
+    const vPad = 4.0;
+    final textStyle = theme.textTheme.labelMedium?.copyWith(
+      color: fg,
+      fontWeight: FontWeight.w600,
+      height: 1.2,
+    );
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: outlineAlpha),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (showIcon && icon != null) ...[
+            Icon(icon, size: iconSize, color: fg),
+            const SizedBox(width: 5),
+          ],
+          Text(
+            text,
+            style: textStyle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textDirection: textDirection,
+          ),
+        ],
+      ),
+    );
+  }
+
   static Widget buildTabularDataSection(
     BuildContext context,
     ThemeData theme,
@@ -871,7 +927,18 @@ class TransactionDetailsDialog extends ConsumerWidget {
     if (rows.isEmpty) return const SizedBox.shrink();
 
     final total = rows.fold(0.0, (sum, row) => sum + row.totalAmount);
+    final totalQuantity =
+        rows.fold(0.0, (sum, row) => sum + row.quantity);
     final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final amountLine = AmountFormatter.formatWithCurrency(
+      total,
+      currency.symbol,
+      currency.decimalPlaces,
+      isRtl: isRtl,
+    );
+    final quantityLine = AmountFormatter.formatQuantity(totalQuantity);
+    final quantitySubtitle =
+        l10n.itemizedHeaderQuantityLabel(quantityLine);
 
     final isDarkMode = theme.brightness == Brightness.dark;
 
@@ -896,33 +963,59 @@ class TransactionDetailsDialog extends ConsumerWidget {
           collapsedShape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(16)),
           ),
-          title: Row(
+          title: Column(
             key: const ValueKey('tx-details-tabular-title-row'),
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.table_chart_outlined,
-                  size: 18, color: theme.colorScheme.primary),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  key: const ValueKey('tx-details-tabular-label'),
-                  l10n.itemizedDetails,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Icon(
+                      Icons.table_chart_outlined,
+                      size: 22,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      l10n.itemizedDetails,
+                      key: const ValueKey('tx-details-tabular-label'),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: -0.1,
+                        height: 1.25,
+                        color: theme.colorScheme.primary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
-              Text(
+              const SizedBox(height: 6),
+              Wrap(
                 key: const ValueKey('tx-details-tabular-total'),
-                AmountFormatter.formatWithCurrency(
-                  total,
-                  currency.symbol,
-                  currency.decimalPlaces,
-                ),
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
-                ),
+                spacing: 8,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  _tabularMetricBadge(
+                    theme,
+                    icon: Symbols.payments,
+                    text: amountLine,
+                    forAmount: true,
+                    textDirection: TextDirection.ltr,
+                  ),
+                  _tabularMetricBadge(
+                    theme,
+                    icon: Symbols.inventory_2,
+                    text: quantitySubtitle,
+                    forAmount: false,
+                  ),
+                ],
               ),
             ],
           ),
@@ -941,26 +1034,45 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   currency.symbol,
                   currency.decimalPlaces,
                 );
+                final showQtyBreakdown =
+                    (row.quantity - 1.0).abs() > 1e-9;
+                final qtyDisplay =
+                    AmountFormatter.formatQuantity(row.quantity);
 
                 return Padding(
                   key: ValueKey('tx-details-tabular-row-$index'),
                   padding: const EdgeInsets.all(16),
-                  child: Column(
+                  child: Row(
                     key: ValueKey('tx-details-tabular-col-$index'),
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        key: ValueKey('tx-details-tabular-header-$index'),
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            key: ValueKey('tx-details-tabular-date-$index'),
-                            AppDateFormatter.formatDate(row.date,
-                                pattern: 'dd MMM, yyyy'),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
+                      Expanded(
+                        child: Column(
+                          key: ValueKey('tx-details-tabular-header-$index'),
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              key: ValueKey('tx-details-tabular-date-$index'),
+                              AppDateFormatter.formatDate(row.date,
+                                  pattern: 'dd MMM, yyyy'),
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 4),
+                            Text(
+                              key: ValueKey('tx-details-tabular-desc-$index'),
+                              row.description,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
                           Text(
                             key: ValueKey('tx-details-tabular-amount-$index'),
                             AmountFormatter.formatWithCurrency(
@@ -972,30 +1084,25 @@ class TransactionDetailsDialog extends ConsumerWidget {
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.primary,
                             ),
+                            textAlign: TextAlign.end,
+                            textDirection: TextDirection.ltr,
                           ),
+                          if (showQtyBreakdown) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              key: ValueKey('tx-details-tabular-qty-$index'),
+                              isRtl
+                                  ? '$unitPriceStr x $qtyDisplay'
+                                  : '$qtyDisplay x $unitPriceStr',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              textAlign: TextAlign.end,
+                              textDirection: TextDirection.ltr,
+                            ),
+                          ],
                         ],
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        key: ValueKey('tx-details-tabular-desc-$index'),
-                        row.description,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      if ((row.quantity - 1.0).abs() > 1e-9) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          key: ValueKey('tx-details-tabular-qty-$index'),
-                          isRtl
-                              ? '$unitPriceStr x ${row.quantity}'
-                              : '${row.quantity} x $unitPriceStr',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          textDirection: TextDirection.ltr,
-                        ),
-                      ],
                     ],
                   ),
                 );
