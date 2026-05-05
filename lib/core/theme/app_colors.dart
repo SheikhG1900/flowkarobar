@@ -5,13 +5,19 @@ import 'package:flutter/material.dart';
 class AppColors {
   // Primary Brand Gradients (GermGuard-inspired - Professional Cyan/Blue)
   static const primaryGradient = LinearGradient(
-    colors: [Color(0xFF00B8E6), Color(0xFF006699)], // Darker Cyan to Darker Deep Blue
+    colors: [
+      Color(0xFF00B8E6),
+      Color(0xFF006699)
+    ], // Darker Cyan to Darker Deep Blue
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const secondaryGradient = LinearGradient(
-    colors: [Color(0xFF0099CC), Color(0xFF0044CC)], // Darker Electric Blue gradient
+    colors: [
+      Color(0xFF0099CC),
+      Color(0xFF0044CC)
+    ], // Darker Electric Blue gradient
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -61,7 +67,10 @@ class AppColors {
   );
 
   static const receivableGradient = LinearGradient(
-    colors: [Color(0xFF00ACC1), Color(0xFF0288D1)], // Darker Cyan to Darker Sky Blue
+    colors: [
+      Color(0xFF00ACC1),
+      Color(0xFF0288D1)
+    ], // Darker Cyan to Darker Sky Blue
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -151,7 +160,8 @@ class AppColors {
 
   // Section Colors (for FABs, tabs, and quick actions)
   static const dashboardSectionColor = Color(0xFF00B8E6); // Darker Cyan
-  static const transactionsSectionColor = Color(0xFF0099CC); // Darker Electric Blue
+  static const transactionsSectionColor =
+      Color(0xFF0099CC); // Darker Electric Blue
   static const receivablesSectionColor = Color(0xFF00ACC1); // Darker Cyan
   static const payablesSectionColor = Color(0xFFFBBF24); // Amber
   static const analyticsSectionColor = Color(0xFF8B5CF6); // Purple
@@ -337,5 +347,58 @@ class AppColors {
       default:
         return Colors.grey;
     }
+  }
+
+  /// Calendar month (1–12) accent for transaction list date chips.
+  static Color monthChipAccent(int month) {
+    final m = month.clamp(1, 12);
+    return _monthChipAccents[m - 1];
+  }
+
+  /// Twelve readable hues (distinct from each other; work when alpha-blended).
+  static const List<Color> _monthChipAccents = [
+    Color(0xFF0369A1), // Jan — sky
+    Color(0xFFC026D3), // Feb — fuchsia
+    Color(0xFF047857), // Mar — emerald
+    Color(0xFFCA8A04), // Apr — gold
+    Color(0xFF15803D), // May — green
+    Color(0xFFA16207), // Jun — amber
+	Color(0xFFC2410C), // Jul — orange
+	Color(0xFF0F766E), // Aug — teal
+    Color(0xFF6D28D9), // Sep — violet
+    Color(0xFF9A3412), // Oct — rust
+    Color(0xFF4338CA), // Nov — indigo
+    Color(0xFF0E7490), // Dec — cyan
+  ];
+
+  /// Background for sticky date chip; [month] null uses [transactionsSectionColor].
+  static Color transactionDateChipBackground(ThemeData theme, int? month) {
+    final isDark = theme.brightness == Brightness.dark;
+    final base = theme.colorScheme.surfaceContainerHighest;
+    final accent =
+        month != null ? monthChipAccent(month) : transactionsSectionColor;
+    return Color.alphaBlend(
+      accent.withValues(alpha: isDark ? 0.44 : 0.26),
+      base,
+    );
+  }
+
+  /// Label on date chip: high contrast on both themes.
+  static Color transactionDateChipForeground(ThemeData theme, int? month) {
+    final bg = transactionDateChipBackground(theme, month);
+    final accent =
+        month != null ? monthChipAccent(month) : transactionsSectionColor;
+    final lum = bg.computeLuminance();
+    if (lum > 0.55) {
+      return Color.lerp(theme.colorScheme.onSurface, accent, 0.12)!;
+    }
+    return Color.lerp(theme.colorScheme.onSurface, accent, 0.18)!;
+  }
+
+  static Color transactionDateChipShadow(ThemeData theme, int? month) {
+    final isDark = theme.brightness == Brightness.dark;
+    final accent =
+        month != null ? monthChipAccent(month) : transactionsSectionColor;
+    return accent.withValues(alpha: isDark ? 0.35 : 0.22);
   }
 }

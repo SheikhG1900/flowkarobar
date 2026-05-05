@@ -611,7 +611,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         for (int i = 0; i < keys.length; i++)
           SliverStickyHeader(
             key: ValueKey('tx-sticky-header-${keys[i]}'),
-            header: _buildDateHeader(theme, keys[i]),
+            header: _buildDateHeader(
+              theme,
+              keys[i],
+              _monthForDateGroup(groupedTransactions[keys[i]]!),
+            ),
             sliver: SliverList(
               key: ValueKey('tx-sliver-list-${keys[i]}'),
               delegate: SliverChildBuilderDelegate(
@@ -727,7 +731,18 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     );
   }
 
-  Widget _buildDateHeader(ThemeData theme, String dateKey) {
+  /// Calendar month for the group (from first row) to tint the date chip.
+  int? _monthForDateGroup(List<dynamic> items) {
+    if (items.isEmpty) return null;
+    final tx = items.first.transaction;
+    if (tx == null || tx.date == null) return null;
+    return tx.date.month;
+  }
+
+  Widget _buildDateHeader(ThemeData theme, String dateKey, int? month) {
+    final chipBg = AppColors.transactionDateChipBackground(theme, month);
+    final chipFg = AppColors.transactionDateChipForeground(theme, month);
+    final chipShadow = AppColors.transactionDateChipShadow(theme, month);
     return Container(
       key: ValueKey('tx-date-header-$dateKey'),
       height: 50,
@@ -738,11 +753,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         key: ValueKey('tx-date-header-inner-$dateKey'),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.transactionsSectionColor.withValues(alpha: 0.7),
+          color: chipBg,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: AppColors.transactionsSectionColor.withValues(alpha: 0.3),
+              color: chipShadow,
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -752,7 +767,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           key: ValueKey('tx-date-header-text-$dateKey'),
           dateKey,
           style: theme.textTheme.titleSmall?.copyWith(
-            color: Colors.white,
+            color: chipFg,
             fontWeight: FontWeight.w600,
           ),
         ),
