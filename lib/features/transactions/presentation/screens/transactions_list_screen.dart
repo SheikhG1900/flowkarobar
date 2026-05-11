@@ -569,9 +569,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       );
     }
 
-    // Group transactions by date
-    final groupedTransactions = <String, List>{};
+    // Group transactions by date and calculate daily stats
+    final groupedTransactions = <String, List<TransactionWithDetails>>{};
+    final dailyStats = <String, ({int count, double netAmount})>{};
     final userProfile = ref.watch(userProfileProvider);
+
     for (final item in paginatedState.items) {
       if (item == null ||
           item.transaction == null ||
@@ -580,12 +582,31 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       try {
         final dateKey = AppDateFormatter.formatDate(item.transaction.date,
             pattern: userProfile.dateFormat ?? 'MMM dd, yyyy');
+
+        // Grouping
         groupedTransactions.putIfAbsent(dateKey, () => []);
         groupedTransactions[dateKey]!.add(item);
+
+        // Stats calculation
+        final current = dailyStats[dateKey] ?? (count: 0, netAmount: 0.0);
+        final isExpense = item.transaction.type == 'EXPENSE';
+        dailyStats[dateKey] = (
+          count: current.count + 1,
+          netAmount: current.netAmount +
+              (isExpense ? -item.transaction.amount : item.transaction.amount),
+        );
       } catch (e) {
         const fallbackKey = 'Other';
         groupedTransactions.putIfAbsent(fallbackKey, () => []);
         groupedTransactions[fallbackKey]!.add(item);
+
+        final current = dailyStats[fallbackKey] ?? (count: 0, netAmount: 0.0);
+        final isExpense = item.transaction.type == 'EXPENSE';
+        dailyStats[fallbackKey] = (
+          count: current.count + 1,
+          netAmount: current.netAmount +
+              (isExpense ? -item.transaction.amount : item.transaction.amount),
+        );
       }
     }
 
@@ -603,7 +624,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             child: CollapsibleListSummary(
               key: const ValueKey('tx-list-summary-collapsible'),
               title: l10n.financialSummary,
-              child: _TransactionListSummaryContent(key: const ValueKey('tx-list-summary-content-inner')),
+              child: _TransactionListSummaryContent(
+                  key: const ValueKey('tx-list-summary-content-inner')),
             ),
           ),
         ),
@@ -615,6 +637,9 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
               theme,
               keys[i],
               _monthForDateGroup(groupedTransactions[keys[i]]!),
+              count: dailyStats[keys[i]]?.count ?? 0,
+              netAmount: dailyStats[keys[i]]?.netAmount ?? 0.0,
+              isConfirmed: i < keys.length - 1 || !paginatedState.hasMore,
             ),
             sliver: SliverList(
               key: ValueKey('tx-sliver-list-${keys[i]}'),
@@ -739,10 +764,19 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     return tx.date.month;
   }
 
-  Widget _buildDateHeader(ThemeData theme, String dateKey, int? month) {
+  Widget _buildDateHeader(
+    ThemeData theme,
+    String dateKey,
+    int? month, {
+    required int count,
+    required double netAmount,
+    required bool isConfirmed,
+  }) {
     final chipBg = AppColors.transactionDateChipBackground(theme, month);
     final chipFg = AppColors.transactionDateChipForeground(theme, month);
     final chipShadow = AppColors.transactionDateChipShadow(theme, month);
+    final currency = ref.watch(currentCurrencyProvider).value;
+
     return Container(
       key: ValueKey('tx-date-header-$dateKey'),
       height: 50,
@@ -751,7 +785,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       alignment: Alignment.center,
       child: Container(
         key: ValueKey('tx-date-header-inner-$dateKey'),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
           color: chipBg,
           borderRadius: BorderRadius.circular(20),
@@ -763,13 +797,63 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             ),
           ],
         ),
-        child: Text(
-          key: ValueKey('tx-date-header-text-$dateKey'),
-          dateKey,
-          style: theme.textTheme.titleSmall?.copyWith(
-            color: chipFg,
-            fontWeight: FontWeight.w600,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              key: ValueKey('tx-date-header-text-$dateKey'),
+              dateKey,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: chipFg,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (count > 0) ...[
+              const SizedBox(width: 8),
+              Container(
+                width: 1,
+                height: 12,
+                color: chipFg.withValues(alpha: 0.2),
+              ),
+              const SizedBox(width: 8),
+              Opacity(
+                opacity: isConfirmed ? 1.0 : 0.6,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      AmountFormatter.formatWithCurrency(
+                        netAmount,
+                        currency?.symbol ?? '',
+                        currency?.decimalPlaces ?? 2,
+                      ),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: netAmount >= 0
+                            ? AppColors.incomeColor
+                            : AppColors.expenseColor,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '|',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: chipFg.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '$count',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: chipFg,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
