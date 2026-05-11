@@ -130,6 +130,7 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
                   widget.onScanReceipt();
                 },
               ),
+              const SizedBox(height: 16),
               _buildStep(
                 key: const ValueKey('speed-dial-step-voice'),
                 index: 0,
