@@ -6947,6 +6947,36 @@ abstract class AppLocalizations {
   /// **'Receive Into'**
   String get receiveInto;
 
+  /// No description provided for @settlementAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement Account'**
+  String get settlementAccount;
+
+  /// No description provided for @setAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Set Account'**
+  String get setAccount;
+
+  /// No description provided for @combineBalances.
+  ///
+  /// In en, this message translates to:
+  /// **'Combine Balances'**
+  String get combineBalances;
+
+  /// No description provided for @selectedTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected Total'**
+  String get selectedTotal;
+
+  /// No description provided for @selectAccountsToCombine.
+  ///
+  /// In en, this message translates to:
+  /// **'Select accounts to see their combined balance'**
+  String get selectAccountsToCombine;
+
   /// No description provided for @accountPickerInfoMessage.
   ///
   /// In en, this message translates to:

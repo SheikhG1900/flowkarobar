@@ -46,6 +46,15 @@ class TransactionService {
     required this.contactsRepository,
   });
 
+  Future<void> updateTransactionAccount(String uuid, String? accountUuid) async {
+    await transactionsRepository.updateTransactionWithCompanion(
+      uuid,
+      TransactionsCompanion(
+        accountUuid: drift.Value(accountUuid),
+      ),
+    );
+  }
+
   Future<String> createTransaction({
     required double amount,
     required String type,

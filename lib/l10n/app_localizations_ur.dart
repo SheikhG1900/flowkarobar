@@ -3816,6 +3816,22 @@ class AppLocalizationsUr extends AppLocalizations {
   String get receiveInto => 'یہاں وصول کریں';
 
   @override
+  String get settlementAccount => 'سیٹلمنٹ اکاؤنٹ';
+
+  @override
+  String get setAccount => 'اکاؤنٹ سیٹ کریں';
+
+  @override
+  String get combineBalances => 'بیلنس یکجا کریں';
+
+  @override
+  String get selectedTotal => 'منتخب کل';
+
+  @override
+  String get selectAccountsToCombine =>
+      'مشترکہ بیلنس دیکھنے کے لیے اکاؤنٹس منتخب کریں';
+
+  @override
   String get accountPickerInfoMessage =>
       'صرف ان لین دین پر لاگو ہوتا ہے جن کا اکاؤنٹ مقرر نہیں';
 

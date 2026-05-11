@@ -674,6 +674,15 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 theme,
                 l10n,
                 account: item.account!,
+                onEdit: () => _changeAccount(context, ref, item),
+              ),
+              const SizedBox(height: 16),
+            ] else ...[
+              _buildNoAccountCard(
+                context,
+                theme,
+                l10n,
+                onSet: () => _changeAccount(context, ref, item),
               ),
               const SizedBox(height: 16),
             ],
@@ -1771,6 +1780,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
     ThemeData theme,
     AppLocalizations l10n, {
     required Account account,
+    VoidCallback? onEdit,
   }) {
     final type = AccountType.fromValue(account.type);
     final color = account.color != null
@@ -1869,9 +1879,93 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     ],
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right,
-                  color: theme.colorScheme.onSurfaceVariant,
+                if (onEdit != null)
+                  IconButton(
+                    key: const ValueKey('tx-details-account-edit-btn'),
+                    icon: Icon(Icons.edit_outlined,
+                        size: 20, color: theme.colorScheme.onSurfaceVariant),
+                    onPressed: onEdit,
+                    tooltip: l10n.editAccount,
+                  ),
+                if (onEdit == null)
+                  Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildNoAccountCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n, {
+    required VoidCallback onSet,
+  }) {
+    final color = theme.colorScheme.primary;
+    return Container(
+      key: const ValueKey('tx-details-no-account-card'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+            color: theme.dividerColor.withValues(alpha: 0.5), width: 1),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onSet,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Symbols.account_balance_wallet,
+                    color: theme.colorScheme.onSurfaceVariant,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.account,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l10n.noAccountSelected,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  onPressed: onSet,
+                  icon: Icon(Icons.add_circle_outline,
+                      size: 20, color: theme.colorScheme.primary),
+                  tooltip: l10n.setAccount,
                 ),
               ],
             ),
@@ -2627,6 +2721,39 @@ class TransactionDetailsDialog extends ConsumerWidget {
         final l10n = AppLocalizations.of(context)!;
         ToastUtils.showErrorToast(
             context, ref, l10n.errorOccurred(e.toString()));
+      }
+    }
+  }
+
+  static Future<void> _changeAccount(
+    BuildContext context,
+    WidgetRef ref,
+    TransactionWithDetails item,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final isExpense = item.transaction.type == 'EXPENSE';
+
+    final choice = await resolveSettlementAccountChoice(
+      context,
+      ref,
+      isPayable: isExpense, // If expense, we pay from account
+      initialAccount: item.account,
+      transactionForAccountDefault: item.transaction,
+    );
+
+    if (choice != null) {
+      try {
+        await ref
+            .read(transactionServiceProvider)
+            .updateTransactionAccount(item.transaction.uuid, choice.accountUuid);
+        if (context.mounted) {
+          ToastUtils.showSuccessToast(context, ref, l10n.accountUpdated);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ToastUtils.showErrorToast(
+              context, ref, l10n.errorOccurred(e.toString()));
+        }
       }
     }
   }

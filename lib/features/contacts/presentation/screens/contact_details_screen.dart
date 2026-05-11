@@ -598,45 +598,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                                       return;
                                     }
 
-                                    // If balance is zero, just confirm and process all
-                                    if (netBalance == 0) {
-                                      final confirmed = await showDialog<bool>(
-                                            context: context,
-                                            builder: (dialogContext) =>
-                                                AlertDialog(
-                                              title:
-                                                  Text(l10n.bulkProcessInBulk),
-                                              content: Text(
-                                                l10n.bulkProcessConfirmation,
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(
-                                                          dialogContext, false),
-                                                  child: Text(l10n.cancel),
-                                                ),
-                                                FilledButton(
-                                                  onPressed: () =>
-                                                      Navigator.pop(
-                                                          dialogContext, true),
-                                                  child: Text(l10n.ok),
-                                                ),
-                                              ],
-                                            ),
-                                          ) ??
-                                          false;
-
-                                      if (!confirmed) return;
-
-                      await ref
-                          .read(
-                              contactBulkSettlementServiceProvider)
-                          .settleAll(contactUuid);
-                      return;
-
-                                    }
-
+                                    // If balance is zero, we still show the sheet for account selection
                                     _showBulkSettleSheet(
                                       context,
                                       ref,
@@ -1078,8 +1040,7 @@ class _BulkSettleSheetContent extends StatefulWidget {
 class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
   late final TextEditingController _amountController;
   double _currentAmount = 0.0;
-  Account? _outgoingAccount; // For payables: account to debit
-  Account? _incomingAccount; // For receivables: account to credit
+  Account? _selectedAccount;
 
   double get _remainingAmount {
     final remaining = widget.absNet - _currentAmount;
@@ -1106,19 +1067,23 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
     final currencyDecimalPlaces =
         widget.ref.watch(currencyDecimalPlacesProvider);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                widget.isNetReceivable
-                    ? widget.l10n.receivable
-                    : widget.l10n.payable,
+                widget.absNet == 0
+                    ? widget.l10n.bulkProcessInBulk
+                    : widget.isNetReceivable
+                        ? widget.l10n.receivable
+                        : widget.l10n.payable,
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.bold),
               ),
@@ -1169,58 +1134,50 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
             ),
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _amountController,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: widget.l10n.amount,
-              border: const OutlineInputBorder(),
-            ),
-            onChanged: (value) {
-              final parsed = double.tryParse(value.trim()) ?? 0;
-              setState(() {
-                _currentAmount = parsed;
-              });
-            },
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerRight,
-            child: TextButton(
-              onPressed: () {
+          if (widget.absNet > 0) ...[
+            TextField(
+              controller: _amountController,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: widget.l10n.amount,
+                border: const OutlineInputBorder(),
+              ),
+              onChanged: (value) {
+                final parsed = double.tryParse(value.trim()) ?? 0;
                 setState(() {
-                  _currentAmount = widget.absNet;
-                  _amountController.text =
-                      widget.absNet.toStringAsFixed(currencyDecimalPlaces);
+                  _currentAmount = parsed;
                 });
               },
-              child: Text(widget.l10n.settleAll),
             ),
-          ),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  setState(() {
+                    _currentAmount = widget.absNet;
+                    _amountController.text =
+                        widget.absNet.toStringAsFixed(currencyDecimalPlaces);
+                  });
+                },
+                child: Text(widget.l10n.settleAll),
+              ),
+            ),
+          ],
 
-          // Account pickers (create account from sheet when none exist)
+          // Account picker
           const SizedBox(height: 12),
           Text(
-            widget.l10n.payFrom,
+            widget.l10n.settlementAccount,
             style: theme.textTheme.labelMedium,
           ),
           const SizedBox(height: 6),
           AccountPickerField(
-            selectedAccount: _outgoingAccount,
-            onChanged: (acc) => setState(() => _outgoingAccount = acc),
-            label: widget.l10n.payFrom,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            widget.l10n.receiveInto,
-            style: theme.textTheme.labelMedium,
-          ),
-          const SizedBox(height: 6),
-          AccountPickerField(
-            selectedAccount: _incomingAccount,
-            excludeCreditCard: true,
-            onChanged: (acc) => setState(() => _incomingAccount = acc),
-            label: widget.l10n.receiveInto,
+            selectedAccount: _selectedAccount,
+            excludeCreditCard: widget.isNetReceivable,
+            onChanged: (acc) => setState(() => _selectedAccount = acc),
+            label: widget.l10n.settlementAccount,
           ),
           const SizedBox(height: 8),
           Row(
@@ -1244,23 +1201,35 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
             child: FilledButton(
               onPressed: () async {
                 try {
-                  final raw = _amountController.text.trim();
-                  final parsed = double.tryParse(raw) ?? 0;
-                  if (parsed <= 0) {
-                    ToastUtils.showErrorToast(
-                      context,
-                      widget.ref,
-                      widget.l10n.errorOccurred('Invalid amount'),
+                  if (widget.absNet == 0) {
+                    await widget.service.settleAll(
+                      widget.contactUuid,
+                      outgoingAccountUuid: _selectedAccount?.uuid,
+                      incomingAccountUuid: _selectedAccount?.uuid,
                     );
-                    return;
+                  } else {
+                    final raw = _amountController.text.trim();
+                    final parsed = double.tryParse(raw) ?? 0;
+                    if (parsed <= 0) {
+                      ToastUtils.showErrorToast(
+                        context,
+                        widget.ref,
+                        widget.l10n.errorOccurred('Invalid amount'),
+                      );
+                      return;
+                    }
+                    await widget.service.settleAmount(
+                      widget.contactUuid,
+                      parsed,
+                      isNetReceivable: widget.isNetReceivable,
+                      outgoingAccountUuid: widget.isNetReceivable
+                          ? null
+                          : _selectedAccount?.uuid,
+                      incomingAccountUuid: widget.isNetReceivable
+                          ? _selectedAccount?.uuid
+                          : null,
+                    );
                   }
-                  await widget.service.settleAmount(
-                    widget.contactUuid,
-                    parsed,
-                    isNetReceivable: widget.isNetReceivable,
-                    outgoingAccountUuid: _outgoingAccount?.uuid,
-                    incomingAccountUuid: _incomingAccount?.uuid,
-                  );
                   if (mounted) {
                     Navigator.pop(context);
                   }
@@ -1282,8 +1251,9 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _ContactNavTile extends StatelessWidget {

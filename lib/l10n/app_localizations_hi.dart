@@ -3810,6 +3810,22 @@ class AppLocalizationsHi extends AppLocalizations {
   String get receiveInto => 'यहाँ प्राप्त करें';
 
   @override
+  String get settlementAccount => 'सेटलेमेंट अकाउंट';
+
+  @override
+  String get setAccount => 'खाता सेट करें';
+
+  @override
+  String get combineBalances => 'बैलेंस कंबाइन करें';
+
+  @override
+  String get selectedTotal => 'चयनित कुल';
+
+  @override
+  String get selectAccountsToCombine =>
+      'संयुक्त बैलेंस देखने के लिए खाते चुनें';
+
+  @override
   String get accountPickerInfoMessage =>
       'केवल उन लेनदेन पर लागू होता है जिनका खाता निर्दिष्ट नहीं है';
 

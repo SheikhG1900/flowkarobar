@@ -3799,6 +3799,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get receiveInto => 'Receive Into';
 
   @override
+  String get settlementAccount => 'Settlement Account';
+
+  @override
+  String get setAccount => 'Set Account';
+
+  @override
+  String get combineBalances => 'Combine Balances';
+
+  @override
+  String get selectedTotal => 'Selected Total';
+
+  @override
+  String get selectAccountsToCombine =>
+      'Select accounts to see their combined balance';
+
+  @override
   String get accountPickerInfoMessage =>
       'Applies only to transactions without an assigned account';
 

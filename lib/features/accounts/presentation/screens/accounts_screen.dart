@@ -20,6 +20,7 @@ import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_
 import 'package:flowpaisa/features/accounts/presentation/widgets/account_card_background_patterns.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/add_edit_account_screen.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/account_transfer_sheet.dart';
+import 'package:flowpaisa/features/accounts/presentation/widgets/combine_balances_sheet.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/transfer_account_box.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
@@ -90,6 +91,11 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
       appBar: AppBar(
         title: Text(l10n.accounts),
         actions: [
+          IconButton(
+            icon: const Icon(Symbols.calculate),
+            tooltip: l10n.combineBalances,
+            onPressed: () => CombineBalancesSheet.show(context),
+          ),
           IconButton(
             icon: const Icon(Symbols.swap_horiz),
             tooltip: l10n.transferMoney,
