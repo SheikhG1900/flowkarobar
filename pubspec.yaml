@@ -2,7 +2,7 @@ name: flowpaisa
 description: Flowpaisa - Complete personal finance & cash flow manager. Track expenses, incomes, receivables, payables with linked transactions, receipt scanning, and WhatsApp integration.
 publish_to: 'none'
 
-version: 1.0.0+52
+version: 1.0.0+53
 
 environment:
   sdk: '>=3.1.5 <4.0.0'
@@ -91,6 +91,7 @@ dependencies:
   rxdart: ^0.28.0
   device_info_plus: ^12.3.0
   in_app_review: ^2.0.9
+  in_app_update: ^4.2.5
   package_info_plus: ^8.0.2
   flutter_phoenix: ^1.1.1
   arabic_reshaper: ^0.0.1

@@ -77,6 +77,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flowpaisa/features/transactions/data/schedule_scheduler.dart';
 import 'package:flowpaisa/features/backup/data/sync/sync_scheduler.dart';
 
+import 'package:flowpaisa/core/services/update_service.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/features/voice_command/presentation/screens/voice_add_screen.dart';
@@ -152,6 +153,11 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    
+    // Check for in-app updates on startup (Android only)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(updateServiceProvider).checkForUpdate();
+    });
   }
 
   @override
