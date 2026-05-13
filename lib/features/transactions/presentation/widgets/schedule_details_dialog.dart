@@ -1,3 +1,7 @@
+import 'package:flowpaisa/features/transactions/presentation/widgets/linked_settlement_account_sheet.dart';
+import 'package:flowpaisa/features/accounts/presentation/widgets/transfer_account_box.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
+import 'package:flowpaisa/features/accounts/presentation/widgets/account_picker.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/category_details_screen.dart';
@@ -219,6 +223,25 @@ class ScheduleDetailsDialog extends ConsumerWidget {
             ),
 
             const SizedBox(height: 16),
+
+            if (item.account != null) ...[
+              _buildTxAccountCard(
+                context,
+                theme,
+                l10n,
+                account: item.account!,
+                onEdit: () => _changeAccount(context, ref, item),
+              ),
+              const SizedBox(height: 16),
+            ] else ...[
+              _buildNoAccountCard(
+                context,
+                theme,
+                l10n,
+                onSet: () => _changeAccount(context, ref, item),
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // Receivable card (PAID_FOR, WILL_RECEIVE)
             if (schedule.paidRelationship != null &&
@@ -523,13 +546,6 @@ class ScheduleDetailsDialog extends ConsumerWidget {
                     pattern: dateFormat)
                 : l10n.never,
           ),
-          if (account != null)
-            _buildDetailRow(
-              context,
-              icon: Icons.account_balance_wallet,
-              label: l10n.account,
-              value: account.name,
-            ),
         ],
       ),
     );
@@ -1403,6 +1419,190 @@ class ScheduleDetailsDialog extends ConsumerWidget {
       candidate = DateTime(nextYear, nextMonth, targetDay);
     }
     return candidate;
+  }
+
+  static Future<void> _changeAccount(
+    BuildContext context,
+    WidgetRef ref,
+    ScheduleWithDetails item,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final isExpense = item.schedule.type == 'EXPENSE';
+
+    final choice = await resolveSettlementAccountChoice(
+      context,
+      ref,
+      isPayable: isExpense,
+      initialAccount: item.account,
+    );
+
+    if (choice != null) {
+      try {
+        await ref
+            .read(scheduleServiceProvider)
+            .updateSchedule(item.schedule.uuid, accountUuid: choice.accountUuid);
+        if (context.mounted) {
+          ToastUtils.showSuccessToast(context, ref, l10n.accountUpdated);
+          ref.invalidate(scheduleWithDetailsProvider(item.schedule.uuid));
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ToastUtils.showErrorToast(
+              context, ref, l10n.errorOccurred(e.toString()));
+        }
+      }
+    }
+  }
+
+  static Widget _buildTxAccountCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n, {
+    required Account account,
+    VoidCallback? onEdit,
+  }) {
+    final accent = TransferAccountBox.accentColorFor(account, theme);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accent.withValues(alpha: 0.3), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: accent.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onEdit,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    TransferAccountBox.iconForAccount(account),
+                    color: accent,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.account,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        account.name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: accent,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (onEdit != null)
+                  IconButton(
+                    onPressed: onEdit,
+                    icon: Icon(Icons.edit_outlined,
+                        size: 20, color: theme.colorScheme.primary),
+                    tooltip: l10n.edit,
+                  )
+                else
+                  Icon(
+                    Icons.chevron_right,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildNoAccountCard(
+    BuildContext context,
+    ThemeData theme,
+    AppLocalizations l10n, {
+    required VoidCallback onSet,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.account_balance_wallet_outlined,
+              color: theme.colorScheme.onSurfaceVariant,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.account,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  l10n.noAccountSelected,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: onSet,
+            icon: Icon(Icons.add_circle_outline,
+                size: 20, color: theme.colorScheme.primary),
+            tooltip: l10n.setAccount,
+          ),
+        ],
+      ),
+    );
   }
 
   static void _toggleSchedule(

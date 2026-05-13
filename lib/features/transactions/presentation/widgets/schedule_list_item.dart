@@ -1,3 +1,4 @@
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_account_icon_badge.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
@@ -60,279 +61,358 @@ class ScheduleListItem extends ConsumerWidget {
         ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
         : theme.colorScheme.onSurface;
 
-    return Container(
-      key: key,
-      decoration: BoxDecoration(
-        color: theme.cardColor.withValues(alpha: isInactive ? 0.6 : 1.0),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: displayColor.withValues(alpha: isDark ? 0.2 : 0.1),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: displayColor.withValues(alpha: isDark ? 0.05 : 0.08),
-            blurRadius: isInactive ? 4 : 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Material(
-        key: key != null ? ValueKey('${(key as ValueKey).value}-material') : null,
-        color: Colors.transparent,
-        child: InkWell(
-          key: key != null ? ValueKey('${(key as ValueKey).value}-inkwell') : null,
-          onTap: () {
-            if (isLocked) {
-              PremiumGate.showPremiumDialog(context);
-              return;
-            }
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ScheduleDetailsDialog(
-                  scheduleUuid: schedule.uuid,
-                ),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          key: key,
+          decoration: BoxDecoration(
+            color: theme.cardColor.withValues(alpha: isInactive ? 0.6 : 1.0),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: displayColor.withValues(alpha: isDark ? 0.2 : 0.1),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: displayColor.withValues(alpha: isDark ? 0.05 : 0.08),
+                blurRadius: isInactive ? 4 : 12,
+                offset: const Offset(0, 4),
               ),
-            );
-          },
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            key: key != null ? ValueKey('${(key as ValueKey).value}-padding') : null,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Row(
-              key: key != null ? ValueKey('${(key as ValueKey).value}-row') : null,
-              children: [
-                // Leading
-                Container(
-                  key: key != null ? ValueKey('${(key as ValueKey).value}-leading') : null,
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    color: displayColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: displayColor.withValues(alpha: 0.3),
-                      width: 1,
+            ],
+          ),
+          child: Material(
+            key: key != null
+                ? ValueKey('${(key as ValueKey).value}-material')
+                : null,
+            color: Colors.transparent,
+            child: InkWell(
+              key: key != null
+                  ? ValueKey('${(key as ValueKey).value}-inkwell')
+                  : null,
+              onTap: () {
+                if (isLocked) {
+                  PremiumGate.showPremiumDialog(context);
+                  return;
+                }
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ScheduleDetailsDialog(
+                      scheduleUuid: schedule.uuid,
                     ),
                   ),
-                  alignment: Alignment.center,
-                  child: CategoryHelper.buildCategoryIcon(
-                      category?.icon, displayColor, isExpense),
-                ),
-                const SizedBox(width: 16),
-                // Title & Subtitle
-                Expanded(
-                  key: key != null ? ValueKey('${(key as ValueKey).value}-content-expanded') : null,
-                  child: Column(
-                    key: key != null ? ValueKey('${(key as ValueKey).value}-content-col') : null,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        key: key != null ? ValueKey('${(key as ValueKey).value}-title') : null,
-                        category != null
-                            ? LocalizationHelper.getLocalizedCategoryName(
-                                context, category.name)
-                            : l10n.uncategorized,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: textColor,
+                );
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: Padding(
+                key: key != null
+                    ? ValueKey('${(key as ValueKey).value}-padding')
+                    : null,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Row(
+                  key: key != null
+                      ? ValueKey('${(key as ValueKey).value}-row')
+                      : null,
+                  children: [
+                    // Leading
+                    Container(
+                      key: key != null
+                          ? ValueKey('${(key as ValueKey).value}-leading')
+                          : null,
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: displayColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: displayColor.withValues(alpha: 0.3),
+                          width: 1,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        key: key != null ? ValueKey('${(key as ValueKey).value}-desc') : null,
-                        schedule.description ??
-                            (isExpense ? l10n.expense : l10n.income),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant
-                              .withValues(alpha: isInactive ? 0.5 : 1.0),
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                      alignment: Alignment.center,
+                      child: CategoryHelper.buildCategoryIcon(
+                          category?.icon, displayColor, isExpense),
+                    ),
+                    const SizedBox(width: 16),
+                    // Title & Subtitle
+                    Expanded(
+                      key: key != null
+                          ? ValueKey(
+                              '${(key as ValueKey).value}-content-expanded')
+                          : null,
+                      child: Column(
+                        key: key != null
+                            ? ValueKey('${(key as ValueKey).value}-content-col')
+                            : null,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            key: key != null
+                                ? ValueKey('${(key as ValueKey).value}-title')
+                                : null,
+                            category != null
+                                ? LocalizationHelper.getLocalizedCategoryName(
+                                    context, category.name)
+                                : l10n.uncategorized,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: textColor,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            key: key != null
+                                ? ValueKey('${(key as ValueKey).value}-desc')
+                                : null,
+                            schedule.description ??
+                                (isExpense ? l10n.expense : l10n.income),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant
+                                  .withValues(alpha: isInactive ? 0.5 : 1.0),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (contact != null) ...[
+                            const SizedBox(height: 8),
+                            // Contact tag
+                            Container(
+                              key: key != null
+                                  ? ValueKey(
+                                      '${(key as ValueKey).value}-contact-tag')
+                                  : null,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.getContactColor(contact.name)
+                                    .withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: AppColors.getContactColor(contact.name)
+                                      .withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                key: key != null
+                                    ? ValueKey(
+                                        '${(key as ValueKey).value}-contact-row')
+                                    : null,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    key: key != null
+                                        ? ValueKey(
+                                            '${(key as ValueKey).value}-contact-avatar')
+                                        : null,
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      gradient: AppColors.getContactGradient(
+                                          contact.name),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      contact.name.isNotEmpty
+                                          ? contact.name[0].toUpperCase()
+                                          : '?',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 6,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      key: key != null
+                                          ? ValueKey(
+                                              '${(key as ValueKey).value}-contact-name')
+                                          : null,
+                                      contact.name,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color:
+                                            theme.colorScheme.onSurfaceVariant,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                      if (contact != null) ...[
-                        const SizedBox(height: 8),
-                        // Contact tag
+                    ),
+                    const SizedBox(width: 16),
+                    // Trailing
+                    Column(
+                      key: key != null
+                          ? ValueKey('${(key as ValueKey).value}-trailing-col')
+                          : null,
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Frequency badge above amount
                         Container(
-                          key: key != null ? ValueKey('${(key as ValueKey).value}-contact-tag') : null,
+                          key: key != null
+                              ? ValueKey(
+                                  '${(key as ValueKey).value}-freq-badge')
+                              : null,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: AppColors.getContactColor(contact.name)
-                                .withValues(alpha: 0.1),
+                            color:
+                                theme.colorScheme.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(
-                              color: AppColors.getContactColor(contact.name)
+                              color: theme.colorScheme.primary
                                   .withValues(alpha: 0.3),
                               width: 1,
                             ),
                           ),
                           child: Row(
-                            key: key != null ? ValueKey('${(key as ValueKey).value}-contact-row') : null,
+                            key: key != null
+                                ? ValueKey(
+                                    '${(key as ValueKey).value}-freq-row')
+                                : null,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Container(
-                                key: key != null ? ValueKey('${(key as ValueKey).value}-contact-avatar') : null,
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                  gradient: AppColors.getContactGradient(
-                                      contact.name),
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  contact.name.isNotEmpty
-                                      ? contact.name[0].toUpperCase()
-                                      : '?',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 6,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                              Icon(
+                                key: key != null
+                                    ? ValueKey(
+                                        '${(key as ValueKey).value}-freq-icon')
+                                    : null,
+                                _getFrequencyIcon(schedule.scheduleType),
+                                size: 10,
+                                color: theme.colorScheme.primary,
                               ),
                               const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  key: key != null ? ValueKey('${(key as ValueKey).value}-contact-name') : null,
-                                  contact.name,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
+                              Text(
+                                key: key != null
+                                    ? ValueKey(
+                                        '${(key as ValueKey).value}-freq-label')
+                                    : null,
+                                _getFrequencyLabel(l10n, schedule.scheduleType),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: theme.colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Trailing
-                Column(
-                  key: key != null ? ValueKey('${(key as ValueKey).value}-trailing-col') : null,
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Frequency badge above amount
-                    Container(
-                      key: key != null ? ValueKey('${(key as ValueKey).value}-freq-badge') : null,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color:
-                              theme.colorScheme.primary.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        key: key != null ? ValueKey('${(key as ValueKey).value}-freq-row') : null,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            key: key != null ? ValueKey('${(key as ValueKey).value}-freq-icon') : null,
-                            _getFrequencyIcon(schedule.scheduleType),
-                            size: 10,
-                            color: theme.colorScheme.primary,
+                        const SizedBox(height: 4),
+                        FittedBox(
+                          key: key != null
+                              ? ValueKey(
+                                  '${(key as ValueKey).value}-amount-fitted')
+                              : null,
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            key: key != null
+                                ? ValueKey(
+                                    '${(key as ValueKey).value}-amount-text')
+                                : null,
+                            '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(schedule.amount, currency.symbol, currency.decimalPlaces)}',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: isExpense
+                                  ? (isInactive
+                                      ? AppColors.expenseColor
+                                          .withValues(alpha: 0.5)
+                                      : AppColors.expenseColor)
+                                  : (isInactive
+                                      ? AppColors.incomeColor
+                                          .withValues(alpha: 0.5)
+                                      : AppColors.incomeColor),
+                              fontWeight: FontWeight.bold,
+                              fontSize:
+                                  AmountFormatter.getFontSize(schedule.amount),
+                            ),
                           ),
-                          const SizedBox(width: 4),
+                        ),
+                        if (schedule.paidRelationship != null) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            key: key != null
+                                ? ValueKey('${(key as ValueKey).value}-rel-badge')
+                                : null,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.getRelationshipColor(
+                                      schedule.paidRelationship)
+                                  .withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: AppColors.getRelationshipColor(
+                                        schedule.paidRelationship)
+                                    .withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              key: key != null
+                                  ? ValueKey(
+                                      '${(key as ValueKey).value}-rel-text')
+                                  : null,
+                              LocalizationHelper.localizeRelationshipShort(
+                                l10n,
+                                schedule.paidRelationship,
+                                isExpense: isExpense,
+                              ),
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: AppColors.getRelationshipColor(
+                                    schedule.paidRelationship),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (isInactive) ...[
+                          const SizedBox(height: 4),
                           Text(
-                            key: key != null ? ValueKey('${(key as ValueKey).value}-freq-label') : null,
-                            _getFrequencyLabel(l10n, schedule.scheduleType),
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: theme.colorScheme.primary,
+                            key: key != null
+                                ? ValueKey(
+                                    '${(key as ValueKey).value}-inactive-text')
+                                : null,
+                            l10n.inactive,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color:
+                                  theme.colorScheme.error.withValues(alpha: 0.7),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
-                      ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    FittedBox(
-                      key: key != null ? ValueKey('${(key as ValueKey).value}-amount-fitted') : null,
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        key: key != null ? ValueKey('${(key as ValueKey).value}-amount-text') : null,
-                        '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(schedule.amount, currency.symbol, currency.decimalPlaces)}',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          color: isExpense
-                              ? (isInactive
-                                  ? AppColors.expenseColor.withValues(alpha: 0.5)
-                                  : AppColors.expenseColor)
-                              : (isInactive
-                                  ? AppColors.incomeColor.withValues(alpha: 0.5)
-                                  : AppColors.incomeColor),
-                          fontWeight: FontWeight.bold,
-                          fontSize:
-                              AmountFormatter.getFontSize(schedule.amount),
-                        ),
-                      ),
-                    ),
-                    if (schedule.paidRelationship != null) ...[
-                      const SizedBox(height: 4),
-                      Container(
-                        key: key != null ? ValueKey('${(key as ValueKey).value}-rel-badge') : null,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppColors.getRelationshipColor(
-                                  schedule.paidRelationship)
-                              .withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: AppColors.getRelationshipColor(
-                                    schedule.paidRelationship)
-                                .withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Text(
-                          key: key != null ? ValueKey('${(key as ValueKey).value}-rel-text') : null,
-                          LocalizationHelper.localizeRelationshipShort(
-                            l10n,
-                            schedule.paidRelationship,
-                            isExpense: isExpense,
-                          ),
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: AppColors.getRelationshipColor(
-                                schedule.paidRelationship),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                    if (isInactive) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        key: key != null ? ValueKey('${(key as ValueKey).value}-inactive-text') : null,
-                        l10n.inactive,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.error.withValues(alpha: 0.7),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
                   ],
                 ),
-              ],
+              ),
             ),
           ),
         ),
-      ),
+        if (item.account != null)
+          TransactionAccountIconBadge(
+            key: key != null
+                ? ValueKey('${(key as ValueKey).value}-acc-badge')
+                : null,
+            account: item.account!,
+            theme: theme,
+            isInactive: isInactive,
+          ),
+      ],
     );
   }
 
