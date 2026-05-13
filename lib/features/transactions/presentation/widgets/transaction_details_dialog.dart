@@ -447,6 +447,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                                   initialCategoryIcon: category?.icon,
                                   initialContactName: contact?.name,
                                   initialContactPhone: contact?.phone,
+                                  initialAccountUuid: item.account?.uuid,
                                   initialDueDate: initialDueDate,
                                 ),
                               ),

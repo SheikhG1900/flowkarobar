@@ -56,6 +56,7 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
   final String? initialContactName;
   final String? initialContactPhone;
   final String? initialExternalLinkId;
+  final String? initialAccountUuid;
   final DateTime? initialDueDate;
   final bool startTour;
 
@@ -72,6 +73,7 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
     this.initialContactName,
     this.initialContactPhone,
     this.initialExternalLinkId,
+    this.initialAccountUuid,
     this.initialDueDate,
     this.startTour = false,
   });
@@ -189,6 +191,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       _dueDate = widget.initialDueDate;
     } else if (widget.initialDueDate != null) {
       _dueDate = widget.initialDueDate;
+    }
+
+    if (widget.initialAccountUuid != null) {
+      // Handled in _initializeEntities
     }
 
     // Handle initial contact and category in post-frame
@@ -310,6 +316,18 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             _selectedCategoryUuid = category!.uuid;
           });
         }
+      }
+    }
+
+    // 3. Handle Account
+    if (widget.initialAccountUuid != null) {
+      final accountsRepo = ref.read(accountsRepositoryProvider);
+      final account =
+          await accountsRepo.getAccountByUuid(widget.initialAccountUuid!);
+      if (account != null && mounted) {
+        setState(() {
+          _selectedAccount = account;
+        });
       }
     }
   }
