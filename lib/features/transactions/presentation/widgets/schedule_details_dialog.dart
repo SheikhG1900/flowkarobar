@@ -1,6 +1,8 @@
 import 'package:flowpaisa/features/transactions/presentation/widgets/linked_settlement_account_sheet.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/transfer_account_box.dart';
-import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/tabular_editor_sheet.dart';
+import 'package:flowpaisa/core/utils/tabular_parser.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/account_picker.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
@@ -14,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
@@ -303,8 +306,34 @@ class ScheduleDetailsDialog extends ConsumerWidget {
             // Description card
             if (schedule.description != null &&
                 schedule.description!.isNotEmpty) ...[
-              _buildDescriptionCard(context, theme, l10n, schedule.description!),
-              const SizedBox(height: 16),
+              () {
+                final isTabular = TabularParser.isTabular(schedule.description);
+                final (summary, _) = TabularParser.parse(schedule.description);
+                final showSummary = summary.isNotEmpty;
+                final showTabular = isTabular && ref.watch(premiumProvider).isPremium;
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (showSummary) ...[
+                      _buildDescriptionCard(context, theme, l10n, summary),
+                      const SizedBox(height: 16),
+                    ],
+                    if (showTabular) ...[
+                      TransactionDetailsDialog.buildTabularDataSection(
+                        context,
+                        theme,
+                        l10n,
+                        schedule.description!,
+                        currency,
+                        onEdit: () =>
+                            _editTabularDetails(context, ref, item, currency),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ],
+                );
+              }(),
             ],
 
             if (kDebugMode) ...[
@@ -1419,6 +1448,49 @@ class ScheduleDetailsDialog extends ConsumerWidget {
       candidate = DateTime(nextYear, nextMonth, targetDay);
     }
     return candidate;
+  }
+
+  static Future<void> _editTabularDetails(
+    BuildContext context,
+    WidgetRef ref,
+    ScheduleWithDetails item,
+    dynamic currency,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final (summary, rows) = TabularParser.parse(item.schedule.description!);
+
+    await TabularEditorSheet.show(
+      context,
+      initialRows: rows,
+      currencySymbol: currency.symbol,
+      decimalPlaces: currency.decimalPlaces,
+      currentTransactionAmount: item.schedule.amount,
+      onSave: (updatedRows, updateAmount) async {
+        try {
+          final newDescription = TabularParser.serialize(summary, updatedRows);
+          final newAmount = updateAmount
+              ? updatedRows.fold(0.0, (sum, row) => sum + row.totalAmount)
+              : item.schedule.amount;
+
+          await ref.read(scheduleServiceProvider).updateSchedule(
+                item.schedule.uuid,
+                amount: newAmount,
+                description: newDescription,
+              );
+
+          ref.invalidate(scheduleWithDetailsProvider(item.schedule.uuid));
+
+          if (context.mounted) {
+            ToastUtils.showSuccessToast(context, ref, l10n.scheduleUpdated);
+          }
+        } catch (e) {
+          if (context.mounted) {
+            ToastUtils.showErrorToast(
+                context, ref, l10n.errorOccurred(e.toString()));
+          }
+        }
+      },
+    );
   }
 
   static Future<void> _changeAccount(

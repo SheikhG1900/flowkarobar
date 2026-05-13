@@ -377,9 +377,16 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     try {
       final scheduleService = ref.read(scheduleServiceProvider);
       final amount = double.parse(_amountController.text);
-      final description = _descriptionController.text.isEmpty
-          ? null
-          : _descriptionController.text;
+      
+      String? description;
+      if (_isTabularMode && _tabularRows.isNotEmpty) {
+        description = TabularParser.serialize(
+            _descriptionController.text, _tabularRows);
+      } else {
+        description = _descriptionController.text.isEmpty
+            ? null
+            : _descriptionController.text;
+      }
 
       // Calculate dueDateOffset if both dates are available
       int? dueDateOffset;

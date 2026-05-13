@@ -18,6 +18,9 @@ import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:flowpaisa/core/utils/tabular_parser.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/tabular_editor_sheet.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'dart:convert';
 
 class EditScheduleScreen extends ConsumerStatefulWidget {
@@ -36,6 +39,10 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
+
+  List<TabularRow> _tabularRows = [];
+  String _tabularSummary = '';
+  bool _isTabularMode = false;
 
   String _selectedType = 'EXPENSE';
   bool _isLoading = false;
@@ -61,6 +68,16 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
     // Initialize with existing schedule data
     _amountController.text = widget.schedule.amount.toStringAsFixed(2);
     _descriptionController.text = widget.schedule.description ?? '';
+    
+    // Initialize tabular data if present
+    if (TabularParser.isTabular(widget.schedule.description)) {
+      final (summary, rows) = TabularParser.parse(widget.schedule.description);
+      _tabularSummary = summary;
+      _tabularRows = rows;
+      _isTabularMode = true;
+      _descriptionController.text = summary;
+    }
+
     _selectedType = widget.schedule.type;
     _selectedCategory = null; 
     _selectedContact = null; 
@@ -162,9 +179,16 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
       final l10n = AppLocalizations.of(context)!;
       final scheduleService = ref.read(scheduleServiceProvider);
       final amount = double.parse(_amountController.text);
-      final description = _descriptionController.text.isEmpty
-          ? null
-          : _descriptionController.text;
+      
+      String? description;
+      if (_isTabularMode && _tabularRows.isNotEmpty) {
+        description = TabularParser.serialize(
+            _descriptionController.text, _tabularRows);
+      } else {
+        description = _descriptionController.text.isEmpty
+            ? null
+            : _descriptionController.text;
+      }
 
       final catUuid = _selectedCategory?.uuid ?? _selectedCategoryUuid;
       final conUuid = _selectedContact?.uuid ?? _selectedContactUuid;
@@ -913,10 +937,108 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                   labelText: l10n.description,
                   hintText: l10n.descriptionHint,
                   prefixIcon: const Icon(Icons.notes_outlined),
+                  suffixIcon: ref.watch(premiumProvider).isPremium
+                      ? IconButton(
+                          icon: Icon(
+                            _isTabularMode
+                                ? Icons.table_chart
+                                : Icons.table_chart_outlined,
+                            color: _isTabularMode
+                                ? theme.colorScheme.primary
+                                : null,
+                          ),
+                          onPressed: () {
+                            TabularEditorSheet.show(
+                              context,
+                              initialRows: _tabularRows,
+                              currencySymbol: currencySymbol,
+                              decimalPlaces:
+                                  ref.read(currencyDecimalPlacesProvider),
+                              currentTransactionAmount:
+                                  double.tryParse(_amountController.text) ??
+                                      0.0,
+                              onSave: (rows, updateAmount) {
+                                setState(() {
+                                  _tabularRows = rows;
+                                  _isTabularMode = rows.isNotEmpty;
+                                  if (updateAmount) {
+                                    final total = rows.fold(0.0,
+                                        (sum, row) => sum + row.totalAmount);
+                                    _amountController.text =
+                                        total.toStringAsFixed(2);
+                                  }
+                                });
+                              },
+                            );
+                          },
+                          tooltip: _isTabularMode
+                              ? l10n.itemizedDetails
+                              : l10n.itemizedDetails,
+                        )
+                      : null,
                 ),
                 maxLines: 2,
                 textCapitalization: TextCapitalization.sentences,
               ),
+
+              if (_isTabularMode && ref.watch(premiumProvider).isPremium) ...[
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () {
+                    TabularEditorSheet.show(
+                      context,
+                      initialRows: _tabularRows,
+                      currencySymbol: currencySymbol,
+                      decimalPlaces: ref.read(currencyDecimalPlacesProvider),
+                      currentTransactionAmount:
+                          double.tryParse(_amountController.text) ?? 0,
+                      onSave: (rows, updateAmount) {
+                        setState(() {
+                          _tabularRows = rows;
+                          _isTabularMode = rows.isNotEmpty;
+                          if (updateAmount) {
+                            final total = rows.fold(
+                                0.0, (sum, row) => sum + row.totalAmount);
+                            _amountController.text = total.toStringAsFixed(2);
+                          }
+                        });
+                      },
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.list_alt,
+                            size: 20, color: theme.colorScheme.primary),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _tabularRows.isEmpty
+                                ? 'Add Itemized Details'
+                                : '${_tabularRows.length} item(s) added',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Icon(Icons.chevron_right,
+                            size: 20, color: theme.colorScheme.primary),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 16),
 
