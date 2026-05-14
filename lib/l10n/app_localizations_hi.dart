@@ -4020,6 +4020,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get netFlow => 'शुद्ध प्रवाह';
 
   @override
+  String get showDetails => 'विवरण दिखाएं';
+
+  @override
   String get customiseSections => 'अनुभाग अनुकूलित करें';
 
   @override
@@ -4322,4 +4325,13 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get never => 'कभी नहीं';
+
+  @override
+  String get showChart => 'चार्ट दिखाएं';
+
+  @override
+  String get showList => 'सूची दिखाएं';
+
+  @override
+  String get budget => 'बजट';
 }

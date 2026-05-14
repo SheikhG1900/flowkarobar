@@ -4,6 +4,7 @@ import 'package:flowpaisa/features/categories/data/categories_repository.dart';
 import 'package:flowpaisa/features/categories/domain/category_budget_models.dart';
 import 'package:flowpaisa/features/categories/domain/category_monthly_hint_key.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/shared/models/date_range_state.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:collection/collection.dart';
@@ -188,6 +189,122 @@ class IncludeUncategorizedInCategorySummaryNotifier extends AsyncNotifier<bool> 
 final includeUncategorizedInCategorySummaryProvider =
     AsyncNotifierProvider<IncludeUncategorizedInCategorySummaryNotifier, bool>(
         IncludeUncategorizedInCategorySummaryNotifier.new);
+
+class SummaryViewModeNotifier extends AsyncNotifier<String> {
+  @override
+  Future<String> build() async {
+    ref.watch(databaseProvider);
+    final repo = ref.read(userPreferencesRepositoryProvider);
+    return repo.getSummaryViewMode();
+  }
+
+  Future<void> setMode(String mode) async {
+    final repo = ref.read(userPreferencesRepositoryProvider);
+    await repo.setSummaryViewMode(mode);
+    state = AsyncData(mode);
+  }
+}
+
+final summaryViewModeProvider =
+    AsyncNotifierProvider<SummaryViewModeNotifier, String>(
+        SummaryViewModeNotifier.new);
+
+/// Provides daily cumulative net amounts for a category group trend chart.
+final dailyCumulativeNetAmountsProvider = StreamProvider.family<
+    List<DailyNetAmount>,
+    ({String type, DateRangeState range})>((ref, arg) {
+  final type = arg.type;
+  final range = arg.range;
+  final txRepo = ref.watch(transactionsRepositoryProvider);
+  final categoriesAsync = ref.watch(categoriesByTypeProvider(type));
+  final includeUncategorizedAsync =
+      ref.watch(includeUncategorizedInCategorySummaryProvider);
+
+  return Rx.combineLatest3(
+    txRepo.watchTransactionsByDateRange(range.startDate, range.endDate),
+    categoriesAsync.when(
+        data: (c) => Stream.value(c),
+        loading: () => const Stream.empty(),
+        error: (_, __) => Stream.value(<Category>[])),
+    includeUncategorizedAsync.when(
+        data: (i) => Stream.value(i),
+        loading: () => const Stream.empty(),
+        error: (_, __) => Stream.value(false)),
+    (transactions, categories, includeUncategorized) {
+      final categoryUuids = categories.map((c) => c.uuid).toSet();
+
+      // Filter processed transactions
+      final processedTxs =
+          transactions.where((t) => t.processedDate != null).toList();
+
+      // Group by date
+      final dailyNets = <DateTime, double>{};
+      final dailyCounts = <DateTime, int>{};
+      final dailyHasData = <DateTime, bool>{};
+
+      // Initialize dailyNets with 0 for all days in range
+      var current = DateTime(
+          range.startDate.year, range.startDate.month, range.startDate.day);
+      final end =
+          DateTime(range.endDate.year, range.endDate.month, range.endDate.day);
+      while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
+        dailyNets[current] = 0.0;
+        dailyCounts[current] = 0;
+        dailyHasData[current] = false;
+        current = current.add(const Duration(days: 1));
+      }
+
+      for (final t in processedTxs) {
+        final date = DateTime(t.date.year, t.date.month, t.date.day);
+        if (!dailyNets.containsKey(date)) continue;
+
+        double amount = 0;
+        bool relevant = false;
+        if (t.categoryUuid != null && categoryUuids.contains(t.categoryUuid)) {
+          relevant = true;
+          // Transaction belongs to a category of the requested type
+          if (type == 'INCOME') {
+            // Net = income - expense
+            amount = t.type == 'INCOME' ? t.amount : -t.amount;
+          } else {
+            // Net = expense - income
+            amount = t.type == 'EXPENSE' ? t.amount : -t.amount;
+          }
+        } else if (t.categoryUuid == null &&
+            includeUncategorized &&
+            t.type == type) {
+          relevant = true;
+          // Uncategorized transaction of the requested type
+          amount = t.amount;
+        }
+
+        if (relevant) {
+          dailyNets[date] = (dailyNets[date] ?? 0.0) + amount;
+          dailyCounts[date] = (dailyCounts[date] ?? 0) + 1;
+          dailyHasData[date] = true;
+        }
+      }
+
+      // Calculate cumulative
+      final sortedDates = dailyNets.keys.toList()..sort();
+      final result = <DailyNetAmount>[];
+      double cumulative = 0;
+      for (final date in sortedDates) {
+        final dailyNet = dailyNets[date]!;
+        cumulative += dailyNet;
+        result.add(DailyNetAmount(
+          date: date,
+          netAmount: cumulative,
+          dailyNet: dailyNet,
+          transactionCount: dailyCounts[date] ?? 0,
+          hasData: dailyHasData[date] ?? false,
+        ));
+      }
+
+      return result;
+    },
+  ).debounceTime(const Duration(milliseconds: 100));
+});
 
 /// Refresh category nets + uncategorized for the list after transactions/budget change.
 void invalidateCategoryPeriodNets(WidgetRef ref, String type) {

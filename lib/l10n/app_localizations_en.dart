@@ -4009,6 +4009,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get netFlow => 'Net Flow';
 
   @override
+  String get showDetails => 'Show Details';
+
+  @override
   String get customiseSections => 'Customise Sections';
 
   @override
@@ -4310,4 +4313,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get never => 'Never';
+
+  @override
+  String get showChart => 'Show Chart';
+
+  @override
+  String get showList => 'Show List';
+
+  @override
+  String get budget => 'Budget';
 }

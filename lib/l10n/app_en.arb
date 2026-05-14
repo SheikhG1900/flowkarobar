@@ -2107,6 +2107,7 @@
   "inflow": "Inflow",
   "outflow": "Outflow",
   "netFlow": "Net Flow",
+  "showDetails": "Show Details",
   "customiseSections": "Customise Sections",
   "selectAll": "Select All",
   "deselectAll": "Deselect All",
@@ -2218,5 +2219,8 @@
   "price": "Price",
   "itemized": "Itemized",
   "nextGenerated": "Next Generated",
-  "never": "Never"
+  "never": "Never",
+  "showChart": "Show Chart",
+  "showList": "Show List",
+  "budget": "Budget"
 }

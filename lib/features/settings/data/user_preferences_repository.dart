@@ -34,6 +34,7 @@ class UserPreferencesRepository {
       'show_dashboard_privacy_highlight';
   static const String keyShowDashboardFinancialSummary =
       'show_dashboard_financial_summary';
+  static const String keySummaryViewMode = 'summary_view_mode';
   static const String keySequenceBackfillDone = 'sequence_backfill_done';
 
   // Get a preference value by key (excludes soft-deleted rows so they sync correctly)
@@ -159,6 +160,16 @@ class UserPreferencesRepository {
       keyIncludeUncategorizedInCategorySummary,
       value ? 'true' : 'false',
     );
+  }
+
+  /// 'list' or 'chart'
+  Future<String> getSummaryViewMode() async {
+    final value = await getPreference(keySummaryViewMode);
+    return value ?? 'list';
+  }
+
+  Future<void> setSummaryViewMode(String mode) async {
+    await setPreference(keySummaryViewMode, mode);
   }
 
   // User Profile Information

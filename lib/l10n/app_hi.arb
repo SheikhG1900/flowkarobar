@@ -1667,5 +1667,9 @@
   "price": "मूल्य",
   "itemized": "मदवार",
   "nextGenerated": "अगली बार उत्पन्न होगा",
-  "never": "कभी नहीं"
+  "never": "कभी नहीं",
+  "showChart": "चार्ट दिखाएं",
+  "showList": "सूची दिखाएं",
+  "budget": "बजट",
+  "showDetails": "विवरण दिखाएं"
 }

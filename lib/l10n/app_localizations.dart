@@ -7325,6 +7325,12 @@ abstract class AppLocalizations {
   /// **'Net Flow'**
   String get netFlow;
 
+  /// No description provided for @showDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Details'**
+  String get showDetails;
+
   /// No description provided for @customiseSections.
   ///
   /// In en, this message translates to:
@@ -7870,6 +7876,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Never'**
   String get never;
+
+  /// No description provided for @showChart.
+  ///
+  /// In en, this message translates to:
+  /// **'Show Chart'**
+  String get showChart;
+
+  /// No description provided for @showList.
+  ///
+  /// In en, this message translates to:
+  /// **'Show List'**
+  String get showList;
+
+  /// No description provided for @budget.
+  ///
+  /// In en, this message translates to:
+  /// **'Budget'**
+  String get budget;
 }
 
 class _AppLocalizationsDelegate

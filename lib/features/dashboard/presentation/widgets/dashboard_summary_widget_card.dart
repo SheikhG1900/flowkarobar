@@ -1,4 +1,6 @@
+﻿import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/main.dart';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,8 +11,10 @@ import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart
 import 'package:flowpaisa/features/dashboard/domain/models.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contacts_list_screen.dart';
@@ -23,6 +27,7 @@ import 'package:flowpaisa/features/payables/presentation/providers/payables_prov
 import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/features/categories/domain/category_budget_models.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/accounts_screen.dart';
@@ -394,7 +399,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                         children: [
                           Expanded(
                             child: _buildSmallStatItem(
-                              key: ValueKey('fin-summary-payable-${filter.name}'),
+                              key: ValueKey(
+                                  'fin-summary-payable-${filter.name}'),
                               theme: theme,
                               color: AppColors.payableColor,
                               icon: Symbols.trending_down,
@@ -407,7 +413,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: _buildSmallStatItem(
-                              key: ValueKey('fin-summary-receivable-${filter.name}'),
+                              key: ValueKey(
+                                  'fin-summary-receivable-${filter.name}'),
                               theme: theme,
                               color: AppColors.receivableColor,
                               icon: Symbols.trending_up,
@@ -425,7 +432,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                         children: [
                           Expanded(
                             child: _buildSmallStatItem(
-                              key: ValueKey('fin-summary-expense-${filter.name}'),
+                              key: ValueKey(
+                                  'fin-summary-expense-${filter.name}'),
                               theme: theme,
                               color: AppColors.expenseColor,
                               icon: Symbols.trending_down,
@@ -438,7 +446,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: _buildSmallStatItem(
-                              key: ValueKey('fin-summary-income-${filter.name}'),
+                              key:
+                                  ValueKey('fin-summary-income-${filter.name}'),
                               theme: theme,
                               color: AppColors.incomeColor,
                               icon: Symbols.trending_up,
@@ -657,7 +666,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
           ),
         );
       },
-      loading: () => _buildCardPlaceholder(theme, key: const ValueKey('recent-tx-loading')),
+      loading: () => _buildCardPlaceholder(theme,
+          key: const ValueKey('recent-tx-loading')),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
@@ -681,6 +691,9 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
         ref.watch(includeUncategorizedInCategorySummaryProvider);
     final uncategorizedAsync =
         ref.watch(uncategorizedAmountByTypeProvider(type));
+    final viewModeAsync = ref.watch(summaryViewModeProvider);
+    final viewMode = viewModeAsync.value ?? 'list';
+    final isPremium = PremiumGate.isPremium(ref);
 
     final symbol = currency?.symbol ?? '';
     final decimals = currency?.decimalPlaces ?? 2;
@@ -771,45 +784,39 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                             Container(
                               clipBehavior: Clip.antiAlias,
                               decoration: gradientCardDecoration,
-                                        child: Column(
-                                          key: ValueKey('inc-exp-content-$type-${filter.name}'),
-                                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                                          mainAxisSize: MainAxisSize.min,
+                              child: Column(
+                                key: ValueKey(
+                                    'inc-exp-content-$type-${filter.name}'),
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Material(
+                                    key: ValueKey(
+                                        'inc-exp-material-$type-${filter.name}'),
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: null,
+                                      onLongPress: () =>
+                                          _showSummaryActionsSheet(
+                                        context,
+                                        ref,
+                                        onRemove,
+                                        l10n,
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                            12, 10, 12, 10),
+                                        child: Stack(
+                                          alignment: Alignment.center,
                                           children: [
-                                            Material(
-                                              key: ValueKey('inc-exp-material-$type-${filter.name}'),
-                                              color: Colors.transparent,
-                                              child: InkWell(
-                                                onTap: () {
-                                                  Navigator.push(
-                                                    context,
-                                                    MaterialPageRoute(
-                                                      builder: (_) =>
-                                                          CategoriesListScreen(
-                                                        initialIndex: isIncome ? 1 : 0,
-                                                      ),
-                                                    ),
-                                                  );
-                                                },
-                                                onLongPress: () =>
-                                                    _showSummaryActionsSheet(
-                                                  context,
-                                                  ref,
-                                                  onRemove,
-                                                  l10n,
-                                                ),
-                                                child: Padding(
-                                                  padding: const EdgeInsets.fromLTRB(
-                                                      12, 10, 12, 10),
-                                                  child: Stack(
-                                                    alignment: Alignment.center,
-                                                    children: [
-                                                      Column(
-                                                        key: ValueKey('inc-exp-stack-column-$type-${filter.name}'),
-                                                        mainAxisSize: MainAxisSize.min,
-                                                        children: [
+                                            Column(
+                                              key: ValueKey(
+                                                  'inc-exp-stack-column-$type-${filter.name}'),
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
                                                 Text(
-                                                  key: ValueKey('inc-exp-label-$type-${filter.name}'),
+                                                  key: ValueKey(
+                                                      'inc-exp-label-$type-${filter.name}'),
                                                   isIncome
                                                       ? l10n.totalIncome
                                                       : l10n.totalExpenses,
@@ -817,21 +824,24 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                                                       .textTheme.labelMedium
                                                       ?.copyWith(
                                                     color: Colors.white
-                                                        .withValues(alpha: 0.88),
+                                                        .withValues(
+                                                            alpha: 0.88),
                                                     fontWeight: FontWeight.w500,
                                                     fontSize: 11,
                                                   ),
                                                 ),
                                                 const SizedBox(height: 1),
                                                 Text(
-                                                  key: ValueKey('inc-exp-period-$type-${filter.name}'),
+                                                  key: ValueKey(
+                                                      'inc-exp-period-$type-${filter.name}'),
                                                   _getPeriodLabel(
                                                       context, range, l10n),
                                                   style: theme
                                                       .textTheme.labelSmall
                                                       ?.copyWith(
                                                     color: Colors.white
-                                                        .withValues(alpha: 0.65),
+                                                        .withValues(
+                                                            alpha: 0.65),
                                                     fontWeight: FontWeight.w400,
                                                     fontSize: 9,
                                                     fontStyle: FontStyle.italic,
@@ -839,7 +849,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                                                 ),
                                                 const SizedBox(height: 3),
                                                 Text(
-                                                  key: ValueKey('inc-exp-amount-$type-${filter.name}'),
+                                                  key: ValueKey(
+                                                      'inc-exp-amount-$type-${filter.name}'),
                                                   netStr,
                                                   style: theme
                                                       .textTheme.titleLarge
@@ -849,10 +860,12 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                                                     color: Colors.white,
                                                   ),
                                                 ),
-                                                if (hasBudget) ...[
+                                                if (hasBudget &&
+                                                    viewMode == 'list') ...[
                                                   const SizedBox(height: 6),
                                                   Text(
-                                                    key: ValueKey('inc-exp-budget-$type-${filter.name}'),
+                                                    key: ValueKey(
+                                                        'inc-exp-budget-$type-${filter.name}'),
                                                     budgetStr,
                                                     style: theme
                                                         .textTheme.labelLarge
@@ -870,19 +883,79 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                                             ),
                                             PositionedDirectional(
                                               end: 0,
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.all(7),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white
-                                                      .withValues(alpha: 0.2),
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: const Icon(
-                                                  Icons.arrow_forward_ios,
-                                                  size: 14,
-                                                  color: Colors.white,
-                                                ),
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (isPremium)
+                                                    IconButton(
+                                                      icon: Icon(
+                                                        viewMode == 'list'
+                                                            ? Icons.show_chart
+                                                            : Icons.list,
+                                                        color: Colors.white,
+                                                        size: 20,
+                                                      ),
+                                                      onPressed: () {
+                                                        ref
+                                                            .read(
+                                                                summaryViewModeProvider
+                                                                    .notifier)
+                                                            .setMode(viewMode ==
+                                                                    'list'
+                                                                ? 'chart'
+                                                                : 'list');
+                                                      },
+                                                      tooltip:
+                                                          viewMode == 'list'
+                                                              ? l10n.showChart
+                                                              : l10n.showList,
+                                                    )
+                                                  else
+                                                    IconButton(
+                                                      icon: const Icon(
+                                                        Icons.show_chart,
+                                                        color: Colors.white54,
+                                                        size: 20,
+                                                      ),
+                                                      onPressed: () =>
+                                                          PremiumGate
+                                                              .showPremiumDialog(
+                                                                  context),
+                                                      tooltip:
+                                                          l10n.unlockPremium,
+                                                    ),
+                                                  InkWell(
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder: (_) =>
+                                                              CategoriesListScreen(
+                                                            initialIndex:
+                                                                isIncome ? 1 : 0,
+                                                          ),
+                                                        ),
+                                                      );
+                                                    },
+                                                    borderRadius:
+                                                        BorderRadius.circular(20),
+                                                    child: Container(
+                                                      padding:
+                                                          const EdgeInsets.all(7),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white
+                                                            .withValues(
+                                                                alpha: 0.2),
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      child: const Icon(
+                                                        Icons.arrow_forward_ios,
+                                                        size: 14,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ],
@@ -890,6 +963,19 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                                       ),
                                     ),
                                   ),
+                                  if (viewMode == 'chart')
+                                    _buildIncomeExpenseChart(
+                                      context,
+                                      ref,
+                                      theme,
+                                      l10n,
+                                      type,
+                                      range,
+                                      totalBudgetCap,
+                                      color,
+                                      symbol,
+                                      decimals,
+                                    ),
                                   Divider(
                                     height: 1,
                                     thickness: 1,
@@ -1005,7 +1091,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                                 ],
                               ),
                             ),
-                            if (hasBudget) ...[
+                            if (hasBudget && viewMode == 'list') ...[
                               const SizedBox(height: 8),
                               DualAmountProgressBar(
                                 leftLabel: isIncome
@@ -1041,6 +1127,60 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
       },
       loading: () => _buildCardPlaceholder(theme),
       error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildIncomeExpenseChart(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l10n,
+    String type,
+    DateRangeState range,
+    double budget,
+    Color color,
+    String symbol,
+    int decimals,
+  ) {
+    final dailyNetsAsync = ref
+        .watch(dailyCumulativeNetAmountsProvider((type: type, range: range)));
+
+    final userProfile = ref.watch(userProfileProvider);
+    final dateFormat = userProfile.dateFormat;
+
+    return dailyNetsAsync.when(
+      data: (data) {
+        if (data.isEmpty) {
+          return SizedBox(
+            height: 180,
+            child: Center(
+              child: Text(
+                l10n.noTransactionsFound,
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+              ),
+            ),
+          );
+        }
+
+        return _IncomeExpenseTrendChart(
+          data: data,
+          theme: theme,
+          l10n: l10n,
+          budget: budget,
+          color: color,
+          symbol: symbol,
+          decimals: decimals,
+          dateFormat: dateFormat,
+        );
+      },
+      loading: () => const SizedBox(
+          height: 180,
+          child: Center(child: CircularProgressIndicator(color: Colors.white))),
+      error: (e, s) => SizedBox(
+          height: 180,
+          child: Center(
+              child: Text(e.toString(),
+                  style: const TextStyle(color: Colors.white)))),
     );
   }
 
@@ -1122,7 +1262,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Row(
-                              key: const ValueKey('net-worth-summary-header-row'),
+                              key: const ValueKey(
+                                  'net-worth-summary-header-row'),
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Icon(
@@ -1176,7 +1317,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Expanded(
                             child: _buildSmallStatItem(
-                              key: const ValueKey('net-worth-summary-liabilities'),
+                              key: const ValueKey(
+                                  'net-worth-summary-liabilities'),
                               theme: theme,
                               color: AppColors.payableColor,
                               icon: Symbols.trending_down,
@@ -1568,7 +1710,9 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.only(bottom: 10),
         child: Material(
-          key: key != null ? ValueKey('summary-material-${key.toString()}') : null,
+          key: key != null
+              ? ValueKey('summary-material-${key.toString()}')
+              : null,
           color: theme.cardColor,
           borderRadius: BorderRadius.circular(16),
           clipBehavior: Clip.antiAlias,
@@ -1583,17 +1727,24 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
               copyOpenLinkUuid: copyOpenLinkUuid,
             ),
             child: Container(
-              key: key != null ? ValueKey('summary-container-${key.toString()}') : null,
+              key: key != null
+                  ? ValueKey('summary-container-${key.toString()}')
+                  : null,
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+                border:
+                    Border.all(color: color.withValues(alpha: 0.4), width: 1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Row(
-                key: key != null ? ValueKey('summary-row-${key.toString()}') : null,
+                key: key != null
+                    ? ValueKey('summary-row-${key.toString()}')
+                    : null,
                 children: [
                   Container(
-                    key: key != null ? ValueKey('summary-icon-container-${key.toString()}') : null,
+                    key: key != null
+                        ? ValueKey('summary-icon-container-${key.toString()}')
+                        : null,
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
@@ -1606,11 +1757,15 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
-                      key: key != null ? ValueKey('summary-text-col-${key.toString()}') : null,
+                      key: key != null
+                          ? ValueKey('summary-text-col-${key.toString()}')
+                          : null,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          key: key != null ? ValueKey('summary-title-${key.toString()}') : null,
+                          key: key != null
+                              ? ValueKey('summary-title-${key.toString()}')
+                              : null,
                           title,
                           style: theme.textTheme.titleSmall?.copyWith(
                             fontWeight: FontWeight.w600,
@@ -1621,7 +1776,9 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                         if (subtitle != null) ...[
                           const SizedBox(height: 2),
                           Text(
-                            key: key != null ? ValueKey('summary-subtitle-${key.toString()}') : null,
+                            key: key != null
+                                ? ValueKey('summary-subtitle-${key.toString()}')
+                                : null,
                             subtitle,
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
@@ -1634,7 +1791,9 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    key: key != null ? ValueKey('summary-amount-${key.toString()}') : null,
+                    key: key != null
+                        ? ValueKey('summary-amount-${key.toString()}')
+                        : null,
                     amountLabel,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
@@ -1864,7 +2023,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
       isScrollControlled: true,
       builder: (ctx) => Consumer(
         builder: (context, ref, _) {
-          // Re-watch the layout to get live updates if needed, 
+          // Re-watch the layout to get live updates if needed,
           // but we can also just use the local state for the modal.
           final currentLayout = ref.watch(dashboardWidgetLayoutProvider).value;
           if (currentLayout == null || layoutIndex >= currentLayout.length) {
@@ -1920,8 +2079,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                                   .setQuickActionsOnDashboard(
                                       layoutIndex, newList);
                             },
-                            selectedColor:
-                                theme.colorScheme.primary.withValues(alpha: 0.15),
+                            selectedColor: theme.colorScheme.primary
+                                .withValues(alpha: 0.15),
                             labelStyle: TextStyle(
                               color: isSelected
                                   ? theme.colorScheme.primary
@@ -2483,3 +2642,476 @@ class _AnimatedPressScaleState extends State<_AnimatedPressScale>
     );
   }
 }
+
+class _IncomeExpenseTrendChart extends StatefulWidget {
+  final List<DailyNetAmount> data;
+  final ThemeData theme;
+  final AppLocalizations l10n;
+  final double budget;
+  final Color color;
+  final String symbol;
+  final int decimals;
+  final String? dateFormat;
+
+  const _IncomeExpenseTrendChart({
+    required this.data,
+    required this.theme,
+    required this.l10n,
+    required this.budget,
+    required this.color,
+    required this.symbol,
+    required this.decimals,
+    this.dateFormat,
+  });
+
+  @override
+  State<_IncomeExpenseTrendChart> createState() =>
+      _IncomeExpenseTrendChartState();
+}
+
+class _IncomeExpenseTrendChartState extends State<_IncomeExpenseTrendChart> {
+  int? _touchedIndex;
+
+  void _moveSelection(int direction) {
+    // direction: -1 for left (previous), 1 for right (next)
+    final dataIndices = <int>[];
+    for (int i = 0; i < widget.data.length; i++) {
+      if (widget.data[i].hasData) {
+        dataIndices.add(i);
+      }
+    }
+
+    if (dataIndices.isEmpty) return;
+
+    int newIndex;
+    if (_touchedIndex == null) {
+      // If nothing selected, select first or last based on direction
+      newIndex = direction > 0 ? dataIndices.first : dataIndices.last;
+    } else {
+      int currentPos = dataIndices.indexOf(_touchedIndex!);
+      if (currentPos == -1) {
+        // Fallback if current index somehow not in dataIndices
+        newIndex = direction > 0 ? dataIndices.first : dataIndices.last;
+      } else {
+        // Move to next/previous and wrap around
+        int nextPos = currentPos + direction;
+        if (nextPos < 0) {
+          nextPos = dataIndices.length - 1;
+        } else if (nextPos >= dataIndices.length) {
+          nextPos = 0;
+        }
+        newIndex = dataIndices[nextPos];
+      }
+    }
+
+    setState(() {
+      _touchedIndex = newIndex;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final spots = widget.data.asMap().entries.map((e) {
+      return FlSpot(e.key.toDouble(), e.value.netAmount);
+    }).toList();
+
+    double minY = spots.map((s) => s.y).reduce(min);
+    double maxY = spots.map((s) => s.y).reduce(max);
+
+    if (widget.budget > 0) {
+      minY = min(minY, widget.budget);
+      maxY = max(maxY, widget.budget);
+    }
+
+    final yRange = maxY - minY;
+    final yPadding = yRange == 0 ? 10.0 : yRange * 0.15;
+    minY -= yPadding;
+    maxY += yPadding;
+
+    final barData = LineChartBarData(
+      spots: spots,
+      isCurved: false,
+      color: Colors.white,
+      barWidth: 1,
+      isStrokeCapRound: true,
+      dotData: FlDotData(
+        show: true,
+        getDotPainter: (spot, percent, barData, index) {
+          final isSelected = index == _touchedIndex;
+          final hasData = widget.data[index].hasData;
+          return FlDotCirclePainter(
+            radius: isSelected ? 4.5 : (hasData ? 2.5 : 0),
+            color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.8),
+            strokeWidth: isSelected ? 2 : 0,
+            strokeColor: widget.color,
+          );
+        },
+      ),
+      belowBarData: BarAreaData(
+        show: true,
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withValues(alpha: 0.3),
+            Colors.white.withValues(alpha: 0.0),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+    );
+
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+
+    return TapRegion(
+      onTapOutside: (event) {
+        if (_touchedIndex != null) {
+          setState(() {
+            _touchedIndex = null;
+          });
+        }
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          LayoutBuilder(builder: (context, constraints) {
+            return Container(
+              height: 220,
+              padding: const EdgeInsets.fromLTRB(12, 24, 24, 12),
+              child: LineChart(
+                LineChartData(
+                  gridData: FlGridData(
+                    show: true,
+                    drawVerticalLine: true,
+                    horizontalInterval: yRange > 0 ? yRange / 4 : 1,
+                    verticalInterval: spots.length > 1 ? (spots.length - 1) / 4 : 1,
+                    getDrawingHorizontalLine: (value) {
+                      return FlLine(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        strokeWidth: 1,
+                      );
+                    },
+                    getDrawingVerticalLine: (value) {
+                      return FlLine(
+                        color: Colors.white.withValues(alpha: 0.1),
+                        strokeWidth: 1,
+                      );
+                    },
+                  ),
+                  titlesData: FlTitlesData(
+                    show: true,
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 24,
+                        interval: spots.length > 1 ? (spots.length - 1) / 3 : 1,
+                        getTitlesWidget: (value, meta) {
+                          final index = value.toInt();
+                          if (index < 0 || index >= widget.data.length) {
+                            return const SizedBox.shrink();
+                          }
+                          final date = widget.data[index].date;
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              AppDateFormatter.formatDate(date, pattern: 'dd/MM'),
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: yRange > 0 ? yRange / 3 : 1,
+                        reservedSize: 42,
+                        getTitlesWidget: (value, meta) {
+                          return Text(
+                            AmountFormatter.formatAmount(value, widget.decimals),
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.7),
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  borderData: FlBorderData(
+                    show: true,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      width: 1,
+                    ),
+                  ),
+                  minX: 0,
+                  maxX: (spots.length - 1).toDouble(),
+                  minY: minY,
+                  maxY: maxY,
+                  showingTooltipIndicators: _touchedIndex != null
+                      ? [
+                          ShowingTooltipIndicators([
+                            LineBarSpot(
+                              barData,
+                              0,
+                              spots[_touchedIndex!],
+                            ),
+                          ])
+                        ]
+                      : [],
+                  lineBarsData: [barData],
+                  extraLinesData: ExtraLinesData(
+                    horizontalLines: [
+                      if (widget.budget > 0)
+                        HorizontalLine(
+                          y: widget.budget,
+                          color: Colors.white.withValues(alpha: 0.6),
+                          strokeWidth: 2,
+                          dashArray: [5, 5],
+                          label: HorizontalLineLabel(
+                            show: true,
+                            alignment: Alignment.topRight,
+                            padding: const EdgeInsets.only(right: 8, bottom: 4),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w900,
+                            ),
+                            labelResolver: (line) =>
+                                '${widget.l10n.budget}: ${AmountFormatter.formatAmount(widget.budget, widget.decimals)}',
+                          ),
+                        ),
+                    ],
+                  ),
+                  lineTouchData: LineTouchData(
+                    handleBuiltInTouches: false,
+                    touchCallback:
+                        (FlTouchEvent event, LineTouchResponse? touchResponse) {
+                      if (event is FlTapDownEvent ||
+                          event is FlPanStartEvent ||
+                          event is FlPanUpdateEvent) {
+                        if (touchResponse != null &&
+                            touchResponse.lineBarSpots != null &&
+                            touchResponse.lineBarSpots!.isNotEmpty) {
+                          final index =
+                              touchResponse.lineBarSpots!.first.x.toInt();
+                          if (widget.data[index].hasData &&
+                              _touchedIndex != index) {
+                            setState(() => _touchedIndex = index);
+                          }
+                        }
+                        return;
+                      }
+
+                      if (event is FlTapUpEvent) {
+                        if (touchResponse != null &&
+                            touchResponse.lineBarSpots != null &&
+                            touchResponse.lineBarSpots!.isNotEmpty) {
+                          final index =
+                              touchResponse.lineBarSpots!.first.x.toInt();
+                          if (widget.data[index].hasData) {
+                            setState(() => _touchedIndex = index);
+                          }
+                        }
+                      }
+                    },
+                    getTouchedSpotIndicator:
+                        (LineChartBarData barData, List<int> spotIndexes) {
+                      return spotIndexes.map((index) {
+                        if (!widget.data[index].hasData) {
+                          return TouchedSpotIndicatorData(
+                            const FlLine(
+                                color: Colors.transparent, strokeWidth: 0),
+                            const FlDotData(show: false),
+                          );
+                        }
+                        return TouchedSpotIndicatorData(
+                          FlLine(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              strokeWidth: 2),
+                          FlDotData(
+                            show: true,
+                            getDotPainter: (spot, percent, barData, index) {
+                              return FlDotCirclePainter(
+                                radius: 5,
+                                color: Colors.white,
+                                strokeWidth: 2,
+                                strokeColor: widget.color,
+                              );
+                            },
+                          ),
+                        );
+                      }).toList();
+                    },
+                    touchTooltipData: LineTouchTooltipData(
+                      getTooltipColor: (_) => Colors.white,
+                      tooltipBorderRadius: BorderRadius.circular(12),
+                      maxContentWidth: 300,
+                      fitInsideHorizontally: true,
+                      tooltipPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      getTooltipItems: (touchedSpots) {
+                        return touchedSpots.map((spot) {
+                          final dayData = widget.data[spot.x.toInt()];
+                          if (!dayData.hasData) return null;
+
+                          final dateStr = AppDateFormatter.formatDate(
+                              dayData.date,
+                              pattern: widget.dateFormat ?? 'dd MMM yyyy');
+                          final incrementalStr =
+                              AmountFormatter.formatWithCurrency(
+                                  spot.y, widget.symbol, widget.decimals);
+                          final netStr = AmountFormatter.formatWithCurrency(
+                              dayData.dailyNet, widget.symbol, widget.decimals);
+                          final count = dayData.transactionCount;
+
+                          return LineTooltipItem(
+                            '',
+                            const TextStyle(),
+                            textAlign: TextAlign.center,
+                            textDirection: isRtl ? TextDirection.rtl : TextDirection.ltr,
+                            children: [
+                              TextSpan(
+                                text: '$dateStr\n',
+                                style: widget.theme.textTheme.titleSmall?.copyWith(
+                                  color: Colors.black87,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              TextSpan(
+                                text: '${widget.l10n.transactions}: ',
+                                style: const TextStyle(
+                                  color: Colors.black54,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              TextSpan(
+                                text: '$count\n',
+                                style: const TextStyle(
+                                  color: Colors.black87,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              TextSpan(
+                                text: '${widget.l10n.netBalance}: ',
+                                style: const TextStyle(
+                                  color: Colors.black54,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              TextSpan(
+                                text: '$netStr\n',
+                                style: TextStyle(
+                                  color: widget.color,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              TextSpan(
+                                text: '${widget.l10n.totalBalance}: ',
+                                style: const TextStyle(
+                                  color: Colors.black54,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              TextSpan(
+                                text: '$incrementalStr',
+                                style: TextStyle(
+                                  color: widget.color,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList();
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton.filled(
+                  onPressed: () {
+                    if (_touchedIndex == null) return;
+                    final dayData = widget.data[_touchedIndex!];
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TransactionsListScreen(
+                          initialDate: dayData.date,
+                        ),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.receipt_long, size: 18),
+                  style: IconButton.styleFrom(
+                    backgroundColor: _touchedIndex == null
+                        ? Colors.white.withValues(alpha: 0.15)
+                        : widget.color,
+                    foregroundColor: Colors.white.withValues(
+                        alpha: _touchedIndex == null ? 0.3 : 1.0),
+                    padding: const EdgeInsets.all(8),
+                    minimumSize: const Size(36, 36),
+                  ),
+                  tooltip: widget.l10n.showDetails,
+                ),
+                Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        _moveSelection(isRtl ? 1 : -1);
+                      },
+                      icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+                      style: IconButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        disabledForegroundColor: Colors.white.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      onPressed: () {
+                        _moveSelection(isRtl ? -1 : 1);
+                      },
+                      icon: const Icon(Icons.arrow_forward_ios, size: 18),
+                      style: IconButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        disabledForegroundColor: Colors.white.withValues(alpha: 0.3),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
+

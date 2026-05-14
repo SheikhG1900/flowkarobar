@@ -51,3 +51,20 @@ class CategoryBudgetSnapshot {
     return budgetAmount! - netAmount;
   }
 }
+
+/// Daily net amount for a category group, used for trend charts.
+class DailyNetAmount {
+  final DateTime date;
+  final double netAmount;
+  final double dailyNet;
+  final int transactionCount;
+  final bool hasData;
+
+  const DailyNetAmount({
+    required this.date,
+    required this.netAmount,
+    required this.dailyNet,
+    required this.transactionCount,
+    required this.hasData,
+  });
+}

@@ -4026,6 +4026,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get netFlow => 'خالص بہاؤ';
 
   @override
+  String get showDetails => 'تفصیلات دیکھیں';
+
+  @override
   String get customiseSections => 'سیکشن ترتیب دیں';
 
   @override
@@ -4327,4 +4330,13 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get never => 'کبھی نہیں';
+
+  @override
+  String get showChart => 'چارٹ دکھائیں';
+
+  @override
+  String get showList => 'فہرست دکھائیں';
+
+  @override
+  String get budget => 'بجٹ';
 }

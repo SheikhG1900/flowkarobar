@@ -52,7 +52,9 @@ import 'package:material_symbols_icons/symbols.dart';
 
 class TransactionsListScreen extends ConsumerStatefulWidget {
   final bool startTour;
-  const TransactionsListScreen({super.key, this.startTour = false});
+  final DateTime? initialDate;
+  const TransactionsListScreen(
+      {super.key, this.startTour = false, this.initialDate});
 
   @override
   ConsumerState<TransactionsListScreen> createState() =>
@@ -83,6 +85,33 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAndShowGuide();
+      if (widget.initialDate != null) {
+        final startOfDay = DateTime(
+          widget.initialDate!.year,
+          widget.initialDate!.month,
+          widget.initialDate!.day,
+          0,
+          0,
+          0,
+        );
+        final endOfDay = DateTime(
+          widget.initialDate!.year,
+          widget.initialDate!.month,
+          widget.initialDate!.day,
+          23,
+          59,
+          59,
+        );
+        ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+              ref
+                  .read(transactionsPaginatedProvider.notifier)
+                  .currentFilters
+                  .copyWith(
+                    startDate: startOfDay,
+                    endDate: endOfDay,
+                  ),
+            );
+      }
     });
   }
 
