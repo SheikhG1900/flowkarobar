@@ -42,6 +42,37 @@ class AmountFormatter {
     return isNegative ? '-$formatted' : formatted;
   }
 
+  /// Format amount in compact form (e.g., 1K, 2M, 1.5B)
+  static String formatCompactAmount(double amount) {
+    final isNegative = amount < 0;
+    final absAmount = amount.abs();
+
+    if (absAmount >= 1000000000) {
+      final value = absAmount / 1000000000;
+      return '${isNegative ? '-' : ''}${_formatCompactValue(value)}B';
+    } else if (absAmount >= 1000000) {
+      final value = absAmount / 1000000;
+      return '${isNegative ? '-' : ''}${_formatCompactValue(value)}M';
+    } else if (absAmount >= 1000) {
+      final value = absAmount / 1000;
+      return '${isNegative ? '-' : ''}${_formatCompactValue(value)}K';
+    } else {
+      return formatAmount(amount, 0);
+    }
+  }
+
+  static String _formatCompactValue(double value) {
+    if (value >= 10) {
+      return value.toStringAsFixed(0);
+    } else {
+      final s = value.toStringAsFixed(1);
+      if (s.endsWith('.0')) {
+        return s.substring(0, s.length - 2);
+      }
+      return s;
+    }
+  }
+
   /// Get formatted text with currency symbol
   static String formatWithCurrency(
       double amount, String currency, int decimalPlaces,

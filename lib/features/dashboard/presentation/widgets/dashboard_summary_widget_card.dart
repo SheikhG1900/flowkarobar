@@ -2740,7 +2740,7 @@ class _IncomeExpenseTrendChartState extends State<_IncomeExpenseTrendChart> {
           final isSelected = index == _touchedIndex;
           final hasData = widget.data[index].hasData;
           return FlDotCirclePainter(
-            radius: isSelected ? 4.5 : (hasData ? 2.5 : 0),
+            radius: isSelected ? 4.5 : (hasData ? 1.5 : 0),
             color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.8),
             strokeWidth: isSelected ? 2 : 0,
             strokeColor: widget.color,
@@ -2837,7 +2837,7 @@ class _IncomeExpenseTrendChartState extends State<_IncomeExpenseTrendChart> {
                         reservedSize: 42,
                         getTitlesWidget: (value, meta) {
                           return Text(
-                            AmountFormatter.formatAmount(value, widget.decimals),
+                            AmountFormatter.formatCompactAmount(value),
                             style: TextStyle(
                               color: Colors.white.withValues(alpha: 0.7),
                               fontSize: 9,
@@ -2890,7 +2890,7 @@ class _IncomeExpenseTrendChartState extends State<_IncomeExpenseTrendChart> {
                               fontWeight: FontWeight.w900,
                             ),
                             labelResolver: (line) =>
-                                '${widget.l10n.budget}: ${AmountFormatter.formatAmount(widget.budget, widget.decimals)}',
+                                '${widget.l10n.budget}: ${AmountFormatter.formatWithCurrency(widget.budget, widget.symbol, widget.decimals)}',
                           ),
                         ),
                     ],
