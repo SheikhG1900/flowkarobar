@@ -394,71 +394,60 @@ class ScheduleService {
   /// Update a schedule
   Future<bool> updateSchedule(
     String scheduleUuid, {
-    double? amount,
-    String? type,
-    String? description,
-    String? categoryUuid,
-    String? contactUuid,
-    String? accountUuid,
-    String? paidRelationship,
-    DateTime? dueDate,
-    int? dueDateOffset,
-    String? scheduleType,
-    List<int>? selectedDaysOfWeek,
-    List<int>? selectedDaysOfMonth,
-    DateTime? startDate,
-    DateTime? endDate,
+    Value<double> amount = const Value.absent(),
+    Value<String> type = const Value.absent(),
+    Value<String?> description = const Value.absent(),
+    Value<String?> categoryUuid = const Value.absent(),
+    Value<String?> contactUuid = const Value.absent(),
+    Value<String?> accountUuid = const Value.absent(),
+    Value<String?> paidRelationship = const Value.absent(),
+    Value<DateTime?> dueDate = const Value.absent(),
+    Value<int?> dueDateOffset = const Value.absent(),
+    Value<String> scheduleType = const Value.absent(),
+    Value<List<int>?> selectedDaysOfWeek = const Value.absent(),
+    Value<List<int>?> selectedDaysOfMonth = const Value.absent(),
+    Value<DateTime?> startDate = const Value.absent(),
+    Value<DateTime?> endDate = const Value.absent(),
   }) async {
     if (kDebugMode) {
       debugPrint('Service updating schedule $scheduleUuid');
-      debugPrint('Service categoryUuid: $categoryUuid');
-      debugPrint('Service contactUuid: $contactUuid');
     }
 
-    String? daysOfWeekJson;
-    if (selectedDaysOfWeek != null) {
-      if (selectedDaysOfWeek.isEmpty) {
-        daysOfWeekJson = null;
+    Value<String?> daysOfWeekJson = const Value.absent();
+    if (selectedDaysOfWeek.present) {
+      if (selectedDaysOfWeek.value == null || selectedDaysOfWeek.value!.isEmpty) {
+        daysOfWeekJson = const Value(null);
       } else {
-        daysOfWeekJson = jsonEncode(selectedDaysOfWeek);
+        daysOfWeekJson = Value(jsonEncode(selectedDaysOfWeek.value));
       }
     }
 
-    String? daysOfMonthJson;
-    if (selectedDaysOfMonth != null) {
-      if (selectedDaysOfMonth.isEmpty) {
-        daysOfMonthJson = null;
+    Value<String?> daysOfMonthJson = const Value.absent();
+    if (selectedDaysOfMonth.present) {
+      if (selectedDaysOfMonth.value == null || selectedDaysOfMonth.value!.isEmpty) {
+        daysOfMonthJson = const Value(null);
       } else {
-        daysOfMonthJson = jsonEncode(selectedDaysOfMonth);
+        daysOfMonthJson = Value(jsonEncode(selectedDaysOfMonth.value));
       }
     }
 
     return await schedulesRepository.updateSchedule(
       scheduleUuid,
       TransactionSchedulesCompanion(
-        amount: amount != null ? Value(amount) : const Value.absent(),
-        type: type != null ? Value(type) : const Value.absent(),
-        // Use Value(description) so clearing the field (null) updates DB to null
-        description: Value(description),
-        categoryUuid: Value(categoryUuid),
-        contactUuid: Value(contactUuid),
-        accountUuid: Value(accountUuid),
-        paidRelationship: Value(paidRelationship),
-        dueDate: dueDate != null ? Value(dueDate) : const Value.absent(),
-        dueDateOffset: dueDateOffset != null
-            ? Value(dueDateOffset)
-            : const Value.absent(),
-        scheduleType:
-            scheduleType != null ? Value(scheduleType) : const Value.absent(),
-        selectedDaysOfWeek: daysOfWeekJson != null
-            ? Value(daysOfWeekJson)
-            : const Value.absent(),
-        selectedDaysOfMonth: daysOfMonthJson != null
-            ? Value(daysOfMonthJson)
-            : const Value.absent(),
-        // Use Value() so clearing date range (null) updates DB to null
-        startDate: Value(startDate),
-        endDate: Value(endDate),
+        amount: amount,
+        type: type,
+        description: description,
+        categoryUuid: categoryUuid,
+        contactUuid: contactUuid,
+        accountUuid: accountUuid,
+        paidRelationship: paidRelationship,
+        dueDate: dueDate,
+        dueDateOffset: dueDateOffset,
+        scheduleType: scheduleType,
+        selectedDaysOfWeek: daysOfWeekJson,
+        selectedDaysOfMonth: daysOfMonthJson,
+        startDate: startDate,
+        endDate: endDate,
         updatedAt: Value(DateTime.now()),
       ),
     );

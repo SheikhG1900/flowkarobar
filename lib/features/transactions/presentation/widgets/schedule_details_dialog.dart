@@ -1,4 +1,5 @@
 import 'package:flowpaisa/features/transactions/presentation/widgets/linked_settlement_account_sheet.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flowpaisa/features/accounts/presentation/widgets/transfer_account_box.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/tabular_editor_sheet.dart';
 import 'package:flowpaisa/core/utils/tabular_parser.dart';
@@ -1474,8 +1475,8 @@ class ScheduleDetailsDialog extends ConsumerWidget {
 
           await ref.read(scheduleServiceProvider).updateSchedule(
                 item.schedule.uuid,
-                amount: newAmount,
-                description: newDescription,
+                amount: Value(newAmount),
+                description: Value(newDescription),
               );
 
           ref.invalidate(scheduleWithDetailsProvider(item.schedule.uuid));
@@ -1512,7 +1513,7 @@ class ScheduleDetailsDialog extends ConsumerWidget {
       try {
         await ref
             .read(scheduleServiceProvider)
-            .updateSchedule(item.schedule.uuid, accountUuid: choice.accountUuid);
+            .updateSchedule(item.schedule.uuid, accountUuid: Value(choice.accountUuid));
         if (context.mounted) {
           ToastUtils.showSuccessToast(context, ref, l10n.accountUpdated);
           ref.invalidate(scheduleWithDetailsProvider(item.schedule.uuid));

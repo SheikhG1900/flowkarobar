@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -206,20 +207,20 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
 
       await scheduleService.updateSchedule(
         widget.schedule.uuid,
-        amount: amount,
-        type: _selectedType,
-        description: description,
-        categoryUuid: catUuid,
-        contactUuid: conUuid,
-        accountUuid: _selectedAccount?.uuid,
-        paidRelationship: _paidRelationship,
-        dueDate: _dueDate,
-        dueDateOffset: dueDateOffset,
-        scheduleType: _scheduleType,
-        selectedDaysOfWeek: _selectedDaysOfWeek,
-        selectedDaysOfMonth: _selectedDaysOfMonth,
-        startDate: _startDate,
-        endDate: _endDate,
+        amount: Value(amount),
+        type: Value(_selectedType),
+        description: Value(description),
+        categoryUuid: Value(catUuid),
+        contactUuid: Value(conUuid),
+        accountUuid: Value(_selectedAccount?.uuid),
+        paidRelationship: Value(_paidRelationship),
+        dueDate: Value(_dueDate),
+        dueDateOffset: Value(dueDateOffset),
+        scheduleType: Value(_scheduleType),
+        selectedDaysOfWeek: Value(_selectedDaysOfWeek),
+        selectedDaysOfMonth: Value(_selectedDaysOfMonth),
+        startDate: Value(_startDate),
+        endDate: Value(_endDate),
       );
 
       // Invalidate schedules provider

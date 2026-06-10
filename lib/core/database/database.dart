@@ -389,7 +389,6 @@ class AppDatabase extends _$AppDatabase {
             return;
           }
           await insertDefaultData();
-          await _backfillLinkedGroupId();
           await _backfillSequenceNumbers();
         },
         onCreate: (Migrator m) async {
@@ -603,43 +602,6 @@ class AppDatabase extends _$AppDatabase {
           }
         },
       );
-
-  /// Backfill linked_group_id for existing split transactions (legacy pattern: uuid/externalLinkId like prefix_0, prefix_1, ...).
-  Future<void> _backfillLinkedGroupId() async {
-    try {
-      final rows = await (select(transactions)
-            ..where((t) => t.linkedGroupId.isNull() & t.isDeleted.equals(false)))
-          .get();
-      final pattern = RegExp(r'^(.+)_\d+$');
-      final Map<String, List<Transaction>> groups = {};
-      for (final tx in rows) {
-        final key = tx.externalLinkId ?? tx.uuid;
-        if (key == null) continue;
-        final match = pattern.firstMatch(key);
-        if (match == null) continue;
-        final prefix = match.group(1)!;
-        groups.putIfAbsent(prefix, () => []).add(tx);
-      }
-      for (final entry in groups.entries) {
-        if (entry.value.length < 2) continue;
-        // Use a minified UUID (remove dashes, take first 12 chars) for linkedGroupId,
-        // consistent with how deep links and new split groups are generated.
-        final newGroupId =
-            const Uuid().v4().replaceAll('-', '').substring(0, 12);
-        for (final tx in entry.value) {
-          await (update(transactions)..where((t) => t.uuid.equals(tx.uuid)))
-              .write(TransactionsCompanion(
-            linkedGroupId: Value(newGroupId),
-            isNotSynced: const Value(true),
-          ));
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        print('Database: _backfillLinkedGroupId failed: $e');
-      }
-    }
-  }
 
   Future<void> _backfillSequenceNumbers() async {
     try {
