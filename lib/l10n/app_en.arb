@@ -2222,5 +2222,6 @@
   "never": "Never",
   "showChart": "Show Chart",
   "showList": "Show List",
-  "budget": "Budget"
+  "budget": "Budget",
+  "relatedTransactions": "Related Transactions"
 }

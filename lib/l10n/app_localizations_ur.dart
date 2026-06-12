@@ -4339,4 +4339,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get budget => 'بجٹ';
+
+  @override
+  String get relatedTransactions => 'متعلقہ لین دین';
 }

@@ -1671,5 +1671,6 @@
   "showChart": "चार्ट दिखाएं",
   "showList": "सूची दिखाएं",
   "budget": "बजट",
-  "showDetails": "विवरण दिखाएं"
+  "showDetails": "विवरण दिखाएं",
+  "relatedTransactions": "संबंधित लेनदेन"
 }

@@ -110,6 +110,31 @@ final transactionGroupProvider =
   });
 });
 
+/// All transactions that share the same UUID prefix (e.g. scheduleUuid_YYYYMMDD).
+final relatedTransactionsProvider =
+    StreamProvider.family<List<TransactionWithDetails>, String>(
+        (ref, transactionUuid) {
+  final repository = ref.watch(transactionsRepositoryProvider);
+
+  return repository
+      .watchTransactionWithDetailsByUuid(transactionUuid)
+      .switchMap((item) {
+    if (item == null) return Stream.value(<TransactionWithDetails>[]);
+
+    final uuid = item.transaction.uuid;
+    // Relaxed regex: everything before the last underscore is the prefix
+    final match = RegExp(r'(.+)_(\d+)').firstMatch(uuid);
+    if (match == null) return Stream.value(<TransactionWithDetails>[]);
+
+    final prefix = match.group(1)!;
+
+    return repository.watchTransactionsWithDetailsByUuidPrefix(prefix).map((list) {
+      // Include all transactions with the same prefix (including the current one)
+      return list;
+    });
+  });
+});
+
 // Watch transactions by date range
 final transactionsByDateRangeProvider =
     StreamProvider.family<List<Transaction>, DateRange>(

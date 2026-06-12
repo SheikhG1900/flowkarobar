@@ -1,3 +1,4 @@
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_list_item.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_split_transaction_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
 import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
@@ -57,6 +58,14 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final itemAsync =
         ref.watch(transactionWithDetailsProvider(transactionUuid));
     final groupAsync = ref.watch(transactionGroupProvider(transactionUuid));
+    final relatedAsync = ref.watch(relatedTransactionsProvider(transactionUuid));
+
+    // Extract prefix for schedule lookup
+    final match = RegExp(r'(.+)_(\d+)').firstMatch(transactionUuid);
+    final prefix = match?.group(1);
+    final scheduleAsync = prefix != null
+        ? ref.watch(scheduleWithDetailsProvider(prefix))
+        : const AsyncValue<ScheduleWithDetails?>.data(null);
 
     // Listen for changes to the group to ensure we refresh if needed
     // (StreamProvider already does this, but we want to be explicit)
@@ -106,6 +115,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
               currency: currency,
               group: group,
               isSplitGroup: isSplitGroup,
+              relatedAsync: relatedAsync,
+              scheduleAsync: scheduleAsync,
             );
           },
           loading: () => Scaffold(
@@ -146,6 +157,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
     required dynamic currency,
     required List<TransactionWithDetails> group,
     required bool isSplitGroup,
+    required AsyncValue<List<TransactionWithDetails>> relatedAsync,
+    required AsyncValue<ScheduleWithDetails?> scheduleAsync,
   }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
@@ -206,13 +219,16 @@ class TransactionDetailsDialog extends ConsumerWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        key: const ValueKey('tx-details-scrollview'),
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          key: const ValueKey('tx-details-column'),
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+      body: SafeArea(
+        key: const ValueKey('tx-details-safearea'),
+        top: false,
+        child: SingleChildScrollView(
+          key: const ValueKey('tx-details-scrollview'),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
+          child: Column(
+            key: const ValueKey('tx-details-column'),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             // Amount Card
             Container(
               key: const ValueKey('tx-details-amount-card'),
@@ -790,10 +806,11 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     ),
                   ],
                 ],
-              ),
             ),
+          ),
+          const SizedBox(height: 16),
 
-            if (transaction.description != null &&
+          if (transaction.description != null &&
                 TabularParser.isTabular(transaction.description) &&
                 ref.watch(premiumProvider).isPremium) ...[
               const SizedBox(height: 16),
@@ -869,11 +886,218 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
               ),
             ],
+
+          relatedAsync.when(
+            data: (related) {
+              if (related.length <= 1) return const SizedBox.shrink();
+              
+              // Sort chronologically (earlier to later)
+              final sortedRelated = [...related]..sort((a, b) => a.transaction.date.compareTo(b.transaction.date));
+
+              // Calculate summary
+              double totalAmount = 0;
+              double processedAmount = 0;
+              double pendingAmount = 0;
+              double settledAmount = 0;
+              String? relationship;
+
+              for (final item in related) {
+                final amt = item.transaction.amount;
+                totalAmount += amt;
+                if (item.transaction.processedDate != null) {
+                  processedAmount += amt;
+                } else {
+                  pendingAmount += amt;
+                }
+                if (item.isLinkedEntryMarked) {
+                  settledAmount += amt;
+                }
+                relationship ??= item.transaction.paidRelationship;
+              }
+
+              final isReceivableScenario =
+                  relationship == 'PAID_FOR' || relationship == 'WILL_RECEIVE';
+              final isPayableScenario =
+                  relationship == 'PAID_BY' || relationship == 'RECEIVED_FROM';
+              final isLinked = isReceivableScenario || isPayableScenario;
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 8),
+                  // Summary Row
+                  if (isLinked)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSummaryTile(
+                            context,
+                            label: l10n.totalAmount,
+                            amount: totalAmount,
+                            color: isExpense
+                                ? AppColors.expenseColor
+                                : AppColors.incomeColor,
+                            currency: currency,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: _buildSummaryTile(
+                            context,
+                            label: isExpense ? l10n.statusPaid : l10n.statusReceived,
+                            amount: processedAmount,
+                            color: AppColors.success,
+                            currency: currency,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: _buildSummaryTile(
+                            context,
+                            label: isExpense ? l10n.statusReceived : l10n.statusPaid,
+                            amount: settledAmount,
+                            color: isExpense
+                                ? AppColors.incomeColor
+                                : AppColors.expenseColor,
+                            currency: currency,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: _buildSummaryTile(
+                            context,
+                            label: isExpense
+                                ? l10n.receivableTag
+                                : l10n.payableTag,
+                            amount: (processedAmount - settledAmount).abs(),
+                            color: AppColors.payableColor,
+                            currency: currency,
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSummaryTile(
+                            context,
+                            label: l10n.totalAmount,
+                            amount: totalAmount,
+                            color: isExpense
+                                ? AppColors.expenseColor
+                                : AppColors.incomeColor,
+                            currency: currency,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildSummaryTile(
+                            context,
+                            label: isExpense ? l10n.statusPaid : l10n.statusReceived,
+                            amount: processedAmount,
+                            color: AppColors.success,
+                            currency: currency,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildSummaryTile(
+                            context,
+                            label: l10n.statusPending,
+                            amount: pendingAmount,
+                            color: AppColors.payableColor,
+                            currency: currency,
+                          ),
+                        ),
+                      ],
+                    ),
+                  const SizedBox(height: 16),
+                  ...sortedRelated.map((relItem) {
+                      final isCurrent = relItem.transaction.uuid == transaction.uuid;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: TransactionListItem(
+                          item: relItem,
+                          isCompact: true,
+                          isHighlighted: isCurrent,
+                          titleOverride: AppDateFormatter.formatDate(
+                            relItem.transaction.date,
+                            pattern: ref.watch(userProfileProvider).dateFormat,
+                          ),
+                          leadingOverride: scheduleAsync.when(
+                            data: (sched) {
+                              final isMonthly = sched?.schedule.scheduleType == 'MONTHLY';
+                              final text = isMonthly
+                                  ? AppDateFormatter.formatMonth(relItem.transaction.date)
+                                  : relItem.transaction.date.day.toString();
+
+                              // Resolve category color for avatar background
+                              Color avatarColor;
+                              final relCat = relItem.category;
+                              if (relCat?.color != null) {
+                                try {
+                                  avatarColor = Color(int.parse(relCat!.color!.replaceAll('#', '0xFF')));
+                                } catch (_) {
+                                  avatarColor = relItem.transaction.type == 'EXPENSE'
+                                      ? AppColors.expenseColor
+                                      : AppColors.incomeColor;
+                                }
+                              } else {
+                                avatarColor = relItem.transaction.type == 'EXPENSE'
+                                    ? AppColors.expenseColor
+                                    : AppColors.incomeColor;
+                              }
+
+                              return Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: avatarColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: avatarColor.withValues(alpha: 0.3),
+                                    width: 1,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  text,
+                                  style: TextStyle(
+                                    color: avatarColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: isMonthly ? 10 : 14,
+                                  ),
+                                ),
+                              );
+                            },
+                            loading: () => const SizedBox(width: 40, height: 40),
+                            error: (_, __) => const SizedBox(width: 40, height: 40),
+                          ),
+                          onTap: isCurrent ? null : () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => TransactionDetailsDialog(
+                                transactionUuid: relItem.transaction.uuid,
+                              ),
+                            );
+                          },
+                        ),
+                      );
+                    }).toList(),
+                    const SizedBox(height: 16),
+                  ],
+                );
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   /// Theme-aware pill for itemized amount / quantity summaries.
   static (Color, Color) _tabularBadgeColors(ThemeData theme, bool forAmount) {
@@ -1136,6 +1360,53 @@ class TransactionDetailsDialog extends ConsumerWidget {
   }
 
   /// Section shell (schedule / account-detail style).
+  static Widget _buildSummaryTile(
+    BuildContext context, {
+    required String label,
+    required double amount,
+    required Color color,
+    required dynamic currency,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+              fontSize: 9,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              AmountFormatter.formatWithCurrency(
+                  amount, currency.symbol, currency.decimalPlaces),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   static Widget _buildSectionCard(
     BuildContext context, {
     Key? key,

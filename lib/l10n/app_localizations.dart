@@ -7894,6 +7894,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Budget'**
   String get budget;
+
+  /// No description provided for @relatedTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Related Transactions'**
+  String get relatedTransactions;
 }
 
 class _AppLocalizationsDelegate

@@ -463,6 +463,101 @@ class TransactionsRepository {
     return result.read(_database.transactions.amount.sum()) ?? 0.0;
   }
 
+  // Get transactions with details by UUID prefix
+  Future<List<TransactionWithDetails>> getTransactionsWithDetailsByUuidPrefix(
+    String prefix,
+  ) async {
+    final query = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
+      ),
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
+      ),
+    ]);
+
+    query.where(_database.transactions.uuid.like('$prefix%') &
+        _database.transactions.isDeleted.equals(false));
+    query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
+
+    final rows = await query.get();
+    return rows.map((row) {
+      return TransactionWithDetails(
+        transaction: row.readTable(_database.transactions),
+        category: row.readTableOrNull(_database.categories),
+        contact: row.readTableOrNull(_database.contacts),
+        account: row.readTableOrNull(_database.accounts),
+        linkedPayable: row.readTableOrNull(_database.payables),
+        linkedReceivable: row.readTableOrNull(_database.receivables),
+      );
+    }).toList();
+  }
+
+  // Watch transactions with details by UUID prefix
+  Stream<List<TransactionWithDetails>> watchTransactionsWithDetailsByUuidPrefix(
+    String prefix,
+  ) {
+    final query = _database.select(_database.transactions).join([
+      leftOuterJoin(
+        _database.categories,
+        _database.categories.uuid
+            .equalsExp(_database.transactions.categoryUuid),
+      ),
+      leftOuterJoin(
+        _database.contacts,
+        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
+      ),
+      leftOuterJoin(
+        _database.accounts,
+        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
+      ),
+      leftOuterJoin(
+        _database.payables,
+        _database.payables.uuid
+            .equalsExp(_database.transactions.linkedPayableUuid),
+      ),
+      leftOuterJoin(
+        _database.receivables,
+        _database.receivables.uuid
+            .equalsExp(_database.transactions.linkedReceivableUuid),
+      ),
+    ]);
+
+    query.where(_database.transactions.uuid.like('$prefix%') &
+        _database.transactions.isDeleted.equals(false));
+    query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return TransactionWithDetails(
+          transaction: row.readTable(_database.transactions),
+          category: row.readTableOrNull(_database.categories),
+          contact: row.readTableOrNull(_database.contacts),
+          account: row.readTableOrNull(_database.accounts),
+          linkedPayable: row.readTableOrNull(_database.payables),
+          linkedReceivable: row.readTableOrNull(_database.receivables),
+        );
+      }).toList();
+    });
+  }
+
   // Import transaction from shared link
   Future<String> importFromSharedLink(dynamic sharedData) async {
     // Extract contact ID or create contact

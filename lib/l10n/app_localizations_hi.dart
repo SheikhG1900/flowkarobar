@@ -4334,4 +4334,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get budget => 'बजट';
+
+  @override
+  String get relatedTransactions => 'संबंधित लेनदेन';
 }

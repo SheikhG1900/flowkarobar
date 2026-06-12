@@ -4322,4 +4322,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get budget => 'Budget';
+
+  @override
+  String get relatedTransactions => 'Related Transactions';
 }
