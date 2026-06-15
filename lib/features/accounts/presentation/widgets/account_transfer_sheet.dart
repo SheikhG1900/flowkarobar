@@ -46,6 +46,14 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
   bool _isLoading = false;
 
   void _onAmountChanged() => setState(() {});
+  
+  void _swapAccounts() {
+    setState(() {
+      final temp = _fromAccount;
+      _fromAccount = _toAccount;
+      _toAccount = temp;
+    });
+  }
 
   @override
   void initState() {
@@ -330,19 +338,24 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
 
                     const SizedBox(height: 12),
 
-                    // Transfer direction indicator
+                    // Transfer direction indicator / Swap button
                     Center(
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.arrow_downward_rounded,
-                          color: theme.colorScheme.primary,
-                          size: 20,
+                      child: InkWell(
+                        onTap: _swapAccounts,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color:
+                                theme.colorScheme.primary.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.swap_vert_rounded,
+                            color: theme.colorScheme.primary,
+                            size: 24,
+                          ),
                         ),
                       ),
                     ),
