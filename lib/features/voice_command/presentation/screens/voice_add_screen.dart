@@ -45,6 +45,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   String? _selectedCategoryColor;
   String? _selectedCategoryIcon;
   String? _selectedContactName;
+  bool _hasAutoSelectedCategory = false;
+  bool _hasAutoSelectedContact = false;
 
   late TextEditingController _transcriptController;
 
@@ -158,6 +160,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
         _usedAi = usedAi;
         _selectedCategoryName = result?.categoryName;
         _selectedContactName = result?.contactName;
+        _hasAutoSelectedCategory = false;
+        _hasAutoSelectedContact = false;
         _isProcessing = false;
       });
     } catch (e) {
@@ -714,7 +718,19 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
 
   Widget _buildExtractedResultCard(ThemeData theme, AppLocalizations l10n, Cashbook activeCashbook) {
     final isIncome = _parsedResult?.type == 'INCOME';
-    final baseColor = isIncome ? AppColors.incomeColor : AppColors.expenseColor;
+    final hasContact = _selectedContactName != null && _selectedContactName!.isNotEmpty;
+    final rel = _parsedResult?.paidRelationship;
+    final isLinked = hasContact && rel != null;
+    
+    // If linked, use relationship colors, otherwise use standard income/expense colors
+    Color baseColor;
+    if (isLinked) {
+      final isReceivable = rel == 'PAID_FOR' || rel == 'WILL_RECEIVE';
+      baseColor = isReceivable ? AppColors.receivableColor : AppColors.payableColor;
+    } else {
+      baseColor = isIncome ? AppColors.incomeColor : AppColors.expenseColor;
+    }
+    
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
@@ -755,7 +771,9 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    isIncome ? Icons.trending_up : Icons.trending_down,
+                    isLinked 
+                      ? (rel == 'PAID_FOR' || rel == 'WILL_RECEIVE' ? Icons.call_made : Icons.call_received)
+                      : (isIncome ? Icons.trending_up : Icons.trending_down),
                     color: baseColor,
                     size: 28,
                   ),
@@ -766,7 +784,9 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.amount,
+                        isLinked 
+                          ? (rel == 'PAID_FOR' || rel == 'WILL_RECEIVE' ? l10n.receivable : l10n.payable)
+                          : (isIncome ? l10n.income : l10n.expense),
                         style: theme.textTheme.labelMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                         ),
@@ -781,7 +801,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                     ],
                   ),
                 ),
-                if (_parsedResult?.paidRelationship != null)
+                if (isLinked)
                   _buildRelationshipBadge(theme, l10n),
               ],
             ),
@@ -845,7 +865,9 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                         initialCategoryColor: _selectedCategoryColor,
                         initialCategoryIcon: _selectedCategoryIcon,
                         initialContactName: _selectedContactName,
-                        initialRelationship: _parsedResult?.paidRelationship,
+                        initialRelationship: (_selectedContactName != null && _selectedContactName!.isNotEmpty)
+                            ? _parsedResult?.paidRelationship
+                            : null,
                       ),
                     ),
                   );
@@ -1016,37 +1038,79 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
 
     return categoriesAsync.when(
       data: (categories) {
-        final List<db.Category> suggested = [];
-        final extractedName = _parsedResult?.categoryName?.toLowerCase();
+        final extractedName = _parsedResult?.categoryName;
+        final List<({String label, double score, db.Category? category, bool isRaw})> candidates = [];
 
-        if (extractedName != null) {
-          // Find similar categories (fuzzy so e.g. misheard names still match)
-          suggested.addAll(categories.where((c) {
-            return stringsMatchFuzzy(extractedName!, c.name);
-          }));
-          // Sort by similarity so best match first
-          suggested.sort((a, b) {
-            final scoreA = fuzzyScore(extractedName!, a.name);
-            final scoreB = fuzzyScore(extractedName!, b.name);
-            return scoreB.compareTo(scoreA);
-          });
+        if (extractedName != null && extractedName.isNotEmpty) {
+          // 1. Add the raw extracted name
+          candidates.add((
+            label: extractedName,
+            score: 0.99, // Just below a perfect 1.0 DB match
+            category: null,
+            isRaw: true,
+          ));
+
+          // 2. Add fuzzy matches from DB
+          for (final c in categories) {
+            final score = fuzzyScore(extractedName, c.name);
+            if (score >= kFuzzyMatchThreshold) {
+              candidates.add((
+                label: c.name,
+                score: score,
+                category: c,
+                isRaw: false,
+              ));
+            }
+          }
+        } else {
+          // No category in command, show first few as suggestions
+          for (final c in categories.take(10)) {
+            candidates.add((
+              label: c.name,
+              score: 0.0,
+              category: c,
+              isRaw: false,
+            ));
+          }
         }
 
-        if (suggested.isEmpty && _parsedResult?.categoryName == null) {
+        // Sort by score descending
+        candidates.sort((a, b) => b.score.compareTo(a.score));
+
+        // Remove duplicates (prefer DB category over raw if names match)
+        final seenLabels = <String>{};
+        final uniqueCandidates = <({String label, double score, db.Category? category, bool isRaw})>[];
+        for (final cand in candidates) {
+          final normalizedLabel = cand.label.toLowerCase().trim();
+          if (!seenLabels.contains(normalizedLabel)) {
+            seenLabels.add(normalizedLabel);
+            uniqueCandidates.add(cand);
+          } else if (!cand.isRaw) {
+            // If we already saw this label but this one is a DB category, replace it
+            final idx = uniqueCandidates.indexWhere((element) => element.label.toLowerCase().trim() == normalizedLabel);
+            if (idx != -1 && uniqueCandidates[idx].isRaw) {
+              uniqueCandidates[idx] = cand;
+            }
+          }
+        }
+
+        if (uniqueCandidates.isEmpty) {
           return Text(
             l10n.uncategorized,
             style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
           );
         }
 
-        // Auto-select first suggested if nothing selected yet or if selection not in suggested
-        if (_selectedCategoryName == null && suggested.isNotEmpty) {
+        // Auto-select logic: pick the first one
+        if (!_hasAutoSelectedCategory) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
             setState(() {
-              _selectedCategoryName = suggested.first.name;
-              _selectedCategoryColor = suggested.first.color;
-              _selectedCategoryIcon = suggested.first.icon;
+              final first = uniqueCandidates.first;
+              _selectedCategoryName = first.label;
+              _selectedCategoryColor = first.category?.color;
+              _selectedCategoryIcon = first.category?.icon;
+              _hasAutoSelectedCategory = true;
             });
           });
         }
@@ -1054,64 +1118,44 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
         return Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: [
-            // Extracted one (if not in suggested)
-            if (_parsedResult?.categoryName != null &&
-                !suggested.any((c) =>
-                    c.name.toLowerCase() ==
-                    _parsedResult!.categoryName!.toLowerCase()))
-              _buildSuggestionChip(
-                  label: _parsedResult!.categoryName!,
-                  isSelected:
-                      _selectedCategoryName == _parsedResult!.categoryName,
-                  onPressed: () => setState(() {
-                        if (_selectedCategoryName ==
-                            _parsedResult!.categoryName) {
-                          _selectedCategoryName = null;
-                        } else {
-                          _selectedCategoryName =
-                              _parsedResult!.categoryName;
-                        }
-                        _selectedCategoryColor = null;
-                        _selectedCategoryIcon = null;
-                      }),
-                  selectedColor: AppColors.brightCyan),
-            // Suggested ones from list
-            ...suggested.map((c) {
-              final isSelected = _selectedCategoryName == c.name;
-              Color chipColor = activeCashbookForeColor;
-              if (c.color != null) {
+          children: uniqueCandidates.map((cand) {
+            final isSelected = _selectedCategoryName == cand.label;
+            Color chipColor = activeCashbookForeColor;
+            
+            if (cand.category != null) {
+              if (cand.category!.color != null) {
                 try {
-                  chipColor =
-                      Color(int.parse(c.color!.replaceFirst('#', '0xFF')));
+                  chipColor = Color(int.parse(cand.category!.color!.replaceFirst('#', '0xFF')));
                 } catch (_) {}
               }
+            } else {
+              chipColor = AppColors.brightCyan;
+            }
 
-              return _buildSuggestionChip(
-                label: c.name,
-                isSelected: isSelected,
-                onPressed: () => setState(() {
-                  if (isSelected) {
-                    _selectedCategoryName = null;
-                    _selectedCategoryColor = null;
-                    _selectedCategoryIcon = null;
-                  } else {
-                    _selectedCategoryName = c.name;
-                    _selectedCategoryColor = c.color;
-                    _selectedCategoryIcon = c.icon;
-                  }
-                }),
-                selectedColor: chipColor,
-                avatar: c.icon != null
-                    ? Icon(
-                        IconHelper.getIconData(c.icon),
-                        size: 14,
-                        color: isSelected ? Colors.white : chipColor,
-                      )
-                    : null,
-              );
-            }),
-          ],
+            return _buildSuggestionChip(
+              label: cand.label,
+              isSelected: isSelected,
+              onPressed: () => setState(() {
+                if (isSelected) {
+                  _selectedCategoryName = null;
+                  _selectedCategoryColor = null;
+                  _selectedCategoryIcon = null;
+                } else {
+                  _selectedCategoryName = cand.label;
+                  _selectedCategoryColor = cand.category?.color;
+                  _selectedCategoryIcon = cand.category?.icon;
+                }
+              }),
+              selectedColor: chipColor,
+              avatar: cand.category?.icon != null
+                  ? Icon(
+                      IconHelper.getIconData(cand.category!.icon),
+                      size: 14,
+                      color: isSelected ? Colors.white : chipColor,
+                    )
+                  : null,
+            );
+          }).toList(),
         );
       },
       loading: () => const SizedBox.shrink(),
@@ -1124,35 +1168,76 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
 
     return contactsAsync.when(
       data: (contacts) {
-        final List<db.Contact> suggested = [];
-        final extractedName = _parsedResult?.contactName?.toLowerCase();
+        final extractedName = _parsedResult?.contactName;
+        final List<({String label, double score, db.Contact? contact, bool isRaw})> candidates = [];
 
-        if (extractedName != null) {
-          // Find similar contacts (fuzzy so e.g. "Afsar" matches "Absar Ahmed")
-          suggested.addAll(contacts.where((c) {
-            return stringsMatchFuzzy(extractedName!, c.name);
-          }));
-          // Sort by similarity so best match first
-          suggested.sort((a, b) {
-            final scoreA = fuzzyScore(extractedName!, a.name);
-            final scoreB = fuzzyScore(extractedName!, b.name);
-            return scoreB.compareTo(scoreA);
-          });
+        if (extractedName != null && extractedName.isNotEmpty) {
+          // 1. Add the raw extracted name
+          candidates.add((
+            label: extractedName,
+            score: 0.99,
+            contact: null,
+            isRaw: true,
+          ));
+
+          // 2. Add fuzzy matches from DB
+          for (final c in contacts) {
+            final score = fuzzyScore(extractedName, c.name);
+            if (score >= kFuzzyMatchThreshold) {
+              candidates.add((
+                label: c.name,
+                score: score,
+                contact: c,
+                isRaw: false,
+              ));
+            }
+          }
+        } else {
+          // No contact in command, show first few as suggestions
+          for (final c in contacts.take(10)) {
+            candidates.add((
+              label: c.name,
+              score: 0.0,
+              contact: c,
+              isRaw: false,
+            ));
+          }
         }
 
-        if (suggested.isEmpty && _parsedResult?.contactName == null) {
+        // Sort by score descending
+        candidates.sort((a, b) => b.score.compareTo(a.score));
+
+        // Remove duplicates
+        final seenLabels = <String>{};
+        final uniqueCandidates = <({String label, double score, db.Contact? contact, bool isRaw})>[];
+        for (final cand in candidates) {
+          final normalizedLabel = cand.label.toLowerCase().trim();
+          if (!seenLabels.contains(normalizedLabel)) {
+            seenLabels.add(normalizedLabel);
+            uniqueCandidates.add(cand);
+          } else if (!cand.isRaw) {
+            final idx = uniqueCandidates.indexWhere((element) => element.label.toLowerCase().trim() == normalizedLabel);
+            if (idx != -1 && uniqueCandidates[idx].isRaw) {
+              uniqueCandidates[idx] = cand;
+            }
+          }
+        }
+
+        if (uniqueCandidates.isEmpty) {
           return Text(
             l10n.noContactsFound,
             style: theme.textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
           );
         }
 
-        // Auto-select first suggested if nothing selected yet
-        if (_selectedContactName == null && suggested.isNotEmpty) {
+        // Auto-select logic: pick the first one
+        if (!_hasAutoSelectedContact) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
             setState(() {
-              _selectedContactName = suggested.first.name;
+              final first = uniqueCandidates.first;
+              _selectedContactName = first.label;
+              _hasAutoSelectedContact = true;
             });
           });
         }
@@ -1160,57 +1245,35 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
         return Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: [
-            // Extracted one
-            if (_parsedResult?.contactName != null &&
-                !suggested.any((c) =>
-                    c.name.toLowerCase() ==
-                    _parsedResult!.contactName!.toLowerCase()))
-              _buildSuggestionChip(
-                label: _parsedResult!.contactName!,
-                isSelected:
-                    _selectedContactName == _parsedResult!.contactName,
-                onPressed: () => setState(() {
-                  if (_selectedContactName == _parsedResult!.contactName) {
-                    _selectedContactName = null;
-                  } else {
-                    _selectedContactName = _parsedResult!.contactName;
-                  }
-                }),
-                selectedColor:
-                    AppColors.getContactColor(_parsedResult!.contactName!),
-              ),
-            // Suggested ones
-            ...suggested.map((c) {
-              final isSelected = _selectedContactName == c.name;
-              final contactColor = AppColors.getContactColor(c.name);
+          children: uniqueCandidates.map((cand) {
+            final isSelected = _selectedContactName == cand.label;
+            final contactColor = AppColors.getContactColor(cand.label);
 
-              return _buildSuggestionChip(
-                label: c.name,
-                isSelected: isSelected,
-                onPressed: () => setState(() {
-                  if (isSelected) {
-                    _selectedContactName = null;
-                  } else {
-                    _selectedContactName = c.name;
-                  }
-                }),
-                selectedColor: contactColor,
-                avatar: CircleAvatar(
-                  radius: 10,
-                  backgroundColor: isSelected ? Colors.white : contactColor,
-                  child: Text(
-                    c.name[0].toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? contactColor : Colors.white,
-                    ),
+            return _buildSuggestionChip(
+              label: cand.label,
+              isSelected: isSelected,
+              onPressed: () => setState(() {
+                if (isSelected) {
+                  _selectedContactName = null;
+                } else {
+                  _selectedContactName = cand.label;
+                }
+              }),
+              selectedColor: contactColor,
+              avatar: CircleAvatar(
+                radius: 10,
+                backgroundColor: isSelected ? Colors.white : contactColor,
+                child: Text(
+                  cand.label[0].toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? contactColor : Colors.white,
                   ),
                 ),
-              );
-            }),
-          ],
+              ),
+            );
+          }).toList(),
         );
       },
       loading: () => const SizedBox.shrink(),

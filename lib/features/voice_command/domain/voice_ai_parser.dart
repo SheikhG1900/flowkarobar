@@ -227,7 +227,7 @@ class VoiceAiParser extends BaseTransactionAiParser {
 
     // Contact extraction.
     final subjectContactRegex = RegExp(
-      r'^([A-Z][a-z]+)\s+(?:has|ne|ko|took|borrowed|gave|is|was|purchased|paid|spent)\b',
+      r'^([A-Z][a-z]+)\s+(?:has|ne|ko|se|took|borrowed|gave|is|was|purchased|paid|spent)\b',
       caseSensitive: false,
     );
     final subjectMatch = subjectContactRegex.firstMatch(originalText);
@@ -237,7 +237,7 @@ class VoiceAiParser extends BaseTransactionAiParser {
 
     if (contact == null || stopWords.contains(contact.toLowerCase())) {
       final objectContactRegex = RegExp(
-        r'\b(?:to|from|by|with|ko|se|ne|gave|given)\s+([A-Z][a-z]+)\b',
+        r'\b(?:to|from|by|with|gave|given)\s+([A-Z][a-z]+)\b',
         caseSensitive: false,
       );
       final objectMatch = objectContactRegex.firstMatch(originalText);
