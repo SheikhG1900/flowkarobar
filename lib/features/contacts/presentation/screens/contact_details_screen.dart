@@ -1222,12 +1222,8 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
                       widget.contactUuid,
                       parsed,
                       isNetReceivable: widget.isNetReceivable,
-                      outgoingAccountUuid: widget.isNetReceivable
-                          ? null
-                          : _selectedAccount?.uuid,
-                      incomingAccountUuid: widget.isNetReceivable
-                          ? _selectedAccount?.uuid
-                          : null,
+                      outgoingAccountUuid: _selectedAccount?.uuid,
+                      incomingAccountUuid: _selectedAccount?.uuid,
                     );
                   }
                   if (mounted) {

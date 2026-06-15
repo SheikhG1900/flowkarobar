@@ -196,7 +196,9 @@ class ContactBulkSettlementService {
           description: const Value('bulk adjustment'),
           date: Value(now),
           paidRelationship: const Value('RECEIVED_FROM'),
-          accountUuid: Value(incomingAccountUuid),
+          accountUuid: incomingAccountUuid != null
+              ? Value(incomingAccountUuid)
+              : const Value.absent(),
           processedDate: Value(now),
           createdAt: Value(now),
           updatedAt: Value(now),
@@ -294,7 +296,9 @@ class ContactBulkSettlementService {
           description: const Value('bulk adjustment'),
           date: Value(now),
           paidRelationship: const Value('PAID_FOR'),
-          accountUuid: Value(outgoingAccountUuid),
+          accountUuid: outgoingAccountUuid != null
+              ? Value(outgoingAccountUuid)
+              : const Value.absent(),
           processedDate: Value(now),
           createdAt: Value(now),
           updatedAt: Value(now),
