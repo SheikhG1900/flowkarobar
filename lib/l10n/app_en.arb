@@ -2223,5 +2223,8 @@
   "showChart": "Show Chart",
   "showList": "Show List",
   "budget": "Budget",
-  "relatedTransactions": "Related Transactions"
+  "relatedTransactions": "Related Transactions",
+  "advanced": "Advanced",
+  "autoSyncOnStartup": "Auto-sync on startup",
+  "autoSyncDescription": "Automatically sync data when the app opens"
 }

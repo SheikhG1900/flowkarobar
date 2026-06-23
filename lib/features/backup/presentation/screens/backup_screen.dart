@@ -18,6 +18,7 @@ import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 
 bool _isDatabaseLockedError(String status) {
   return status.contains('database is locked') ||
@@ -59,7 +60,13 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.googleDriveBackupRestore),
+        title: Row(
+          children: [
+            Text(l10n.googleDriveBackupRestore),
+            const SizedBox(width: 8),
+            _buildAdvancedChip(context, l10n),
+          ],
+        ),
         actions: [
           if (state.currentUser != null)
             IconButton(
@@ -599,6 +606,44 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                       ),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Auto-sync on startup toggle
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: theme.dividerColor.withValues(alpha: 0.5)),
+                ),
+                child: Consumer(
+                  builder: (context, ref, child) {
+                    final autoSync = ref.watch(autoSyncOnStartupProvider);
+                    return SwitchListTile(
+                      value: autoSync,
+                      onChanged: (value) {
+                        ref
+                            .read(autoSyncOnStartupProvider.notifier)
+                            .setAutoSync(value);
+                      },
+                      title: Text(
+                        l10n.autoSyncOnStartup,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      subtitle: Text(
+                        l10n.autoSyncDescription,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      secondary: Icon(
+                        Icons.sync_lock,
+                        color: autoSync ? theme.colorScheme.primary : null,
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 16),
@@ -1396,41 +1441,24 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   }
 
   void _showResetLocalSyncDialog(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    // ... (existing code)
+  }
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.resetLocalSyncState),
-        content: Text(l10n.resetLocalSyncMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              try {
-                await ref.read(backupProvider.notifier).resetLocalSyncState();
-                if (context.mounted) {
-                  ToastUtils.showSuccessToast(
-                      context, ref, l10n.localSyncResetSuccess);
-                }
-              } catch (e) {
-                if (context.mounted) {
-                  ToastUtils.showErrorToast(
-                      context, ref, l10n.errorOccurred(e.toString()));
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(l10n.resetNow),
-          ),
-        ],
+  Widget _buildAdvancedChip(BuildContext context, AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.tertiaryContainer,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        l10n.advanced.toUpperCase(),
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.onTertiaryContainer,
+        ),
       ),
     );
   }

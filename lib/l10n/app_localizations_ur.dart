@@ -4342,4 +4342,13 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get relatedTransactions => 'متعلقہ لین دین';
+
+  @override
+  String get advanced => 'ایڈوانس';
+
+  @override
+  String get autoSyncOnStartup => 'اسٹارٹ اپ پر آٹو سنک';
+
+  @override
+  String get autoSyncDescription => 'ایپ کھلنے پر ڈیٹا خودکار طور پر سنک کریں';
 }

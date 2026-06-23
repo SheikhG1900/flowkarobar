@@ -4337,4 +4337,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get relatedTransactions => 'संबंधित लेनदेन';
+
+  @override
+  String get advanced => 'उन्नत';
+
+  @override
+  String get autoSyncOnStartup => 'स्टार्टअप पर ऑटो-सिंक';
+
+  @override
+  String get autoSyncDescription =>
+      'ऐप खुलने पर डेटा को स्वचालित रूप से सिंक करें';
 }

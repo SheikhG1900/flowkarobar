@@ -412,6 +412,28 @@ final showDashboardSyncStatusProvider =
   return ShowDashboardSyncStatusNotifier();
 });
 
+// Auto Sync on Startup Notifier
+class AutoSyncOnStartupNotifier extends Notifier<bool> {
+  static const String _key = 'auto_sync_on_startup';
+
+  @override
+  bool build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    return prefs.getBool(_key) ?? true; // Default to true
+  }
+
+  Future<void> setAutoSync(bool value) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setBool(_key, value);
+    state = value;
+  }
+}
+
+final autoSyncOnStartupProvider =
+    NotifierProvider<AutoSyncOnStartupNotifier, bool>(() {
+  return AutoSyncOnStartupNotifier();
+});
+
 // Helper provider to get the font for the CURRENT language
 final currentFontProvider = Provider<String>((ref) {
   final fonts = ref.watch(fontProvider);

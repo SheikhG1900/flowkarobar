@@ -24,6 +24,7 @@ import 'package:flowpaisa/features/transactions/presentation/providers/transacti
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart' as import_device_info;
@@ -270,22 +271,31 @@ class BackupNotifier extends Notifier<BackupState> {
       await loadBackups();
       await _loadAvailableCashbooks();
 
-      // Sync on startup so user gets updated data and keeps data saved when using the app
-      if (kDebugMode) {
-        print('BackupNotifier: Sync on startup triggered');
-      }
-      
-      // 1. Sync the active cashbook in the foreground (with UI updates)
-      // Add a small delay to let the UI finish rendering first
-      Future.delayed(const Duration(milliseconds: 500), () {
-        triggerSync(null);
-      });
+      // Check auto-sync on startup preference
+      final autoSyncOnStartup = ref.read(autoSyncOnStartupProvider);
 
-      // 2. Sync all other unlocked cashbooks in the foreground (silent)
-      // Run this with a larger delay and in a separate microtask to prevent UI jank
-      Future.delayed(const Duration(seconds: 2), () {
-        _syncOtherCashbooksSilently();
-      });
+      if (autoSyncOnStartup) {
+        // Sync on startup so user gets updated data and keeps data saved when using the app
+        if (kDebugMode) {
+          print('BackupNotifier: Sync on startup triggered');
+        }
+
+        // 1. Sync the active cashbook in the foreground (with UI updates)
+        // Add a small delay to let the UI finish rendering first
+        Future.delayed(const Duration(milliseconds: 500), () {
+          triggerSync(null);
+        });
+
+        // 2. Sync all other unlocked cashbooks in the foreground (silent)
+        // Run this with a larger delay and in a separate microtask to prevent UI jank
+        Future.delayed(const Duration(seconds: 2), () {
+          _syncOtherCashbooksSilently();
+        });
+      } else {
+        if (kDebugMode) {
+          print('BackupNotifier: Sync on startup skipped (preference disabled)');
+        }
+      }
     }
   }
 

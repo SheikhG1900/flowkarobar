@@ -4325,4 +4325,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get relatedTransactions => 'Related Transactions';
+
+  @override
+  String get advanced => 'Advanced';
+
+  @override
+  String get autoSyncOnStartup => 'Auto-sync on startup';
+
+  @override
+  String get autoSyncDescription =>
+      'Automatically sync data when the app opens';
 }

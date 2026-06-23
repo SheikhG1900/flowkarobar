@@ -1672,5 +1672,8 @@
   "showList": "فہرست دکھائیں",
   "budget": "بجٹ",
   "showDetails": "تفصیلات دیکھیں",
-  "relatedTransactions": "متعلقہ لین دین"
+  "relatedTransactions": "متعلقہ لین دین",
+  "advanced": "ایڈوانس",
+  "autoSyncOnStartup": "اسٹارٹ اپ پر آٹو سنک",
+  "autoSyncDescription": "ایپ کھلنے پر ڈیٹا خودکار طور پر سنک کریں"
 }

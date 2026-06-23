@@ -2809,6 +2809,7 @@ class _DashboardHeader extends ConsumerWidget {
             
             final showSync = ref.watch(showDashboardSyncStatusProvider);
             final backupState = ref.watch(backupProvider);
+            final isAutoSync = ref.watch(autoSyncOnStartupProvider);
 
             final bool isSyncing = backupState.syncStatus == 'Syncing...' ||
                 backupState.syncStatus == 'Processing...' ||
@@ -2865,9 +2866,22 @@ class _DashboardHeader extends ConsumerWidget {
             }
 
             return IconButton(
-              icon: Icon(
-                statusIcon,
-                color: iconColor,
+              icon: Badge(
+                label: const Text(
+                  'A',
+                  style: TextStyle(
+                    fontSize: 8,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                isLabelVisible: isAutoSync && !showSync,
+                backgroundColor: iconColor,
+                textColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Icon(
+                  statusIcon,
+                  color: iconColor,
+                ),
               ),
               onPressed: () =>
                   ref.read(showDashboardSyncStatusProvider.notifier).toggle(),
@@ -3795,6 +3809,10 @@ class _SettingsTab extends ConsumerWidget {
                 const SizedBox(width: 8),
                 if (!isPremium)
                   const PremiumBadge(isSmall: true, showLock: true),
+                if (isPremium) ...[
+                  const SizedBox(width: 4),
+                  _buildAdvancedChip(context, l10n),
+                ],
               ],
             ),
             subtitle: Text(l10n.googleDriveBackupRestore),
@@ -3977,6 +3995,25 @@ class _SettingsTab extends ConsumerWidget {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAdvancedChip(BuildContext context, AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.tertiaryContainer,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(
+        l10n.advanced.toUpperCase(),
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          color: theme.colorScheme.onTertiaryContainer,
+        ),
       ),
     );
   }

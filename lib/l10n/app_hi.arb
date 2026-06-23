@@ -1672,5 +1672,8 @@
   "showList": "सूची दिखाएं",
   "budget": "बजट",
   "showDetails": "विवरण दिखाएं",
-  "relatedTransactions": "संबंधित लेनदेन"
+  "relatedTransactions": "संबंधित लेनदेन",
+  "advanced": "उन्नत",
+  "autoSyncOnStartup": "स्टार्टअप पर ऑटो-सिंक",
+  "autoSyncDescription": "ऐप खुलने पर डेटा को स्वचालित रूप से सिंक करें"
 }

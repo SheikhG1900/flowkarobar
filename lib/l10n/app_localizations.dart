@@ -7900,6 +7900,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Related Transactions'**
   String get relatedTransactions;
+
+  /// No description provided for @advanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get advanced;
+
+  /// No description provided for @autoSyncOnStartup.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-sync on startup'**
+  String get autoSyncOnStartup;
+
+  /// No description provided for @autoSyncDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatically sync data when the app opens'**
+  String get autoSyncDescription;
 }
 
 class _AppLocalizationsDelegate

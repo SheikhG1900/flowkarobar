@@ -7,6 +7,7 @@ import 'package:flowpaisa/features/backup/presentation/screens/backup_screen.dar
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 bool _isDatabaseLockedError(String status) {
@@ -203,115 +204,181 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
               width: 1,
             ),
           ),
-          child: Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      statusColor.withValues(alpha: 0.3),
-                      statusColor.withValues(alpha: 0.2),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: statusColor.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: isSyncing
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: AppLoadingIndicator(size: 20),
-                      )
-                    : Icon(
-                        statusIcon,
-                        color: statusColor,
-                        size: 24,
-                      ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.syncStatusTitle,
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: statusColor.withValues(alpha: 0.8),
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      statusText,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: theme.colorScheme.onSurface,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              if ((hasUnsynced || hasCloudUpdates) && !isSyncing)
-                Container(
-                  decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    onPressed: () async {
-                      if (isPremium) {
-                        if (isSignedIn) {
-                          ref
-                              .read(backupProvider.notifier)
-                              .triggerSync(l10n);
-                        } else {
-                          final success = await ref
-                              .read(backupProvider.notifier)
-                              .signInIfNeeded();
-                          if (success) {
-                            ref
-                                .read(backupProvider.notifier)
-                                .triggerSync(l10n);
-                          }
-                        }
-                      } else {
-                        PremiumGate.showPremiumDialog(context);
-                      }
-                    },
-                    icon: Icon(
-                      Symbols.sync,
-                      color: statusColor,
-                      size: 24,
-                    ),
-                    tooltip: l10n.syncNow,
+              Row(
+                children: [
+                  Container(
                     padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          statusColor.withValues(alpha: 0.3),
+                          statusColor.withValues(alpha: 0.2),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: statusColor.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: isSyncing
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: AppLoadingIndicator(size: 20),
+                          )
+                        : Icon(
+                            statusIcon,
+                            color: statusColor,
+                            size: 24,
+                          ),
                   ),
-                ),
-              if (isSuccess && !hasUnsynced && !hasCloudUpdates)
-                Icon(
-                  Symbols.check_circle,
-                  color: statusColor.withValues(alpha: 0.7),
-                  size: 28,
-                ),
-              if (isSyncing)
-                Icon(
-                  Symbols.clock_loader_20_rounded,
-                  color: statusColor.withValues(alpha: 0.7),
-                  size: 28,
-                ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.syncStatusTitle,
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: statusColor.withValues(alpha: 0.8),
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          statusText,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.onSurface,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  if ((hasUnsynced || hasCloudUpdates) && !isSyncing)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        onPressed: () async {
+                          if (isPremium) {
+                            if (isSignedIn) {
+                              ref
+                                  .read(backupProvider.notifier)
+                                  .triggerSync(l10n);
+                            } else {
+                              final success = await ref
+                                  .read(backupProvider.notifier)
+                                  .signInIfNeeded();
+                              if (success) {
+                                ref
+                                    .read(backupProvider.notifier)
+                                    .triggerSync(l10n);
+                              }
+                            }
+                          } else {
+                            PremiumGate.showPremiumDialog(context);
+                          }
+                        },
+                        icon: Icon(
+                          Symbols.sync,
+                          color: statusColor,
+                          size: 24,
+                        ),
+                        tooltip: l10n.syncNow,
+                        padding: const EdgeInsets.all(12),
+                      ),
+                    ),
+                  if (isSuccess && !hasUnsynced && !hasCloudUpdates)
+                    Icon(
+                      Symbols.check_circle,
+                      color: statusColor.withValues(alpha: 0.7),
+                      size: 28,
+                    ),
+                  if (isSyncing)
+                    Icon(
+                      Symbols.clock_loader_20_rounded,
+                      color: statusColor.withValues(alpha: 0.7),
+                      size: 28,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Divider(
+                height: 1,
+                color: statusColor.withValues(alpha: 0.2),
+              ),
+              const SizedBox(height: 4),
+              Consumer(
+                builder: (context, ref, child) {
+                  final autoSync = ref.watch(autoSyncOnStartupProvider);
+                  return InkWell(
+                    onTap: () {
+                      ref
+                          .read(autoSyncOnStartupProvider.notifier)
+                          .setAutoSync(!autoSync);
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 4),
+                      child: Row(
+                        children: [
+                          Icon(
+                            autoSync ? Symbols.sync_lock : Symbols.sync_disabled,
+                            size: 18,
+                            color: autoSync
+                                ? statusColor.withValues(alpha: 0.8)
+                                : theme.colorScheme.onSurfaceVariant
+                                    .withValues(alpha: 0.6),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              l10n.autoSyncOnStartup,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: theme.colorScheme.onSurface
+                                    .withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: 24,
+                            child: Transform.scale(
+                              scale: 0.7,
+                              child: Switch(
+                                value: autoSync,
+                                onChanged: (value) {
+                                  ref
+                                      .read(autoSyncOnStartupProvider.notifier)
+                                      .setAutoSync(value);
+                                },
+                                activeColor: statusColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ],
           ),
         ),
