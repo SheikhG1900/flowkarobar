@@ -4351,4 +4351,33 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get autoSyncDescription => 'ایپ کھلنے پر ڈیٹا خودکار طور پر سنک کریں';
+
+  @override
+  String get premiumVerificationToken => 'پریمیم تصدیقی ٹوکن';
+
+  @override
+  String get tokenExpiry => 'ٹوکن کی میعاد';
+
+  @override
+  String get refreshToken => 'ٹوکن ری فریش کریں';
+
+  @override
+  String get tokenValid => 'پریمیم تصدیقی ٹوکن درست ہے';
+
+  @override
+  String get tokenExpiringSoon => 'جلد ختم ہونے والا ہے';
+
+  @override
+  String get tokenExpired => 'میعاد ختم ہوگئی';
+
+  @override
+  String get noTokenGenerated => 'ابھی تک کوئی ٹوکن نہیں بنایا گیا';
+
+  @override
+  String get tokenRegeneratedSuccess =>
+      'پریمیم ٹوکن کامیابی سے دوبارہ تیار کر لیا گیا';
+
+  @override
+  String get googleDriveNotConnected =>
+      'گوگل ڈرائیو منسلک نہیں ہے۔ کلاؤڈ تصدیق دستیاب نہیں ہوگی۔';
 }

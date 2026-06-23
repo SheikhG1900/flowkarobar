@@ -4347,4 +4347,33 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get autoSyncDescription =>
       'ऐप खुलने पर डेटा को स्वचालित रूप से सिंक करें';
+
+  @override
+  String get premiumVerificationToken => 'प्रीमियम सत्यापन टोकन';
+
+  @override
+  String get tokenExpiry => 'टोकन समाप्ति';
+
+  @override
+  String get refreshToken => 'टोकन रिफ्रेश करें';
+
+  @override
+  String get tokenValid => 'प्रीमियम टोकन मान्य है';
+
+  @override
+  String get tokenExpiringSoon => 'जल्د समाप्त हो रहा है';
+
+  @override
+  String get tokenExpired => 'टोकन समाप्त हो गया';
+
+  @override
+  String get noTokenGenerated => 'अभी तक कोई टोकन उत्पन्न नहीं हुआ';
+
+  @override
+  String get tokenRegeneratedSuccess =>
+      'प्रीमियम टोकन सफलतापूर्वक पुन: उत्पन्न किया गया';
+
+  @override
+  String get googleDriveNotConnected =>
+      'Google Drive कनेक्ट नहीं है। क्लाउड सत्यापन उपलब्ध नहीं होगा।';
 }

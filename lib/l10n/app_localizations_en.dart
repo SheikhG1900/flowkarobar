@@ -4335,4 +4335,33 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get autoSyncDescription =>
       'Automatically sync data when the app opens';
+
+  @override
+  String get premiumVerificationToken => 'Premium Verification Token';
+
+  @override
+  String get tokenExpiry => 'Token Expiry';
+
+  @override
+  String get refreshToken => 'Refresh Token';
+
+  @override
+  String get tokenValid => 'Premium Token Valid';
+
+  @override
+  String get tokenExpiringSoon => 'Expiring Soon';
+
+  @override
+  String get tokenExpired => 'Token Expired';
+
+  @override
+  String get noTokenGenerated => 'No token generated yet';
+
+  @override
+  String get tokenRegeneratedSuccess =>
+      'Premium token regenerated successfully';
+
+  @override
+  String get googleDriveNotConnected =>
+      'Google Drive not connected. Cloud verification will not be available.';
 }

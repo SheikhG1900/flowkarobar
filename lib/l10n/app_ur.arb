@@ -1675,5 +1675,14 @@
   "relatedTransactions": "متعلقہ لین دین",
   "advanced": "ایڈوانس",
   "autoSyncOnStartup": "اسٹارٹ اپ پر آٹو سنک",
-  "autoSyncDescription": "ایپ کھلنے پر ڈیٹا خودکار طور پر سنک کریں"
+  "autoSyncDescription": "ایپ کھلنے پر ڈیٹا خودکار طور پر سنک کریں",
+  "premiumVerificationToken": "پریمیم تصدیقی ٹوکن",
+  "tokenExpiry": "ٹوکن کی میعاد",
+  "refreshToken": "ٹوکن ری فریش کریں",
+  "tokenValid": "پریمیم تصدیقی ٹوکن درست ہے",
+  "tokenExpiringSoon": "جلد ختم ہونے والا ہے",
+  "tokenExpired": "میعاد ختم ہوگئی",
+  "noTokenGenerated": "ابھی تک کوئی ٹوکن نہیں بنایا گیا",
+  "tokenRegeneratedSuccess": "پریمیم ٹوکن کامیابی سے دوبارہ تیار کر لیا گیا",
+  "googleDriveNotConnected": "گوگل ڈرائیو منسلک نہیں ہے۔ کلاؤڈ تصدیق دستیاب نہیں ہوگی۔"
 }

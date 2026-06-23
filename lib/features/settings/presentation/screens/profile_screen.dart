@@ -1,3 +1,4 @@
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/core/utils/name_utils.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flutter/material.dart';
@@ -501,10 +502,100 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ),
                       ],
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 16),
+
+                // Premium Token Card
+                if (ref.watch(premiumProvider).isPremium)
+                  Consumer(
+                    builder: (context, ref, child) {
+                      final premiumState = ref.watch(premiumProvider);
+                      final token = premiumState.premiumToken;
+                      final expiry = premiumState.premiumTokenExpiry;
+                      final now = DateTime.now();
+
+                      Color statusColor = Colors.grey;
+                      String statusText = l10n.noTokenGenerated;
+                      IconData statusIcon = Icons.token_outlined;
+
+                      if (token != null && expiry != null) {
+                        final diff = expiry.difference(now);
+                        if (diff.isNegative) {
+                          statusColor = theme.colorScheme.error;
+                          statusText = l10n.tokenExpired;
+                          statusIcon = Icons.error_outline;
+                        } else if (diff.inDays < 2) {
+                          statusColor = Colors.orange;
+                          statusText = l10n.tokenExpiringSoon;
+                          statusIcon = Icons.warning_amber_rounded;
+                        } else {
+                          statusColor = Colors.amber;
+                          statusText = l10n.tokenValid;
+                          statusIcon = Icons.workspace_premium;
+                        }
+                      }
+
+                      return Card(
+                        margin: EdgeInsets.zero,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(color: theme.dividerColor),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: ListTile(
+                            dense: true,
+                            leading: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: statusColor.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                statusIcon,
+                                color: statusColor,
+                                size: 20,
+                              ),
+                            ),
+                            title: Text(
+                              statusText,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: statusColor,
+                              ),
+                            ),
+                            subtitle: expiry != null
+                                ? Text(
+                                    '${l10n.tokenExpiry}: ${AppDateFormatter.formatDate(expiry, pattern: profile.dateFormat)}',
+                                    style: theme.textTheme.bodySmall,
+                                  )
+                                : null,
+                            trailing: isGoogleSignedIn
+                                ? IconButton(
+                                    icon: const Icon(Icons.refresh, size: 20),
+                                    onPressed: () async {
+                                      await ref
+                                          .read(premiumProvider.notifier)
+                                          .generatePremiumToken();
+                                      if (context.mounted) {
+                                        ToastUtils.showSuccessToast(
+                                            context,
+                                            ref,
+                                            l10n.tokenRegeneratedSuccess);
+                                      }
+                                    },
+                                    tooltip: l10n.refreshToken,
+                                  )
+                                : null,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
               const SizedBox(height: 32),
 
               // Name Field

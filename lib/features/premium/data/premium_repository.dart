@@ -16,6 +16,8 @@ class PremiumRepository {
   static const String _isPremiumKey = 'is_premium_user';
   static const String _expiryDateKey = 'premium_expiry_date';
   static const String _subscriptionTypeKey = 'premium_subscription_type';
+  static const String _premiumTokenKey = 'premium_verification_token';
+  static const String _premiumTokenExpiryKey = 'premium_verification_token_expiry';
 
   PremiumRepository(this._prefs);
 
@@ -124,5 +126,28 @@ class PremiumRepository {
   /// Get subscription type
   String? getSubscriptionType() {
     return _prefs.getString(_subscriptionTypeKey);
+  }
+
+  /// Save premium verification token
+  Future<void> setPremiumToken(String? token, DateTime? expiry) async {
+    if (token == null || expiry == null) {
+      await _prefs.remove(_premiumTokenKey);
+      await _prefs.remove(_premiumTokenExpiryKey);
+    } else {
+      await _prefs.setString(_premiumTokenKey, token);
+      await _prefs.setString(_premiumTokenExpiryKey, expiry.toIso8601String());
+    }
+  }
+
+  /// Get premium verification token
+  String? getPremiumToken() {
+    return _prefs.getString(_premiumTokenKey);
+  }
+
+  /// Get premium verification token expiry
+  DateTime? getPremiumTokenExpiry() {
+    final dateStr = _prefs.getString(_premiumTokenExpiryKey);
+    if (dateStr == null) return null;
+    return DateTime.tryParse(dateStr);
   }
 }

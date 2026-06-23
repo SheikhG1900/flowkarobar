@@ -2226,5 +2226,14 @@
   "relatedTransactions": "Related Transactions",
   "advanced": "Advanced",
   "autoSyncOnStartup": "Auto-sync on startup",
-  "autoSyncDescription": "Automatically sync data when the app opens"
+  "autoSyncDescription": "Automatically sync data when the app opens",
+  "premiumVerificationToken": "Premium Verification Token",
+  "tokenExpiry": "Token Expiry",
+  "refreshToken": "Refresh Token",
+  "tokenValid": "Premium Token Valid",
+  "tokenExpiringSoon": "Expiring Soon",
+  "tokenExpired": "Token Expired",
+  "noTokenGenerated": "No token generated yet",
+  "tokenRegeneratedSuccess": "Premium token regenerated successfully",
+  "googleDriveNotConnected": "Google Drive not connected. Cloud verification will not be available."
 }

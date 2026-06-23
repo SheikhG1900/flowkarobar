@@ -1090,6 +1090,8 @@ class BackupNotifier extends Notifier<BackupState> {
       
       if (account != null) {
         await _checkAccountMismatch(account.email);
+        // Trigger premium token check after sign-in
+        ref.read(premiumProvider.notifier).checkAndGenerateToken();
       }
       
       state = state.copyWith(
@@ -1113,6 +1115,8 @@ class BackupNotifier extends Notifier<BackupState> {
       
       if (account != null) {
         await _checkAccountMismatch(account.email);
+        // Trigger premium token check after sign-in
+        ref.read(premiumProvider.notifier).checkAndGenerateToken();
         state = state.copyWith(
           isLoading: false,
           currentUser: account,
@@ -1124,6 +1128,8 @@ class BackupNotifier extends Notifier<BackupState> {
       final explicitAccount = await _driveService.signIn();
       if (explicitAccount != null) {
         await _checkAccountMismatch(explicitAccount.email);
+        // Trigger premium token check after sign-in
+        ref.read(premiumProvider.notifier).checkAndGenerateToken();
       }
       
       state = state.copyWith(

@@ -1675,5 +1675,14 @@
   "relatedTransactions": "संबंधित लेनदेन",
   "advanced": "उन्नत",
   "autoSyncOnStartup": "स्टार्टअप पर ऑटो-सिंक",
-  "autoSyncDescription": "ऐप खुलने पर डेटा को स्वचालित रूप से सिंक करें"
+  "autoSyncDescription": "ऐप खुलने पर डेटा को स्वचालित रूप से सिंक करें",
+  "premiumVerificationToken": "प्रीमियम सत्यापन टोकन",
+  "tokenExpiry": "टोकन समाप्ति",
+  "refreshToken": "टोकन रिफ्रेश करें",
+  "tokenValid": "प्रीमियम टोकन मान्य है",
+  "tokenExpiringSoon": "जल्د समाप्त हो रहा है",
+  "tokenExpired": "टोकन समाप्त हो गया",
+  "noTokenGenerated": "अभी तक कोई टोकन उत्पन्न नहीं हुआ",
+  "tokenRegeneratedSuccess": "प्रीमियम टोकन सफलतापूर्वक पुन: उत्पन्न किया गया",
+  "googleDriveNotConnected": "Google Drive कनेक्ट नहीं है। क्लाउड सत्यापन उपलब्ध नहीं होगा।"
 }

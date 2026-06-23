@@ -7918,6 +7918,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Automatically sync data when the app opens'**
   String get autoSyncDescription;
+
+  /// No description provided for @premiumVerificationToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Verification Token'**
+  String get premiumVerificationToken;
+
+  /// No description provided for @tokenExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Token Expiry'**
+  String get tokenExpiry;
+
+  /// No description provided for @refreshToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh Token'**
+  String get refreshToken;
+
+  /// No description provided for @tokenValid.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Token Valid'**
+  String get tokenValid;
+
+  /// No description provided for @tokenExpiringSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiring Soon'**
+  String get tokenExpiringSoon;
+
+  /// No description provided for @tokenExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Token Expired'**
+  String get tokenExpired;
+
+  /// No description provided for @noTokenGenerated.
+  ///
+  /// In en, this message translates to:
+  /// **'No token generated yet'**
+  String get noTokenGenerated;
+
+  /// No description provided for @tokenRegeneratedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium token regenerated successfully'**
+  String get tokenRegeneratedSuccess;
+
+  /// No description provided for @googleDriveNotConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive not connected. Cloud verification will not be available.'**
+  String get googleDriveNotConnected;
 }
 
 class _AppLocalizationsDelegate

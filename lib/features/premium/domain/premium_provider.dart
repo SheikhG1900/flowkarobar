@@ -1,6 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'package:crypto/crypto.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
+import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/features/premium/data/premium_repository.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 
@@ -18,6 +25,8 @@ class PremiumState {
   final List<ProductDetails> products;
   final DateTime? expiryDate;
   final String? subscriptionType; // 'monthly', 'yearly', 'lifetime', null
+  final String? premiumToken;
+  final DateTime? premiumTokenExpiry;
 
   PremiumState({
     this.isPremium = false,
@@ -26,6 +35,8 @@ class PremiumState {
     this.products = const [],
     this.expiryDate,
     this.subscriptionType,
+    this.premiumToken,
+    this.premiumTokenExpiry,
   });
 
   PremiumState copyWith({
@@ -35,6 +46,8 @@ class PremiumState {
     List<ProductDetails>? products,
     DateTime? expiryDate,
     String? subscriptionType,
+    String? premiumToken,
+    DateTime? premiumTokenExpiry,
   }) {
     return PremiumState(
       isPremium: isPremium ?? this.isPremium,
@@ -43,6 +56,8 @@ class PremiumState {
       products: products ?? this.products,
       expiryDate: expiryDate ?? this.expiryDate,
       subscriptionType: subscriptionType ?? this.subscriptionType,
+      premiumToken: premiumToken ?? this.premiumToken,
+      premiumTokenExpiry: premiumTokenExpiry ?? this.premiumTokenExpiry,
     );
   }
 }
@@ -60,6 +75,8 @@ class PremiumNotifier extends Notifier<PremiumState> {
       isPremium: _repository.getPremiumStatus(),
       expiryDate: _repository.getExpiryDate(),
       subscriptionType: _repository.getSubscriptionType(),
+      premiumToken: _repository.getPremiumToken(),
+      premiumTokenExpiry: _repository.getPremiumTokenExpiry(),
     );
   }
 
@@ -79,6 +96,9 @@ class PremiumNotifier extends Notifier<PremiumState> {
 
     // Load products
     await loadProducts();
+
+    // Check if premium token needs generation
+    await checkAndGenerateToken();
 
     // Check if user is already premium locally (done in build), maybe verify with store?
     // Restoring purchases is usually explicit user action or on first install logic.
@@ -179,6 +199,7 @@ class PremiumNotifier extends Notifier<PremiumState> {
               subscriptionType: type,
               expiryDate: expiry,
             );
+            await checkAndGenerateToken();
           } else {
             state = state.copyWith(isLoading: false, error: 'Invalid purchase');
           }
@@ -208,6 +229,127 @@ class PremiumNotifier extends Notifier<PremiumState> {
   Future<void> debugUnlockPremium() async {
     await _repository.setPremiumStatus(true);
     state = state.copyWith(isPremium: true);
+    await checkAndGenerateToken();
+  }
+
+  /// Token generation logic
+  Future<void> checkAndGenerateToken() async {
+    if (!state.isPremium) {
+      if (state.premiumToken != null) {
+        await _repository.setPremiumToken(null, null);
+        state = state.copyWith(premiumToken: null, premiumTokenExpiry: null);
+      }
+      return;
+    }
+
+    // Don't auto-regenerate if not signed in to Google Drive
+    final driveService = ref.read(googleDriveServiceProvider);
+    if (!driveService.isSignedIn) return;
+
+    final now = DateTime.now();
+    final currentToken = state.premiumToken;
+    final currentExpiry = state.premiumTokenExpiry;
+
+    bool needsGeneration = false;
+    if (currentToken == null || currentExpiry == null) {
+      needsGeneration = true;
+    } else {
+      final difference = currentExpiry.difference(now);
+      if (difference.inDays < 2) {
+        needsGeneration = true;
+      }
+    }
+
+    if (needsGeneration) {
+      await generatePremiumToken();
+    }
+  }
+
+  Future<void> generatePremiumToken() async {
+    final driveService = ref.read(googleDriveServiceProvider);
+    if (!driveService.isSignedIn) {
+      if (kDebugMode) {
+        print(
+            'PremiumNotifier: Skipping token generation because user is not signed in to Google Drive');
+      }
+      return;
+    }
+
+    try {
+      final deviceId = await _getDeviceId();
+      final expiry = DateTime.now().add(const Duration(days: 15));
+      final issuedAt = DateTime.now();
+
+      final payload = {
+        'deviceId': deviceId,
+        'expiry': expiry.toIso8601String(),
+        'issuedAt': issuedAt.toIso8601String(),
+        'version': 1,
+      };
+
+      final payloadString = json.encode(payload);
+
+      // Simple signing (HMAC-SHA256)
+      const secret = 'flowpaisa_premium_secret_2026';
+      final hmac = Hmac(sha256, utf8.encode(secret));
+      final signature = hmac.convert(utf8.encode(payloadString));
+
+      final tokenData = {
+        'payload': payload,
+        'signature': signature.toString(),
+      };
+
+      final token = base64Url.encode(utf8.encode(json.encode(tokenData)));
+
+      // 1. Try to upload to Google Drive first for cross-platform verification
+      try {
+        final rootFolderId =
+            await driveService.getOrCreateCashbookFolder(''); // Root appDataFolder
+        await driveService.uploadFile(
+          name: 'premium_verification.json',
+          content: json.encode(tokenData),
+          parentId: rootFolderId,
+        );
+
+        // 2. Save locally ONLY if upload was successful (to keep them in sync)
+        await _repository.setPremiumToken(token, expiry);
+        state = state.copyWith(
+          premiumToken: token,
+          premiumTokenExpiry: expiry,
+        );
+
+        if (kDebugMode) {
+          print(
+              'PremiumNotifier: Generated, uploaded and saved premium token expiring at $expiry');
+        }
+      } catch (driveError) {
+        if (kDebugMode) {
+          print(
+              'PremiumNotifier: Failed to upload to Google Drive, skipping local save: $driveError');
+        }
+        rethrow;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print('PremiumNotifier: Failed to generate premium token: $e');
+      }
+      rethrow;
+    }
+  }
+
+  Future<String> _getDeviceId() async {
+    final deviceInfo = DeviceInfoPlugin();
+    if (Platform.isAndroid) {
+      final androidInfo = await deviceInfo.androidInfo;
+      return androidInfo.id;
+    } else if (Platform.isIOS) {
+      final iosInfo = await deviceInfo.iosInfo;
+      return iosInfo.identifierForVendor ?? 'unknown_ios';
+    } else if (Platform.isWindows) {
+      final windowsInfo = await deviceInfo.windowsInfo;
+      return windowsInfo.deviceId;
+    }
+    return 'unknown_device';
   }
 }
 
