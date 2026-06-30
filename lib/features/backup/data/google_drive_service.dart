@@ -4,9 +4,15 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
+import 'package:flowpaisa/private/keys.dart';
+
+import 'windows_auth_stub.dart' if (dart.library.io) 'windows_auth_io.dart';
 
 class GoogleDriveService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: Platform.isWindows
+        ? PrivateKeys.googleClientId
+        : null,
     scopes: [
       drive.DriveApi.driveAppdataScope,
       drive.DriveApi.driveFileScope,
@@ -23,6 +29,24 @@ class GoogleDriveService {
 
   /// Initialize and try to sign in silently
   Future<GoogleSignInAccount?> init() async {
+    if (!kIsWeb && Platform.isWindows) {
+      final account = await WindowsAuthHelper.silentSignInWindows(
+        PrivateKeys.googleClientId,
+        PrivateKeys.googleClientSecret,
+        [
+          drive.DriveApi.driveAppdataScope,
+          drive.DriveApi.driveFileScope,
+          'https://www.googleapis.com/auth/userinfo.profile',
+          'https://www.googleapis.com/auth/userinfo.email',
+        ],
+      );
+      if (account != null) {
+        _currentUser = account;
+        _driveApi = WindowsAuthHelper.getDriveApiWindows();
+      }
+      return account;
+    }
+
     _googleSignIn.onCurrentUserChanged.listen((account) {
       _currentUser = account;
     });
@@ -44,6 +68,24 @@ class GoogleDriveService {
 
   /// Sign in explicitly
   Future<GoogleSignInAccount?> signIn() async {
+    if (!kIsWeb && Platform.isWindows) {
+      final account = await WindowsAuthHelper.signInWindows(
+        PrivateKeys.googleClientId,
+        PrivateKeys.googleClientSecret,
+        [
+          drive.DriveApi.driveAppdataScope,
+          drive.DriveApi.driveFileScope,
+          'https://www.googleapis.com/auth/userinfo.profile',
+          'https://www.googleapis.com/auth/userinfo.email',
+        ],
+      );
+      if (account != null) {
+        _currentUser = account;
+        _driveApi = WindowsAuthHelper.getDriveApiWindows();
+      }
+      return account;
+    }
+
     try {
       final account = await _googleSignIn.signIn();
       if (account != null) {
@@ -62,6 +104,13 @@ class GoogleDriveService {
 
   /// Sign out
   Future<void> signOut() async {
+    if (!kIsWeb && Platform.isWindows) {
+      await WindowsAuthHelper.signOutWindows();
+      _currentUser = null;
+      _driveApi = null;
+      return;
+    }
+
     await _googleSignIn.signOut();
     _currentUser = null;
     _driveApi = null;
@@ -69,6 +118,14 @@ class GoogleDriveService {
 
   /// Initialize Drive API client
   Future<void> _initializeDriveApi({bool forceRefresh = false}) async {
+    if (!kIsWeb && Platform.isWindows) {
+      if (forceRefresh) {
+        await signOut();
+        await signIn();
+      }
+      return;
+    }
+
     if (_currentUser == null) {
       if (kDebugMode) {
         print(
@@ -563,4 +620,44 @@ class GoogleDriveService {
       }
     }
   }
+}
+
+class WindowsGoogleSignInAccount implements GoogleSignInAccount {
+  @override
+  final String email;
+  @override
+  final String? displayName;
+  @override
+  final String id;
+  @override
+  final String? photoUrl;
+  @override
+  final String? serverAuthCode = null;
+
+  WindowsGoogleSignInAccount({
+    required this.email,
+    this.displayName,
+    required this.id,
+    this.photoUrl,
+  });
+
+  @override
+  Future<GoogleSignInAuthentication> get authentication => Future.value(
+    WindowsGoogleSignInAuthentication(),
+  );
+
+  @override
+  Future<void> clearAuthCache() async {}
+
+  @override
+  Future<Map<String, String>> get authHeaders => Future.value({});
+}
+
+class WindowsGoogleSignInAuthentication implements GoogleSignInAuthentication {
+  @override
+  final String? accessToken = null;
+  @override
+  final String? idToken = null;
+  @override
+  final String? serverAuthCode = null;
 }

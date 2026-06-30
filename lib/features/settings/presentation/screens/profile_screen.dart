@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/core/utils/name_utils.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
@@ -468,24 +469,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ),
                         ),
                       ] else ...[
-                        Row(
-                          children: [
-                            const Icon(Icons.cloud_off, color: Colors.grey),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                l10n.signInGoogleToBackup,
-                                style: theme.textTheme.bodySmall,
+                        if (!Platform.isWindows) ...[
+                          Row(
+                            children: [
+                              const Icon(Icons.cloud_off, color: Colors.grey),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  l10n.signInGoogleToBackup,
+                                  style: theme.textTheme.bodySmall,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                        ],
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             onPressed: () {
-                              if (PremiumGate.isPremium(ref)) {
+                              if (Platform.isWindows || PremiumGate.isPremium(ref)) {
                                 backupNotifier.signIn();
                               } else {
                                 PremiumGate.showPremiumDialog(context);
@@ -509,93 +512,147 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: 16),
 
                 // Premium Token Card
-                if (ref.watch(premiumProvider).isPremium)
-                  Consumer(
-                    builder: (context, ref, child) {
-                      final premiumState = ref.watch(premiumProvider);
-                      final token = premiumState.premiumToken;
-                      final expiry = premiumState.premiumTokenExpiry;
-                      final now = DateTime.now();
+                Consumer(
+                  builder: (context, ref, child) {
+                    final premiumState = ref.watch(premiumProvider);
+                    final token = premiumState.premiumToken;
+                    final expiry = premiumState.premiumTokenExpiry;
+                    final now = DateTime.now();
 
-                      Color statusColor = Colors.grey;
-                      String statusText = l10n.noTokenGenerated;
-                      IconData statusIcon = Icons.token_outlined;
+                    Color statusColor = Colors.grey;
+                    String statusText = l10n.premiumTokenMissing;
+                    IconData statusIcon = Icons.token_outlined;
 
-                      if (token != null && expiry != null) {
-                        final diff = expiry.difference(now);
-                        if (diff.isNegative) {
-                          statusColor = theme.colorScheme.error;
-                          statusText = l10n.tokenExpired;
-                          statusIcon = Icons.error_outline;
-                        } else if (diff.inDays < 2) {
-                          statusColor = Colors.orange;
-                          statusText = l10n.tokenExpiringSoon;
-                          statusIcon = Icons.warning_amber_rounded;
-                        } else {
-                          statusColor = Colors.amber;
-                          statusText = l10n.tokenValid;
-                          statusIcon = Icons.workspace_premium;
-                        }
+                    if (!premiumState.isPremium) {
+                      statusColor = theme.colorScheme.error;
+                      statusText = l10n.premiumTokenMissing;
+                      statusIcon = Icons.token_outlined;
+                    } else if (token == null || expiry == null) {
+                      statusColor = Colors.grey;
+                      statusText = l10n.noTokenGenerated;
+                      statusIcon = Icons.token_outlined;
+                    } else {
+                      final diff = expiry.difference(now);
+                      if (diff.isNegative) {
+                        statusColor = theme.colorScheme.error;
+                        statusText = l10n.tokenExpired;
+                        statusIcon = Icons.error_outline;
+                      } else if (diff.inDays < 2) {
+                        statusColor = Colors.orange;
+                        statusText = l10n.tokenExpiringSoon;
+                        statusIcon = Icons.warning_amber_rounded;
+                      } else {
+                        statusColor = Colors.amber;
+                        statusText = l10n.tokenValid;
+                        statusIcon = Icons.workspace_premium;
                       }
+                    }
 
-                      return Card(
-                        margin: EdgeInsets.zero,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(color: theme.dividerColor),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(4),
-                          child: ListTile(
-                            dense: true,
-                            leading: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: statusColor.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
+                    return Card(
+                      margin: EdgeInsets.zero,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: theme.dividerColor),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              dense: true,
+                              leading: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: statusColor.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  statusIcon,
+                                  color: statusColor,
+                                  size: 20,
+                                ),
                               ),
-                              child: Icon(
-                                statusIcon,
-                                color: statusColor,
-                                size: 20,
+                              title: Text(
+                                statusText,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: statusColor,
+                                ),
+                              ),
+                              subtitle: expiry != null
+                                  ? Text(
+                                      '${l10n.tokenExpiry}: ${AppDateFormatter.formatDate(expiry, pattern: profile.dateFormat)}',
+                                      style: theme.textTheme.bodySmall,
+                                    )
+                                  : Text(
+                                      premiumState.isPremium
+                                          ? l10n.noTokenGenerated
+                                          : l10n.upgradeToPremium,
+                                      style: theme.textTheme.bodySmall,
+                                    ),
+                              trailing: isGoogleSignedIn
+                                  ? IconButton(
+                                      icon: Icon(
+                                        Platform.isWindows
+                                            ? Icons.download
+                                            : Icons.refresh,
+                                        size: 20,
+                                      ),
+                                      onPressed: () async {
+                                        if (Platform.isWindows) {
+                                          final success = await ref
+                                              .read(premiumProvider.notifier)
+                                              .verifyPremiumFromGoogleDrive();
+                                          if (context.mounted) {
+                                            if (success) {
+                                              ToastUtils.showSuccessToast(
+                                                  context,
+                                                  ref,
+                                                  l10n.premiumTokenSyncedSuccess);
+                                            } else {
+                                              ToastUtils.showErrorToast(
+                                                  context,
+                                                  ref,
+                                                  l10n.premiumTokenNotFound);
+                                            }
+                                          }
+                                        } else {
+                                          if (premiumState.isPremium) {
+                                            await ref
+                                                .read(premiumProvider.notifier)
+                                                .generatePremiumToken();
+                                            if (context.mounted) {
+                                              ToastUtils.showSuccessToast(
+                                                  context,
+                                                  ref,
+                                                  l10n.tokenRegeneratedSuccess);
+                                            }
+                                          }
+                                        }
+                                      },
+                                      tooltip: Platform.isWindows
+                                          ? l10n.fetchPremiumToken
+                                          : l10n.refreshToken,
+                                    )
+                                  : null,
+                            ),
+                            const Divider(height: 16, thickness: 0.5),
+                            Text(
+                              l10n.premiumTokenDescription,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                height: 1.3,
                               ),
                             ),
-                            title: Text(
-                              statusText,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: statusColor,
-                              ),
-                            ),
-                            subtitle: expiry != null
-                                ? Text(
-                                    '${l10n.tokenExpiry}: ${AppDateFormatter.formatDate(expiry, pattern: profile.dateFormat)}',
-                                    style: theme.textTheme.bodySmall,
-                                  )
-                                : null,
-                            trailing: isGoogleSignedIn
-                                ? IconButton(
-                                    icon: const Icon(Icons.refresh, size: 20),
-                                    onPressed: () async {
-                                      await ref
-                                          .read(premiumProvider.notifier)
-                                          .generatePremiumToken();
-                                      if (context.mounted) {
-                                        ToastUtils.showSuccessToast(
-                                            context,
-                                            ref,
-                                            l10n.tokenRegeneratedSuccess);
-                                      }
-                                    },
-                                    tooltip: l10n.refreshToken,
-                                  )
-                                : null,
-                          ),
+                          ],
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
+                ),
               const SizedBox(height: 32),
 
               // Name Field

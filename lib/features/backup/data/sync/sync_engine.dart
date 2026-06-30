@@ -1053,6 +1053,9 @@ class SyncEngine {
     } else if (Platform.isIOS) {
       final iosInfo = await deviceInfo.iosInfo;
       return iosInfo.identifierForVendor ?? 'unknown_ios';
+    } else if (Platform.isWindows) {
+      final windowsInfo = await deviceInfo.windowsInfo;
+      return windowsInfo.deviceId;
     }
     return 'unknown_device';
   }

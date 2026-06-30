@@ -1,6 +1,7 @@
 ﻿import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/main.dart';
 import 'dart:math';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -2007,10 +2008,10 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     final actions = [
       ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
       ('add_transaction', l10n.add, Icons.add),
-      ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
-      ('accounts', l10n.accounts, Symbols.account_balance),
+      if (!Platform.isWindows) ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
+      ('accounts', l10n.accounts, Platform.isWindows ? Icons.account_balance : Icons.account_balance),
       ('contacts', l10n.contacts, Icons.people_outline_rounded),
-      ('receivables', l10n.receivableTag, Symbols.account_balance_wallet),
+      ('receivables', l10n.receivableTag, Platform.isWindows ? Icons.account_balance_wallet : Icons.account_balance_wallet),
       ('payables', l10n.payables, Icons.payment_outlined),
       ('categories', l10n.categories, Icons.category_outlined),
       ('analytics', l10n.analytics, Icons.bar_chart_rounded),
@@ -2310,8 +2311,10 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                                 );
                               },
                             ),
-                          if (config.quickActionCodes == null ||
-                              config.quickActionCodes!.contains('scan_receipt'))
+                          if (!Platform.isWindows &&
+                              (config.quickActionCodes == null ||
+                                  config.quickActionCodes!
+                                      .contains('scan_receipt')))
                             _QuickActionButton(
                               icon: Icons.document_scanner_outlined,
                               label: l10n.scan,

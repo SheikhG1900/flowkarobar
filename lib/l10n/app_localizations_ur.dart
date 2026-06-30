@@ -2440,6 +2440,10 @@ class AppLocalizationsUr extends AppLocalizations {
       'آپ سمارٹ اخراج استعمال کر رہے ہیں۔ مزید تجاویز کے لیے یہاں ٹیپ کریں۔';
 
   @override
+  String get windowsDictationTip =>
+      'ٹپ: ونڈوز پر، آپ نیچے دیے گئے ٹیکسٹ باکس پر کلک کر سکتے ہیں اور ونڈوز کے انتہائی درست بلٹ ان ڈکٹیشن ٹول کو استعمال کرنے کے لیے Win + H دبا سکتے ہیں!';
+
+  @override
   String get includeTextAsDescription => 'ٹیکسٹ کو تفصیل کے طور پر شامل کریں';
 
   @override
@@ -4371,11 +4375,29 @@ class AppLocalizationsUr extends AppLocalizations {
   String get tokenExpired => 'میعاد ختم ہوگئی';
 
   @override
+  String get premiumTokenMissing => 'پریمیم ٹوکن غائب ہے';
+
+  @override
   String get noTokenGenerated => 'ابھی تک کوئی ٹوکن نہیں بنایا گیا';
 
   @override
   String get tokenRegeneratedSuccess =>
       'پریمیم ٹوکن کامیابی سے دوبارہ تیار کر لیا گیا';
+
+  @override
+  String get fetchPremiumToken => 'پریمیم ٹوکن حاصل کریں';
+
+  @override
+  String get premiumTokenSyncedSuccess =>
+      'پریمیم کی حیثیت کامیابی سے ہم آہنگ ہو گئی!';
+
+  @override
+  String get premiumTokenNotFound =>
+      'گوگل ڈرائیو پر کوئی پریمیم تصدیق نہیں ملی۔';
+
+  @override
+  String get premiumTokenDescription =>
+      'یہ ٹوکن آپ کو ونڈوز اور دیگر پلیٹ فارمز پر اپنی پریمیم خریداری استعمال کرنے کی اجازت دیتا ہے۔ پریمیم اسٹیٹس کو خود بخود ہم آہنگ کرنے کے لیے اسی گوگل اکاؤنٹ سے لاگ ان کریں۔';
 
   @override
   String get googleDriveNotConnected =>

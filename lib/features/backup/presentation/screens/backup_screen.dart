@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flutter/material.dart';
@@ -62,9 +63,12 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            Text(l10n.googleDriveBackupRestore),
-            const SizedBox(width: 8),
-            _buildAdvancedChip(context, l10n),
+                Text(
+                  l10n.googleDriveBackupRestore,
+                  style: Platform.isWindows ? const TextStyle(fontSize: 16) : null,
+                ),
+                const SizedBox(width: 8),
+                _buildAdvancedChip(context, l10n),
           ],
         ),
         actions: [
@@ -257,13 +261,13 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            if (state.currentUser == null) ...[
-              const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
-              const SizedBox(height: 16),
-              Text(
-                l10n.googleDriveBackup,
-                style: theme.textTheme.titleMedium,
-              ),
+                      if (state.currentUser == null) ...[
+                        if (!Platform.isWindows) const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.googleDriveBackup,
+                          style: theme.textTheme.titleMedium,
+                        ),
               const SizedBox(height: 8),
               Text(
                 l10n.signInGoogleToBackup,
@@ -280,7 +284,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               Row(
                 children: [
                   UserAvatar(
-                    user: state.currentUser,
+                    user: Platform.isWindows ? null : state.currentUser,
                     size: 40,
                   ),
                   const SizedBox(width: 12),
@@ -339,7 +343,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
             ),
             child: Icon(
               IconHelper.getIconData(activeCashbook.iconCodePoint) ??
-                  Symbols.water_drop,
+                  (Platform.isWindows ? Icons.water_drop : Symbols.water_drop),
               color: Colors.white,
               size: 28,
             ),
@@ -1066,7 +1070,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
                             ),
                             child: Icon(
                               IconHelper.getIconData(metadata?.icon) ??
-                                  Symbols.water_drop,
+                                  (Platform.isWindows ? Icons.water_drop : Symbols.water_drop),
                               size: 20,
                               color: metadata != null
                                   ? Color(int.parse(
@@ -1441,7 +1445,43 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   }
 
   void _showResetLocalSyncDialog(BuildContext context) {
-    // ... (existing code)
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.resetLocalSyncState),
+        content: Text(l10n.resetLocalSyncMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await ref.read(backupProvider.notifier).resetLocalSyncState();
+                if (context.mounted) {
+                  ToastUtils.showSuccessToast(
+                      context, ref, l10n.localSyncResetSuccess);
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ToastUtils.showErrorToast(
+                      context, ref, l10n.errorOccurred(e.toString()));
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(l10n.resetNow),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildAdvancedChip(BuildContext context, AppLocalizations l10n) {

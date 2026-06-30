@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
@@ -22,6 +23,8 @@ import 'package:flowpaisa/features/voice_command/domain/voice_ai_parser.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
+import 'package:flowpaisa/core/utils/windows_dictation_stub.dart'
+    if (dart.library.io) 'package:flowpaisa/core/utils/windows_dictation_io.dart';
 
 class VoiceAddScreen extends ConsumerStatefulWidget {
   const VoiceAddScreen({super.key});
@@ -49,6 +52,8 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   bool _hasAutoSelectedContact = false;
 
   late TextEditingController _transcriptController;
+  final FocusNode _transcriptFocusNode = FocusNode();
+  Timer? _debounceTimer;
 
   static const String _includeDescKey = 'voice_include_text_as_description';
 
@@ -57,11 +62,29 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
     super.initState();
     _transcriptController = TextEditingController();
     _loadSettings();
+
+    // Listen to text changes to auto-process typed/dictated text
+    _transcriptController.addListener(_onTextChanged);
     
     // Auto-start listening when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _listen();
+      }
+    });
+  }
+
+  void _onTextChanged() {
+    final text = _transcriptController.text.trim();
+    if (text.isEmpty) return;
+
+    // Cancel previous debounce timer
+    _debounceTimer?.cancel();
+
+    // Debounce for 1.5 seconds of inactivity before parsing automatically
+    _debounceTimer = Timer(const Duration(milliseconds: 1500), () {
+      if (mounted && !_isProcessing) {
+        _processText(text);
       }
     });
   }
@@ -84,36 +107,72 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   @override
   void dispose() {
     _transcriptController.dispose();
+    _transcriptFocusNode.dispose();
+    _debounceTimer?.cancel();
     _aiParser.close();
     super.dispose();
   }
 
   Future<void> _listen() async {
+    if (defaultTargetPlatform == TargetPlatform.windows) {
+      _transcriptFocusNode.requestFocus();
+      await Future.delayed(const Duration(milliseconds: 150));
+      triggerWindowsDictation();
+      return;
+    }
+
     if (!_isListening) {
-      bool available = await _speech.initialize(
-        onStatus: (val) {
-          if (kDebugMode) {
-            debugPrint('onStatus: $val');
-          }
-        },
-        onError: (val) {
-          if (kDebugMode) {
-            debugPrint('onError: $val');
-          }
-        },
-      );
-      if (available) {
-        setState(() => _isListening = true);
-        _speech.listen(
-          onResult: (val) => setState(() {
-            _text = val.recognizedWords;
-            _transcriptController.text = _text;
-            if (val.finalResult) {
-              _isListening = false;
-              _processText(_text);
+      try {
+        bool available = await _speech.initialize(
+          onStatus: (val) {
+            if (kDebugMode) {
+              debugPrint('onStatus: $val');
             }
-          }),
+          },
+          onError: (val) {
+            if (kDebugMode) {
+              debugPrint('onError: $val');
+            }
+            if (mounted) {
+              ToastUtils.showErrorToast(
+                context,
+                ref,
+                "Voice recognition error: ${val.errorMsg}. Please check if your microphone is connected and enabled.",
+              );
+              setState(() => _isListening = false);
+            }
+          },
+          debugLogging: kDebugMode,
         );
+        if (available) {
+          setState(() => _isListening = true);
+          _speech.listen(
+            onResult: (val) => setState(() {
+              _text = val.recognizedWords;
+              _transcriptController.text = _text;
+              if (val.finalResult) {
+                _isListening = false;
+                _processText(_text);
+              }
+            }),
+          );
+        } else {
+          if (mounted) {
+            ToastUtils.showErrorToast(
+              context,
+              ref,
+              "Voice recognition is not available on this device. Please ensure a microphone is connected and microphone permissions are granted.",
+            );
+          }
+        }
+      } catch (e) {
+        if (mounted) {
+          ToastUtils.showErrorToast(
+            context,
+            ref,
+            "Failed to initialize voice recognition: $e",
+          );
+        }
       }
     } else {
       setState(() => _isListening = false);
@@ -612,10 +671,41 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                       const SizedBox(height: 32),
 
                       // Transcript Field
-                      if (_text.isNotEmpty || _isProcessing)
+                      if (_text.isNotEmpty || _isProcessing || (defaultTargetPlatform == TargetPlatform.windows))
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            if (defaultTargetPlatform == TargetPlatform.windows) ...[
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.info_outline,
+                                      color: theme.colorScheme.primary,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        l10n.windowsDictationTip,
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: theme.colorScheme.onSurface,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
                             Text(l10n.whatWeHeard,
                                 style: const TextStyle(
                                     fontWeight: FontWeight.bold)),
@@ -637,6 +727,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
                             const SizedBox(height: 8),
                             TextField(
                               controller: _transcriptController,
+                              focusNode: _transcriptFocusNode,
                               maxLines: 3,
                               decoration: InputDecoration(
                                 border: OutlineInputBorder(

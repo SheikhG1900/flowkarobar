@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flowpaisa/core/utils/name_utils.dart';
@@ -23,7 +24,8 @@ class UserAvatar extends StatelessWidget {
 
     if (user == null) {
       avatarContent = Icon(Icons.person_outline, size: size * 0.6);
-    } else if (user!.photoUrl != null && user!.photoUrl!.isNotEmpty) {
+    } else if (user!.photoUrl != null &&
+        user!.photoUrl!.isNotEmpty) {
       avatarContent = ClipOval(
         child: Image.network(
           user!.photoUrl!,

@@ -1290,6 +1290,7 @@
   "voiceGuideTitle": "Voice Phrasing Guide",
   "voiceInstructionBasic": "You're using simple extraction mode. Tap here to see hint messages.",
   "voiceInstructionSmart": "You're using Smart extraction. Tap here for more tips.",
+  "windowsDictationTip": "Tip: On Windows, you can click the text box below and press Win + H to use Windows' highly accurate built-in Dictation tool!",
   "includeTextAsDescription": "Include text as description",
   "camera": "Camera",
   "gallery": "Gallery",
@@ -2233,7 +2234,12 @@
   "tokenValid": "Premium Token Valid",
   "tokenExpiringSoon": "Expiring Soon",
   "tokenExpired": "Token Expired",
+  "premiumTokenMissing": "Premium Token Missing",
   "noTokenGenerated": "No token generated yet",
   "tokenRegeneratedSuccess": "Premium token regenerated successfully",
+  "fetchPremiumToken": "Fetch Premium Token",
+  "premiumTokenSyncedSuccess": "Premium status synced successfully!",
+  "premiumTokenNotFound": "No premium verification found on Google Drive.",
+  "premiumTokenDescription": "This token allows you to use your Premium purchase on Windows and other platforms. Log in with the same Google account to sync your Premium status automatically.",
   "googleDriveNotConnected": "Google Drive not connected. Cloud verification will not be available."
 }

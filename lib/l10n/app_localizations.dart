@@ -4444,6 +4444,12 @@ abstract class AppLocalizations {
   /// **'You\'re using Smart extraction. Tap here for more tips.'**
   String get voiceInstructionSmart;
 
+  /// No description provided for @windowsDictationTip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: On Windows, you can click the text box below and press Win + H to use Windows\' highly accurate built-in Dictation tool!'**
+  String get windowsDictationTip;
+
   /// No description provided for @includeTextAsDescription.
   ///
   /// In en, this message translates to:
@@ -7955,6 +7961,12 @@ abstract class AppLocalizations {
   /// **'Token Expired'**
   String get tokenExpired;
 
+  /// No description provided for @premiumTokenMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium Token Missing'**
+  String get premiumTokenMissing;
+
   /// No description provided for @noTokenGenerated.
   ///
   /// In en, this message translates to:
@@ -7966,6 +7978,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Premium token regenerated successfully'**
   String get tokenRegeneratedSuccess;
+
+  /// No description provided for @fetchPremiumToken.
+  ///
+  /// In en, this message translates to:
+  /// **'Fetch Premium Token'**
+  String get fetchPremiumToken;
+
+  /// No description provided for @premiumTokenSyncedSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium status synced successfully!'**
+  String get premiumTokenSyncedSuccess;
+
+  /// No description provided for @premiumTokenNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No premium verification found on Google Drive.'**
+  String get premiumTokenNotFound;
+
+  /// No description provided for @premiumTokenDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This token allows you to use your Premium purchase on Windows and other platforms. Log in with the same Google account to sync your Premium status automatically.'**
+  String get premiumTokenDescription;
 
   /// No description provided for @googleDriveNotConnected.
   ///

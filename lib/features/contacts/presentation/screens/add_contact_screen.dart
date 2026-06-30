@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flowpaisa/core/utils/name_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,6 +56,11 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
   }
 
   Future<void> _pickFromDevice() async {
+    if (Platform.isWindows) {
+      ToastUtils.showInfoToast(
+          context, ref, "Importing contacts is not supported on Windows");
+      return;
+    }
     try {
       // Use readonly: true as it's often more reliable for just picking/reading
       // and correctly handles cases where permission is already granted.

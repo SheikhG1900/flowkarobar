@@ -2435,6 +2435,10 @@ class AppLocalizationsHi extends AppLocalizations {
       'आप स्मार्ट एक्सट्रैक्शन का उपयोग कर रहे हैं। अधिक टिप्स के लिए यहां टैप करें।';
 
   @override
+  String get windowsDictationTip =>
+      'सुझाव: विंडोज़ पर, आप नीचे दिए गए टेक्स्ट बॉक्स पर क्लिक कर सकते हैं और विंडोज़ के अत्यधिक सटीक अंतर्निहित डिक्टेशन टूल का उपयोग करने के लिए Win + H दबा सकते हैं!';
+
+  @override
   String get includeTextAsDescription =>
       'टेक्स्ट को विवरण के रूप में शामिल करें';
 
@@ -4367,11 +4371,29 @@ class AppLocalizationsHi extends AppLocalizations {
   String get tokenExpired => 'टोकन समाप्त हो गया';
 
   @override
+  String get premiumTokenMissing => 'प्रीमियम टोकन गायब है';
+
+  @override
   String get noTokenGenerated => 'अभी तक कोई टोकन उत्पन्न नहीं हुआ';
 
   @override
   String get tokenRegeneratedSuccess =>
       'प्रीमियम टोकन सफलतापूर्वक पुन: उत्पन्न किया गया';
+
+  @override
+  String get fetchPremiumToken => 'प्रीमियम टोकन प्राप्त करें';
+
+  @override
+  String get premiumTokenSyncedSuccess =>
+      'प्रीमियम स्थिति सफलतापूर्वक सिंक की गई!';
+
+  @override
+  String get premiumTokenNotFound =>
+      'Google Drive पर कोई प्रीमियम सत्यापन नहीं मिला।';
+
+  @override
+  String get premiumTokenDescription =>
+      'यह टोकन आपको विंडोज और अन्य प्लेटफॉर्म पर अपनी प्रीमियम खरीद का उपयोग करने की अनुमति देता है। अपनी प्रीमियम स्थिति को स्वचालित रूप से सिंक करने के लिए उसी Google खाते से लॉग इन करें।';
 
   @override
   String get googleDriveNotConnected =>

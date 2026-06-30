@@ -251,6 +251,11 @@ class BackupNotifier extends Notifier<BackupState> {
     _startDatabaseStatusWatcher();
 
     if (_driveService.isSignedIn) {
+      // Try to verify premium from Google Drive first if not already premium
+      if (!ref.read(premiumProvider).isPremium) {
+        await ref.read(premiumProvider.notifier).verifyPremiumFromGoogleDrive();
+      }
+
       // Check premium status (same logic as PremiumGate.isPremium but using Ref)
       final premiumState = ref.read(premiumProvider);
       bool isPremium = premiumState.isPremium;
@@ -805,6 +810,9 @@ class BackupNotifier extends Notifier<BackupState> {
     } else if (Platform.isIOS) {
       final iosInfo = await deviceInfo.iosInfo;
       return iosInfo.identifierForVendor ?? 'unknown_ios';
+    } else if (Platform.isWindows) {
+      final windowsInfo = await deviceInfo.windowsInfo;
+      return windowsInfo.deviceId;
     }
     return 'unknown_device';
   }
@@ -1090,6 +1098,8 @@ class BackupNotifier extends Notifier<BackupState> {
       
       if (account != null) {
         await _checkAccountMismatch(account.email);
+        // Verify premium from Google Drive (especially for Windows or fresh installs)
+        await ref.read(premiumProvider.notifier).verifyPremiumFromGoogleDrive();
         // Trigger premium token check after sign-in
         ref.read(premiumProvider.notifier).checkAndGenerateToken();
       }
@@ -1115,6 +1125,8 @@ class BackupNotifier extends Notifier<BackupState> {
       
       if (account != null) {
         await _checkAccountMismatch(account.email);
+        // Verify premium from Google Drive (especially for Windows or fresh installs)
+        await ref.read(premiumProvider.notifier).verifyPremiumFromGoogleDrive();
         // Trigger premium token check after sign-in
         ref.read(premiumProvider.notifier).checkAndGenerateToken();
         state = state.copyWith(
@@ -1128,6 +1140,8 @@ class BackupNotifier extends Notifier<BackupState> {
       final explicitAccount = await _driveService.signIn();
       if (explicitAccount != null) {
         await _checkAccountMismatch(explicitAccount.email);
+        // Verify premium from Google Drive (especially for Windows or fresh installs)
+        await ref.read(premiumProvider.notifier).verifyPremiumFromGoogleDrive();
         // Trigger premium token check after sign-in
         ref.read(premiumProvider.notifier).checkAndGenerateToken();
       }

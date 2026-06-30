@@ -84,6 +84,11 @@ class _DevScreenState extends ConsumerState<DevScreen> {
         deviceInfo['Model'] = iosInfo.model;
         deviceInfo['System Name'] = iosInfo.systemName;
         deviceInfo['System Version'] = iosInfo.systemVersion;
+      } else if (Platform.isWindows) {
+        final windowsInfo = await deviceInfoPlugin.windowsInfo;
+        deviceInfo['Computer Name'] = windowsInfo.computerName;
+        deviceInfo['Release Id'] = windowsInfo.releaseId;
+        deviceInfo['Build Number'] = windowsInfo.buildNumber.toString();
       }
 
       final prefs = await SharedPreferences.getInstance();

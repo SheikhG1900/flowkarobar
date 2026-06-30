@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_undraw/flutter_undraw.dart';
@@ -57,12 +58,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         image: _buildWelcomeLogo(primaryColor, isDark, theme),
         decoration: pageDecoration,
       ),
-      PageViewModel(
-        title: l10n.onboardingScanTitle,
-        body: l10n.onboardingScanBody,
-        image: _buildUndraw(UndrawIllustration.mobileSite, primaryColor),
-        decoration: pageDecoration,
-      ),
+      if (!Platform.isWindows)
+        PageViewModel(
+          title: l10n.onboardingScanTitle,
+          body: l10n.onboardingScanBody,
+          image: _buildUndraw(UndrawIllustration.mobileSite, primaryColor),
+          decoration: pageDecoration,
+        ),
       PageViewModel(
         title: l10n.onboardingTransactionsTitle,
         body: l10n.onboardingTransactionsBody,

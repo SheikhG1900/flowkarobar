@@ -34,7 +34,7 @@ class AccountSlider extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                height: 230,
+                height: 242, // Increased height to accommodate bottom padding for shadows
                 width: double.infinity,
                 child: accounts.length == 1
                     ? Padding(
@@ -58,7 +58,7 @@ class AccountSlider extends ConsumerWidget {
                           left: 12,
                           right: 20,
                           top: 0,
-                          bottom: 0,
+                          bottom: 12, // Extra bottom padding so shadows don't get cropped
                         ),
                         itemCount: accounts.length,
                         itemBuilder: (context, index) {
@@ -90,7 +90,7 @@ class AccountSlider extends ConsumerWidget {
           );
         },
         loading: () => const SizedBox(
-          height: 230,
+          height: 242,
           child: Center(child: CircularProgressIndicator()),
         ),
         error: (_, __) => const SizedBox.shrink(),

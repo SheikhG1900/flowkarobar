@@ -2426,6 +2426,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'You\'re using Smart extraction. Tap here for more tips.';
 
   @override
+  String get windowsDictationTip =>
+      'Tip: On Windows, you can click the text box below and press Win + H to use Windows\' highly accurate built-in Dictation tool!';
+
+  @override
   String get includeTextAsDescription => 'Include text as description';
 
   @override
@@ -4355,11 +4359,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tokenExpired => 'Token Expired';
 
   @override
+  String get premiumTokenMissing => 'Premium Token Missing';
+
+  @override
   String get noTokenGenerated => 'No token generated yet';
 
   @override
   String get tokenRegeneratedSuccess =>
       'Premium token regenerated successfully';
+
+  @override
+  String get fetchPremiumToken => 'Fetch Premium Token';
+
+  @override
+  String get premiumTokenSyncedSuccess => 'Premium status synced successfully!';
+
+  @override
+  String get premiumTokenNotFound =>
+      'No premium verification found on Google Drive.';
+
+  @override
+  String get premiumTokenDescription =>
+      'This token allows you to use your Premium purchase on Windows and other platforms. Log in with the same Google account to sync your Premium status automatically.';
 
   @override
   String get googleDriveNotConnected =>

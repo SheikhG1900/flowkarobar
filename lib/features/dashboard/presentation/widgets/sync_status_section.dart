@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -156,29 +157,29 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
 
     if (isSyncAlreadyInProgress) {
       statusText = l10n.syncAlreadyInProgress;
-      statusIcon = Symbols.sync;
+      statusIcon = Platform.isWindows ? Icons.sync : Symbols.sync;
       statusColor = Colors.orange;
     } else if (isLockError) {
       statusText = l10n.syncDelayedRetryShortly;
-      statusIcon = Symbols.sync;
+      statusIcon = Platform.isWindows ? Icons.sync : Symbols.sync;
       statusColor = Colors.orange;
     } else if (isSyncing) {
       statusText = l10n.processing;
-      statusIcon = Symbols.sync;
+      statusIcon = Platform.isWindows ? Icons.sync : Symbols.sync;
       statusColor = theme.colorScheme.primary;
     } else if (hasUnsynced) {
       statusText = l10n.changesToPush(backupState.unsyncedCount);
-      statusIcon = Symbols.cloud_upload;
+      statusIcon = Platform.isWindows ? Icons.cloud_upload : Symbols.cloud_upload;
       statusColor = Colors.orange;
     } else if (hasCloudUpdates) {
       statusText = updatesCount == 1
           ? l10n.oneUpdateAvailable
           : l10n.multipleUpdatesAvailable(updatesCount);
-      statusIcon = Symbols.cloud_download;
+      statusIcon = Platform.isWindows ? Icons.cloud_download : Symbols.cloud_download;
       statusColor = Colors.lightBlue;
     } else {
       statusText = l10n.dataSynced;
-      statusIcon = Symbols.cloud_done;
+      statusIcon = Platform.isWindows ? Icons.cloud_done : Symbols.cloud_done;
       statusColor = Colors.green;
     }
 
@@ -235,11 +236,17 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                             height: 24,
                             child: AppLoadingIndicator(size: 20),
                           )
-                        : Icon(
-                            statusIcon,
-                            color: statusColor,
-                            size: 24,
-                          ),
+                        : (Platform.isWindows && statusIcon == Symbols.cloud_done)
+                            ? Icon(
+                                Icons.check_circle_outline,
+                                color: statusColor,
+                                size: 24,
+                              )
+                            : Icon(
+                                statusIcon,
+                                color: statusColor,
+                                size: 24,
+                              ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -276,7 +283,7 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                       ),
                       child: IconButton(
                         onPressed: () async {
-                          if (isPremium) {
+                          if (Platform.isWindows || isPremium) {
                             if (isSignedIn) {
                               ref
                                   .read(backupProvider.notifier)
@@ -296,7 +303,7 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                           }
                         },
                         icon: Icon(
-                          Symbols.sync,
+                          Platform.isWindows ? Icons.sync : Symbols.sync,
                           color: statusColor,
                           size: 24,
                         ),
@@ -306,13 +313,13 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                     ),
                   if (isSuccess && !hasUnsynced && !hasCloudUpdates)
                     Icon(
-                      Symbols.check_circle,
+                      Platform.isWindows ? Icons.check_circle : Symbols.check_circle,
                       color: statusColor.withValues(alpha: 0.7),
                       size: 28,
                     ),
                   if (isSyncing)
                     Icon(
-                      Symbols.clock_loader_20_rounded,
+                      Platform.isWindows ? Icons.sync : Symbols.clock_loader_20_rounded,
                       color: statusColor.withValues(alpha: 0.7),
                       size: 28,
                     ),
@@ -340,7 +347,9 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                       child: Row(
                         children: [
                           Icon(
-                            autoSync ? Symbols.sync_lock : Symbols.sync_disabled,
+                            autoSync
+                                ? (Platform.isWindows ? Icons.sync_lock : Symbols.sync_lock)
+                                : (Platform.isWindows ? Icons.sync_disabled : Symbols.sync_disabled),
                             size: 18,
                             color: autoSync
                                 ? statusColor.withValues(alpha: 0.8)

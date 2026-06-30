@@ -80,8 +80,9 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     final l10n = AppLocalizations.of(context)!;
-    if (kIsWeb) {
-      ToastUtils.showErrorToast(context, ref, "Scanning not available on Web");
+    if (kIsWeb || Platform.isWindows) {
+      ToastUtils.showErrorToast(
+          context, ref, "Scanning not available on this platform");
       return;
     }
     try {

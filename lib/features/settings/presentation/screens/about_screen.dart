@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -220,11 +221,11 @@ class _AboutBody extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final features = [
       {'icon': Icons.receipt_long, 'label': l10n.transactions},
-      {'icon': Icons.account_balance_wallet, 'label': l10n.receivables},
+      {'icon': Platform.isWindows ? Icons.account_balance_wallet : Icons.account_balance_wallet, 'label': l10n.receivables},
       {'icon': Icons.payment, 'label': l10n.payables},
       {'icon': Icons.people, 'label': l10n.contacts},
       {'icon': Icons.analytics, 'label': l10n.analytics},
-      {'icon': Icons.camera_alt, 'label': l10n.receiptScan},
+      if (!Platform.isWindows) {'icon': Icons.camera_alt, 'label': l10n.receiptScan},
       {'icon': Icons.cloud_upload, 'label': l10n.cloudBackup},
       {'icon': Icons.language, 'label': l10n.multilingual},
     ];

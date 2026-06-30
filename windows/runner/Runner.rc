@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.flowpaisa" "\0"
-            VALUE "FileDescription", "flowpaisa" "\0"
+            VALUE "CompanyName", "flowpaisa" "\0"
+            VALUE "FileDescription", "Flowpaisa - Personal Finance Manager" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "flowpaisa" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.flowpaisa. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 flowpaisa. All rights reserved." "\0"
             VALUE "OriginalFilename", "flowpaisa.exe" "\0"
-            VALUE "ProductName", "flowpaisa" "\0"
+            VALUE "ProductName", "Flowpaisa" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

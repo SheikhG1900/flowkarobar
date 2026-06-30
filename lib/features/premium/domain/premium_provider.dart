@@ -6,6 +6,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'dart:io';
 import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/features/premium/data/premium_repository.dart';
@@ -144,7 +145,17 @@ class PremiumNotifier extends Notifier<PremiumState> {
   Future<void> restorePurchases() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await _repository.restorePurchases();
+      if (Platform.isWindows) {
+        final verified = await verifyPremiumFromGoogleDrive();
+        state = state.copyWith(isLoading: false);
+        if (!verified) {
+          state = state.copyWith(
+              error:
+                  'No premium verification found on Google Drive. Please sign in with the Google account used to purchase premium on mobile.');
+        }
+      } else {
+        await _repository.restorePurchases();
+      }
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -230,6 +241,85 @@ class PremiumNotifier extends Notifier<PremiumState> {
     await _repository.setPremiumStatus(true);
     state = state.copyWith(isPremium: true);
     await checkAndGenerateToken();
+  }
+
+  /// Verify premium status from Google Drive (for cross-platform support)
+  Future<bool> verifyPremiumFromGoogleDrive() async {
+    final driveService = ref.read(googleDriveServiceProvider);
+    if (!driveService.isSignedIn) return false;
+
+    try {
+      if (kDebugMode) {
+        print('PremiumNotifier: Checking Google Drive for premium verification...');
+      }
+      final syncFolderId = await driveService.getOrCreateCashbookFolder('');
+      
+      // Find premium_verification.json in the Sync Data folder
+      final query = "name = 'premium_verification.json' and '$syncFolderId' in parents and trashed = false";
+      final files = await driveService.listFilesWithQuery(query);
+      
+      if (files.isEmpty) {
+        if (kDebugMode) {
+          print('PremiumNotifier: No premium verification file found on Google Drive');
+        }
+        return false;
+      }
+      
+      final fileId = files.first.id!;
+      final result = await driveService.downloadFileWithETag(fileId);
+      final tokenData = json.decode(result.content) as Map<String, dynamic>;
+      
+      final payload = tokenData['payload'] as Map<String, dynamic>;
+      final signature = tokenData['signature'] as String;
+      
+      final payloadString = json.encode(payload);
+      const secret = 'flowpaisa_premium_secret_2026';
+      final hmac = Hmac(sha256, utf8.encode(secret));
+      final expectedSignature = hmac.convert(utf8.encode(payloadString)).toString();
+      
+      if (signature != expectedSignature) {
+        if (kDebugMode) {
+          print('PremiumNotifier: Premium token signature mismatch');
+        }
+        return false;
+      }
+      
+      final expiryStr = payload['expiry'] as String;
+      final expiry = DateTime.parse(expiryStr);
+      if (expiry.isBefore(DateTime.now())) {
+        if (kDebugMode) {
+          print('PremiumNotifier: Premium token has expired: $expiry');
+        }
+        return false;
+      }
+      
+      // Token is valid! Mark local user as premium
+      await _repository.setPremiumStatus(true);
+      await _repository.setSubscriptionType('cross_platform');
+      await _repository.setExpiryDate(expiry);
+      
+      // Also save the token locally
+      final token = base64Url.encode(utf8.encode(json.encode(tokenData)));
+      await _repository.setPremiumToken(token, expiry);
+      
+      state = state.copyWith(
+        isPremium: true,
+        subscriptionType: 'cross_platform',
+        expiryDate: expiry,
+        premiumToken: token,
+        premiumTokenExpiry: expiry,
+      );
+      
+      if (kDebugMode) {
+        print('PremiumNotifier: Successfully verified premium status from Google Drive expiring at $expiry');
+      }
+      return true;
+    } catch (e) {
+      if (kDebugMode) {
+        print('PremiumNotifier: Failed to verify premium from Google Drive: $e');
+      }
+      return false;
+    }
   }
 
   /// Token generation logic

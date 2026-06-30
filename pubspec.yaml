@@ -76,12 +76,15 @@ dependencies:
   
   # Utils
   dio: ^5.4.0
-  speech_to_text: ^7.0.0
+  http: ^1.6.0
+  speech_to_text: ^7.4.0
   share_plus: ^12.0.1
   cupertino_icons: ^1.0.2
   shared_preferences: ^2.5.4
   country_flags: ^4.1.1
   file_selector: ^1.1.0
+  win32: ^5.15.0
+  ffi: ^2.2.0
   
   # AI & ML
   # google_mlkit_entity_extraction removed to support SDK 24 and 16KB alignment

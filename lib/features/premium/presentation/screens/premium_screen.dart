@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -216,133 +218,170 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     ),
                   ],
 
-                  // Plan selection (non-premium): show at top before features
-                  if (!premiumState.isPremium) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.chooseYourPlan,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
+                    // Plan selection (non-premium): show at top before features
+                    if (!premiumState.isPremium) ...[
+                      if (Platform.isWindows)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 24),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                                color: Colors.blue.withValues(alpha: 0.2)),
+                          ),
+                          child: Column(
+                            children: [
+                              const Icon(Icons.info_outline,
+                                  color: Colors.blue, size: 32),
+                              const SizedBox(height: 12),
+                              Text(
+                                "Premium purchases are not available on Windows yet.",
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                "Please purchase Premium on Android or iOS, then sign in with the same Google account here to sync your status using the Premium Token.",
+                                style: TextStyle(fontSize: 13),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        )
+                      else ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.chooseYourPlan,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
 
-                    // Monthly Plan
-                    _buildPlanOption(
-                      context,
-                      id: PremiumRepository.premiumMonthlyId,
-                      title: l10n.monthly,
-                      subtitle: l10n.cancelAnytime,
-                      productInfo: _getDetailedProductInfo(
-                        context,
-                        premiumState.products
-                                .where((p) =>
-                                    p.id == PremiumRepository.premiumMonthlyId)
-                                .firstOrNull ??
-                            ProductDetails(
-                              id: PremiumRepository.premiumMonthlyId,
-                              title: '',
-                              description: '',
-                              price: '₹29',
-                              rawPrice: 29.0,
-                              currencyCode: 'INR',
-                            ),
-                      ),
-                      isSelected: _selectedProductId ==
-                          PremiumRepository.premiumMonthlyId,
-                    ),
-                    const SizedBox(height: 12),
+                        // Monthly Plan
+                        _buildPlanOption(
+                          context,
+                          id: PremiumRepository.premiumMonthlyId,
+                          title: l10n.monthly,
+                          subtitle: l10n.cancelAnytime,
+                          productInfo: _getDetailedProductInfo(
+                            context,
+                            premiumState.products
+                                    .where((p) =>
+                                        p.id ==
+                                        PremiumRepository.premiumMonthlyId)
+                                    .firstOrNull ??
+                                ProductDetails(
+                                  id: PremiumRepository.premiumMonthlyId,
+                                  title: '',
+                                  description: '',
+                                  price: '₹29',
+                                  rawPrice: 29.0,
+                                  currencyCode: 'INR',
+                                ),
+                          ),
+                          isSelected: _selectedProductId ==
+                              PremiumRepository.premiumMonthlyId,
+                        ),
+                        const SizedBox(height: 12),
 
-                    // Yearly Plan (Recommended)
-                    _buildPlanOption(
-                      context,
-                      id: PremiumRepository.premiumYearlyId,
-                      title: l10n.yearly,
-                      subtitle: l10n.savePercentage("50"),
-                      productInfo: _getDetailedProductInfo(
-                        context,
-                        premiumState.products
-                                .where((p) =>
-                                    p.id == PremiumRepository.premiumYearlyId)
-                                .firstOrNull ??
-                            ProductDetails(
-                              id: PremiumRepository.premiumYearlyId,
-                              title: '',
-                              description: '',
-                              price: '₹199',
-                              rawPrice: 199.0,
-                              currencyCode: 'INR',
-                            ),
-                      ),
-                      isSelected: _selectedProductId ==
-                          PremiumRepository.premiumYearlyId,
-                      isRecommended: true,
-                    ),
-                    const SizedBox(height: 12),
+                        // Yearly Plan (Recommended)
+                        _buildPlanOption(
+                          context,
+                          id: PremiumRepository.premiumYearlyId,
+                          title: l10n.yearly,
+                          subtitle: l10n.savePercentage("50"),
+                          productInfo: _getDetailedProductInfo(
+                            context,
+                            premiumState.products
+                                    .where((p) =>
+                                        p.id ==
+                                        PremiumRepository.premiumYearlyId)
+                                    .firstOrNull ??
+                                ProductDetails(
+                                  id: PremiumRepository.premiumYearlyId,
+                                  title: '',
+                                  description: '',
+                                  price: '₹199',
+                                  rawPrice: 199.0,
+                                  currencyCode: 'INR',
+                                ),
+                          ),
+                          isSelected: _selectedProductId ==
+                              PremiumRepository.premiumYearlyId,
+                          isRecommended: true,
+                        ),
+                        const SizedBox(height: 12),
 
-                    // Lifetime Plan
-                    _buildPlanOption(
-                      context,
-                      id: PremiumRepository.premiumLifetimeId,
-                      title: l10n.lifetime,
-                      subtitle: l10n.oneTimePayment,
-                      productInfo: _getDetailedProductInfo(
-                        context,
-                        premiumState.products
-                                .where((p) =>
-                                    p.id == PremiumRepository.premiumLifetimeId)
-                                .firstOrNull ??
-                            ProductDetails(
-                              id: PremiumRepository.premiumLifetimeId,
-                              title: '',
-                              description: '',
-                              price: '₹399',
-                              rawPrice: 399.0,
-                              currencyCode: 'INR',
-                            ),
-                      ),
-                      isSelected: _selectedProductId ==
-                          PremiumRepository.premiumLifetimeId,
-                    ),
-                    const SizedBox(height: 24),
+                        // Lifetime Plan
+                        _buildPlanOption(
+                          context,
+                          id: PremiumRepository.premiumLifetimeId,
+                          title: l10n.lifetime,
+                          subtitle: l10n.oneTimePayment,
+                          productInfo: _getDetailedProductInfo(
+                            context,
+                            premiumState.products
+                                    .where((p) =>
+                                        p.id ==
+                                        PremiumRepository.premiumLifetimeId)
+                                    .firstOrNull ??
+                                ProductDetails(
+                                  id: PremiumRepository.premiumLifetimeId,
+                                  title: '',
+                                  description: '',
+                                  price: '₹399',
+                                  rawPrice: 399.0,
+                                  currencyCode: 'INR',
+                                ),
+                          ),
+                          isSelected: _selectedProductId ==
+                              PremiumRepository.premiumLifetimeId,
+                        ),
+                        const SizedBox(height: 24),
 
-                    // Unlock Button
-                    GradientButton(
-                      label: premiumState.isLoading
-                          ? l10n.processing
-                          : l10n.unlockPremium,
-                      icon: premiumState.isLoading
-                          ? Icons.hourglass_empty
-                          : Icons.lock_open,
-                      isLoading: premiumState.isLoading,
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                      ),
-                      onPressed: premiumState.isLoading
-                          ? () {}
-                          : () {
-                              if (_selectedProductId != null) {
-                                ref
-                                    .read(premiumProvider.notifier)
-                                    .buyPremium(_selectedProductId!);
-                              }
-                            },
-                    ),
-                    const SizedBox(height: 12),
+                        // Unlock Button
+                        GradientButton(
+                          label: premiumState.isLoading
+                              ? l10n.processing
+                              : l10n.unlockPremium,
+                          icon: premiumState.isLoading
+                              ? Icons.hourglass_empty
+                              : Icons.lock_open,
+                          isLoading: premiumState.isLoading,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                          ),
+                          onPressed: premiumState.isLoading
+                              ? () {}
+                              : () {
+                                  if (_selectedProductId != null) {
+                                    ref
+                                        .read(premiumProvider.notifier)
+                                        .buyPremium(_selectedProductId!);
+                                  }
+                                },
+                        ),
+                        const SizedBox(height: 12),
 
-                    // Restore Purchases
-                    TextButton.icon(
-                      onPressed: premiumState.isLoading
-                          ? null
-                          : () {
-                              ref
-                                  .read(premiumProvider.notifier)
-                                  .restorePurchases();
-                            },
-                      icon: const Icon(Icons.restore),
-                      label: Text(l10n.restorePurchases),
-                    ),
+                        // Restore Purchases
+                        TextButton.icon(
+                          onPressed: premiumState.isLoading
+                              ? null
+                              : () {
+                                  ref
+                                      .read(premiumProvider.notifier)
+                                      .restorePurchases();
+                                },
+                          icon: const Icon(Icons.restore),
+                          label: Text(l10n.restorePurchases),
+                        ),
+                      ],
                     const SizedBox(height: 16),
 
                     // Benefits Note

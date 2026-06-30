@@ -77,7 +77,7 @@ class _CashbookSliderState extends ConsumerState<CashbookSlider> {
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                height: 196,
+                height: 208, // Increased height to accommodate bottom padding for shadows
                 width: double.infinity,
                 child: expandSingle
                     ? Padding(
@@ -96,8 +96,12 @@ class _CashbookSliderState extends ConsumerState<CashbookSlider> {
                     : ListView.builder(
                         scrollDirection: Axis.horizontal,
                         clipBehavior: Clip.none,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 0, vertical: 0),
+                        padding: const EdgeInsets.only(
+                          left: 0,
+                          right: 0,
+                          top: 0,
+                          bottom: 12, // Extra bottom padding so shadows don't get cropped
+                        ),
                         itemCount: summaries.length,
                         itemBuilder: (context, index) {
                           return _CashbookSummaryCard(

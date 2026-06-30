@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -156,7 +157,9 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
     
     // Check for in-app updates on startup (Android only)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(updateServiceProvider).checkForUpdate();
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        ref.read(updateServiceProvider).checkForUpdate();
+      }
     });
   }
 
@@ -189,6 +192,15 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
     return MaterialApp(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        if (kIsWeb || !Platform.isWindows) return child!;
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: child,
+          ),
+        );
+      },
 
       // Localization
       localizationsDelegates: const [
@@ -238,10 +250,10 @@ class HomeScreen extends ConsumerStatefulWidget {
     final actions = [
       ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
       ('add_transaction', l10n.add, Icons.add),
-      ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
-      ('accounts', l10n.accounts, Symbols.account_balance),
+      if (!Platform.isWindows) ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
+      ('accounts', l10n.accounts, Platform.isWindows ? Icons.account_balance : Icons.account_balance),
       ('contacts', l10n.contacts, Icons.people_outline_rounded),
-      ('receivables', l10n.receivableTag, Symbols.account_balance_wallet),
+      ('receivables', l10n.receivableTag, Platform.isWindows ? Icons.account_balance_wallet : Icons.account_balance_wallet),
       ('payables', l10n.payables, Icons.payment_outlined),
       ('categories', l10n.categories, Icons.category_outlined),
       ('analytics', l10n.analytics, Icons.bar_chart_rounded),
@@ -961,9 +973,7 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
           await Future.delayed(const Duration(milliseconds: 500));
         },
         child: CustomScrollView(
-          // Allow dashboard cards (e.g. account/cashbook sliders) to paint shadows
-          // past sliver bounds without viewport clipping.
-          clipBehavior: Clip.none,
+          clipBehavior: Clip.hardEdge,
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
@@ -1103,10 +1113,10 @@ class _DashboardTab extends ConsumerWidget {
     final actions = [
       ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
       ('add_transaction', l10n.add, Icons.add),
-      ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
-      ('accounts', l10n.accounts, Symbols.account_balance),
+      if (!Platform.isWindows) ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
+      ('accounts', l10n.accounts, Platform.isWindows ? Icons.account_balance : Icons.account_balance),
       ('contacts', l10n.contacts, Icons.people_outline_rounded),
-      ('receivables', l10n.receivableTag, Symbols.account_balance_wallet),
+      ('receivables', l10n.receivableTag, Platform.isWindows ? Icons.account_balance_wallet : Icons.account_balance_wallet),
       ('payables', l10n.payables, Icons.payment_outlined),
       ('categories', l10n.categories, Icons.category_outlined),
       ('analytics', l10n.analytics, Icons.bar_chart_rounded),
@@ -2682,48 +2692,45 @@ class _DashboardHeader extends ConsumerWidget {
 
             return FadeTransition(
               opacity: AlwaysStoppedAnimation(t),
-              child: Padding(
-                padding: const EdgeInsets.only(top: 40),
-                child: Container(
-                  alignment: AlignmentDirectional.centerStart,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SvgPicture.asset(
-                          'assets/images/logo_square.svg',
-                          height: 24,
-                          fit: BoxFit.contain,
-                          colorFilter: ColorFilter.mode(
-                            Color.lerp(
+              child: Container(
+                alignment: AlignmentDirectional.centerStart,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SvgPicture.asset(
+                        'assets/images/logo_square.svg',
+                        height: 24,
+                        fit: BoxFit.contain,
+                        colorFilter: ColorFilter.mode(
+                          Color.lerp(
+                                theme.colorScheme.onSurface,
+                                theme.colorScheme.primary,
+                                .3,
+                              ) ??
+                              theme.colorScheme.onSurface,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                      Transform.translate(
+                        offset: const Offset(-2, 0),
+                        child: Text(
+                          'lowpaisa',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Color.lerp(
                                   theme.colorScheme.onSurface,
                                   theme.colorScheme.primary,
                                   .3,
                                 ) ??
                                 theme.colorScheme.onSurface,
-                            BlendMode.srcIn,
                           ),
                         ),
-                        Transform.translate(
-                          offset: const Offset(-2, 0),
-                          child: Text(
-                            'lowpaisa',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: Color.lerp(
-                                    theme.colorScheme.onSurface,
-                                    theme.colorScheme.primary,
-                                    .3,
-                                  ) ??
-                                  theme.colorScheme.onSurface,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),

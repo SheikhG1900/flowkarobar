@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -93,12 +94,12 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
             crossAxisAlignment:
                 isRtl ? CrossAxisAlignment.start : CrossAxisAlignment.end,
             children: [
-              _buildStep(
-                key: const ValueKey('speed-dial-step-bulk'),
-                index: 2,
-                label: l10n.bulkImport,
-                icon: Icons.backup_table,
-                isRtl: isRtl,
+                _buildStep(
+                  key: const ValueKey('speed-dial-step-bulk'),
+                  index: 2,
+                  label: l10n.bulkImport,
+                  icon: Platform.isWindows ? Icons.table_chart : Icons.backup_table,
+                  isRtl: isRtl,
                 color: isDark
                     ? theme.colorScheme.secondaryContainer
                     : theme.colorScheme.primary.withValues(alpha: 0.1),
@@ -112,25 +113,27 @@ class _TransactionSpeedDialState extends ConsumerState<TransactionSpeedDial>
                 },
               ),
               const SizedBox(height: 16),
-              _buildStep(
-                key: const ValueKey('speed-dial-step-scan'),
-                index: 1,
-                label: l10n.scanReceipt,
-                icon: Icons.document_scanner_outlined,
-                isRtl: isRtl,
-                color: isDark
-                    ? theme.colorScheme.primaryContainer
-                    : theme.colorScheme.primary.withValues(alpha: 0.1),
-                iconColor: isDark
-                    ? theme.colorScheme.onPrimaryContainer
-                    : theme.colorScheme.primary,
-                size: 48,
-                onTap: () {
-                  _toggle();
-                  widget.onScanReceipt();
-                },
-              ),
-              const SizedBox(height: 16),
+              if (!Platform.isWindows) ...[
+                _buildStep(
+                  key: const ValueKey('speed-dial-step-scan'),
+                  index: 1,
+                  label: l10n.scanReceipt,
+                  icon: Icons.document_scanner_outlined,
+                  isRtl: isRtl,
+                  color: isDark
+                      ? theme.colorScheme.primaryContainer
+                      : theme.colorScheme.primary.withValues(alpha: 0.1),
+                  iconColor: isDark
+                      ? theme.colorScheme.onPrimaryContainer
+                      : theme.colorScheme.primary,
+                  size: 48,
+                  onTap: () {
+                    _toggle();
+                    widget.onScanReceipt();
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
               _buildStep(
                 key: const ValueKey('speed-dial-step-voice'),
                 index: 0,
