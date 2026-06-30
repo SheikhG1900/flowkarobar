@@ -154,7 +154,7 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    
+
     // Check for in-app updates on startup (Android only)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (defaultTargetPlatform == TargetPlatform.android) {
@@ -250,10 +250,21 @@ class HomeScreen extends ConsumerStatefulWidget {
     final actions = [
       ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
       ('add_transaction', l10n.add, Icons.add),
-      if (!Platform.isWindows) ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
-      ('accounts', l10n.accounts, Platform.isWindows ? Icons.account_balance : Icons.account_balance),
+      if (!Platform.isWindows)
+        ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
+      (
+        'accounts',
+        l10n.accounts,
+        Platform.isWindows ? Icons.account_balance : Icons.account_balance
+      ),
       ('contacts', l10n.contacts, Icons.people_outline_rounded),
-      ('receivables', l10n.receivableTag, Platform.isWindows ? Icons.account_balance_wallet : Icons.account_balance_wallet),
+      (
+        'receivables',
+        l10n.receivableTag,
+        Platform.isWindows
+            ? Icons.account_balance_wallet
+            : Icons.account_balance_wallet
+      ),
       ('payables', l10n.payables, Icons.payment_outlined),
       ('categories', l10n.categories, Icons.category_outlined),
       ('analytics', l10n.analytics, Icons.bar_chart_rounded),
@@ -316,6 +327,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   /// Hold dimmed UI while the new cashbook DB and dashboard providers repopulate.
   static const Duration _cashbookSwitchHold = Duration(milliseconds: 1200);
+
   /// Fade between full brightness and the dimmed “switching” state.
   static const Duration _cashbookSwitchFade = Duration(milliseconds: 700);
 
@@ -592,8 +604,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ignoring: _isSwitchingCashbook,
                           child: AnimatedSwitcher(
                             duration: const Duration(milliseconds: 400),
-                            transitionBuilder: (Widget child,
-                                Animation<double> animation) {
+                            transitionBuilder:
+                                (Widget child, Animation<double> animation) {
                               return FadeTransition(
                                   opacity: animation, child: child);
                             },
@@ -628,7 +640,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   padding: EdgeInsets.zero,
                   height: 80,
                   notchMargin: 8.0,
-                  shape: showQuickButton ? const CircularNotchedRectangle() : null,
+                  shape:
+                      showQuickButton ? const CircularNotchedRectangle() : null,
                   clipBehavior: Clip.antiAlias,
                   color: Theme.of(context).colorScheme.surface,
                   elevation: 2,
@@ -744,11 +757,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       PositionedDirectional(
                         top: -8,
                         start: -8,
-                        child:                             GestureDetector(
-                              onTap: () => _DashboardTab
-                                  .showQuickActionSelectionSheetForBottomBar(
-                                      context, ref, Theme.of(context), l10n),
-                              child: Container(
+                        child: GestureDetector(
+                          onTap: () => _DashboardTab
+                              .showQuickActionSelectionSheetForBottomBar(
+                                  context, ref, Theme.of(context), l10n),
+                          child: Container(
                             width: 24,
                             height: 24,
                             decoration: BoxDecoration(
@@ -1016,8 +1029,9 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
                                   ? _DashboardTab.wrapCard(
                                       child: const _DashboardPrivacyHighlight(),
                                       onRemove: () => ref
-                                          .read(showDashboardPrivacyHighlightProvider
-                                              .notifier)
+                                          .read(
+                                              showDashboardPrivacyHighlightProvider
+                                                  .notifier)
                                           .setVisibility(false),
                                     )
                                   : const _DashboardPrivacyHighlight(),
@@ -1113,10 +1127,21 @@ class _DashboardTab extends ConsumerWidget {
     final actions = [
       ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
       ('add_transaction', l10n.add, Icons.add),
-      if (!Platform.isWindows) ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
-      ('accounts', l10n.accounts, Platform.isWindows ? Icons.account_balance : Icons.account_balance),
+      if (!Platform.isWindows)
+        ('scan_receipt', l10n.scan, Icons.document_scanner_outlined),
+      (
+        'accounts',
+        l10n.accounts,
+        Platform.isWindows ? Icons.account_balance : Icons.account_balance
+      ),
       ('contacts', l10n.contacts, Icons.people_outline_rounded),
-      ('receivables', l10n.receivableTag, Platform.isWindows ? Icons.account_balance_wallet : Icons.account_balance_wallet),
+      (
+        'receivables',
+        l10n.receivableTag,
+        Platform.isWindows
+            ? Icons.account_balance_wallet
+            : Icons.account_balance_wallet
+      ),
       ('payables', l10n.payables, Icons.payment_outlined),
       ('categories', l10n.categories, Icons.category_outlined),
       ('analytics', l10n.analytics, Icons.bar_chart_rounded),
@@ -1215,7 +1240,6 @@ class _DashboardTab extends ConsumerWidget {
     List<DashboardWidgetConfig> configs,
     bool reorderMode,
   ) {
-
     return RepaintBoundary(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
@@ -1424,11 +1448,7 @@ class _DashboardTab extends ConsumerWidget {
         l10n.accounts,
         Symbols.account_balance
       ),
-      (
-        DashboardWidgetKind.cashbooksSlider,
-        l10n.cashbooks,
-        Symbols.book
-      ),
+      (DashboardWidgetKind.cashbooksSlider, l10n.cashbooks, Symbols.book),
     ];
     showModalBottomSheet<void>(
       context: context,
@@ -1495,7 +1515,8 @@ class _DashboardTab extends ConsumerWidget {
                             fontWeight:
                                 checked ? FontWeight.bold : FontWeight.normal,
                           ),
-                          selectedColor: theme.colorScheme.primary.withValues(alpha: 0.15),
+                          selectedColor:
+                              theme.colorScheme.primary.withValues(alpha: 0.15),
                           side: BorderSide(
                             color: checked
                                 ? theme.colorScheme.primary
@@ -1608,7 +1629,6 @@ class _DashboardTab extends ConsumerWidget {
       ),
     );
   }
-
 
   static Widget _buildFilterChip(BuildContext context, WidgetRef ref,
       DashboardFilter currentFilter, bool isDark) {
@@ -2692,45 +2712,48 @@ class _DashboardHeader extends ConsumerWidget {
 
             return FadeTransition(
               opacity: AlwaysStoppedAnimation(t),
-              child: Container(
-                alignment: AlignmentDirectional.centerStart,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SvgPicture.asset(
-                        'assets/images/logo_square.svg',
-                        height: 24,
-                        fit: BoxFit.contain,
-                        colorFilter: ColorFilter.mode(
-                          Color.lerp(
-                                theme.colorScheme.onSurface,
-                                theme.colorScheme.primary,
-                                .3,
-                              ) ??
-                              theme.colorScheme.onSurface,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      Transform.translate(
-                        offset: const Offset(-2, 0),
-                        child: Text(
-                          'lowpaisa',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: Color.lerp(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: Container(
+                  alignment: AlignmentDirectional.centerStart,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SvgPicture.asset(
+                          'assets/images/logo_square.svg',
+                          height: 24,
+                          fit: BoxFit.contain,
+                          colorFilter: ColorFilter.mode(
+                            Color.lerp(
                                   theme.colorScheme.onSurface,
                                   theme.colorScheme.primary,
                                   .3,
                                 ) ??
                                 theme.colorScheme.onSurface,
+                            BlendMode.srcIn,
                           ),
                         ),
-                      ),
-                    ],
+                        Transform.translate(
+                          offset: const Offset(-2, 0),
+                          child: Text(
+                            'lowpaisa',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: Color.lerp(
+                                    theme.colorScheme.onSurface,
+                                    theme.colorScheme.primary,
+                                    .3,
+                                  ) ??
+                                  theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -2813,7 +2836,7 @@ class _DashboardHeader extends ConsumerWidget {
           builder: (context, ref, child) {
             // Keep sync status polling active globally (reactive approach).
             ref.watch(syncStatusPollingProvider);
-            
+
             final showSync = ref.watch(showDashboardSyncStatusProvider);
             final backupState = ref.watch(backupProvider);
             final isAutoSync = ref.watch(autoSyncOnStartupProvider);
@@ -2828,12 +2851,11 @@ class _DashboardHeader extends ConsumerWidget {
             final bool hasCloudUpdates = updatesCount > 0;
             final bool isSyncAlreadyInProgress =
                 backupState.syncStatus == 'Sync already in progress';
-            final bool isLockError =
-                backupState.syncStatus.contains('Error') &&
-                    (backupState.syncStatus.contains('database is locked') ||
-                        backupState.syncStatus.contains('1555') ||
-                        backupState.syncStatus.contains('code 5') ||
-                        backupState.syncStatus.contains('SQLITE_BUSY'));
+            final bool isLockError = backupState.syncStatus.contains('Error') &&
+                (backupState.syncStatus.contains('database is locked') ||
+                    backupState.syncStatus.contains('1555') ||
+                    backupState.syncStatus.contains('code 5') ||
+                    backupState.syncStatus.contains('SQLITE_BUSY'));
 
             // Hide the cloud icon if everything is idle and the section is hidden
             if (!showSync &&
@@ -2848,7 +2870,7 @@ class _DashboardHeader extends ConsumerWidget {
 
             IconData statusIcon;
             Color iconColor = theme.colorScheme.primary;
-            
+
             if (isSyncAlreadyInProgress || isLockError || hasUnsynced) {
               iconColor = Colors.orange;
               statusIcon = showSync
@@ -2858,16 +2880,21 @@ class _DashboardHeader extends ConsumerWidget {
                       : Icons.cloud_outlined);
             } else if (isSyncing) {
               iconColor = theme.colorScheme.primary;
-              statusIcon = showSync ? Icons.cloud_sync : Icons.cloud_sync_outlined;
+              statusIcon =
+                  showSync ? Icons.cloud_sync : Icons.cloud_sync_outlined;
             } else if (hasCloudUpdates) {
               iconColor = Colors.lightBlue;
-              statusIcon = showSync ? Icons.cloud_download : Icons.cloud_download_outlined;
+              statusIcon = showSync
+                  ? Icons.cloud_download
+                  : Icons.cloud_download_outlined;
             } else if (backupState.syncStatus == 'Success') {
               iconColor = Colors.green;
-              statusIcon = showSync ? Icons.cloud_done : Icons.cloud_done_outlined;
+              statusIcon =
+                  showSync ? Icons.cloud_done : Icons.cloud_done_outlined;
             } else if (backupState.syncStatus.contains('Error')) {
               iconColor = theme.colorScheme.error;
-              statusIcon = showSync ? Icons.cloud_off : Icons.cloud_off_outlined;
+              statusIcon =
+                  showSync ? Icons.cloud_off : Icons.cloud_off_outlined;
             } else {
               statusIcon = showSync ? Icons.cloud : Icons.cloud_outlined;
             }
@@ -2948,9 +2975,8 @@ class _DashboardHeader extends ConsumerWidget {
                       width: 14,
                       height: 14,
                       decoration: BoxDecoration(
-                        color: showBadge
-                            ? Colors.orange
-                            : theme.colorScheme.error,
+                        color:
+                            showBadge ? Colors.orange : theme.colorScheme.error,
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: theme.colorScheme.surface,
@@ -3018,7 +3044,8 @@ class _DashboardHeroContent extends ConsumerWidget {
     final showNetWorthOnHero =
         hasAccounts && mainBalanceView == DashboardMainBalanceView.netWorth;
     final heroCombineAddends = ref.watch(dashboardHeroCombinedAddendsProvider);
-    final heroCombineChips = ref.watch(dashboardHeroCombinedCashbooksForChipsProvider);
+    final heroCombineChips =
+        ref.watch(dashboardHeroCombinedCashbooksForChipsProvider);
     final cashbookCount = ref.watch(cashbooksProvider).length;
 
     // Cache stats for loading state
@@ -3127,9 +3154,9 @@ class _DashboardHeroContent extends ConsumerWidget {
                     showNetWorthOnHero
                         ? accountsWithBalanceAsync.when(
                             data: (accounts) {
-                              final nw = dashboardNetWorthFromAccounts(
-                                      accounts) +
-                                  heroCombineAddends.netWorth;
+                              final nw =
+                                  dashboardNetWorthFromAccounts(accounts) +
+                                      heroCombineAddends.netWorth;
                               return RollingAmount(
                                 amount: nw,
                                 currencySymbol: currency.symbol,
@@ -3169,20 +3196,21 @@ class _DashboardHeroContent extends ConsumerWidget {
                                 currencySymbol: currency.symbol,
                                 decimalPlaces: currency.decimalPlaces,
                                 style: theme.textTheme.displaySmall?.copyWith(
-                                color:
-                                    isDark ? Colors.white : AppColors.lightText,
-                                fontWeight: FontWeight.bold,
-                                height: 1.1,
-                                fontSize: AmountFormatter.getFontSize(
-                                  combinedCash,
-                                  baseSize: 28,
-                                  decimalPlaces: currency.decimalPlaces,
+                                  color: isDark
+                                      ? Colors.white
+                                      : AppColors.lightText,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.1,
+                                  fontSize: AmountFormatter.getFontSize(
+                                    combinedCash,
+                                    baseSize: 28,
+                                    decimalPlaces: currency.decimalPlaces,
+                                  ),
+                                  shadows: isDark
+                                      ? AppTheme.textShadow(blurMultiplier: 4.0)
+                                      : null,
                                 ),
-                                shadows: isDark
-                                    ? AppTheme.textShadow(blurMultiplier: 4.0)
-                                    : null,
-                              ),
-                            );
+                              );
                             },
                             loading: () => lastStats != null
                                 ? RollingAmount(
@@ -3260,28 +3288,28 @@ class _DashboardStatsGrid extends ConsumerWidget {
               items: [
                 _SummaryItem(
                   label: l10n.income,
-                amountContent: dashboardStatsAsync.when(
-                  skipLoadingOnRefresh: true,
-                  data: (s) => _DashboardTab._buildSummaryAmountContent(
-                    context,
-                    amount: s.income(filter),
-                    currency: currency,
-                    isDark: isDark,
-                    label: l10n.income,
+                  amountContent: dashboardStatsAsync.when(
+                    skipLoadingOnRefresh: true,
+                    data: (s) => _DashboardTab._buildSummaryAmountContent(
+                      context,
+                      amount: s.income(filter),
+                      currency: currency,
+                      isDark: isDark,
+                      label: l10n.income,
+                    ),
+                    loading: () => lastStats != null
+                        ? _DashboardTab._buildSummaryAmountContent(
+                            context,
+                            amount: lastStats.income(filter),
+                            currency: currency,
+                            isDark: isDark,
+                            label: l10n.income,
+                          )
+                        : _DashboardTab._buildAmountPlaceholder(
+                            context, currency, isDark),
+                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                        context, currency, isDark),
                   ),
-                  loading: () => lastStats != null
-                      ? _DashboardTab._buildSummaryAmountContent(
-                          context,
-                          amount: lastStats.income(filter),
-                          currency: currency,
-                          isDark: isDark,
-                          label: l10n.income,
-                        )
-                      : _DashboardTab._buildAmountPlaceholder(
-                          context, currency, isDark),
-                  error: (_, __) => _DashboardTab._buildAmountPlaceholder(
-                      context, currency, isDark),
-                ),
                   color: AppColors.incomeColor,
                   icon: Icons.south_west,
                   onTap: () {
@@ -3291,7 +3319,9 @@ class _DashboardStatsGrid extends ConsumerWidget {
                         isMonthly ? DateTime(now.year, now.month, 1) : null;
                     final endDate =
                         isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-                    ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                    ref
+                        .read(transactionsPaginatedProvider.notifier)
+                        .applyFilters(
                           TransactionFilters(
                             type: 'INCOME',
                             startDate: startDate,
@@ -3306,30 +3336,30 @@ class _DashboardStatsGrid extends ConsumerWidget {
                     );
                   },
                 ),
-              _SummaryItem(
-                label: l10n.expense,
-                amountContent: dashboardStatsAsync.when(
-                  skipLoadingOnRefresh: true,
-                  data: (s) => _DashboardTab._buildSummaryAmountContent(
-                    context,
-                    amount: s.expense(filter),
-                    currency: currency,
-                    isDark: isDark,
-                    label: l10n.expense,
+                _SummaryItem(
+                  label: l10n.expense,
+                  amountContent: dashboardStatsAsync.when(
+                    skipLoadingOnRefresh: true,
+                    data: (s) => _DashboardTab._buildSummaryAmountContent(
+                      context,
+                      amount: s.expense(filter),
+                      currency: currency,
+                      isDark: isDark,
+                      label: l10n.expense,
+                    ),
+                    loading: () => lastStats != null
+                        ? _DashboardTab._buildSummaryAmountContent(
+                            context,
+                            amount: lastStats.expense(filter),
+                            currency: currency,
+                            isDark: isDark,
+                            label: l10n.expense,
+                          )
+                        : _DashboardTab._buildAmountPlaceholder(
+                            context, currency, isDark),
+                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                        context, currency, isDark),
                   ),
-                  loading: () => lastStats != null
-                      ? _DashboardTab._buildSummaryAmountContent(
-                          context,
-                          amount: lastStats.expense(filter),
-                          currency: currency,
-                          isDark: isDark,
-                          label: l10n.expense,
-                        )
-                      : _DashboardTab._buildAmountPlaceholder(
-                          context, currency, isDark),
-                  error: (_, __) => _DashboardTab._buildAmountPlaceholder(
-                      context, currency, isDark),
-                ),
                   color: AppColors.expenseColor,
                   icon: Icons.north_east,
                   onTap: () {
@@ -3339,7 +3369,9 @@ class _DashboardStatsGrid extends ConsumerWidget {
                         isMonthly ? DateTime(now.year, now.month, 1) : null;
                     final endDate =
                         isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-                    ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                    ref
+                        .read(transactionsPaginatedProvider.notifier)
+                        .applyFilters(
                           TransactionFilters(
                             type: 'EXPENSE',
                             startDate: startDate,
@@ -3354,30 +3386,30 @@ class _DashboardStatsGrid extends ConsumerWidget {
                     );
                   },
                 ),
-              _SummaryItem(
-                label: l10n.netCash,
-                amountContent: dashboardStatsAsync.when(
-                  skipLoadingOnRefresh: true,
-                  data: (s) => _DashboardTab._buildSummaryAmountContent(
-                    context,
-                    amount: s.netCash(filter),
-                    currency: currency,
-                    isDark: isDark,
-                    label: l10n.netCash,
+                _SummaryItem(
+                  label: l10n.netCash,
+                  amountContent: dashboardStatsAsync.when(
+                    skipLoadingOnRefresh: true,
+                    data: (s) => _DashboardTab._buildSummaryAmountContent(
+                      context,
+                      amount: s.netCash(filter),
+                      currency: currency,
+                      isDark: isDark,
+                      label: l10n.netCash,
+                    ),
+                    loading: () => lastStats != null
+                        ? _DashboardTab._buildSummaryAmountContent(
+                            context,
+                            amount: lastStats.netCash(filter),
+                            currency: currency,
+                            isDark: isDark,
+                            label: l10n.netCash,
+                          )
+                        : _DashboardTab._buildAmountPlaceholder(
+                            context, currency, isDark),
+                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                        context, currency, isDark),
                   ),
-                  loading: () => lastStats != null
-                      ? _DashboardTab._buildSummaryAmountContent(
-                          context,
-                          amount: lastStats.netCash(filter),
-                          currency: currency,
-                          isDark: isDark,
-                          label: l10n.netCash,
-                        )
-                      : _DashboardTab._buildAmountPlaceholder(
-                          context, currency, isDark),
-                  error: (_, __) => _DashboardTab._buildAmountPlaceholder(
-                      context, currency, isDark),
-                ),
                   color: activeForeColor,
                   icon: Icons.account_balance_wallet,
                   onTap: () {
@@ -3387,7 +3419,9 @@ class _DashboardStatsGrid extends ConsumerWidget {
                         isMonthly ? DateTime(now.year, now.month, 1) : null;
                     final endDate =
                         isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-                    ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                    ref
+                        .read(transactionsPaginatedProvider.notifier)
+                        .applyFilters(
                           TransactionFilters(
                             startDate: startDate,
                             endDate: endDate,
@@ -3410,32 +3444,32 @@ class _DashboardStatsGrid extends ConsumerWidget {
               isDark: isDark,
               title: l10n.lendingCredit,
               items: [
-              _SummaryItem(
-                label: l10n.receivableTag,
-                amountContent: dashboardStatsAsync.when(
-                  skipLoadingOnRefresh: true,
-                  data: (s) => _DashboardTab._buildSummaryAmountContent(
-                    context,
-                    amount: s.receivable(filter),
-                    currency: currency,
-                    isDark: isDark,
-                    overdue: s.overdueReceivable,
-                    label: l10n.receivableTag,
+                _SummaryItem(
+                  label: l10n.receivableTag,
+                  amountContent: dashboardStatsAsync.when(
+                    skipLoadingOnRefresh: true,
+                    data: (s) => _DashboardTab._buildSummaryAmountContent(
+                      context,
+                      amount: s.receivable(filter),
+                      currency: currency,
+                      isDark: isDark,
+                      overdue: s.overdueReceivable,
+                      label: l10n.receivableTag,
+                    ),
+                    loading: () => lastStats != null
+                        ? _DashboardTab._buildSummaryAmountContent(
+                            context,
+                            amount: lastStats.receivable(filter),
+                            currency: currency,
+                            isDark: isDark,
+                            overdue: lastStats.overdueReceivable,
+                            label: l10n.receivableTag,
+                          )
+                        : _DashboardTab._buildAmountPlaceholder(
+                            context, currency, isDark),
+                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                        context, currency, isDark),
                   ),
-                  loading: () => lastStats != null
-                      ? _DashboardTab._buildSummaryAmountContent(
-                          context,
-                          amount: lastStats.receivable(filter),
-                          currency: currency,
-                          isDark: isDark,
-                          overdue: lastStats.overdueReceivable,
-                          label: l10n.receivableTag,
-                        )
-                      : _DashboardTab._buildAmountPlaceholder(
-                          context, currency, isDark),
-                  error: (_, __) => _DashboardTab._buildAmountPlaceholder(
-                      context, currency, isDark),
-                ),
                   color: AppColors.receivableColor,
                   icon: Icons.call_received,
                   onTap: () {
@@ -3461,32 +3495,32 @@ class _DashboardStatsGrid extends ConsumerWidget {
                     );
                   },
                 ),
-              _SummaryItem(
-                label: l10n.payableTag,
-                amountContent: dashboardStatsAsync.when(
-                  skipLoadingOnRefresh: true,
-                  data: (s) => _DashboardTab._buildSummaryAmountContent(
-                    context,
-                    amount: s.payable(filter),
-                    currency: currency,
-                    isDark: isDark,
-                    overdue: s.overduePayable,
-                    label: l10n.payableTag,
+                _SummaryItem(
+                  label: l10n.payableTag,
+                  amountContent: dashboardStatsAsync.when(
+                    skipLoadingOnRefresh: true,
+                    data: (s) => _DashboardTab._buildSummaryAmountContent(
+                      context,
+                      amount: s.payable(filter),
+                      currency: currency,
+                      isDark: isDark,
+                      overdue: s.overduePayable,
+                      label: l10n.payableTag,
+                    ),
+                    loading: () => lastStats != null
+                        ? _DashboardTab._buildSummaryAmountContent(
+                            context,
+                            amount: lastStats.payable(filter),
+                            currency: currency,
+                            isDark: isDark,
+                            overdue: lastStats.overduePayable,
+                            label: l10n.payableTag,
+                          )
+                        : _DashboardTab._buildAmountPlaceholder(
+                            context, currency, isDark),
+                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                        context, currency, isDark),
                   ),
-                  loading: () => lastStats != null
-                      ? _DashboardTab._buildSummaryAmountContent(
-                          context,
-                          amount: lastStats.payable(filter),
-                          currency: currency,
-                          isDark: isDark,
-                          overdue: lastStats.overduePayable,
-                          label: l10n.payableTag,
-                        )
-                      : _DashboardTab._buildAmountPlaceholder(
-                          context, currency, isDark),
-                  error: (_, __) => _DashboardTab._buildAmountPlaceholder(
-                      context, currency, isDark),
-                ),
                   color: AppColors.payableColor,
                   icon: Icons.call_made,
                   onTap: () {
@@ -3512,30 +3546,30 @@ class _DashboardStatsGrid extends ConsumerWidget {
                     );
                   },
                 ),
-              _SummaryItem(
-                label: l10n.netCredit,
-                amountContent: dashboardStatsAsync.when(
-                  skipLoadingOnRefresh: true,
-                  data: (s) => _DashboardTab._buildSummaryAmountContent(
-                    context,
-                    amount: s.netCredit(filter),
-                    currency: currency,
-                    isDark: isDark,
-                    label: l10n.netCredit,
+                _SummaryItem(
+                  label: l10n.netCredit,
+                  amountContent: dashboardStatsAsync.when(
+                    skipLoadingOnRefresh: true,
+                    data: (s) => _DashboardTab._buildSummaryAmountContent(
+                      context,
+                      amount: s.netCredit(filter),
+                      currency: currency,
+                      isDark: isDark,
+                      label: l10n.netCredit,
+                    ),
+                    loading: () => lastStats != null
+                        ? _DashboardTab._buildSummaryAmountContent(
+                            context,
+                            amount: lastStats.netCredit(filter),
+                            currency: currency,
+                            isDark: isDark,
+                            label: l10n.netCredit,
+                          )
+                        : _DashboardTab._buildAmountPlaceholder(
+                            context, currency, isDark),
+                    error: (_, __) => _DashboardTab._buildAmountPlaceholder(
+                        context, currency, isDark),
                   ),
-                  loading: () => lastStats != null
-                      ? _DashboardTab._buildSummaryAmountContent(
-                          context,
-                          amount: lastStats.netCredit(filter),
-                          currency: currency,
-                          isDark: isDark,
-                          label: l10n.netCredit,
-                        )
-                      : _DashboardTab._buildAmountPlaceholder(
-                          context, currency, isDark),
-                  error: (_, __) => _DashboardTab._buildAmountPlaceholder(
-                      context, currency, isDark),
-                ),
                   color: activeForeColor,
                   icon: Icons.swap_horiz,
                 ),
