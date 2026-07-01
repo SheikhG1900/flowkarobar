@@ -4,6 +4,7 @@ import 'package:flowpaisa/core/utils/tabular_parser.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/shared/widgets/voice_input_button.dart';
 
 class TabularEditor extends StatefulWidget {
   final List<TabularRow> rows;
@@ -121,6 +122,7 @@ class _TabularRowInputState extends State<_TabularRowInput> {
   late TextEditingController _qtyController;
   late TextEditingController _unitAmountController;
   late TextEditingController _descController;
+  final _descFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -137,6 +139,7 @@ class _TabularRowInputState extends State<_TabularRowInput> {
     _qtyController.dispose();
     _unitAmountController.dispose();
     _descController.dispose();
+    _descFocusNode.dispose();
     super.dispose();
   }
 
@@ -248,11 +251,17 @@ class _TabularRowInputState extends State<_TabularRowInput> {
           // Description
           TextFormField(
             controller: _descController,
+            focusNode: _descFocusNode,
             decoration: InputDecoration(
               hintText: l10n.descriptionHint,
               labelText: l10n.description,
               isDense: true,
               prefixIcon: const Icon(Icons.notes, size: 18),
+              suffixIcon: VoiceInputButton(
+                controller: _descController,
+                focusNode: _descFocusNode,
+                size: 18.0,
+              ),
             ),
             onChanged: (val) {
               widget.row.description = val;

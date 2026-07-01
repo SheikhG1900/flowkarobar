@@ -2429,33 +2429,36 @@ class _DashboardRecentTransactionTile extends StatelessWidget {
             ),
           ],
         ),
-        child: ListTile(
-          contentPadding: const EdgeInsets.all(12),
-          leading: Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: categoryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+        child: Material(
+          type: MaterialType.transparency,
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(12),
+            leading: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: categoryColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.center,
+              child: CategoryHelper.buildCategoryIcon(
+                  category?.icon, categoryColor, isExpense),
             ),
-            alignment: Alignment.center,
-            child: CategoryHelper.buildCategoryIcon(
-                category?.icon, categoryColor, isExpense),
-          ),
-          title: Text(
-            transaction.description ?? (isExpense ? l10n.expense : l10n.income),
-            style: const TextStyle(fontWeight: FontWeight.w600),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          subtitle: Text(AppDateFormatter.formatDate(transaction.date,
-              pattern: dateFormat)),
-          trailing: Text(
-            '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currencySymbol, currencyDecimals)}',
-            style: TextStyle(
-              color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
+            title: Text(
+              transaction.description ?? (isExpense ? l10n.expense : l10n.income),
+              style: const TextStyle(fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            subtitle: Text(AppDateFormatter.formatDate(transaction.date,
+                pattern: dateFormat)),
+            trailing: Text(
+              '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currencySymbol, currencyDecimals)}',
+              style: TextStyle(
+                color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
           ),
         ),
@@ -3880,26 +3883,29 @@ class _SettingsTab extends ConsumerWidget {
                 ],
               ),
             ),
-            child: ListTile(
-              leading: const Icon(Icons.workspace_premium, color: Colors.white),
-              title: Text(
-                l10n.premium,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+            child: Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                leading: const Icon(Icons.workspace_premium, color: Colors.white),
+                title: Text(
+                  l10n.premium,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              subtitle: Text(
-                l10n.unlockAdvancedAnalytics,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.9),
+                subtitle: Text(
+                  l10n.unlockAdvancedAnalytics,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                  ),
                 ),
+                trailing:
+                    const Icon(Icons.arrow_forward_ios, color: Colors.white),
+                onTap: () {
+                  PremiumGate.showPremiumDialog(context);
+                },
               ),
-              trailing:
-                  const Icon(Icons.arrow_forward_ios, color: Colors.white),
-              onTap: () {
-                PremiumGate.showPremiumDialog(context);
-              },
             ),
           ),
           const Divider(),

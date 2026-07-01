@@ -105,78 +105,80 @@ class TransactionListItem extends ConsumerWidget {
               ),
             ],
           ),
-          child: ListTile(
-            key: ValueKey('tx-card-listtile-${transaction.uuid}'),
-            contentPadding: EdgeInsets.all(isCompact ? 12 : 16),
-            leading: leadingOverride ??
-                Container(
-                  key: ValueKey('tx-card-icon-${transaction.uuid}'),
-                  width: isCompact ? 40 : 50,
-                  height: isCompact ? 40 : 50,
-                  decoration: BoxDecoration(
-                    color: displayColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(isCompact ? 10 : 14),
-                    border: Border.all(
-                      color: displayColor.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: CategoryHelper.buildCategoryIcon(
-                      category?.icon, displayColor, isExpense),
-                ),
-            title: Text(
-              key: ValueKey('tx-card-title-${transaction.uuid}'),
-              titleOverride ??
-                  (category != null
-                      ? LocalizationHelper.getLocalizedCategoryName(
-                          context, category.name)
-                      : l10n.uncategorized),
-              style: (isCompact ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: textColor,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Column(
-              key: ValueKey('tx-card-subtitle-col-${transaction.uuid}'),
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  key: ValueKey('tx-card-desc-${transaction.uuid}'),
-                  transaction.description ??
-                      (isExpense ? l10n.expense : l10n.income),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant
-                        .withValues(alpha: isInactive ? 0.5 : 1.0),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                // Contact tag
-                if (contact != null) ...[
-                  SizedBox(height: isCompact ? 4 : 6),
+          child: Material(
+            type: MaterialType.transparency,
+            child: ListTile(
+              key: ValueKey('tx-card-listtile-${transaction.uuid}'),
+              contentPadding: EdgeInsets.all(isCompact ? 12 : 16),
+              leading: leadingOverride ??
                   Container(
-                    key: ValueKey('tx-card-contact-${transaction.uuid}'),
-                    padding: EdgeInsets.symmetric(
-                        horizontal: isCompact ? 4 : 6, 
-                        vertical: isCompact ? 2 : 3),
+                    key: ValueKey('tx-card-icon-${transaction.uuid}'),
+                    width: isCompact ? 40 : 50,
+                    height: isCompact ? 40 : 50,
                     decoration: BoxDecoration(
-                      color: AppColors.getContactColor(contact.name).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
+                      color: displayColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(isCompact ? 10 : 14),
                       border: Border.all(
-                        color: AppColors.getContactColor(contact.name).withValues(alpha: 0.3),
+                        color: displayColor.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
-                    child: Row(
-                      key: ValueKey('tx-card-contact-row-${transaction.uuid}'),
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          key: ValueKey('tx-card-contact-avatar-${transaction.uuid}'),
-                          width: 14,
+                    alignment: Alignment.center,
+                    child: CategoryHelper.buildCategoryIcon(
+                        category?.icon, displayColor, isExpense),
+                  ),
+              title: Text(
+                key: ValueKey('tx-card-title-${transaction.uuid}'),
+                titleOverride ??
+                    (category != null
+                        ? LocalizationHelper.getLocalizedCategoryName(
+                            context, category.name)
+                        : l10n.uncategorized),
+                style: (isCompact ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: textColor,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Column(
+                key: ValueKey('tx-card-subtitle-col-${transaction.uuid}'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    key: ValueKey('tx-card-desc-${transaction.uuid}'),
+                    transaction.description ??
+                        (isExpense ? l10n.expense : l10n.income),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant
+                          .withValues(alpha: isInactive ? 0.5 : 1.0),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  // Contact tag
+                  if (contact != null) ...[
+                    SizedBox(height: isCompact ? 4 : 6),
+                    Container(
+                      key: ValueKey('tx-card-contact-${transaction.uuid}'),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: isCompact ? 4 : 6, 
+                          vertical: isCompact ? 2 : 3),
+                      decoration: BoxDecoration(
+                        color: AppColors.getContactColor(contact.name).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: AppColors.getContactColor(contact.name).withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        key: ValueKey('tx-card-contact-row-${transaction.uuid}'),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            key: ValueKey('tx-card-contact-avatar-${transaction.uuid}'),
+                            width: 14,
                           height: 14,
                           decoration: BoxDecoration(
                             gradient: AppColors.getContactGradient(contact.name),
@@ -331,7 +333,7 @@ class TransactionListItem extends ConsumerWidget {
               );
             },
           ),
-        ),
+        ),),
         // Schedule icon badge
         if (transaction.isScheduled == true)
           ScheduleIconBadge(key: ValueKey('tx-card-sched-badge-${transaction.uuid}')),

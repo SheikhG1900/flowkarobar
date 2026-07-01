@@ -14,6 +14,7 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:flowpaisa/shared/widgets/voice_input_button.dart';
 import 'package:uuid/uuid.dart';
 
 class AccountTransferSheet extends ConsumerStatefulWidget {
@@ -39,6 +40,7 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _descriptionFocusNode = FocusNode();
 
   Account? _fromAccount;
   Account? _toAccount;
@@ -100,6 +102,7 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
     _amountController.removeListener(_onAmountChanged);
     _amountController.dispose();
     _descriptionController.dispose();
+    _descriptionFocusNode.dispose();
     super.dispose();
   }
 
@@ -427,11 +430,16 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
                     // Description
                     TextFormField(
                       controller: _descriptionController,
+                      focusNode: _descriptionFocusNode,
                       textCapitalization: TextCapitalization.sentences,
                       maxLines: 2,
                       decoration: InputDecoration(
                         labelText: l10n.descriptionOptional,
                         prefixIcon: const Icon(Icons.notes_outlined),
+                        suffixIcon: VoiceInputButton(
+                          controller: _descriptionController,
+                          focusNode: _descriptionFocusNode,
+                        ),
                         filled: isLight,
                         fillColor: isLight ? Colors.white : null,
                         border: OutlineInputBorder(

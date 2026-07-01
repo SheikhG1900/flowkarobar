@@ -560,84 +560,87 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              dense: true,
-                              leading: Container(
-                                padding: const EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color: statusColor.withValues(alpha: 0.1),
-                                  shape: BoxShape.circle,
+                            Material(
+                              type: MaterialType.transparency,
+                              child: ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                dense: true,
+                                leading: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: statusColor.withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    statusIcon,
+                                    color: statusColor,
+                                    size: 20,
+                                  ),
                                 ),
-                                child: Icon(
-                                  statusIcon,
-                                  color: statusColor,
-                                  size: 20,
+                                title: Text(
+                                  statusText,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: statusColor,
+                                  ),
                                 ),
-                              ),
-                              title: Text(
-                                statusText,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: statusColor,
-                                ),
-                              ),
-                              subtitle: expiry != null
-                                  ? Text(
-                                      '${l10n.tokenExpiry}: ${AppDateFormatter.formatDate(expiry, pattern: profile.dateFormat)}',
-                                      style: theme.textTheme.bodySmall,
-                                    )
-                                  : Text(
-                                      premiumState.isPremium
-                                          ? l10n.noTokenGenerated
-                                          : l10n.upgradeToPremium,
-                                      style: theme.textTheme.bodySmall,
-                                    ),
-                              trailing: isGoogleSignedIn
-                                  ? IconButton(
-                                      icon: Icon(
-                                        Platform.isWindows
-                                            ? Icons.download
-                                            : Icons.refresh,
-                                        size: 20,
+                                subtitle: expiry != null
+                                    ? Text(
+                                        '${l10n.tokenExpiry}: ${AppDateFormatter.formatDate(expiry, pattern: profile.dateFormat)}',
+                                        style: theme.textTheme.bodySmall,
+                                      )
+                                    : Text(
+                                        premiumState.isPremium
+                                            ? l10n.noTokenGenerated
+                                            : l10n.upgradeToPremium,
+                                        style: theme.textTheme.bodySmall,
                                       ),
-                                      onPressed: () async {
-                                        if (Platform.isWindows) {
-                                          final success = await ref
-                                              .read(premiumProvider.notifier)
-                                              .verifyPremiumFromGoogleDrive();
-                                          if (context.mounted) {
-                                            if (success) {
-                                              ToastUtils.showSuccessToast(
-                                                  context,
-                                                  ref,
-                                                  l10n.premiumTokenSyncedSuccess);
-                                            } else {
-                                              ToastUtils.showErrorToast(
-                                                  context,
-                                                  ref,
-                                                  l10n.premiumTokenNotFound);
-                                            }
-                                          }
-                                        } else {
-                                          if (premiumState.isPremium) {
-                                            await ref
+                                trailing: isGoogleSignedIn
+                                    ? IconButton(
+                                        icon: Icon(
+                                          Platform.isWindows
+                                              ? Icons.download
+                                              : Icons.refresh,
+                                          size: 20,
+                                        ),
+                                        onPressed: () async {
+                                          if (Platform.isWindows) {
+                                            final success = await ref
                                                 .read(premiumProvider.notifier)
-                                                .generatePremiumToken();
+                                                .verifyPremiumFromGoogleDrive();
                                             if (context.mounted) {
-                                              ToastUtils.showSuccessToast(
-                                                  context,
-                                                  ref,
-                                                  l10n.tokenRegeneratedSuccess);
+                                              if (success) {
+                                                ToastUtils.showSuccessToast(
+                                                    context,
+                                                    ref,
+                                                    l10n.premiumTokenSyncedSuccess);
+                                              } else {
+                                                ToastUtils.showErrorToast(
+                                                    context,
+                                                    ref,
+                                                    l10n.premiumTokenNotFound);
+                                              }
+                                            }
+                                          } else {
+                                            if (premiumState.isPremium) {
+                                              await ref
+                                                  .read(premiumProvider.notifier)
+                                                  .generatePremiumToken();
+                                              if (context.mounted) {
+                                                ToastUtils.showSuccessToast(
+                                                    context,
+                                                    ref,
+                                                    l10n.tokenRegeneratedSuccess);
+                                              }
                                             }
                                           }
-                                        }
-                                      },
-                                      tooltip: Platform.isWindows
-                                          ? l10n.fetchPremiumToken
-                                          : l10n.refreshToken,
-                                    )
-                                  : null,
+                                        },
+                                        tooltip: Platform.isWindows
+                                            ? l10n.fetchPremiumToken
+                                            : l10n.refreshToken,
+                                      )
+                                    : null,
+                              ),
                             ),
                             const Divider(height: 16, thickness: 0.5),
                             Text(
@@ -807,22 +810,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     color: theme.dividerColor.withValues(alpha: 0.1),
                   ),
                 ),
-                child: ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.calendar_today,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
-                    child: Icon(
-                      Icons.calendar_today,
-                      color: theme.colorScheme.primary,
-                    ),
+                    title: Text(l10n.dateFormat),
+                    subtitle: Text(profile.dateFormat),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: _showDateFormatSelector,
                   ),
-                  title: Text(l10n.dateFormat),
-                  subtitle: Text(profile.dateFormat),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: _showDateFormatSelector,
                 ),
               ),
               const SizedBox(height: 12),
@@ -836,50 +842,53 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     color: theme.dividerColor.withValues(alpha: 0.1),
                   ),
                 ),
-                child: ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      Icons.tour_outlined,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                  title: Text(l10n.appTour),
-                  subtitle: Text(l10n.resetOnboardingSubtitle),
-                  trailing: const Icon(Icons.refresh, size: 16),
-                  onTap: () async {
-                    final confirmed = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text(l10n.appTour),
-                        content: Text(l10n.resetOnboardingConfirmation),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text(l10n.cancel),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: Text(l10n.reset),
-                          ),
-                        ],
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    );
+                      child: Icon(
+                        Icons.tour_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    title: Text(l10n.appTour),
+                    subtitle: Text(l10n.resetOnboardingSubtitle),
+                    trailing: const Icon(Icons.refresh, size: 16),
+                    onTap: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text(l10n.appTour),
+                          content: Text(l10n.resetOnboardingConfirmation),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text(l10n.cancel),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: Text(l10n.reset),
+                            ),
+                          ],
+                        ),
+                      );
 
-                    if (confirmed == true) {
-                      ref
-                          .read(onboardingCompletedProvider.notifier)
-                          .setCompleted(false);
-                      if (mounted) {
-                        ToastUtils.showSuccessToast(
-                            context, ref, l10n.onboardingResetSuccess);
+                      if (confirmed == true) {
+                        ref
+                            .read(onboardingCompletedProvider.notifier)
+                            .setCompleted(false);
+                        if (mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.onboardingResetSuccess);
+                        }
                       }
-                    }
-                  },
+                    },
+                  ),
                 ),
               ),
               const SizedBox(height: 32),

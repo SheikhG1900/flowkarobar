@@ -27,6 +27,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:flowpaisa/shared/widgets/voice_input_button.dart';
 
 /// One row in the split-edit form (existing or new share).
 class _ShareRow {
@@ -92,6 +93,7 @@ class _EditSplitTransactionScreenState
   AppLocalizations get l10n => AppLocalizations.of(context)!;
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
+  final _descriptionFocusNode = FocusNode();
   final _totalAmountController = TextEditingController();
 
   DateTime _selectedDate = DateTime.now();
@@ -113,6 +115,7 @@ class _EditSplitTransactionScreenState
   @override
   void dispose() {
     _descriptionController.dispose();
+    _descriptionFocusNode.dispose();
     _totalAmountController.dispose();
     for (var row in _rows) {
       row.dispose();
@@ -313,11 +316,15 @@ class _EditSplitTransactionScreenState
                       // Description
                       TextFormField(
                         controller: _descriptionController,
+                        focusNode: _descriptionFocusNode,
                         decoration: InputDecoration(
                           labelText: l10n.description,
                           border: const OutlineInputBorder(),
-                          suffixIcon: ref.watch(premiumProvider).isPremium
-                              ? IconButton(
+                          suffixIcon: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (ref.watch(premiumProvider).isPremium)
+                                IconButton(
                                   icon: Icon(
                                     _isTabularMode
                                         ? Icons.table_chart
@@ -357,8 +364,13 @@ class _EditSplitTransactionScreenState
                                   tooltip: _isTabularMode
                                       ? 'Edit Itemized Details'
                                       : 'Add Itemized Details',
-                                )
-                              : null,
+                                ),
+                              VoiceInputButton(
+                                controller: _descriptionController,
+                                focusNode: _descriptionFocusNode,
+                              ),
+                            ],
+                          ),
                         ),
                         maxLines: 2,
                       ),

@@ -27,6 +27,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/string_similarity.dart';
+import 'package:flowpaisa/shared/widgets/voice_input_button.dart';
 
 class ScanReceiptScreen extends ConsumerStatefulWidget {
   const ScanReceiptScreen({super.key});
@@ -52,6 +53,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   late TextEditingController _amountController;
   late TextEditingController _merchantController;
   late TextEditingController _dateController;
+  final _merchantFocusNode = FocusNode();
   DateTime _selectedDate = DateTime.now();
   String? _selectedCategoryName;
   String? _selectedCategoryColor;
@@ -74,6 +76,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     _amountController.dispose();
     _merchantController.dispose();
     _dateController.dispose();
+    _merchantFocusNode.dispose();
     _aiParser.close();
     super.dispose();
   }
@@ -590,11 +593,16 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                 // Description (from receipt / merchant)
                                 TextFormField(
                                   controller: _merchantController,
+                                  focusNode: _merchantFocusNode,
                                   decoration: InputDecoration(
                                     labelText: l10n.description,
                                     hintText: l10n.descriptionHint,
                                     prefixIcon:
                                         const Icon(Icons.description_rounded),
+                                    suffixIcon: VoiceInputButton(
+                                      controller: _merchantController,
+                                      focusNode: _merchantFocusNode,
+                                    ),
                                   ),
                                   textCapitalization: TextCapitalization.words,
                                 ),

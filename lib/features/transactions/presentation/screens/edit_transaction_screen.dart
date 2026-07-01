@@ -41,6 +41,7 @@ import 'package:flowpaisa/core/utils/tabular_parser.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/tabular_editor_sheet.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/account_picker.dart';
+import 'package:flowpaisa/shared/widgets/voice_input_button.dart';
 import 'add_transaction_screen.dart' show TxMoreOptionsSection;
 
 class EditTransactionScreen extends ConsumerStatefulWidget {
@@ -67,6 +68,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _descriptionFocusNode = FocusNode();
 
   String _selectedType = 'EXPENSE';
   DateTime _selectedDate = DateTime.now();
@@ -167,6 +169,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     _amountController.removeListener(_onAmountChanged);
     _amountController.dispose();
     _descriptionController.dispose();
+    _descriptionFocusNode.dispose();
     super.dispose();
   }
 
@@ -1932,12 +1935,16 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
               // Description
               TextFormField(
                 controller: _descriptionController,
+                focusNode: _descriptionFocusNode,
                 decoration: InputDecoration(
                   labelText: l10n.description,
                   hintText: l10n.descriptionHint,
                   prefixIcon: const Icon(Icons.notes_outlined),
-                  suffixIcon: ref.watch(premiumProvider).isPremium
-                      ? IconButton(
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (ref.watch(premiumProvider).isPremium)
+                        IconButton(
                           icon: Icon(
                             _isTabularMode
                                 ? Icons.table_chart
@@ -1972,8 +1979,13 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                           tooltip: _isTabularMode
                               ? 'Edit Itemized Details'
                               : 'Add Itemized Details',
-                        )
-                      : null,
+                        ),
+                      VoiceInputButton(
+                        controller: _descriptionController,
+                        focusNode: _descriptionFocusNode,
+                      ),
+                    ],
+                  ),
                 ),
                 maxLines: 2,
                 textCapitalization: TextCapitalization.sentences,

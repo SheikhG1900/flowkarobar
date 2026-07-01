@@ -19,6 +19,7 @@ import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:flowpaisa/shared/widgets/voice_input_button.dart';
 import 'package:flowpaisa/core/utils/tabular_parser.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/tabular_editor_sheet.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
@@ -40,6 +41,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _descriptionFocusNode = FocusNode();
 
   List<TabularRow> _tabularRows = [];
   String _tabularSummary = '';
@@ -164,6 +166,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
   void dispose() {
     _amountController.dispose();
     _descriptionController.dispose();
+    _descriptionFocusNode.dispose();
     super.dispose();
   }
 
@@ -934,12 +937,16 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
+                focusNode: _descriptionFocusNode,
                 decoration: InputDecoration(
                   labelText: l10n.description,
                   hintText: l10n.descriptionHint,
                   prefixIcon: const Icon(Icons.notes_outlined),
-                  suffixIcon: ref.watch(premiumProvider).isPremium
-                      ? IconButton(
+                  suffixIcon: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (ref.watch(premiumProvider).isPremium)
+                        IconButton(
                           icon: Icon(
                             _isTabularMode
                                 ? Icons.table_chart
@@ -975,8 +982,13 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                           tooltip: _isTabularMode
                               ? l10n.itemizedDetails
                               : l10n.itemizedDetails,
-                        )
-                      : null,
+                        ),
+                      VoiceInputButton(
+                        controller: _descriptionController,
+                        focusNode: _descriptionFocusNode,
+                      ),
+                    ],
+                  ),
                 ),
                 maxLines: 2,
                 textCapitalization: TextCapitalization.sentences,

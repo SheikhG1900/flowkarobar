@@ -26,6 +26,7 @@ import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/amount_calculator_sheet.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:flowpaisa/shared/widgets/voice_input_button.dart';
 
 class AddReceivableScreen extends ConsumerStatefulWidget {
   final double? initialAmount;
@@ -56,6 +57,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _descriptionFocusNode = FocusNode();
 
   DateTime _selectedDate = DateTime.now();
   DateTime? _dueDate;
@@ -145,6 +147,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
     _amountController.removeListener(_onAmountChanged);
     _amountController.dispose();
     _descriptionController.dispose();
+    _descriptionFocusNode.dispose();
     super.dispose();
   }
 
@@ -899,10 +902,15 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
               // Description
               TextFormField(
                 controller: _descriptionController,
+                focusNode: _descriptionFocusNode,
                 decoration: InputDecoration(
                   labelText: l10n.description,
                   hintText: l10n.descriptionHint,
                   prefixIcon: const Icon(Icons.description_outlined),
+                  suffixIcon: VoiceInputButton(
+                    controller: _descriptionController,
+                    focusNode: _descriptionFocusNode,
+                  ),
                 ),
                 textCapitalization: TextCapitalization.sentences,
               ),
