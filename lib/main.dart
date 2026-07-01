@@ -194,10 +194,75 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
       debugShowCheckedModeBanner: false,
       builder: (context, child) {
         if (kIsWeb || !Platform.isWindows) return child!;
-        return Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: child,
+        
+        // Always use a dark ambient background to create a theater-like cinematic experience
+        // matching the gorgeous dark theme, even when the app itself is in light mode.
+        final ambientColor = activeColor.withValues(alpha: 0.05);
+        
+        return Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                const Color(0xFF121212),
+                ambientColor,
+                const Color(0xFF1E1E1E),
+              ],
+            ),
+          ),
+          child: Stack(
+            children: [
+              // Left Logo Watermark
+              Positioned(
+                left: -80,
+                bottom: 100,
+                child: Opacity(
+                  opacity: 0.03,
+                  child: SvgPicture.asset(
+                    'assets/images/logo_square.svg',
+                    height: 280,
+                    colorFilter: ColorFilter.mode(
+                      activeColor,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+              ),
+              // Right Logo Watermark
+              Positioned(
+                right: -80,
+                top: 100,
+                child: Opacity(
+                  opacity: 0.03,
+                  child: SvgPicture.asset(
+                    'assets/images/logo_square.svg',
+                    height: 280,
+                    colorFilter: ColorFilter.mode(
+                      activeColor,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+              ),
+              // Central App Container
+              Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 800),
+                  decoration: const BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black54,
+                        blurRadius: 36,
+                        spreadRadius: 4,
+                        offset: Offset(0, 12),
+                      ),
+                    ],
+                  ),
+                  child: child,
+                ),
+              ),
+            ],
           ),
         );
       },
