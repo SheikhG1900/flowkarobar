@@ -33,6 +33,12 @@ class _VoiceInputButtonState extends ConsumerState<VoiceInputButton> {
   final stt.SpeechToText _speech = stt.SpeechToText();
   bool _isListening = false;
 
+  // Track the initial text and cursor selection before listening starts
+  // to avoid word repetition issues during cumulative real-time updates.
+  String _initialText = '';
+  int _selectionStart = -1;
+  int _selectionEnd = -1;
+
   @override
   void dispose() {
     if (_isListening) {
@@ -73,6 +79,17 @@ class _VoiceInputButtonState extends ConsumerState<VoiceInputButton> {
         );
 
         if (available) {
+          // Capture the text and cursor position before speech recognition starts
+          _initialText = widget.controller.text;
+          final selection = widget.controller.selection;
+          if (selection.isValid && selection.start >= 0) {
+            _selectionStart = selection.start;
+            _selectionEnd = selection.end;
+          } else {
+            _selectionStart = _initialText.length;
+            _selectionEnd = _initialText.length;
+          }
+
           _setListeningState(true);
           _speech.listen(
             onResult: (result) {
@@ -115,26 +132,27 @@ class _VoiceInputButtonState extends ConsumerState<VoiceInputButton> {
     }
   }
 
-  /// Inserts the recognized text at the current cursor position, or appends it if cursor is not active.
+  /// Inserts the recognized text at the captured cursor position, avoiding repetition.
   void _insertText(String newText) {
     if (newText.isEmpty) return;
     
-    final text = widget.controller.text;
-    final selection = widget.controller.selection;
-
-    if (selection.isValid && selection.start >= 0) {
-      final start = selection.start;
-      final end = selection.end;
-      final updatedText = text.replaceRange(start, end, newText);
-      
-      widget.controller.value = TextEditingValue(
-        text: updatedText,
-        selection: TextSelection.collapsed(offset: start + newText.length),
-      );
-    } else {
-      // Fallback: Append to the end
-      widget.controller.text = text.isEmpty ? newText : '$text $newText';
+    // Add a leading space if we are inserting after a non-space character
+    String textToInsert = newText;
+    if (_selectionStart > 0 && _selectionStart <= _initialText.length) {
+      final charBefore = _initialText.substring(_selectionStart - 1, _selectionStart);
+      if (charBefore.trim().isNotEmpty) {
+        textToInsert = ' $newText';
+      }
     }
+    
+    // Always replace the range starting from the captured selection coordinates
+    // using the initial text captured when the microphone was clicked.
+    final updatedText = _initialText.replaceRange(_selectionStart, _selectionEnd, textToInsert);
+    
+    widget.controller.value = TextEditingValue(
+      text: updatedText,
+      selection: TextSelection.collapsed(offset: _selectionStart + textToInsert.length),
+    );
   }
 
   @override
