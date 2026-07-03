@@ -1,6 +1,6 @@
 # deploy_windows.ps1
 # Flowpaisa Windows Build, Package & Deploy Automation Script
-# This script automates compiling, packaging with Inno Setup, committing/pushing to GitHub, and deploying to Firebase Hosting.
+# This script automates compiling, packaging with Inno Setup, committing/pushing to GitHub, creating a GitHub Release with the installer asset, and deploying to Firebase Hosting.
 
 $ErrorActionPreference = "Stop"
 
@@ -92,8 +92,8 @@ if (!(Test-Path $ReadmeFile)) {
     "Note: Executable files (.exe) are forbidden on the Firebase Hosting Spark billing plan. This folder is ignored in firebase.json and the installer is hosted on GitHub Releases instead." | Out-File -FilePath $ReadmeFile -Force
 }
 
-# 5. Git Commit & Push to GitHub
-Write-Host "`n[4/5] Committing and pushing code to GitHub..." -ForegroundColor Green
+# 5. Git Commit & Push to GitHub + Create GitHub Release
+Write-Host "`n[4/5] Committing, pushing code, and creating GitHub Release..." -ForegroundColor Green
 
 $GitCmd = Get-Command "git" -ErrorAction SilentlyContinue
 if ($GitCmd) {
@@ -121,6 +121,27 @@ if ($GitCmd) {
     } else {
         Write-Host "No changes to commit. Skipping git commit/push." -ForegroundColor Yellow
     }
+
+    # Handle GitHub Release creation via GitHub CLI (gh)
+    $GhCmd = Get-Command "gh" -ErrorAction SilentlyContinue
+    if ($GhCmd) {
+        Write-Host "GitHub CLI (gh) detected. Creating/updating release 'v$AppVersion' on GitHub..." -ForegroundColor Gray
+        if (Test-Path $GeneratedSetupPath) {
+            # Create a release and upload the installer asset. --clobber overwrites existing assets if they exist.
+            & gh release create "v$AppVersion" $GeneratedSetupPath --title "v$AppVersion" --notes "Release v$AppVersion (Build $BuildNumber)" --clobber
+            Write-Host "Successfully created GitHub Release and uploaded flowpaisa_setup.exe!" -ForegroundColor Green
+        } else {
+            Write-Host "WARNING: Could not upload release asset because '$GeneratedSetupPath' was not found." -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "`n--------------------------------------------------" -ForegroundColor Yellow
+        Write-Host "👉 TIP: Install GitHub CLI (gh) to fully automate uploading the installer!" -ForegroundColor Yellow
+        Write-Host "You can install it right now by running this in PowerShell:" -ForegroundColor Yellow
+        Write-Host "winget install --id GitHub.cli" -ForegroundColor Cyan
+        Write-Host "Then run: gh auth login" -ForegroundColor Cyan
+        Write-Host "Once logged in, this script will automatically upload the installer to GitHub Releases for you!" -ForegroundColor Yellow
+        Write-Host "--------------------------------------------------`n" -ForegroundColor Yellow
+    }
 } else {
     Write-Host "WARNING: Git command was not found in your system PATH. Skipping Git push step..." -ForegroundColor Yellow
 }
@@ -139,7 +160,10 @@ if ($FirebaseCmd) {
         Write-Host "Your Windows app update is now live on Firebase Hosting!" -ForegroundColor Green
         Write-Host "Website: https://flow-paisa.firebaseapp.com" -ForegroundColor Cyan
         Write-Host "Update Config: https://flow-paisa.firebaseapp.com/version.json" -ForegroundColor Cyan
-        Write-Host "`nNext Step: Go to GitHub (https://github.com/tamatasoft/flowpaisa/releases), create a release named 'v$AppVersion', and upload the generated installer located at: .\Output\$SetupOutputName" -ForegroundColor Yellow
+        
+        if (!(Get-Command "gh" -ErrorAction SilentlyContinue)) {
+            Write-Host "`nNext Step: Go to GitHub (https://github.com/tamatasoft/flowpaisa/releases), create a release named 'v$AppVersion', and upload the generated installer located at: .\Output\$SetupOutputName" -ForegroundColor Yellow
+        }
     } else {
         Write-Error "Firebase deployment failed!"
         exit $LASTEXITCODE
