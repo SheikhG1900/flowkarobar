@@ -155,10 +155,12 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    // Check for in-app updates on startup (Android only)
+    // Check for in-app updates on startup (Android and Windows)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (defaultTargetPlatform == TargetPlatform.android) {
         ref.read(updateServiceProvider).checkForUpdate();
+      } else if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) {
+        ref.read(updateServiceProvider).checkForWindowsUpdate(context, ref);
       }
     });
   }

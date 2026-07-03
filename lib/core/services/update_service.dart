@@ -1,17 +1,22 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 
-/// Service to handle in-app updates using Google Play's In-App Update API.
-/// This feature is only available on Android devices with Google Play Services.
+/// Service to handle in-app updates across platforms.
+/// - Android: Uses Google Play's In-App Update API.
+/// - Windows: Uses a custom hybrid auto-update system (Firebase Hosting + GitHub Releases).
 class UpdateService {
-  /// Checks for available updates and triggers the update flow.
-  /// 
-  /// We prioritize 'Immediate Update' for the "instant" experience.
-  /// This will show a full-screen dialog that handles the download and 
-  /// installation without the user needing to leave the app.
+  bool _isDownloading = false;
+
+  /// Checks for available updates and triggers the platform-specific update flow.
   Future<void> checkForUpdate() async {
-    // In-app updates are only supported on Android.
+    // In-app updates via Play Store are only supported on Android.
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
 
     try {
@@ -25,16 +30,342 @@ class UpdateService {
           await InAppUpdate.performImmediateUpdate();
         } else if (info.flexibleUpdateAllowed) {
           // Flexible Update: Background download.
-          // For a simple implementation, we start the download.
-          // Note: To be fully robust, one would listen to the download status
-          // and call completeFlexibleUpdate() once finished.
           await InAppUpdate.startFlexibleUpdate();
         }
       }
     } catch (e) {
       // Fail silently to ensure the app remains usable even if the update check fails.
-      debugPrint('UpdateService: Error checking for updates: $e');
+      debugPrint('UpdateService: Error checking for Android updates: $e');
     }
+  }
+
+  /// Checks for Windows desktop updates and triggers the custom update flow.
+  Future<void> checkForWindowsUpdate(BuildContext context, WidgetRef ref) async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.windows) return;
+
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      final currentVersion = packageInfo.version;
+      final currentBuild = int.tryParse(packageInfo.buildNumber) ?? 0;
+
+      // Fetch version.json from Firebase Hosting
+      final dio = Dio();
+      final response = await dio.get(
+        'https://flow-paisa.firebaseapp.com/version.json',
+        options: Options(
+          headers: {'Cache-Control': 'no-cache'}, // Avoid caching issues
+          responseType: ResponseType.json,
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        final serverVersion = data['version'] as String;
+        final serverBuild = data['buildNumber'] as int;
+        final downloadUrl = data['url'] as String;
+        final changelog = data['changelog'] as String? ?? 'Bug fixes and improvements.';
+
+        if (_isNewerVersion(currentVersion, currentBuild, serverVersion, serverBuild)) {
+          if (context.mounted) {
+            _showUpdateDialog(context, ref, serverVersion, downloadUrl, changelog);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('UpdateService: Desktop update check failed: $e');
+    }
+  }
+
+  /// Compares local version and build number with the server's version and build number.
+  bool _isNewerVersion(String currentVersion, int currentBuild, String serverVersion, int serverBuild) {
+    try {
+      final currentParts = currentVersion.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+      final serverParts = serverVersion.split('.').map((e) => int.tryParse(e) ?? 0).toList();
+
+      for (int i = 0; i < 3; i++) {
+        final currentPart = i < currentParts.length ? currentParts[i] : 0;
+        final serverPart = i < serverParts.length ? serverParts[i] : 0;
+        if (serverPart > currentPart) return true;
+        if (serverPart < currentPart) return false;
+      }
+
+      return serverBuild > currentBuild;
+    } catch (e) {
+      // Fallback: If parsing fails, compare build numbers directly
+      return serverBuild > currentBuild;
+    }
+  }
+
+  /// Displays a beautifully styled update dialog matching Flowpaisa theme.
+  void _showUpdateDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String serverVersion,
+    String downloadUrl,
+    String changelog,
+  ) {
+    final activeCashbook = ref.read(activeCashbookProvider);
+    final primaryColor = activeCashbook.color;
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // Force user to choose
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.system_update_alt_rounded, color: primaryColor, size: 28),
+              const SizedBox(width: 12),
+              const Text(
+                'Update Available',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'A new version ($serverVersion) of Flowpaisa is available. Update now to get the latest features and improvements!',
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "What's New:",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        changelog,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                'Later',
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+              ),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: primaryColor,
+                foregroundColor: activeCashbook.foreColor(context),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _showDownloadProgressDialog(context, ref, downloadUrl);
+              },
+              child: const Text('Update Now'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Displays a linear progress dialog showing real-time download progress.
+  void _showDownloadProgressDialog(BuildContext context, WidgetRef ref, String downloadUrl) {
+    final activeCashbook = ref.read(activeCashbookProvider);
+    final primaryColor = activeCashbook.color;
+    final theme = Theme.of(context);
+
+    double progress = 0.0;
+    String statusText = 'Starting download...';
+    CancelToken cancelToken = CancelToken();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (progressContext) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            // Start download if not already started
+            _downloadAndInstall(
+              downloadUrl,
+              cancelToken,
+              onProgress: (received, total) {
+                if (total != -1) {
+                  setState(() {
+                    progress = received / total;
+                    statusText = 'Downloading: ${(progress * 100).toStringAsFixed(0)}%';
+                  });
+                } else {
+                  setState(() {
+                    statusText = 'Downloading...';
+                  });
+                }
+              },
+              onError: (error) {
+                if (progressContext.mounted) {
+                  Navigator.pop(progressContext);
+                  _showErrorDialog(context, ref, error);
+                }
+              },
+            );
+
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Row(
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Text(
+                    'Downloading Update',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                ],
+              ),
+              content: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      statusText,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(height: 16),
+                    LinearProgressIndicator(
+                      value: progress > 0 ? progress : null,
+                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                      valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Please do not close the application. Once finished, the installer will launch automatically.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    cancelToken.cancel();
+                    Navigator.pop(progressContext);
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(color: theme.colorScheme.error),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Downloads the installer and launches it in a detached process.
+  Future<void> _downloadAndInstall(
+    String url,
+    CancelToken cancelToken, {
+    required void Function(int received, int total) onProgress,
+    required void Function(String error) onError,
+  }) async {
+    if (_isDownloading) return;
+    _isDownloading = true;
+
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final filePath = '${tempDir.path}/flowpaisa_setup.exe';
+
+      final dio = Dio();
+      await dio.download(
+        url,
+        filePath,
+        cancelToken: cancelToken,
+        onReceiveProgress: onProgress,
+      );
+
+      final file = File(filePath);
+      if (await file.exists()) {
+        // Launch installer detached and close the app
+        await Process.start(filePath, [], runInShell: true, mode: ProcessStartMode.detached);
+        exit(0);
+      } else {
+        onError('Downloaded installer file could not be found.');
+      }
+    } catch (e) {
+      if (!cancelToken.isCancelled) {
+        onError(e.toString());
+      }
+    } finally {
+      _isDownloading = false;
+    }
+  }
+
+  /// Displays an error dialog if the update download fails.
+  void _showErrorDialog(BuildContext context, WidgetRef ref, String error) {
+    final theme = Theme.of(context);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.error_outline_rounded, color: Colors.red, size: 28),
+            SizedBox(width: 12),
+            Text('Update Failed', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Text(
+          'An error occurred while downloading the update:\n\n$error\n\nPlease check your internet connection and try again.',
+          style: const TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'Close',
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
