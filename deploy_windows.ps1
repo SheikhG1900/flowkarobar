@@ -86,6 +86,12 @@ if (Test-Path $GeneratedSetupPath) {
     Write-Host "Skipping installer copying because the setup file was not found." -ForegroundColor Yellow
 }
 
+# Add a warning file to downloads folder to remind about Spark plan restrictions
+$ReadmeFile = "$WebsiteDownloadsDir\README_SPARK_PLAN.txt"
+if (!(Test-Path $ReadmeFile)) {
+    "Note: Executable files (.exe) are forbidden on the Firebase Hosting Spark billing plan. This folder is ignored in firebase.json and the installer is hosted on GitHub Releases instead." | Out-File -FilePath $ReadmeFile -Force
+}
+
 # 5. Git Commit & Push to GitHub
 Write-Host "`n[4/5] Committing and pushing code to GitHub..." -ForegroundColor Green
 
