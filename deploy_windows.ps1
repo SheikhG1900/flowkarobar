@@ -156,13 +156,26 @@ if ($FirebaseCmd) {
     & firebase deploy --only hosting
     
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "`n🚀 DEPLOYMENT SUCCESSFUL!" -ForegroundColor Green
-        Write-Host "Your Windows app update is now live on Firebase Hosting!" -ForegroundColor Green
-        Write-Host "Website: https://flow-paisa.firebaseapp.com" -ForegroundColor Cyan
-        Write-Host "Update Config: https://flow-paisa.firebaseapp.com/version.json" -ForegroundColor Cyan
+        Write-Host "`n🚀 DEPLOYMENT PIPELINE COMPLETE!" -ForegroundColor Green
+        Write-Host "==================================================" -ForegroundColor Green
+        Write-Host "   RELEASE & DEPLOYMENT DETAILS" -ForegroundColor Green
+        Write-Host "==================================================" -ForegroundColor Green
+        Write-Host "• App Version:             v$AppVersion" -ForegroundColor Gray
+        Write-Host "• Build Number:            $BuildNumber" -ForegroundColor Gray
+        Write-Host "• Landing Page Website:    https://flow-paisa.firebaseapp.com" -ForegroundColor Cyan
+        Write-Host "• Auto-Update Config:      https://flow-paisa.firebaseapp.com/version.json" -ForegroundColor Cyan
+        Write-Host "• GitHub Release Page:     https://github.com/tamatasoft/flowpaisa/releases/tag/v$AppVersion" -ForegroundColor Cyan
+        Write-Host "• Public Download Link:    https://github.com/tamatasoft/flowpaisa/releases/download/v$AppVersion/$SetupOutputName" -ForegroundColor Cyan
+        Write-Host "• Latest Download Link:    https://github.com/tamatasoft/flowpaisa/releases/latest/download/$SetupOutputName" -ForegroundColor Cyan
+        Write-Host "==================================================" -ForegroundColor Green
         
         if (!(Get-Command "gh" -ErrorAction SilentlyContinue)) {
-            Write-Host "`nNext Step: Go to GitHub (https://github.com/tamatasoft/flowpaisa/releases), create a release named 'v$AppVersion', and upload the generated installer located at: .\Output\$SetupOutputName" -ForegroundColor Yellow
+            Write-Host "`n⚠️  ACTION REQUIRED: GitHub CLI (gh) was not found." -ForegroundColor Yellow
+            Write-Host "Please go to: https://github.com/tamatasoft/flowpaisa/releases" -ForegroundColor Yellow
+            Write-Host "1. Create a release named 'v$AppVersion'" -ForegroundColor Yellow
+            Write-Host "2. Upload the installer located at: .\Output\$SetupOutputName" -ForegroundColor Yellow
+        } else {
+            Write-Host "`n✨ All assets have been built, pushed, and deployed successfully!" -ForegroundColor Green
         }
     } else {
         Write-Error "Firebase deployment failed!"
