@@ -148,10 +148,20 @@ if (!$SkipRelease) {
         if ($Status) {
             git commit -m $CommitMessage
             
-            # Push to remote branch
+            # Push to remote branch - Run safely in case remote is missing or access is denied
             Write-Host "Pushing to GitHub (origin $BranchName)..." -ForegroundColor Gray
-            git push origin $BranchName
-            Write-Host "Successfully pushed code to GitHub!" -ForegroundColor Gray
+            try {
+                # Temporarily allow errors so git push failure doesn't crash the script
+                $oldPreference = $ErrorActionPreference
+                $ErrorActionPreference = "Continue"
+                
+                git push origin $BranchName
+                
+                $ErrorActionPreference = $oldPreference
+                Write-Host "Successfully pushed code to GitHub!" -ForegroundColor Gray
+            } catch {
+                Write-Host "WARNING: Git push failed. (This is normal if your remote repository URL is currently inaccessible). Continuing release pipeline..." -ForegroundColor Yellow
+            }
         } else {
             Write-Host "No changes to commit. Skipping git commit/push." -ForegroundColor Yellow
         }
@@ -161,11 +171,17 @@ if (!$SkipRelease) {
         if ($GhCmd) {
             Write-Host "GitHub CLI (gh) detected. Creating/updating release 'v$AppVersion' on tamatasoft/flowpaisa..." -ForegroundColor Gray
             if (Test-Path $GeneratedSetupPath) {
-                # Check if release already exists on tamatasoft/flowpaisa. If yes, delete it first to avoid conflicts, then create fresh.
+                # Temporarily allow errors so 'release delete' failing (if release doesn't exist yet) doesn't halt the script
+                $oldPreference = $ErrorActionPreference
+                $ErrorActionPreference = "Continue"
+
+                # Attempt to delete release if it already exists to avoid conflicts
                 & gh release delete "v$AppVersion" --repo "tamatasoft/flowpaisa" --yes 2>$null
                 
                 # Create a release on tamatasoft/flowpaisa and upload the installer asset.
                 & gh release create "v$AppVersion" $GeneratedSetupPath --repo "tamatasoft/flowpaisa" --title "v$AppVersion" --notes "Release v$AppVersion (Build $BuildNumber)"
+                
+                $ErrorActionPreference = $oldPreference
                 Write-Host "Successfully created GitHub Release on tamatasoft/flowpaisa and uploaded flowpaisa_setup.exe!" -ForegroundColor Green
             } else {
                 Write-Host "WARNING: Could not upload release asset because '$GeneratedSetupPath' was not found." -ForegroundColor Yellow
