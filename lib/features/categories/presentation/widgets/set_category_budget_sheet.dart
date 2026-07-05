@@ -46,6 +46,7 @@ class _SetCategoryBudgetSheetContentState
   late final TextEditingController _monthlyController;
   late final TextEditingController _quarterlyController;
   late final TextEditingController _yearlyController;
+  late final TextEditingController _overallController;
 
   @override
   void initState() {
@@ -60,6 +61,9 @@ class _SetCategoryBudgetSheetContentState
     _yearlyController = TextEditingController(
       text: c.yearlyBudget != null ? _formatNum(c.yearlyBudget!) : '',
     );
+    _overallController = TextEditingController(
+      text: c.overallBudget != null ? _formatNum(c.overallBudget!) : '',
+    );
   }
 
   @override
@@ -67,6 +71,7 @@ class _SetCategoryBudgetSheetContentState
     _monthlyController.dispose();
     _quarterlyController.dispose();
     _yearlyController.dispose();
+    _overallController.dispose();
     super.dispose();
   }
 
@@ -83,12 +88,14 @@ class _SetCategoryBudgetSheetContentState
     final m = _parseAmount(_monthlyController.text);
     final q = _parseAmount(_quarterlyController.text);
     final y = _parseAmount(_yearlyController.text);
+    final o = _parseAmount(_overallController.text);
 
     // Check limits if setting a NEW budget (all were null before)
     final wasBudgetSet = widget.category.monthlyBudget != null ||
         widget.category.quarterlyBudget != null ||
-        widget.category.yearlyBudget != null;
-    final isSettingNewBudget = !wasBudgetSet && (m != null || q != null || y != null);
+        widget.category.yearlyBudget != null ||
+        widget.category.overallBudget != null;
+    final isSettingNewBudget = !wasBudgetSet && (m != null || q != null || y != null || o != null);
 
     if (isSettingNewBudget) {
       final isPremium = PremiumGate.isPremium(ref);
@@ -109,6 +116,7 @@ class _SetCategoryBudgetSheetContentState
         monthlyBudget: Value(m),
         quarterlyBudget: Value(q),
         yearlyBudget: Value(y),
+        overallBudget: Value(o),
       );
       if (!mounted) return;
       Navigator.of(context).pop();
@@ -222,6 +230,19 @@ class _SetCategoryBudgetSheetContentState
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
             ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _overallController,
+              decoration: InputDecoration(
+                labelText: l10n.overallBudget,
+                border: const OutlineInputBorder(),
+              ),
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+              ],
+            ),
             const SizedBox(height: 20),
 
             // Countdown Badge (show until limit reached)
@@ -231,7 +252,8 @@ class _SetCategoryBudgetSheetContentState
                 final limits = snapshot.data;
                 final wasBudgetSet = widget.category.monthlyBudget != null ||
                     widget.category.quarterlyBudget != null ||
-                    widget.category.yearlyBudget != null;
+                    widget.category.yearlyBudget != null ||
+                    widget.category.overallBudget != null;
 
                 if (!wasBudgetSet &&
                     limits != null &&
@@ -269,7 +291,8 @@ class _SetCategoryBudgetSheetContentState
                     final limits = snapshot.data;
                     final wasBudgetSet = widget.category.monthlyBudget != null ||
                         widget.category.quarterlyBudget != null ||
-                        widget.category.yearlyBudget != null;
+                        widget.category.yearlyBudget != null ||
+                        widget.category.overallBudget != null;
 
                     if (!wasBudgetSet &&
                         limits != null &&

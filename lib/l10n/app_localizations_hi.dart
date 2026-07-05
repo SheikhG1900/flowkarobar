@@ -4090,12 +4090,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String get yearlyBudget => 'वार्षिक बजट';
 
   @override
+  String get overallBudget => 'कुल बजट';
+
+  @override
+  String get overallBudgetProgress => 'कुल बजट प्रगति';
+
+  @override
+  String get overallNetAmount => 'कुल शुद्ध राशि';
+
+  @override
+  String get providedPeriod => 'निर्धारित अवधि';
+
+  @override
+  String get overall => 'कुल';
+
+  @override
   String get spendingBudgetDescription =>
-      'कैलेंडर माह, तिमाही या वर्ष के लिए वैकल्पिक खर्च सीमा।';
+      'कैलेंडर माह, तिमाही, वर्ष या कुल के लिए वैकल्पिक खर्च सीमा।';
 
   @override
   String get savingsTargetDescription =>
-      'कैलेंडर माह, तिमाही या वर्ष के लिए वैकल्पिक बचत लक्ष्य।';
+      'कैलेंडर माह, तिमाही, वर्ष या कुल के लिए वैकल्पिक बचत लक्ष्य।';
 
   @override
   String get budgetSaved => 'बजट सहेजा गया';

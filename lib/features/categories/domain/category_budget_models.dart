@@ -20,6 +20,8 @@ class CategoryBudgetSnapshot {
   final double netAmount;
   final double? budgetAmount;
   final int transactionCount;
+  final double overallNetAmount;
+  final double? overallBudgetAmount;
 
   const CategoryBudgetSnapshot({
     required this.category,
@@ -27,10 +29,15 @@ class CategoryBudgetSnapshot {
     required this.netAmount,
     required this.budgetAmount,
     required this.transactionCount,
+    required this.overallNetAmount,
+    required this.overallBudgetAmount,
   });
 
   bool get hasBudget =>
       budgetAmount != null && budgetAmount! > 0;
+
+  bool get hasOverallBudget =>
+      overallBudgetAmount != null && overallBudgetAmount! > 0;
 
   /// Progress 0..1 for bar; can exceed 1 when over budget / past target.
   double get progressRatio {
@@ -45,10 +52,27 @@ class CategoryBudgetSnapshot {
     return netAmount / cap;
   }
 
+  /// Progress 0..1 for overall budget bar; can exceed 1 when over budget / past target.
+  double get overallProgressRatio {
+    if (!hasOverallBudget) return 0;
+    final cap = overallBudgetAmount!;
+    if (cap <= 0) return 0;
+    if (category.type == 'INCOME') {
+      return overallNetAmount / cap;
+    }
+    return overallNetAmount / cap;
+  }
+
   /// Remaining budget (expense) or gap to target (income); negative when over.
   double get remainingOrGap {
     if (!hasBudget) return 0;
     return budgetAmount! - netAmount;
+  }
+
+  /// Remaining overall budget (expense) or gap to target (income); negative when over.
+  double get overallRemainingOrGap {
+    if (!hasOverallBudget) return 0;
+    return overallBudgetAmount! - overallNetAmount;
   }
 }
 

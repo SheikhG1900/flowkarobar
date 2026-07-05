@@ -4096,12 +4096,27 @@ class AppLocalizationsUr extends AppLocalizations {
   String get yearlyBudget => 'سالانہ بجٹ';
 
   @override
+  String get overallBudget => 'مجموعی بجٹ';
+
+  @override
+  String get overallBudgetProgress => 'مجموعی بجٹ کی پیشرفت';
+
+  @override
+  String get overallNetAmount => 'مجموعی خالص رقم';
+
+  @override
+  String get providedPeriod => 'مقررہ مدت';
+
+  @override
+  String get overall => 'مجموعی';
+
+  @override
   String get spendingBudgetDescription =>
-      'کیلنڈر ماہ، سہ ماہی یا سال کے لیے اختیاری خرچ کی حد۔';
+      'کیلنڈر ماہ، سہ ماہی، سال یا مجموعی طور پر اختیاری خرچ کی حد۔';
 
   @override
   String get savingsTargetDescription =>
-      'کیلنڈر ماہ، سہ ماہی یا سال کے لیے اختیاری بچت کے اہداف۔';
+      'کیلنڈر ماہ، سہ ماہی، سال یا مجموعی طور پر اختیاری بچت کے اہداف۔';
 
   @override
   String get budgetSaved => 'بجٹ محفوظ ہو گیا';

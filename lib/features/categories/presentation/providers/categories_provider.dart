@@ -160,6 +160,30 @@ final categoryNetAmountsForListProvider =
   );
 });
 
+/// Net amounts for all categories of [type] for all time (overall).
+final overallCategoryNetAmountsForListProvider =
+    StreamProvider.family<Map<String, double>, String>((ref, type) {
+  final repo = ref.watch(categoriesRepositoryProvider);
+  final categoriesAsync = ref.watch(categoriesByTypeProvider(type));
+
+  return categoriesAsync.when(
+    data: (categories) {
+      if (categories.isEmpty) return Stream.value(<String, double>{});
+      return repo
+          .watchCategoryNetAmountsForCategories(
+            categories.map((c) => c.uuid).toList(),
+            DateTime(1970, 1, 1),
+            DateTime(2100, 12, 31),
+            type,
+          )
+          .distinct((prev, next) => const MapEquality().equals(prev, next))
+          .debounceTime(const Duration(milliseconds: 100));
+    },
+    loading: () => Stream.value(<String, double>{}),
+    error: (_, __) => Stream.value(<String, double>{}),
+  );
+});
+
 /// Uncategorized total for transactions of [type] for the current category budget period.
 final uncategorizedAmountByTypeProvider =
     StreamProvider.family<double, String>((ref, type) {
@@ -167,6 +191,16 @@ final uncategorizedAmountByTypeProvider =
   final repo = ref.watch(categoriesRepositoryProvider);
   return repo
       .watchUncategorizedAmountByType(type, range.startDate, range.endDate)
+      .distinct()
+      .debounceTime(const Duration(milliseconds: 100));
+});
+
+/// Uncategorized total for transactions of [type] for all time (overall).
+final overallUncategorizedAmountByTypeProvider =
+    StreamProvider.family<double, String>((ref, type) {
+  final repo = ref.watch(categoriesRepositoryProvider);
+  return repo
+      .watchUncategorizedAmountByType(type, DateTime(1970, 1, 1), DateTime(2100, 12, 31))
       .distinct()
       .debounceTime(const Duration(milliseconds: 100));
 });

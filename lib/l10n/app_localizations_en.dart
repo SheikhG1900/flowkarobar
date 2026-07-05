@@ -4079,12 +4079,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yearlyBudget => 'Yearly budget';
 
   @override
+  String get overallBudget => 'Overall budget';
+
+  @override
+  String get overallBudgetProgress => 'Overall budget progress';
+
+  @override
+  String get overallNetAmount => 'Overall Net Amount';
+
+  @override
+  String get providedPeriod => 'Provided Period';
+
+  @override
+  String get overall => 'Overall';
+
+  @override
   String get spendingBudgetDescription =>
-      'Optional spending limits for the calendar month, quarter, or year.';
+      'Optional spending limits for the calendar month, quarter, year, or overall.';
 
   @override
   String get savingsTargetDescription =>
-      'Optional savings targets for the calendar month, quarter, or year.';
+      'Optional savings targets for the calendar month, quarter, year, or overall.';
 
   @override
   String get budgetSaved => 'Budget saved';

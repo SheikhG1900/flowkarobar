@@ -9,7 +9,6 @@ import 'package:flowpaisa/features/categories/presentation/widgets/category_budg
 import 'package:flowpaisa/features/categories/presentation/widgets/set_category_budget_sheet.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
-import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/edit_category_screen.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
@@ -17,6 +16,7 @@ import 'package:flowpaisa/features/transactions/presentation/screens/transaction
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flutter/services.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
@@ -270,7 +270,6 @@ class CategoryDetailsScreen extends ConsumerWidget {
                             PremiumGate.showPremiumDialog(context);
                             return;
                           }
-                          final nav = Navigator.of(context);
                           // Check limits before showing the sheet
                           final wasBudgetSet =
                               snapshot.category.monthlyBudget != null ||
@@ -281,7 +280,9 @@ class CategoryDetailsScreen extends ConsumerWidget {
                             final limits =
                                 await PremiumGate.getCategoryBudgetLimits(ref);
                             if (!limits.canAdd) {
-                              PremiumGate.showPremiumDialog(context);
+                              if (context.mounted) {
+                                PremiumGate.showPremiumDialog(context);
+                              }
                               return;
                             }
                           }
@@ -429,6 +430,22 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
     required this.onSetBudget,
   });
 
+  String _getPeriodText(BuildContext context) {
+    switch (selectedDateRange.type) {
+      case DateRangeType.month:
+        return AppDateFormatter.formatMonthYear(selectedDateRange.startDate,
+            context: context);
+      case DateRangeType.quarter:
+        final quarter = ((selectedDateRange.startDate.month - 1) ~/ 3) + 1;
+        return 'Q$quarter ${AppDateFormatter.getFormatter('y').format(selectedDateRange.startDate)}';
+      case DateRangeType.year:
+        return AppDateFormatter.getFormatter('y')
+            .format(selectedDateRange.startDate);
+      case DateRangeType.custom:
+        return '${AppDateFormatter.formatDate(selectedDateRange.startDate)} - ${AppDateFormatter.formatDate(selectedDateRange.endDate)}';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -440,6 +457,19 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
     final budgetStr = !isBudgetLocked && snapshot.budgetAmount != null
         ? AmountFormatter.formatWithCurrency(
             snapshot.budgetAmount!,
+            currencySymbol,
+            decimalPlaces,
+          )
+        : '';
+
+    final overallNetStr = AmountFormatter.formatWithCurrency(
+      snapshot.overallNetAmount,
+      currencySymbol,
+      decimalPlaces,
+    );
+    final overallBudgetStr = !isBudgetLocked && snapshot.overallBudgetAmount != null
+        ? AmountFormatter.formatWithCurrency(
+            snapshot.overallBudgetAmount!,
             currencySymbol,
             decimalPlaces,
           )
@@ -471,6 +501,18 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
         ? snapshot.remainingOrGap
         : 0.0;
 
+    final hasOverallBudget = !isBudgetLocked && snapshot.hasOverallBudget;
+    final overallPr = hasOverallBudget ? snapshot.overallProgressRatio : 0.0;
+    final overallOver = hasOverallBudget && overallPr > 1.0;
+    final overallBarFillColor = overallOver ? AppColors.expenseColor : color;
+
+    final overallNet = snapshot.overallNetAmount;
+    final overallBarRightAmount = hasOverallBudget && snapshot.overallRemainingOrGap > 0
+        ? snapshot.overallRemainingOrGap
+        : 0.0;
+
+    final hasAnyBudget = hasBudget || hasOverallBudget;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -488,93 +530,134 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
                 ),
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(
+                    16,
                     20,
-                    20,
-                    20,
-                    hasBudget ? 16 : 0,
+                    16,
+                    hasAnyBudget ? 16 : 20,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                  child: Stack(
+                    clipBehavior: Clip.none,
                     children: [
-                      SizedBox(
-                        width: double.infinity,
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          alignment: Alignment.center,
-                          children: [
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 44),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  _getPeriodText(context),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  netStr,
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.headlineMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                  ),
+                                ),
+                                if (hasBudget) ...[
+                                  const SizedBox(height: 12),
                                   Text(
-                                    isExpense
-                                        ? l10n.netExpenses
-                                        : l10n.netIncome,
+                                    isExpense ? l10n.spendingBudget : l10n.savingsTarget,
                                     textAlign: TextAlign.center,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.85),
-                                      fontWeight: FontWeight.w500,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: Colors.white.withValues(alpha: 0.75),
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.2,
                                     ),
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 4),
                                   Text(
-                                    netStr,
+                                    budgetStr,
                                     textAlign: TextAlign.center,
-                                    style:
-                                        theme.textTheme.headlineLarge?.copyWith(
+                                    style: theme.textTheme.titleSmall?.copyWith(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 32,
-                                      height: 1.1,
-                                      color: Colors.white,
+                                      color: Colors.white.withValues(alpha: 0.95),
                                     ),
                                   ),
                                 ],
-                              ),
+                              ],
                             ),
-                            PositionedDirectional(
-                              end: 0,
-                              top: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.22),
-                                  shape: BoxShape.circle,
+                          ),
+                          Container(
+                            width: 1,
+                            height: hasAnyBudget ? 110 : 70,
+                            color: Colors.white.withValues(alpha: 0.25),
+                          ),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  l10n.overall,
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                child: const Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 18,
-                                  color: Colors.white,
+                                const SizedBox(height: 8),
+                                Text(
+                                  overallNetStr,
+                                  textAlign: TextAlign.center,
+                                  style: theme.textTheme.headlineMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontSize: 24,
+                                  ),
                                 ),
-                              ),
+                                if (hasOverallBudget) ...[
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    isExpense ? l10n.spendingBudget : l10n.savingsTarget,
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: Colors.white.withValues(alpha: 0.75),
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    overallBudgetStr,
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white.withValues(alpha: 0.95),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                      PositionedDirectional(
+                        end: -4,
+                        top: -4,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.22),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 12,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      if (hasBudget) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          isExpense ? l10n.spendingBudget : l10n.savingsTarget,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.75),
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          budgetStr,
-                          textAlign: TextAlign.center,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white.withValues(alpha: 0.95),
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -595,7 +678,7 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
                       size: 20,
                     ),
                     label: Text(
-                      hasBudget ? l10n.editBudget : l10n.setBudget,
+                      hasAnyBudget ? l10n.editBudget : l10n.setBudget,
                     ),
                   ),
                 ),
@@ -604,15 +687,57 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
           ),
         ),
         if (hasBudget) ...[
-          const SizedBox(height: 12),
-          DualAmountProgressBar(
-            leftLabel: isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress,
-            leftAmount: net > 0 ? net : 0.0,
-            rightLabel: l10n.remaining,
-            rightAmount: barRightAmount,
-            symbol: currencySymbol,
-            decimals: decimalPlaces,
-            filledColor: barFillColor,
+          const SizedBox(height: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 6),
+                child: Text(
+                  '${_getPeriodText(context)} ${l10n.budget}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              DualAmountProgressBar(
+                leftLabel: isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress,
+                leftAmount: net > 0 ? net : 0.0,
+                rightLabel: l10n.remaining,
+                rightAmount: barRightAmount,
+                symbol: currencySymbol,
+                decimals: decimalPlaces,
+                filledColor: barFillColor,
+              ),
+            ],
+          ),
+        ],
+        if (hasOverallBudget) ...[
+          const SizedBox(height: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 6),
+                child: Text(
+                  l10n.overallBudgetProgress,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              DualAmountProgressBar(
+                leftLabel: isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress,
+                leftAmount: overallNet > 0 ? overallNet : 0.0,
+                rightLabel: l10n.remaining,
+                rightAmount: overallBarRightAmount,
+                symbol: currencySymbol,
+                decimals: decimalPlaces,
+                filledColor: overallBarFillColor,
+              ),
+            ],
           ),
         ],
       ],

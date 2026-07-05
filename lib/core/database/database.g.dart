@@ -101,6 +101,12 @@ class $CategoriesTable extends Categories
   late final GeneratedColumn<double> yearlyBudget = GeneratedColumn<double>(
       'yearly_budget', aliasedName, true,
       type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _overallBudgetMeta =
+      const VerificationMeta('overallBudget');
+  @override
+  late final GeneratedColumn<double> overallBudget = GeneratedColumn<double>(
+      'overall_budget', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
   static const VerificationMeta _addSeqMeta = const VerificationMeta('addSeq');
   @override
   late final GeneratedColumn<int> addSeq = GeneratedColumn<int>(
@@ -127,6 +133,7 @@ class $CategoriesTable extends Categories
         monthlyBudget,
         quarterlyBudget,
         yearlyBudget,
+        overallBudget,
         addSeq,
         budgetSeq
       ];
@@ -206,6 +213,12 @@ class $CategoriesTable extends Categories
           yearlyBudget.isAcceptableOrUnknown(
               data['yearly_budget']!, _yearlyBudgetMeta));
     }
+    if (data.containsKey('overall_budget')) {
+      context.handle(
+          _overallBudgetMeta,
+          overallBudget.isAcceptableOrUnknown(
+              data['overall_budget']!, _overallBudgetMeta));
+    }
     if (data.containsKey('add_seq')) {
       context.handle(_addSeqMeta,
           addSeq.isAcceptableOrUnknown(data['add_seq']!, _addSeqMeta));
@@ -249,6 +262,8 @@ class $CategoriesTable extends Categories
           DriftSqlType.double, data['${effectivePrefix}quarterly_budget']),
       yearlyBudget: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}yearly_budget']),
+      overallBudget: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}overall_budget']),
       addSeq: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}add_seq']),
       budgetSeq: attachedDatabase.typeMapping
@@ -278,6 +293,7 @@ class Category extends DataClass implements Insertable<Category> {
   final double? monthlyBudget;
   final double? quarterlyBudget;
   final double? yearlyBudget;
+  final double? overallBudget;
   final int? addSeq;
   final int? budgetSeq;
   const Category(
@@ -294,6 +310,7 @@ class Category extends DataClass implements Insertable<Category> {
       this.monthlyBudget,
       this.quarterlyBudget,
       this.yearlyBudget,
+      this.overallBudget,
       this.addSeq,
       this.budgetSeq});
   @override
@@ -321,6 +338,9 @@ class Category extends DataClass implements Insertable<Category> {
     }
     if (!nullToAbsent || yearlyBudget != null) {
       map['yearly_budget'] = Variable<double>(yearlyBudget);
+    }
+    if (!nullToAbsent || overallBudget != null) {
+      map['overall_budget'] = Variable<double>(overallBudget);
     }
     if (!nullToAbsent || addSeq != null) {
       map['add_seq'] = Variable<int>(addSeq);
@@ -353,6 +373,9 @@ class Category extends DataClass implements Insertable<Category> {
       yearlyBudget: yearlyBudget == null && nullToAbsent
           ? const Value.absent()
           : Value(yearlyBudget),
+      overallBudget: overallBudget == null && nullToAbsent
+          ? const Value.absent()
+          : Value(overallBudget),
       addSeq:
           addSeq == null && nullToAbsent ? const Value.absent() : Value(addSeq),
       budgetSeq: budgetSeq == null && nullToAbsent
@@ -378,6 +401,7 @@ class Category extends DataClass implements Insertable<Category> {
       monthlyBudget: serializer.fromJson<double?>(json['monthlyBudget']),
       quarterlyBudget: serializer.fromJson<double?>(json['quarterlyBudget']),
       yearlyBudget: serializer.fromJson<double?>(json['yearlyBudget']),
+      overallBudget: serializer.fromJson<double?>(json['overallBudget']),
       addSeq: serializer.fromJson<int?>(json['addSeq']),
       budgetSeq: serializer.fromJson<int?>(json['budgetSeq']),
     );
@@ -399,6 +423,7 @@ class Category extends DataClass implements Insertable<Category> {
       'monthlyBudget': serializer.toJson<double?>(monthlyBudget),
       'quarterlyBudget': serializer.toJson<double?>(quarterlyBudget),
       'yearlyBudget': serializer.toJson<double?>(yearlyBudget),
+      'overallBudget': serializer.toJson<double?>(overallBudget),
       'addSeq': serializer.toJson<int?>(addSeq),
       'budgetSeq': serializer.toJson<int?>(budgetSeq),
     };
@@ -418,6 +443,7 @@ class Category extends DataClass implements Insertable<Category> {
           Value<double?> monthlyBudget = const Value.absent(),
           Value<double?> quarterlyBudget = const Value.absent(),
           Value<double?> yearlyBudget = const Value.absent(),
+          Value<double?> overallBudget = const Value.absent(),
           Value<int?> addSeq = const Value.absent(),
           Value<int?> budgetSeq = const Value.absent()}) =>
       Category(
@@ -438,6 +464,8 @@ class Category extends DataClass implements Insertable<Category> {
             : this.quarterlyBudget,
         yearlyBudget:
             yearlyBudget.present ? yearlyBudget.value : this.yearlyBudget,
+        overallBudget:
+            overallBudget.present ? overallBudget.value : this.overallBudget,
         addSeq: addSeq.present ? addSeq.value : this.addSeq,
         budgetSeq: budgetSeq.present ? budgetSeq.value : this.budgetSeq,
       );
@@ -463,6 +491,9 @@ class Category extends DataClass implements Insertable<Category> {
       yearlyBudget: data.yearlyBudget.present
           ? data.yearlyBudget.value
           : this.yearlyBudget,
+      overallBudget: data.overallBudget.present
+          ? data.overallBudget.value
+          : this.overallBudget,
       addSeq: data.addSeq.present ? data.addSeq.value : this.addSeq,
       budgetSeq: data.budgetSeq.present ? data.budgetSeq.value : this.budgetSeq,
     );
@@ -484,6 +515,7 @@ class Category extends DataClass implements Insertable<Category> {
           ..write('monthlyBudget: $monthlyBudget, ')
           ..write('quarterlyBudget: $quarterlyBudget, ')
           ..write('yearlyBudget: $yearlyBudget, ')
+          ..write('overallBudget: $overallBudget, ')
           ..write('addSeq: $addSeq, ')
           ..write('budgetSeq: $budgetSeq')
           ..write(')'))
@@ -505,6 +537,7 @@ class Category extends DataClass implements Insertable<Category> {
       monthlyBudget,
       quarterlyBudget,
       yearlyBudget,
+      overallBudget,
       addSeq,
       budgetSeq);
   @override
@@ -524,6 +557,7 @@ class Category extends DataClass implements Insertable<Category> {
           other.monthlyBudget == this.monthlyBudget &&
           other.quarterlyBudget == this.quarterlyBudget &&
           other.yearlyBudget == this.yearlyBudget &&
+          other.overallBudget == this.overallBudget &&
           other.addSeq == this.addSeq &&
           other.budgetSeq == this.budgetSeq);
 }
@@ -542,6 +576,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   final Value<double?> monthlyBudget;
   final Value<double?> quarterlyBudget;
   final Value<double?> yearlyBudget;
+  final Value<double?> overallBudget;
   final Value<int?> addSeq;
   final Value<int?> budgetSeq;
   final Value<int> rowid;
@@ -559,6 +594,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.monthlyBudget = const Value.absent(),
     this.quarterlyBudget = const Value.absent(),
     this.yearlyBudget = const Value.absent(),
+    this.overallBudget = const Value.absent(),
     this.addSeq = const Value.absent(),
     this.budgetSeq = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -577,6 +613,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.monthlyBudget = const Value.absent(),
     this.quarterlyBudget = const Value.absent(),
     this.yearlyBudget = const Value.absent(),
+    this.overallBudget = const Value.absent(),
     this.addSeq = const Value.absent(),
     this.budgetSeq = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -597,6 +634,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     Expression<double>? monthlyBudget,
     Expression<double>? quarterlyBudget,
     Expression<double>? yearlyBudget,
+    Expression<double>? overallBudget,
     Expression<int>? addSeq,
     Expression<int>? budgetSeq,
     Expression<int>? rowid,
@@ -615,6 +653,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       if (monthlyBudget != null) 'monthly_budget': monthlyBudget,
       if (quarterlyBudget != null) 'quarterly_budget': quarterlyBudget,
       if (yearlyBudget != null) 'yearly_budget': yearlyBudget,
+      if (overallBudget != null) 'overall_budget': overallBudget,
       if (addSeq != null) 'add_seq': addSeq,
       if (budgetSeq != null) 'budget_seq': budgetSeq,
       if (rowid != null) 'rowid': rowid,
@@ -635,6 +674,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       Value<double?>? monthlyBudget,
       Value<double?>? quarterlyBudget,
       Value<double?>? yearlyBudget,
+      Value<double?>? overallBudget,
       Value<int?>? addSeq,
       Value<int?>? budgetSeq,
       Value<int>? rowid}) {
@@ -652,6 +692,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
       monthlyBudget: monthlyBudget ?? this.monthlyBudget,
       quarterlyBudget: quarterlyBudget ?? this.quarterlyBudget,
       yearlyBudget: yearlyBudget ?? this.yearlyBudget,
+      overallBudget: overallBudget ?? this.overallBudget,
       addSeq: addSeq ?? this.addSeq,
       budgetSeq: budgetSeq ?? this.budgetSeq,
       rowid: rowid ?? this.rowid,
@@ -700,6 +741,9 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     if (yearlyBudget.present) {
       map['yearly_budget'] = Variable<double>(yearlyBudget.value);
     }
+    if (overallBudget.present) {
+      map['overall_budget'] = Variable<double>(overallBudget.value);
+    }
     if (addSeq.present) {
       map['add_seq'] = Variable<int>(addSeq.value);
     }
@@ -728,6 +772,7 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
           ..write('monthlyBudget: $monthlyBudget, ')
           ..write('quarterlyBudget: $quarterlyBudget, ')
           ..write('yearlyBudget: $yearlyBudget, ')
+          ..write('overallBudget: $overallBudget, ')
           ..write('addSeq: $addSeq, ')
           ..write('budgetSeq: $budgetSeq, ')
           ..write('rowid: $rowid')
@@ -9352,6 +9397,7 @@ typedef $$CategoriesTableCreateCompanionBuilder = CategoriesCompanion Function({
   Value<double?> monthlyBudget,
   Value<double?> quarterlyBudget,
   Value<double?> yearlyBudget,
+  Value<double?> overallBudget,
   Value<int?> addSeq,
   Value<int?> budgetSeq,
   Value<int> rowid,
@@ -9370,6 +9416,7 @@ typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
   Value<double?> monthlyBudget,
   Value<double?> quarterlyBudget,
   Value<double?> yearlyBudget,
+  Value<double?> overallBudget,
   Value<int?> addSeq,
   Value<int?> budgetSeq,
   Value<int> rowid,
@@ -9482,6 +9529,9 @@ class $$CategoriesTableFilterComposer
 
   ColumnFilters<double> get yearlyBudget => $composableBuilder(
       column: $table.yearlyBudget, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get overallBudget => $composableBuilder(
+      column: $table.overallBudget, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<int> get addSeq => $composableBuilder(
       column: $table.addSeq, builder: (column) => ColumnFilters(column));
@@ -9605,6 +9655,10 @@ class $$CategoriesTableOrderingComposer
       column: $table.yearlyBudget,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<double> get overallBudget => $composableBuilder(
+      column: $table.overallBudget,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<int> get addSeq => $composableBuilder(
       column: $table.addSeq, builder: (column) => ColumnOrderings(column));
 
@@ -9659,6 +9713,9 @@ class $$CategoriesTableAnnotationComposer
 
   GeneratedColumn<double> get yearlyBudget => $composableBuilder(
       column: $table.yearlyBudget, builder: (column) => column);
+
+  GeneratedColumn<double> get overallBudget => $composableBuilder(
+      column: $table.overallBudget, builder: (column) => column);
 
   GeneratedColumn<int> get addSeq =>
       $composableBuilder(column: $table.addSeq, builder: (column) => column);
@@ -9772,6 +9829,7 @@ class $$CategoriesTableTableManager extends RootTableManager<
             Value<double?> monthlyBudget = const Value.absent(),
             Value<double?> quarterlyBudget = const Value.absent(),
             Value<double?> yearlyBudget = const Value.absent(),
+            Value<double?> overallBudget = const Value.absent(),
             Value<int?> addSeq = const Value.absent(),
             Value<int?> budgetSeq = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -9790,6 +9848,7 @@ class $$CategoriesTableTableManager extends RootTableManager<
             monthlyBudget: monthlyBudget,
             quarterlyBudget: quarterlyBudget,
             yearlyBudget: yearlyBudget,
+            overallBudget: overallBudget,
             addSeq: addSeq,
             budgetSeq: budgetSeq,
             rowid: rowid,
@@ -9808,6 +9867,7 @@ class $$CategoriesTableTableManager extends RootTableManager<
             Value<double?> monthlyBudget = const Value.absent(),
             Value<double?> quarterlyBudget = const Value.absent(),
             Value<double?> yearlyBudget = const Value.absent(),
+            Value<double?> overallBudget = const Value.absent(),
             Value<int?> addSeq = const Value.absent(),
             Value<int?> budgetSeq = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -9826,6 +9886,7 @@ class $$CategoriesTableTableManager extends RootTableManager<
             monthlyBudget: monthlyBudget,
             quarterlyBudget: quarterlyBudget,
             yearlyBudget: yearlyBudget,
+            overallBudget: overallBudget,
             addSeq: addSeq,
             budgetSeq: budgetSeq,
             rowid: rowid,

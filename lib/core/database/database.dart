@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:drift/drift.dart';
-import 'package:uuid/uuid.dart';
 import 'connection/connection.dart'
     if (dart.library.io) 'connection/native.dart'
     if (dart.library.html) 'connection/web.dart'
@@ -26,6 +25,7 @@ class Categories extends Table {
   RealColumn get monthlyBudget => real().nullable()();
   RealColumn get quarterlyBudget => real().nullable()();
   RealColumn get yearlyBudget => real().nullable()();
+  RealColumn get overallBudget => real().nullable()();
 
   IntColumn get addSeq => integer().nullable()();
   IntColumn get budgetSeq => integer().nullable()();
@@ -365,7 +365,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 24;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -575,11 +575,11 @@ class AppDatabase extends _$AppDatabase {
           // Migration from version 21 to 22: sequence numbers for premium limits
           if (from <= 21) {
             try {
-              await m.addColumn(categories, categories.addSeq as GeneratedColumn<int>);
-              await m.addColumn(categories, categories.budgetSeq as GeneratedColumn<int>);
-              await m.addColumn(accounts, accounts.addSeq as GeneratedColumn<int>);
-              await m.addColumn(transactionSchedules, transactionSchedules.addSeq as GeneratedColumn<int>);
-              await m.addColumn(contacts, contacts.addSeq as GeneratedColumn<int>);
+              await m.addColumn(categories, categories.addSeq);
+              await m.addColumn(categories, categories.budgetSeq);
+              await m.addColumn(accounts, accounts.addSeq);
+              await m.addColumn(transactionSchedules, transactionSchedules.addSeq);
+              await m.addColumn(contacts, contacts.addSeq);
             } catch (e) {
               if (kDebugMode) {
                 print('Migration: sequence columns might already exist: $e');
@@ -597,6 +597,17 @@ class AppDatabase extends _$AppDatabase {
             } catch (e) {
               if (kDebugMode) {
                 print('Migration: Failed to drop add_seq from receivables (likely not supported or column missing): $e');
+              }
+            }
+          }
+
+          // Migration from version 23 to 24: overall budget for categories
+          if (from <= 23) {
+            try {
+              await m.addColumn(categories, categories.overallBudget);
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: overall_budget might already exist: $e');
               }
             }
           }

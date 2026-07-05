@@ -447,12 +447,16 @@ class CategoriesRepository {
     }
     final stats = await getCategoryPeriodStats(
         categoryUuid, range.startDate, range.endDate, category.type);
+    final overallNet = await getCategoryNetAmount(
+        categoryUuid, DateTime(1970, 1, 1), DateTime(2100, 12, 31), category.type);
     return CategoryBudgetSnapshot(
       category: category,
       period: range,
       netAmount: stats.netAmount,
       budgetAmount: budgetAmountForPeriod(category, range),
       transactionCount: stats.transactionCount,
+      overallNetAmount: overallNet,
+      overallBudgetAmount: category.overallBudget,
     );
   }
 
@@ -542,6 +546,7 @@ class CategoriesRepository {
     Value<double?> monthlyBudget = const Value.absent(),
     Value<double?> quarterlyBudget = const Value.absent(),
     Value<double?> yearlyBudget = const Value.absent(),
+    Value<double?> overallBudget = const Value.absent(),
   }) async {
     Value<int?> budgetSeq = const Value.absent();
 
@@ -554,7 +559,10 @@ class CategoriesRepository {
             category.quarterlyBudget == null) ||
         (yearlyBudget.present &&
             yearlyBudget.value != null &&
-            category.yearlyBudget == null);
+            category.yearlyBudget == null) ||
+        (overallBudget.present &&
+            overallBudget.value != null &&
+            category.overallBudget == null);
 
     if (isSettingNewBudget && category.budgetSeq == null) {
       final nextBudgetSeq = await getNextAvailableSeq(
@@ -567,6 +575,7 @@ class CategoriesRepository {
         monthlyBudget: monthlyBudget,
         quarterlyBudget: quarterlyBudget,
         yearlyBudget: yearlyBudget,
+        overallBudget: overallBudget,
         budgetSeq: budgetSeq,
         updatedAt: DateTime.now(),
       ),

@@ -6,6 +6,7 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/edit_category_screen.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/category_details_screen.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
@@ -25,7 +26,6 @@ import 'package:flowpaisa/features/transactions/presentation/providers/transacti
 import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
-import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 
 class CategoriesListScreen extends ConsumerStatefulWidget {
   final int initialIndex;
@@ -143,6 +143,7 @@ class _CategoryListBody extends ConsumerWidget {
     final theme = Theme.of(context);
     final range = ref.watch(categoryBudgetDateRangeProvider);
     final netsAsync = ref.watch(categoryNetAmountsForListProvider(type));
+    final overallNetsAsync = ref.watch(overallCategoryNetAmountsForListProvider(type));
 
     final dateHeader = Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -163,83 +164,121 @@ class _CategoryListBody extends ConsumerWidget {
     return netsAsync.when(
       skipLoadingOnRefresh: true,
       data: (nets) {
-        if (categories.isEmpty) {
-          final typeLabel = type == 'EXPENSE' ? l10n.expense : l10n.income;
-          return CustomScrollView(
+        return overallNetsAsync.when(
+          skipLoadingOnRefresh: true,
+          data: (overallNets) {
+            if (categories.isEmpty) {
+              final typeLabel = type == 'EXPENSE' ? l10n.expense : l10n.income;
+              return CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(child: dateHeader),
+                  const SliverToBoxAdapter(child: SizedBox(height: 4)),
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Symbols.category,
+                            size: 80,
+                            color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            l10n.noTypeCategories(typeLabel),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
+            return CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(child: dateHeader),
+                const SliverToBoxAdapter(child: SizedBox(height: 4)),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    child: _CategoriesAggregateSummary(
+                      type: type,
+                      categories: categories,
+                      nets: nets,
+                      overallNets: overallNets,
+                      range: range,
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                      16, 0, 16, 80 + MediaQuery.of(context).padding.bottom),
+                  sliver: SliverList(
+                    key: ValueKey('category-list-$type'),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final category = categories[index];
+                        final net = nets[category.uuid] ?? 0.0;
+                        final overallNet = overallNets[category.uuid] ?? 0.0;
+                        final isPremium = ref.watch(premiumProvider).isPremium;
+                        final isLocked = !isPremium &&
+                            !category.isDefault &&
+                            (category.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
+                        final isBudgetLocked = !isPremium &&
+                            (category.budgetSeq ?? 0) >
+                                PremiumGate.categoryBudgetTotalLimit;
+
+                        return _CategoryCard(
+                          key: ValueKey('category-card-${category.uuid}'),
+                          category: category,
+                          netAmount: net,
+                          overallNetAmount: overallNet,
+                          dateRange: range,
+                          isLocked: isLocked,
+                          isBudgetLocked: isBudgetLocked,
+                        );
+                      },
+                      childCount: categories.length,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+          loading: () => CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(child: dateHeader),
+              const SliverToBoxAdapter(child: SizedBox(height: 4)),
+              const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            ],
+          ),
+          error: (e, _) => CustomScrollView(
             slivers: [
               SliverToBoxAdapter(child: dateHeader),
               const SliverToBoxAdapter(child: SizedBox(height: 4)),
               SliverFillRemaining(
                 hasScrollBody: false,
                 child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Symbols.category,
-                        size: 80,
-                        color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      l10n.errorOccurred(e.toString()),
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.error,
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.noTypeCategories(typeLabel),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
             ],
-          );
-        }
-        return CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(child: dateHeader),
-            const SliverToBoxAdapter(child: SizedBox(height: 4)),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: _CategoriesAggregateSummary(
-                  type: type,
-                  categories: categories,
-                  nets: nets,
-                  range: range,
-                ),
-              ),
-            ),
-            SliverPadding(
-              padding: EdgeInsets.fromLTRB(
-                  16, 0, 16, 80 + MediaQuery.of(context).padding.bottom),
-            sliver: SliverList(
-              key: ValueKey('category-list-$type'),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final category = categories[index];
-                  final net = nets[category.uuid] ?? 0.0;
-                  final isPremium = ref.watch(premiumProvider).isPremium;
-                  final isLocked = !isPremium &&
-                      !category.isDefault &&
-                      (category.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
-                  final isBudgetLocked = !isPremium &&
-                      (category.budgetSeq ?? 0) >
-                          PremiumGate.categoryBudgetTotalLimit;
-
-                  return _CategoryCard(
-                    key: ValueKey('category-card-${category.uuid}'),
-                    category: category,
-                    netAmount: net,
-                    dateRange: range,
-                    isLocked: isLocked,
-                    isBudgetLocked: isBudgetLocked,
-                  );
-                },
-                childCount: categories.length,
-              ),
-            ),
-            ),
-          ],
+          ),
         );
       },
       loading: () => CustomScrollView(
@@ -281,14 +320,32 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
   final String type;
   final List<Category> categories;
   final Map<String, double> nets;
+  final Map<String, double> overallNets;
   final DateRangeState range;
 
   const _CategoriesAggregateSummary({
     required this.type,
     required this.categories,
     required this.nets,
+    required this.overallNets,
     required this.range,
   });
+
+  String _getPeriodText(BuildContext context) {
+    switch (range.type) {
+      case DateRangeType.month:
+        return AppDateFormatter.formatMonthYear(range.startDate,
+            context: context);
+      case DateRangeType.quarter:
+        final quarter = ((range.startDate.month - 1) ~/ 3) + 1;
+        return 'Q$quarter ${AppDateFormatter.getFormatter('y').format(range.startDate)}';
+      case DateRangeType.year:
+        return AppDateFormatter.getFormatter('y')
+            .format(range.startDate);
+      case DateRangeType.custom:
+        return '${AppDateFormatter.formatDate(range.startDate)} - ${AppDateFormatter.formatDate(range.endDate)}';
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -302,9 +359,14 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
 
     double categorizedNet = 0;
     double totalBudgetCap = 0;
+    double overallCategorizedNet = 0;
+    double overallTotalBudgetCap = 0;
     final isPremium = ref.watch(premiumProvider).isPremium;
+
     for (final c in categories) {
       categorizedNet += nets[c.uuid] ?? 0;
+      overallCategorizedNet += overallNets[c.uuid] ?? 0;
+
       final isCatLocked = !isPremium &&
           !c.isDefault &&
           (c.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
@@ -316,12 +378,23 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
         if (b != null && b > 0) {
           totalBudgetCap += b;
         }
+        final ob = c.overallBudget;
+        if (ob != null && ob > 0) {
+          overallTotalBudgetCap += ob;
+        }
       }
     }
 
     final uncategorizedAsync =
         ref.watch(uncategorizedAmountByTypeProvider(type));
     final uncategorizedAmt = uncategorizedAsync.maybeWhen(
+      data: (v) => v,
+      orElse: () => 0.0,
+    );
+
+    final overallUncategorizedAsync =
+        ref.watch(overallUncategorizedAmountByTypeProvider(type));
+    final overallUncategorizedAmt = overallUncategorizedAsync.maybeWhen(
       data: (v) => v,
       orElse: () => 0.0,
     );
@@ -335,6 +408,8 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
 
     final totalNet = categorizedNet +
         (includeUncategorized ? uncategorizedAmt : 0.0);
+    final overallTotalNet = overallCategorizedNet +
+        (includeUncategorized ? overallUncategorizedAmt : 0.0);
 
     final hasBudget = totalBudgetCap > 0;
     final pr = hasBudget ? totalNet / totalBudgetCap : 0.0;
@@ -342,8 +417,19 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
     final barFillColor = over ? AppColors.expenseColor : color;
     final remaining = hasBudget ? totalBudgetCap - totalNet : 0.0;
 
+    final hasOverallBudget = overallTotalBudgetCap > 0;
+    final overallPr = hasOverallBudget ? overallTotalNet / overallTotalBudgetCap : 0.0;
+    final overallOver = hasOverallBudget && overallPr > 1.0;
+    final overallBarFillColor = overallOver ? AppColors.expenseColor : color;
+    final overallRemaining = hasOverallBudget ? overallTotalBudgetCap - overallTotalNet : 0.0;
+
     final netStr = AmountFormatter.formatWithCurrency(
       totalNet,
+      symbol,
+      decimals,
+    );
+    final overallNetStr = AmountFormatter.formatWithCurrency(
+      overallTotalNet,
       symbol,
       decimals,
     );
@@ -352,8 +438,18 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
       symbol,
       decimals,
     );
+    final overallUncategorizedStr = AmountFormatter.formatWithCurrency(
+      overallUncategorizedAmt,
+      symbol,
+      decimals,
+    );
     final budgetStr = AmountFormatter.formatWithCurrency(
       totalBudgetCap,
+      symbol,
+      decimals,
+    );
+    final overallBudgetStr = AmountFormatter.formatWithCurrency(
+      overallTotalBudgetCap,
       symbol,
       decimals,
     );
@@ -376,9 +472,13 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
 
     final barRightAmount =
         hasBudget && remaining > 0 ? remaining : 0.0;
+    final overallBarRightAmount =
+        hasOverallBudget && overallRemaining > 0 ? overallRemaining : 0.0;
     final prefsReady = includeAsync.hasValue;
     final isDarkForChip = theme.brightness == Brightness.dark;
     const chipLabelLight = Color(0xFF0F172A);
+
+    final hasAnyBudget = hasBudget || hasOverallBudget;
 
     return Column(
       key: ValueKey('categories-aggregate-summary-$type'),
@@ -414,70 +514,113 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
                   top: Radius.circular(12),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
                   child: SizedBox(
                     width: double.infinity,
                     child: Stack(
                       clipBehavior: Clip.none,
-                      alignment: Alignment.center,
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32),
-                          child: Column(
-                            key: ValueKey('categories-aggregate-text-col-$type'),
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Text(
-                                key: ValueKey('categories-aggregate-label-$type'),
-                                isExpense ? l10n.totalExpenses : l10n.totalIncome,
-                                textAlign: TextAlign.center,
-                                style: theme.textTheme.labelMedium?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.88),
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 11,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                key: ValueKey('categories-aggregate-amount-$type'),
-                                netStr,
-                                textAlign: TextAlign.center,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 20,
-                                  height: 1.15,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              if (hasBudget) ...[
-                                const SizedBox(height: 6),
-                                Text(
-                                  key: ValueKey('categories-aggregate-budget-$type'),
-                                  budgetStr,
-                                  textAlign: TextAlign.center,
-                                  style: theme.textTheme.labelLarge?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 12,
-                                    color: Colors.white.withValues(alpha: 0.92),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    _getPeriodText(context),
+                                    textAlign: TextAlign.center,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      color: Colors.white.withValues(alpha: 0.88),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ],
-                          ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    netStr,
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  if (hasBudget) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      budgetStr,
+                                      textAlign: TextAlign.center,
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 10,
+                                        color: Colors.white.withValues(alpha: 0.8),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            Container(
+                              width: 1,
+                              height: hasAnyBudget ? 64 : 44,
+                              color: Colors.white.withValues(alpha: 0.25),
+                            ),
+                            Expanded(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    l10n.overall,
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.labelMedium?.copyWith(
+                                      color: Colors.white.withValues(alpha: 0.88),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    overallNetStr,
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  if (hasOverallBudget) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      overallBudgetStr,
+                                      textAlign: TextAlign.center,
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 10,
+                                        color: Colors.white.withValues(alpha: 0.8),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                         PositionedDirectional(
-                          end: 0,
-                          top: 0,
+                          end: -2,
+                          top: -2,
                           child: Container(
-                            padding: const EdgeInsets.all(7),
+                            padding: const EdgeInsets.all(5),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
                               Icons.arrow_forward_ios,
-                              size: 14,
+                              size: 10,
                               color: Colors.white,
                             ),
                           ),
@@ -514,14 +657,34 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          Text(
-                            key: ValueKey('categories-aggregate-uncategorized-amount-$type'),
-                            uncategorizedStr,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                              fontSize: 14,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                uncategorizedStr,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                '|',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  fontSize: 12,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                overallUncategorizedStr,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white.withValues(alpha: 0.8),
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -591,14 +754,27 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
           const SizedBox(height: 8),
           DualAmountProgressBar(
             key: ValueKey('categories-aggregate-budget-bar-$type'),
-            leftLabel:
-                isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress,
+            leftLabel: '${_getPeriodText(context)} ${isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress}',
             leftAmount: totalNet > 0 ? totalNet : 0.0,
             rightLabel: l10n.remaining,
             rightAmount: barRightAmount,
             symbol: symbol,
             decimals: decimals,
             filledColor: barFillColor,
+            compact: true,
+          ),
+        ],
+        if (hasOverallBudget) ...[
+          const SizedBox(height: 8),
+          DualAmountProgressBar(
+            key: ValueKey('categories-aggregate-overall-budget-bar-$type'),
+            leftLabel: '${l10n.overall} ${isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress}',
+            leftAmount: overallTotalNet > 0 ? overallTotalNet : 0.0,
+            rightLabel: l10n.remaining,
+            rightAmount: overallBarRightAmount,
+            symbol: symbol,
+            decimals: decimals,
+            filledColor: overallBarFillColor,
             compact: true,
           ),
         ],
@@ -610,6 +786,7 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
 class _CategoryCard extends ConsumerWidget {
   final Category category;
   final double netAmount;
+  final double overallNetAmount;
   final DateRangeState dateRange;
   final bool isLocked;
   final bool isBudgetLocked;
@@ -618,6 +795,7 @@ class _CategoryCard extends ConsumerWidget {
     super.key,
     required this.category,
     required this.netAmount,
+    required this.overallNetAmount,
     required this.dateRange,
     this.isLocked = false,
     this.isBudgetLocked = false,
@@ -665,14 +843,19 @@ class _CategoryCard extends ConsumerWidget {
     final budget = (isLocked || isBudgetLocked) ? null : budgetAmountForPeriod(category, dateRange);
     final hasBudget = budget != null && budget > 0;
     
+    final overallBudget = (isLocked || isBudgetLocked) ? null : category.overallBudget;
+    final hasOverallBudget = overallBudget != null && overallBudget > 0;
+
     // For Income categories, progress is (Income - Expense) / Budget
     // For Expense categories, progress is (Expense - Income) / Budget
     // netAmount is already calculated relative to category type in repository
     final pr = hasBudget ? netAmount / budget : 0.0;
+    final overallPr = hasOverallBudget ? overallNetAmount / overallBudget : 0.0;
     
     // For income, we don't usually show "over budget" in red unless it's an expense-like behavior.
     // But keeping it consistent with the repository's netAmount logic.
     final fillColor = hasBudget && isExpense && pr > 1.0 ? AppColors.expenseColor : color;
+    final overallFillColor = hasOverallBudget && isExpense && overallPr > 1.0 ? AppColors.expenseColor : color;
 
     return Padding(
       key: ValueKey('category-card-padding-${category.uuid}'),
@@ -783,36 +966,95 @@ class _CategoryCard extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text(
-                                  key: ValueKey('category-amount-text-${category.uuid}'),
-                                  AmountFormatter.formatWithCurrency(
-                                    netAmount,
-                                    symbol,
-                                    decimals,
-                                  ),
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: theme.colorScheme.onSurface,
-                                  ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(
+                                      AmountFormatter.formatWithCurrency(
+                                        netAmount,
+                                        symbol,
+                                        decimals,
+                                      ),
+                                      style: theme.textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: theme.colorScheme.onSurface,
+                                      ),
+                                    ),
+                                    if (hasBudget) ...[
+                                      Text(
+                                        ' / ',
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                                          fontWeight: FontWeight.w300,
+                                        ),
+                                      ),
+                                      Text(
+                                        AmountFormatter.formatWithCurrency(
+                                          budget,
+                                          symbol,
+                                          decimals,
+                                        ),
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
                                 ),
-                                if (hasBudget) ...[
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    key: ValueKey('category-budget-text-${category.uuid}'),
-                                    AmountFormatter.formatWithCurrency(
-                                      budget!,
-                                      symbol,
-                                      decimals,
+                                const SizedBox(height: 4),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(
+                                      '${l10n.overall}: ',
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                        fontWeight: FontWeight.w500,
+                                        fontSize: 10,
+                                      ),
                                     ),
-                                    style: theme.textTheme.labelSmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                      fontWeight: FontWeight.w300,
-                                      fontSize: 10,
-                                      height: 1.2,
+                                    Text(
+                                      AmountFormatter.formatWithCurrency(
+                                        overallNetAmount,
+                                        symbol,
+                                        decimals,
+                                      ),
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                        fontSize: 11,
+                                      ),
                                     ),
-                                    textAlign: TextAlign.end,
-                                  ),
-                                ],
+                                    if (hasOverallBudget) ...[
+                                      Text(
+                                        ' / ',
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                                          fontWeight: FontWeight.w300,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                      Text(
+                                        AmountFormatter.formatWithCurrency(
+                                          overallBudget,
+                                          symbol,
+                                          decimals,
+                                        ),
+                                        style: theme.textTheme.labelSmall?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                          fontWeight: FontWeight.w400,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
                               ],
                             ),
                             const SizedBox(width: 8),
@@ -826,12 +1068,31 @@ class _CategoryCard extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      if (hasBudget)
-                        CategoryBudgetProgressBar(
-                          key: ValueKey('category-budget-bar-${category.uuid}'),
-                          progress: pr,
-                          fillColor: fillColor,
+                      if (hasBudget || hasOverallBudget) ...[
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (hasBudget) ...[
+                                CategoryBudgetProgressBar(
+                                  key: ValueKey('category-budget-bar-${category.uuid}'),
+                                  progress: pr,
+                                  fillColor: fillColor,
+                                ),
+                                if (hasOverallBudget) const SizedBox(height: 4),
+                              ],
+                              if (hasOverallBudget)
+                                CategoryBudgetProgressBar(
+                                  key: ValueKey('category-overall-budget-bar-${category.uuid}'),
+                                  progress: overallPr,
+                                  fillColor: overallFillColor,
+                                  height: 3,
+                                ),
+                            ],
+                          ),
                         ),
+                      ],
                     ],
                   ),
                 ),

@@ -7463,16 +7463,46 @@ abstract class AppLocalizations {
   /// **'Yearly budget'**
   String get yearlyBudget;
 
+  /// No description provided for @overallBudget.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall budget'**
+  String get overallBudget;
+
+  /// No description provided for @overallBudgetProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall budget progress'**
+  String get overallBudgetProgress;
+
+  /// No description provided for @overallNetAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall Net Amount'**
+  String get overallNetAmount;
+
+  /// No description provided for @providedPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Provided Period'**
+  String get providedPeriod;
+
+  /// No description provided for @overall.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall'**
+  String get overall;
+
   /// No description provided for @spendingBudgetDescription.
   ///
   /// In en, this message translates to:
-  /// **'Optional spending limits for the calendar month, quarter, or year.'**
+  /// **'Optional spending limits for the calendar month, quarter, year, or overall.'**
   String get spendingBudgetDescription;
 
   /// No description provided for @savingsTargetDescription.
   ///
   /// In en, this message translates to:
-  /// **'Optional savings targets for the calendar month, quarter, or year.'**
+  /// **'Optional savings targets for the calendar month, quarter, year, or overall.'**
   String get savingsTargetDescription;
 
   /// No description provided for @budgetSaved.
