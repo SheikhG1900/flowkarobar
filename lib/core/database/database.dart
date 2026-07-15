@@ -229,6 +229,7 @@ class AppCurrencies extends Table {
   TextColumn get symbol => text().withLength(min: 0, max: 10)();
   TextColumn get code => text().withLength(min: 3, max: 3)();
   IntColumn get decimalPlaces => integer().withDefault(const Constant(2))();
+  RealColumn get scaleFactor => real().withDefault(const Constant(1.0))();
   BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
@@ -365,7 +366,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 25;
+  int get schemaVersion => 26;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -645,6 +646,17 @@ class AppDatabase extends _$AppDatabase {
             } catch (e) {
               if (kDebugMode) {
                 print('Migration: Sync metadata migration to local_db failed: $e');
+              }
+            }
+          }
+
+          // Migration from version 25 to 26: Add scaleFactor to AppCurrencies
+          if (from <= 25) {
+            try {
+              await m.addColumn(appCurrencies, appCurrencies.scaleFactor);
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: scale_factor might already exist on AppCurrencies: $e');
               }
             }
           }

@@ -27,6 +27,7 @@ import 'package:flowpaisa/features/contacts/presentation/providers/contacts_prov
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/shared/widgets/amount_snap_bar.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
@@ -1907,6 +1908,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                             }
                             return null;
                           },
+                        ),
+                        AmountSnapBar(
+                          controller: _amountController,
+                          currencySymbol: currencySymbol,
                         ),
                       ],
                     ),

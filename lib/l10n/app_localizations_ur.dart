@@ -2095,6 +2095,31 @@ class AppLocalizationsUr extends AppLocalizations {
   String get decimalPlacesHelper => 'اعشاریہ کے بعد ہندسوں کی تعداد';
 
   @override
+  String get scaleFactorLabel => 'ڈسپلے یونٹ / اسکیل فیکٹر';
+
+  @override
+  String get scaleFactorHelper =>
+      'صاف ڈسپلے کے لیے رقم کو اس قیمت سے تقسیم کریں';
+
+  @override
+  String get scaleWhole => 'مکمل اکائیاں (1)';
+
+  @override
+  String get scaleThousands => 'ہزار (1K)';
+
+  @override
+  String get scaleLakhs => 'لاکھ (1L)';
+
+  @override
+  String get scaleMillions => 'ملین (1M)';
+
+  @override
+  String get scaleCrores => 'کروڑ (1Cr)';
+
+  @override
+  String get scaleBillions => 'بلین (1B)';
+
+  @override
   String get noDecimals => '0 (کوئی اعشاریہ نہیں)';
 
   @override

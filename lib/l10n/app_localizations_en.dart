@@ -2082,6 +2082,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get decimalPlacesHelper => 'Number of digits after decimal point';
 
   @override
+  String get scaleFactorLabel => 'Display Unit / Scale Factor';
+
+  @override
+  String get scaleFactorHelper =>
+      'Divide amounts by this value for cleaner display';
+
+  @override
+  String get scaleWhole => 'Whole Units (1)';
+
+  @override
+  String get scaleThousands => 'Thousands (1K)';
+
+  @override
+  String get scaleLakhs => 'Lakhs (1L)';
+
+  @override
+  String get scaleMillions => 'Millions (1M)';
+
+  @override
+  String get scaleCrores => 'Crores (1Cr)';
+
+  @override
+  String get scaleBillions => 'Billions (1B)';
+
+  @override
   String get noDecimals => '0 (No decimals)';
 
   @override

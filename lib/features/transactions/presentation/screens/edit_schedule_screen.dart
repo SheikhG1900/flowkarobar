@@ -15,6 +15,7 @@ import 'package:flowpaisa/features/transactions/presentation/providers/transacti
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/shared/widgets/amount_snap_bar.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
@@ -713,6 +714,10 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                         }
                         return null;
                       },
+                    ),
+                    AmountSnapBar(
+                      controller: _amountController,
+                      currencySymbol: currencySymbol,
                     ),
                   ],
                 ),

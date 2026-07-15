@@ -19,6 +19,7 @@ import 'package:flowpaisa/features/contacts/presentation/providers/contacts_prov
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/shared/widgets/amount_snap_bar.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
@@ -736,6 +737,10 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                         }
                         return null;
                       },
+                    ),
+                    AmountSnapBar(
+                      controller: _amountController,
+                      currencySymbol: currencySymbol,
                     ),
                     if ((double.tryParse(_amountController.text) ?? 0) > 0) ...[
                       const SizedBox(height: 12),

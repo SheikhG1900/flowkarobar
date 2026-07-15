@@ -18,9 +18,9 @@ class AmountFormatter {
   }
 
   /// Format amount with proper comma separation and specified decimal places
-  static String formatAmount(double amount, int decimalPlaces) {
+  static String formatAmount(double amount, int decimalPlaces, {double scaleFactor = 1.0}) {
     final isNegative = amount < 0;
-    final absAmount = amount.abs();
+    final absAmount = amount.abs() / scaleFactor;
     final formatter = absAmount.toStringAsFixed(decimalPlaces);
     final parts = formatter.split('.');
     final intPart = parts[0];
@@ -76,9 +76,9 @@ class AmountFormatter {
   /// Get formatted text with currency symbol
   static String formatWithCurrency(
       double amount, String currency, int decimalPlaces,
-      {bool isRtl = false}) {
+      {bool isRtl = false, double scaleFactor = 1.0}) {
     final isNegative = amount < 0;
-    final formattedAmount = formatAmount(amount.abs(), decimalPlaces);
+    final formattedAmount = formatAmount(amount.abs(), decimalPlaces, scaleFactor: scaleFactor);
     if (isRtl) {
       return isNegative
           ? '($formattedAmount $currency)'

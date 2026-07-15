@@ -15,6 +15,7 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/receipt_scan/domain/receipt_parser.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/shared/widgets/amount_snap_bar.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
@@ -530,6 +531,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                                     const TextInputType
                                                         .numberWithOptions(
                                                         decimal: true),
+                                              ),
+                                              AmountSnapBar(
+                                                controller: _amountController,
+                                                currencySymbol: currencySymbol,
                                               ),
                                             ],
                                           ),

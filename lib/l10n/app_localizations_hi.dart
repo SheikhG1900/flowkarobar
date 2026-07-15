@@ -2091,6 +2091,31 @@ class AppLocalizationsHi extends AppLocalizations {
   String get decimalPlacesHelper => 'दशमलव के बाद अंकों की संख्या';
 
   @override
+  String get scaleFactorLabel => 'प्रदर्शन इकाई / स्केल फैक्टर';
+
+  @override
+  String get scaleFactorHelper =>
+      'साफ प्रदर्शन के लिए राशि को इस मूल्य से विभाजित करें';
+
+  @override
+  String get scaleWhole => 'संपूर्ण इकाइयाँ (1)';
+
+  @override
+  String get scaleThousands => 'हज़ार (1K)';
+
+  @override
+  String get scaleLakhs => 'लाख (1L)';
+
+  @override
+  String get scaleMillions => 'मिलियन (1M)';
+
+  @override
+  String get scaleCrores => 'करोड़ (1Cr)';
+
+  @override
+  String get scaleBillions => 'बिलियन (1B)';
+
+  @override
   String get noDecimals => '0 (कोई दशमलव नहीं)';
 
   @override

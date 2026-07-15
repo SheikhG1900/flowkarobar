@@ -27,6 +27,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
   late TextEditingController _symbolController;
   late TextEditingController _codeController;
   late int _decimalPlaces;
+  late double _scaleFactor;
 
   bool _isLoading = false;
 
@@ -37,6 +38,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
     _symbolController = TextEditingController(text: widget.currency.symbol);
     _codeController = TextEditingController(text: widget.currency.code);
     _decimalPlaces = widget.currency.decimalPlaces;
+    _scaleFactor = widget.currency.scaleFactor;
 
     // Add listeners to update preview instantly
     _nameController.addListener(() => setState(() {}));
@@ -69,6 +71,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
         symbol: _symbolController.text,
         code: _codeController.text.toUpperCase(),
         decimalPlaces: _decimalPlaces,
+        scaleFactor: _scaleFactor,
       );
 
       await repository.updateCurrency(updatedCurrency);
@@ -200,6 +203,35 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                 }
               },
             ),
+            const SizedBox(height: 16),
+
+            // Scale Factor Selector
+            DropdownButtonFormField<double>(
+              value: _scaleFactor,
+              decoration: InputDecoration(
+                labelText: l10n.scaleFactorLabel,
+                helperText: l10n.scaleFactorHelper,
+                prefixIcon: const Icon(Icons.scale_outlined),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              items: [
+                DropdownMenuItem(value: 1.0, child: Text(l10n.scaleWhole)),
+                DropdownMenuItem(value: 1000.0, child: Text(l10n.scaleThousands)),
+                DropdownMenuItem(value: 100000.0, child: Text(l10n.scaleLakhs)),
+                DropdownMenuItem(value: 1000000.0, child: Text(l10n.scaleMillions)),
+                DropdownMenuItem(value: 10000000.0, child: Text(l10n.scaleCrores)),
+                DropdownMenuItem(value: 1000000000.0, child: Text(l10n.scaleBillions)),
+              ],
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _scaleFactor = value;
+                  });
+                }
+              },
+            ),
             const SizedBox(height: 24),
 
             // Preview
@@ -268,7 +300,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    l10n.positiveAmount(AmountFormatter.formatWithCurrency(1234.56, _symbolController.text, _decimalPlaces)),
+                    l10n.positiveAmount(AmountFormatter.formatWithCurrency(1234567.89, _symbolController.text, _decimalPlaces, scaleFactor: _scaleFactor)),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.success,
@@ -276,7 +308,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    l10n.negativeAmount(AmountFormatter.formatWithCurrency(-567.89, _symbolController.text, _decimalPlaces)),
+                    l10n.negativeAmount(AmountFormatter.formatWithCurrency(-567890.12, _symbolController.text, _decimalPlaces, scaleFactor: _scaleFactor)),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.error,

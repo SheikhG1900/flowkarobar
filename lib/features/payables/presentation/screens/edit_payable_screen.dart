@@ -11,9 +11,9 @@ import 'package:flowpaisa/features/payables/presentation/providers/payables_prov
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/shared/widgets/amount_snap_bar.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/amount_calculator_sheet.dart';
-import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/shared/widgets/voice_input_button.dart';
 
@@ -423,6 +423,10 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                         }
                         return null;
                       },
+                    ),
+                    AmountSnapBar(
+                      controller: _amountController,
+                      currencySymbol: currencySymbol,
                     ),
                     if ((double.tryParse(_amountController.text) ?? 0) > 0) ...[
                       const SizedBox(height: 12),

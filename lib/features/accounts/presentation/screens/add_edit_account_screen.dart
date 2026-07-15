@@ -14,6 +14,7 @@ import 'package:flowpaisa/features/settings/presentation/providers/settings_prov
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/shared/widgets/amount_snap_bar.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
@@ -287,6 +288,10 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
                         ),
                         hintText: AmountFormatter.formatAmount(0, decimalPlaces),
                       ),
+                    ),
+                    AmountSnapBar(
+                      controller: _openingBalanceController,
+                      currencySymbol: currencySymbol,
                     ),
                     const SizedBox(height: 16),
 

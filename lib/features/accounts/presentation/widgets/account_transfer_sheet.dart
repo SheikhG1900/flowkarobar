@@ -13,6 +13,7 @@ import 'package:flowpaisa/features/settings/presentation/providers/settings_prov
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/shared/widgets/amount_snap_bar.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/shared/widgets/voice_input_button.dart';
 import 'package:uuid/uuid.dart';
@@ -323,6 +324,10 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
                               }
                               return null;
                             },
+                          ),
+                          AmountSnapBar(
+                            controller: _amountController,
+                            currencySymbol: currencySymbol,
                           ),
                         ],
                       ),

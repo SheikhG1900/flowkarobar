@@ -3838,6 +3838,54 @@ abstract class AppLocalizations {
   /// **'Number of digits after decimal point'**
   String get decimalPlacesHelper;
 
+  /// No description provided for @scaleFactorLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Display Unit / Scale Factor'**
+  String get scaleFactorLabel;
+
+  /// No description provided for @scaleFactorHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'Divide amounts by this value for cleaner display'**
+  String get scaleFactorHelper;
+
+  /// No description provided for @scaleWhole.
+  ///
+  /// In en, this message translates to:
+  /// **'Whole Units (1)'**
+  String get scaleWhole;
+
+  /// No description provided for @scaleThousands.
+  ///
+  /// In en, this message translates to:
+  /// **'Thousands (1K)'**
+  String get scaleThousands;
+
+  /// No description provided for @scaleLakhs.
+  ///
+  /// In en, this message translates to:
+  /// **'Lakhs (1L)'**
+  String get scaleLakhs;
+
+  /// No description provided for @scaleMillions.
+  ///
+  /// In en, this message translates to:
+  /// **'Millions (1M)'**
+  String get scaleMillions;
+
+  /// No description provided for @scaleCrores.
+  ///
+  /// In en, this message translates to:
+  /// **'Crores (1Cr)'**
+  String get scaleCrores;
+
+  /// No description provided for @scaleBillions.
+  ///
+  /// In en, this message translates to:
+  /// **'Billions (1B)'**
+  String get scaleBillions;
+
   /// No description provided for @noDecimals.
   ///
   /// In en, this message translates to:

@@ -11,6 +11,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
+import 'package:flowpaisa/shared/widgets/amount_snap_bar.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/categories/domain/category_monthly_hint_key.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
@@ -1447,6 +1448,10 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                             }
                             return null;
                           },
+                        ),
+                        AmountSnapBar(
+                          controller: _amountController,
+                          currencySymbol: currencySymbol,
                         ),
                       ],
                     ),

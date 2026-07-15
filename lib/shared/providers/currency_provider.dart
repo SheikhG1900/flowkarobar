@@ -115,6 +115,16 @@ final currencyDecimalPlacesProvider = Provider<int>((ref) {
   );
 });
 
+/// Provider for the current currency scale factor
+final currencyScaleFactorProvider = Provider<double>((ref) {
+  final currencyAsync = ref.watch(currentCurrencyProvider);
+  return currencyAsync.when(
+    data: (currency) => currency.scaleFactor,
+    loading: () => 1.0, // Fallback while loading
+    error: (_, __) => 1.0, // Fallback on error
+  );
+});
+
 /// Notifier for updating the selected currency
 class CurrencyNotifier extends Notifier<void> {
   @override

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/shared/widgets/amount_snap_bar.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
@@ -204,6 +205,10 @@ class _SetCategoryBudgetSheetContentState
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
             ),
+            AmountSnapBar(
+              controller: _monthlyController,
+              currencySymbol: '',
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: _quarterlyController,
@@ -216,6 +221,10 @@ class _SetCategoryBudgetSheetContentState
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
+            ),
+            AmountSnapBar(
+              controller: _quarterlyController,
+              currencySymbol: '',
             ),
             const SizedBox(height: 12),
             TextField(
@@ -230,6 +239,10 @@ class _SetCategoryBudgetSheetContentState
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
             ),
+            AmountSnapBar(
+              controller: _yearlyController,
+              currencySymbol: '',
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: _overallController,
@@ -242,6 +255,10 @@ class _SetCategoryBudgetSheetContentState
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
               ],
+            ),
+            AmountSnapBar(
+              controller: _overallController,
+              currencySymbol: '',
             ),
             const SizedBox(height: 20),
 
