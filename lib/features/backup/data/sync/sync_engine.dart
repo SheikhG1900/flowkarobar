@@ -434,7 +434,7 @@ class SyncEngine {
 
       await _runWithRetryOnBusy(() async {
         await (_db.update(_db.syncMetadata)
-              ..where((t) => t.deviceId.equals(deviceId)))
+              ..where((t) => t.deviceId.equals('local_db')))
             .write(SyncMetadataCompanion(
           syncStatus: Value(status),
           syncStartedAt: isStarting
@@ -478,11 +478,39 @@ class SyncEngine {
     }
 
     final metadata = await (_db.select(_db.syncMetadata)
-          ..where((t) => t.deviceId.equals(deviceId)))
+          ..where((t) => t.deviceId.equals('local_db')))
         .getSingleOrNull();
     if (metadata == null) {
+      // IN-APP MIGRATION: Check if there is any existing row with an old device ID
+      // to copy the local version and sync history from.
+      final allMetadata = await _db.select(_db.syncMetadata).get();
+      int existingVersion = 0;
+      int existingCloudVersion = 0;
+      DateTime? existingLastSyncAt;
+      String existingSyncStatus = 'Idle';
+
+      if (allMetadata.isNotEmpty) {
+        // Find the row with the highest version number
+        allMetadata.sort((a, b) => b.version.compareTo(a.version));
+        final bestMatch = allMetadata.first;
+        existingVersion = bestMatch.version;
+        existingCloudVersion = bestMatch.cloudVersion;
+        existingLastSyncAt = bestMatch.lastSyncAt;
+        existingSyncStatus = bestMatch.syncStatus;
+
+        if (kDebugMode) {
+          print(
+              'SyncEngine: Migrating metadata from old device ID (${bestMatch.deviceId}) to local_db. Version: $existingVersion, CloudVersion: $existingCloudVersion');
+        }
+      }
+
       final newMetadata = SyncMetadataData(
-          deviceId: deviceId, version: 0, cloudVersion: 0, syncStatus: 'Idle');
+        deviceId: 'local_db',
+        version: existingVersion,
+        cloudVersion: existingCloudVersion,
+        lastSyncAt: existingLastSyncAt,
+        syncStatus: existingSyncStatus,
+      );
       await _db.into(_db.syncMetadata).insert(newMetadata);
       return newMetadata;
     }
@@ -507,7 +535,7 @@ class SyncEngine {
     }
 
     await (_db.update(_db.syncMetadata)
-          ..where((t) => t.deviceId.equals(deviceId)))
+          ..where((t) => t.deviceId.equals('local_db')))
         .write(SyncMetadataCompanion(
       version: Value(version),
       cloudVersion: Value(cloudVersion),
@@ -562,7 +590,7 @@ class SyncEngine {
     // We MUST NOT touch sync_status or sync_started_at during incremental progress.
     await _runWithRetryOnBusy(() async {
       await (_db.update(_db.syncMetadata)
-            ..where((t) => t.deviceId.equals(deviceId)))
+            ..where((t) => t.deviceId.equals('local_db')))
           .write(SyncMetadataCompanion(
         version: Value(version),
         syncStatus: const Value.absent(),
@@ -597,7 +625,7 @@ class SyncEngine {
     // CRITICAL: We only update the cloud version here.
     // We MUST NOT touch sync_status or sync_started_at.
     await (_db.update(_db.syncMetadata)
-          ..where((t) => t.deviceId.equals(deviceId)))
+          ..where((t) => t.deviceId.equals('local_db')))
         .write(SyncMetadataCompanion(
       cloudVersion: Value(cloudVersion),
       syncStatus: const Value.absent(),

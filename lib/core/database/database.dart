@@ -365,7 +365,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 24;
+  int get schemaVersion => 25;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -608,6 +608,43 @@ class AppDatabase extends _$AppDatabase {
             } catch (e) {
               if (kDebugMode) {
                 print('Migration: overall_budget might already exist: $e');
+              }
+            }
+          }
+
+          // Migration from version 24 to 25: Migrate existing sync metadata to local_db
+          if (from <= 24) {
+            try {
+              // Check if 'local_db' row already exists
+              final existingLocalDb = await (select(syncMetadata)
+                    ..where((t) => t.deviceId.equals('local_db')))
+                  .getSingleOrNull();
+
+              if (existingLocalDb == null) {
+                final allMetadata = await select(syncMetadata).get();
+                if (allMetadata.isNotEmpty) {
+                  // Find the row with the highest version number
+                  allMetadata.sort((a, b) => b.version.compareTo(a.version));
+                  final bestMatch = allMetadata.first;
+
+                  await into(syncMetadata).insert(SyncMetadataCompanion(
+                    deviceId: const Value('local_db'),
+                    version: Value(bestMatch.version),
+                    cloudVersion: Value(bestMatch.cloudVersion),
+                    lastSyncAt: Value(bestMatch.lastSyncAt),
+                    syncStatus: Value(bestMatch.syncStatus),
+                    syncStartedAt: Value(bestMatch.syncStartedAt),
+                  ));
+
+                  if (kDebugMode) {
+                    print(
+                        'Migration: Successfully migrated sync metadata from ${bestMatch.deviceId} to local_db. Version: ${bestMatch.version}');
+                  }
+                }
+              }
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: Sync metadata migration to local_db failed: $e');
               }
             }
           }

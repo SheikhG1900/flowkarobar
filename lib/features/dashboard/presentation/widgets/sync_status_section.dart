@@ -9,6 +9,7 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 bool _isDatabaseLockedError(String status) {
@@ -271,6 +272,43 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                             fontSize: 14,
                           ),
                         ),
+                        if (localVer > 0 || backupState.lastSyncTime != null) ...[
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              if (localVer > 0)
+                                Text(
+                                  'Version: $localVer',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              if (localVer > 0 && backupState.lastSyncTime != null)
+                                Text(
+                                  '  •  ',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                                    fontSize: 11,
+                                  ),
+                                ),
+                              if (backupState.lastSyncTime != null)
+                                Expanded(
+                                  child: Text(
+                                    'Synced: ${AppDateFormatter.formatRelativeTime(backupState.lastSyncTime!, context)}',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),

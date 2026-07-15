@@ -489,7 +489,6 @@ class BackupNotifier extends Notifier<BackupState> {
 
   Future<void> _refreshSyncProgress() async {
     final db = ref.read(databaseProvider);
-    final deviceId = await _getDeviceId();
     final activeCashbook = ref.read(activeCashbookProvider);
     final prefs = await SharedPreferences.getInstance();
 
@@ -502,7 +501,7 @@ class BackupNotifier extends Notifier<BackupState> {
 
       // 2. Refresh metadata from DB (bypass Drift's stream cache by doing a fresh get)
       final metadata = await (db.select(db.syncMetadata)
-            ..where((t) => t.deviceId.equals(deviceId)))
+            ..where((t) => t.deviceId.equals('local_db')))
           .getSingleOrNull();
 
       if (metadata != null) {
@@ -606,10 +605,9 @@ class BackupNotifier extends Notifier<BackupState> {
   Future<void> _refreshVersions() async {
     // 1. Initial local version and cloud version from DB (Instant)
     final db = ref.read(databaseProvider);
-    final deviceId = await _getDeviceId();
     try {
       final metadata = await (db.select(db.syncMetadata)
-            ..where((t) => t.deviceId.equals(deviceId)))
+            ..where((t) => t.deviceId.equals('local_db')))
           .getSingleOrNull();
       if (metadata != null) {
         state = state.copyWith(
@@ -720,29 +718,51 @@ class BackupNotifier extends Notifier<BackupState> {
       state = state.copyWith(deltaFiles: deltaFiles);
 
       // CRITICAL: Ensure the row exists and update the cloud version.
-      final deviceId = await _getDeviceId();
       final db = ref.read(databaseProvider);
 
       final currentMetadata = await (db.select(db.syncMetadata)
-            ..where((t) => t.deviceId.equals(deviceId)))
+            ..where((t) => t.deviceId.equals('local_db')))
           .getSingleOrNull();
 
       if (currentMetadata == null) {
+        // IN-APP MIGRATION: Check if there is any existing row with an old device ID
+        // to copy the local version and sync history from.
+        final allMetadata = await db.select(db.syncMetadata).get();
+        int existingVersion = 0;
+        int existingCloudVersion = cloudVersion;
+        DateTime? existingLastSyncAt;
+        String existingSyncStatus = 'Idle';
+
+        if (allMetadata.isNotEmpty) {
+          allMetadata.sort((a, b) => b.version.compareTo(a.version));
+          final bestMatch = allMetadata.first;
+          existingVersion = bestMatch.version;
+          existingCloudVersion = bestMatch.cloudVersion;
+          existingLastSyncAt = bestMatch.lastSyncAt;
+          existingSyncStatus = bestMatch.syncStatus;
+
+          if (kDebugMode) {
+            print(
+                'BackupNotifier: Migrating metadata from old device ID (${bestMatch.deviceId}) to local_db. Version: $existingVersion, CloudVersion: $existingCloudVersion');
+          }
+        }
+
         // Insert new row if it doesn't exist
         await db.into(db.syncMetadata).insert(SyncMetadataCompanion(
-              deviceId: Value(deviceId),
-              cloudVersion: Value(cloudVersion),
-              version: const Value(0),
-              syncStatus: const Value('Idle'),
+              deviceId: const Value('local_db'),
+              cloudVersion: Value(existingCloudVersion),
+              version: Value(existingVersion),
+              lastSyncAt: Value(existingLastSyncAt),
+              syncStatus: Value(existingSyncStatus),
             ));
         if (kDebugMode) {
           print(
-              'BackupNotifier: Created new metadata row with cloud version $cloudVersion');
+              'BackupNotifier: Created new metadata row with cloud version $existingCloudVersion (migrated version $existingVersion)');
         }
       } else if (currentMetadata.cloudVersion != cloudVersion) {
         // Update existing row only if cloud version changed
         await (db.update(db.syncMetadata)
-              ..where((t) => t.deviceId.equals(deviceId)))
+              ..where((t) => t.deviceId.equals('local_db')))
             .write(SyncMetadataCompanion(
           cloudVersion: Value(cloudVersion),
         ));
@@ -835,7 +855,7 @@ class BackupNotifier extends Notifier<BackupState> {
       if (!ref.mounted) return;
 
       // Find the metadata for OUR device in the list
-      final metadata = list.where((t) => t.deviceId == deviceId).firstOrNull;
+      final metadata = list.where((t) => t.deviceId == 'local_db').firstOrNull;
 
       if (metadata != null) {
         String status = metadata.syncStatus;
@@ -937,9 +957,8 @@ class BackupNotifier extends Notifier<BackupState> {
     // even if the watcher hasn't fired yet
     final db = ref.read(databaseProvider);
     try {
-      final deviceId = await _getDeviceId();
       final metadataList = await (db.select(db.syncMetadata)
-            ..where((t) => t.deviceId.equals(deviceId)))
+            ..where((t) => t.deviceId.equals('local_db')))
           .get();
       if (metadataList.isNotEmpty) {
         final metadata = metadataList.first;
@@ -1003,16 +1022,15 @@ class BackupNotifier extends Notifier<BackupState> {
     Future.delayed(const Duration(seconds: 10), () async {
       if (!ref.mounted) return;
       final db = ref.read(databaseProvider);
-      final deviceId = await _getDeviceId();
 
       // Only reset if it's still Success (don't overwrite a new sync that might have started)
       final currentMetadata = await (db.select(db.syncMetadata)
-            ..where((t) => t.deviceId.equals(deviceId)))
+            ..where((t) => t.deviceId.equals('local_db')))
           .getSingleOrNull();
 
       if (currentMetadata?.syncStatus == 'Success') {
         await (db.update(db.syncMetadata)
-              ..where((t) => t.deviceId.equals(deviceId)))
+              ..where((t) => t.deviceId.equals('local_db')))
             .write(SyncMetadataCompanion(
           syncStatus: const Value('Idle'),
           syncStartedAt: const Value(null),
@@ -1172,9 +1190,8 @@ class BackupNotifier extends Notifier<BackupState> {
       if (!hasLocalSyncData) {
         // Fallback: query active cashbook's DB (may be 0 if wrong cashbook or not yet written)
         final db = ref.read(databaseProvider);
-        final deviceId = await _getDeviceId();
         final metadata = await (db.select(db.syncMetadata)
-              ..where((t) => t.deviceId.equals(deviceId)))
+              ..where((t) => t.deviceId.equals('local_db')))
             .getSingleOrNull();
         if (metadata != null && metadata.version > 0) {
           hasLocalSyncData = true;
