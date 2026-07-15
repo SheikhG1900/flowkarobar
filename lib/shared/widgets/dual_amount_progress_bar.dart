@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/core/database/database.dart';
 
 /// Filled progress bar (same style as credit card balance on account details):
 /// left vs right amounts, centre % badge, left-to-right fill.
@@ -10,6 +11,7 @@ class DualAmountProgressBar extends StatelessWidget {
   final double rightAmount;
   final String symbol;
   final int decimals;
+  final AppCurrency? currency;
 
   /// Color for the left / filled side.
   final Color filledColor;
@@ -35,8 +37,9 @@ class DualAmountProgressBar extends StatelessWidget {
     required this.leftAmount,
     required this.rightLabel,
     required this.rightAmount,
-    required this.symbol,
-    required this.decimals,
+    this.symbol = '',
+    this.decimals = 2,
+    this.currency,
     required this.filledColor,
     this.rightFilledColor,
     this.cornerPercents = false,
@@ -52,10 +55,12 @@ class DualAmountProgressBar extends StatelessWidget {
     final rightPercent = 1.0 - percent;
     final resolvedRightColor = rightFilledColor ?? filledColor;
 
-    final formattedLeft =
-        AmountFormatter.formatWithCurrency(leftAmount, symbol, decimals);
-    final formattedRight =
-        AmountFormatter.formatWithCurrency(rightAmount, symbol, decimals);
+    final formattedLeft = currency != null
+        ? AmountFormatter.formatWithCurrency(leftAmount, currency!)
+        : AmountFormatter.formatWithCurrency(leftAmount, symbol, decimals);
+    final formattedRight = currency != null
+        ? AmountFormatter.formatWithCurrency(rightAmount, currency!)
+        : AmountFormatter.formatWithCurrency(rightAmount, symbol, decimals);
 
     Widget buildCornerRow(Color leftColor, Color rightColor) {
       Widget corner({

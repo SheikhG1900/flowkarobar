@@ -925,7 +925,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '\u200E${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)}',
+                      '\u200E${AmountFormatter.formatWithCurrency(receivable.amount, currency)}',
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: AppColors.receivableColor,
                         fontWeight: FontWeight.bold,
@@ -989,8 +989,12 @@ class _ReceivablesListSummaryContent extends ConsumerWidget {
     final totalAsync = ref.watch(receivablesListTotalProvider(status));
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final currencySymbol = ref.watch(currencySymbolProvider);
-    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
 
     return totalAsync.when(
       data: (total) => Container(
@@ -1017,7 +1021,7 @@ class _ReceivablesListSummaryContent extends ConsumerWidget {
             ),
             Text(
               AmountFormatter.formatWithCurrency(
-                  total, currencySymbol, decimalPlaces),
+                  total, currency),
               style: theme.textTheme.titleMedium?.copyWith(
                 color: AppColors.receivableColor,
                 fontWeight: FontWeight.bold,

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
@@ -719,8 +720,12 @@ class _FinancialSummaryCard extends ConsumerWidget {
     final selectedAsync = ref.watch(financialSummaryProvider);
     final allTimeAsync = ref.watch(allTimeFinancialSummaryProvider);
     final l10n = AppLocalizations.of(context)!;
-    final currencySymbol = ref.watch(currencySymbolProvider);
-    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
 
     return selectedAsync.when(
       data: (selectedSummary) {
@@ -897,8 +902,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
                             Text(
                               AmountFormatter.formatWithCurrency(
                                   selectedSummary.netBalance.abs(),
-                                  currencySymbol,
-                                  decimalPlaces),
+                                  currency),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 24,
@@ -912,7 +916,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
-                              '${l10n.allTime} ${AmountFormatter.formatWithCurrency(allTimeSummary.netBalance.abs(), currencySymbol, decimalPlaces)}',
+                              '${l10n.allTime} ${AmountFormatter.formatWithCurrency(allTimeSummary.netBalance.abs(), currency)}',
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 12,
@@ -976,8 +980,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
                                   (selectedSummary.totalIncome -
                                           selectedSummary.totalExpense)
                                       .abs(),
-                                  currencySymbol,
-                                  decimalPlaces),
+                                  currency),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 24,
@@ -991,7 +994,7 @@ class _FinancialSummaryCard extends ConsumerWidget {
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
-                              '${l10n.allTime} ${AmountFormatter.formatWithCurrency((allTimeSummary.totalIncome - allTimeSummary.totalExpense).abs(), currencySymbol, decimalPlaces)}',
+                              '${l10n.allTime} ${AmountFormatter.formatWithCurrency((allTimeSummary.totalIncome - allTimeSummary.totalExpense).abs(), currency)}',
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 12,
@@ -1039,8 +1042,12 @@ class _SummaryItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final currencySymbol = ref.watch(currencySymbolProvider);
-    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
 
     return InkWell(
       onTap: onTap,
@@ -1078,7 +1085,7 @@ class _SummaryItem extends ConsumerWidget {
             const SizedBox(height: 12),
             Text(
               AmountFormatter.formatWithCurrency(
-                  selectedAmount, currencySymbol, decimalPlaces),
+                  selectedAmount, currency),
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -1087,7 +1094,7 @@ class _SummaryItem extends ConsumerWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '${l10n.allTime} ${AmountFormatter.formatWithCurrency(allTimeAmount, currencySymbol, 0)}',
+              '${l10n.allTime} ${AmountFormatter.formatWithCurrency(allTimeAmount, currency)}',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
@@ -1110,7 +1117,14 @@ class _ContactSummariesSection extends ConsumerWidget {
     final summariesAsync = ref.watch(contactSummariesProvider);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final currencySymbol = currency.symbol;
 
     return summariesAsync.when(
       data: (summaries) {
@@ -1235,8 +1249,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                                       Text(
                                         AmountFormatter.formatWithCurrency(
                                             summary.totalPayable,
-                                            currencySymbol,
-                                            0),
+                                            currency),
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: AppColors.payableColor,
@@ -1285,8 +1298,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                                       Text(
                                         AmountFormatter.formatWithCurrency(
                                             summary.totalReceivable,
-                                            currencySymbol,
-                                            0),
+                                            currency),
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: AppColors.receivableColor,
@@ -1368,7 +1380,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                             isZero
                                 ? l10n.settled
                                 : AmountFormatter.formatWithCurrency(
-                                    summary.balance.abs(), currencySymbol, 0),
+                                    summary.balance.abs(), currency),
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -1407,7 +1419,14 @@ class _ExpensesPieChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final expensesAsync = ref.watch(expensesByCategoryProvider);
     final selectedIndex = ref.watch(selectedExpenseCategoryIndexProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final currencySymbol = currency.symbol;
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
@@ -1662,7 +1681,7 @@ class _ExpensesPieChart extends ConsumerWidget {
                           ),
                           Text(
                             AmountFormatter.formatWithCurrency(
-                                e.totalAmount, currencySymbol, 2),
+                                e.totalAmount, currency),
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -1689,7 +1708,14 @@ class _TrendsBarChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trendsAsync = ref.watch(monthlyTrendsProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final currencySymbol = currency.symbol;
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final selectedIndex = ref.watch(selectedTrendIndexProvider);
@@ -1764,7 +1790,7 @@ class _TrendsBarChart extends ConsumerWidget {
                             const SizedBox(height: 4),
                             Text(
                               AmountFormatter.formatWithCurrency(
-                                  selectedData.income, currencySymbol, 0),
+                                  selectedData.income, currency),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.incomeColor,
@@ -1801,7 +1827,7 @@ class _TrendsBarChart extends ConsumerWidget {
                             const SizedBox(height: 4),
                             Text(
                               AmountFormatter.formatWithCurrency(
-                                  selectedData.expense, currencySymbol, 0),
+                                  selectedData.expense, currency),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: AppColors.expenseColor,
@@ -1947,7 +1973,14 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trendsAsync = ref.watch(payableReceivableTrendsProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final currencySymbol = currency.symbol;
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final selectedIndex = ref.watch(selectedPayableReceivableTrendIndexProvider);
@@ -2064,20 +2097,20 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                               const SizedBox(height: 4),
                               Text(
                                 AmountFormatter.formatWithCurrency(
-                                    displayTotalP, currencySymbol, 0),
+                                    displayTotalP, currency),
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.payableColor,
                                 ),
                               ),
                               Text(
-                                '${l10n.paid}: ${AmountFormatter.formatWithCurrency(displayPaidP, currencySymbol, 0)}',
+                                '${l10n.paid}: ${AmountFormatter.formatWithCurrency(displayPaidP, currency)}',
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
                               Text(
-                                '${l10n.pending}: ${AmountFormatter.formatWithCurrency(displayPendingP, currencySymbol, 0)}',
+                                '${l10n.pending}: ${AmountFormatter.formatWithCurrency(displayPendingP, currency)}',
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: displayPendingP > 0
                                       ? AppColors.payableColor
@@ -2119,21 +2152,20 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                               Text(
                                 AmountFormatter.formatWithCurrency(
                                     displayTotalR,
-                                    currencySymbol,
-                                    0),
+                                    currency),
                                 style: theme.textTheme.titleMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: AppColors.receivableColor,
                                 ),
                               ),
                               Text(
-                                '${l10n.receivedLabel}: ${AmountFormatter.formatWithCurrency(displayReceivedR, currencySymbol, 0)}',
+                                '${l10n.receivedLabel}: ${AmountFormatter.formatWithCurrency(displayReceivedR, currency)}',
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
                               ),
                               Text(
-                                '${l10n.pending}: ${AmountFormatter.formatWithCurrency(displayPendingR, currencySymbol, 0)}',
+                                '${l10n.pending}: ${AmountFormatter.formatWithCurrency(displayPendingR, currency)}',
                                 style: theme.textTheme.labelSmall?.copyWith(
                                   color: displayPendingR > 0
                                       ? AppColors.receivableColor
@@ -2406,7 +2438,14 @@ class _TopContactsChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final contactsAsync = ref.watch(topContactsByBalanceProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final currencySymbol = currency.symbol;
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
@@ -2483,7 +2522,7 @@ class _TopContactsChart extends ConsumerWidget {
                       ),
                       Text(
                         AmountFormatter.formatWithCurrency(
-                            contact.balance.abs(), currencySymbol, 0),
+                            contact.balance.abs(), currency),
                         style: TextStyle(
                           color: textColor,
                           fontWeight: FontWeight.bold,
@@ -2561,7 +2600,14 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
     final statusAsync = ref.watch(paymentStatusDistributionProvider);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final currencySymbol = currency.symbol;
 
     return statusAsync.when(
       data: (status) {
@@ -2658,11 +2704,11 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     _buildStatusLegend(l10n.pending, status.pendingPayables,
-                        payableDullColor, currencySymbol),
+                        payableDullColor, currency),
                     _buildStatusLegend(l10n.paid, status.paidPayables,
-                        payableDarkColor, currencySymbol),
+                        payableDarkColor, currency),
                     _buildStatusLegend(l10n.statusCancelled,
-                        status.cancelledPayables, Colors.grey, currencySymbol),
+                        status.cancelledPayables, Colors.grey, currency),
                   ],
                 ),
               ),
@@ -2725,17 +2771,17 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     _buildStatusLegend(l10n.pending, status.pendingReceivables,
-                        receivableDullColor, currencySymbol),
+                        receivableDullColor, currency),
                     _buildStatusLegend(
                         l10n.receivedLabel,
                         status.receivedReceivables,
                         receivableDarkColor,
-                        currencySymbol),
+                        currency),
                     _buildStatusLegend(
                         l10n.statusCancelled,
                         status.cancelledReceivables,
                         Colors.grey,
-                        currencySymbol),
+                        currency),
                   ],
                 ),
               ),
@@ -2748,7 +2794,7 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
   }
 
   Widget _buildStatusLegend(
-      String label, double amount, Color color, String currencySymbol) {
+      String label, double amount, Color color, AppCurrency currency) {
     if (amount == 0) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -2762,7 +2808,7 @@ class _PaymentStatusDistributionChart extends ConsumerWidget {
           const SizedBox(width: 6),
           Text(label, style: const TextStyle(fontSize: 11)),
           const SizedBox(width: 4),
-          Text(AmountFormatter.formatWithCurrency(amount, currencySymbol, 0),
+          Text(AmountFormatter.formatWithCurrency(amount, currency),
               style:
                   const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
         ],
@@ -2783,7 +2829,14 @@ class _IncomePieChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final incomesAsync = ref.watch(incomeByCategoryProvider);
     final selectedIndex = ref.watch(selectedIncomeCategoryIndexProvider);
-    final currencySymbol = ref.watch(currencySymbolProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final currencySymbol = currency.symbol;
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
 
@@ -3035,7 +3088,7 @@ class _IncomePieChart extends ConsumerWidget {
                           ),
                           Text(
                             AmountFormatter.formatWithCurrency(
-                                e.totalAmount, currencySymbol, 2),
+                                e.totalAmount, currency),
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flowpaisa/core/theme/app_theme.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -1781,8 +1782,7 @@ class _DashboardTab extends ConsumerWidget {
           child: RollingAmount(
             key: ValueKey('summary-amount-rolling-$label'),
             amount: amount,
-            currencySymbol: currency.symbol,
-            decimalPlaces: currency.decimalPlaces,
+            currency: currency,
             style: style,
           ),
         ),
@@ -2414,8 +2414,7 @@ class _DashboardRecentTransactionsBody extends ConsumerWidget {
                 _DashboardRecentTransactionTile(
                   key: ValueKey(item.transaction.uuid),
                   item: item,
-                  currencySymbol: currency.symbol,
-                  currencyDecimals: currency.decimalPlaces,
+                  currency: currency,
                   dateFormat: dateFormat,
                   l10n: l10n,
                   theme: theme,
@@ -2438,8 +2437,7 @@ class _DashboardRecentTransactionTile extends StatelessWidget {
   const _DashboardRecentTransactionTile({
     super.key,
     required this.item,
-    required this.currencySymbol,
-    required this.currencyDecimals,
+    required this.currency,
     required this.dateFormat,
     required this.l10n,
     required this.theme,
@@ -2447,8 +2445,7 @@ class _DashboardRecentTransactionTile extends StatelessWidget {
   });
 
   final TransactionWithDetails item;
-  final String currencySymbol;
-  final int currencyDecimals;
+  final AppCurrency currency;
   final String dateFormat;
   final AppLocalizations l10n;
   final ThemeData theme;
@@ -2520,7 +2517,7 @@ class _DashboardRecentTransactionTile extends StatelessWidget {
             subtitle: Text(AppDateFormatter.formatDate(transaction.date,
                 pattern: dateFormat)),
             trailing: Text(
-              '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currencySymbol, currencyDecimals)}',
+              '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency)}',
               style: TextStyle(
                 color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
                 fontWeight: FontWeight.bold,
@@ -3229,8 +3226,7 @@ class _DashboardHeroContent extends ConsumerWidget {
                                       heroCombineAddends.netWorth;
                               return RollingAmount(
                                 amount: nw,
-                                currencySymbol: currency.symbol,
-                                decimalPlaces: currency.decimalPlaces,
+                                currency: currency,
                                 style: theme.textTheme.displaySmall?.copyWith(
                                   color: isDark
                                       ? Colors.white
@@ -3263,8 +3259,7 @@ class _DashboardHeroContent extends ConsumerWidget {
                                   heroCombineAddends.availableCash;
                               return RollingAmount(
                                 amount: combinedCash,
-                                currencySymbol: currency.symbol,
-                                decimalPlaces: currency.decimalPlaces,
+                                currency: currency,
                                 style: theme.textTheme.displaySmall?.copyWith(
                                   color: isDark
                                       ? Colors.white
@@ -3286,8 +3281,7 @@ class _DashboardHeroContent extends ConsumerWidget {
                                 ? RollingAmount(
                                     amount: lastStats.totalBalance +
                                         heroCombineAddends.availableCash,
-                                    currencySymbol: currency.symbol,
-                                    decimalPlaces: currency.decimalPlaces,
+                                    currency: currency,
                                     style:
                                         theme.textTheme.displaySmall?.copyWith(
                                       color: isDark

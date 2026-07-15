@@ -252,8 +252,15 @@ class _SelectedAccountInfo extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final symbol = currency.symbol;
+    final decimals = currency.decimalPlaces;
     final repo = ref.watch(accountsRepositoryProvider);
     final l10n = AppLocalizations.of(context)!;
 
@@ -293,8 +300,7 @@ class _SelectedAccountInfo extends ConsumerWidget {
                   Text(
                     AmountFormatter.formatWithCurrency(
                       balance.abs() * (isNegative || type.isCreditCard ? -1 : 1),
-                      symbol,
-                      decimals,
+                      currency,
                     ),
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: balanceColor,
@@ -596,8 +602,15 @@ class _AccountWithBalanceTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final symbol = currency.symbol;
+    final decimals = currency.decimalPlaces;
     final acc = awb.account;
     final balance = awb.balance;
     final type = awb.type;
@@ -608,11 +621,11 @@ class _AccountWithBalanceTile extends ConsumerWidget {
     if (type.isCreditCard) {
       balanceColor = AppColors.expenseColor;
       balanceText =
-          '($symbol${AmountFormatter.formatAmount(balance.abs(), decimals)})';
+          '($symbol${AmountFormatter.formatAmount(balance.abs(), decimals, scaleFactor: currency.scaleFactor)})';
     } else {
       balanceColor =
           isNegative ? AppColors.expenseColor : AppColors.incomeColor;
-      balanceText = AmountFormatter.formatWithCurrency(balance, symbol, decimals);
+      balanceText = AmountFormatter.formatWithCurrency(balance, currency);
     }
 
     final accountColor = acc.color != null

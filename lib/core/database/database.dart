@@ -389,6 +389,16 @@ class AppDatabase extends _$AppDatabase {
             // Data is already inserted in onCreate
             return;
           }
+
+          // Heal any NULL scale_factor values in app_currencies
+          try {
+            await customStatement('UPDATE app_currencies SET scale_factor = 1.0 WHERE scale_factor IS NULL;');
+          } catch (e) {
+            if (kDebugMode) {
+              print('Database: Warning - Failed to heal NULL scale_factor: $e');
+            }
+          }
+
           await insertDefaultData();
           await _backfillSequenceNumbers();
         },
@@ -657,6 +667,13 @@ class AppDatabase extends _$AppDatabase {
             } catch (e) {
               if (kDebugMode) {
                 print('Migration: scale_factor might already exist on AppCurrencies: $e');
+              }
+            }
+            try {
+              await customStatement('UPDATE app_currencies SET scale_factor = 1.0 WHERE scale_factor IS NULL;');
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: Failed to backfill scale_factor: $e');
               }
             }
           }

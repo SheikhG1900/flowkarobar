@@ -221,7 +221,7 @@ class TransactionListItem extends ConsumerWidget {
               children: [
                 Text(
                   key: ValueKey('tx-card-amount-${transaction.uuid}'),
-                  '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
+                  '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency!)}',
                   style: theme.textTheme.titleLarge?.copyWith(
                     color: isExpense
                         ? (isInactive ? AppColors.expenseColor.withValues(alpha: 0.5) : AppColors.expenseColor)

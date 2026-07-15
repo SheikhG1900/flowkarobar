@@ -1,4 +1,5 @@
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/amount_formatter.dart';
@@ -90,6 +91,16 @@ class _CombineBalancesSheetState extends ConsumerState<CombineBalancesSheet> {
                   return const SizedBox(height: 100);
                 }
 
+                final currencyAsync = ref.watch(currentCurrencyProvider);
+                final currency = currencyAsync.value;
+
+                if (currency == null) {
+                  return const SizedBox.shrink();
+                }
+
+                final symbol = currency.symbol;
+                final decimals = currency.decimalPlaces;
+
                 // Calculate total
                 double total = 0;
                 for (final acc in accounts) {
@@ -153,7 +164,7 @@ class _CombineBalancesSheetState extends ConsumerState<CombineBalancesSheet> {
                             title: Text(acc.account.name),
                             subtitle: Text(
                               AmountFormatter.formatWithCurrency(
-                                  acc.balance, symbol, decimals),
+                                  acc.balance, currency),
                               style: TextStyle(
                                 color: acc.balance >= 0
                                     ? theme.colorScheme.primary
@@ -180,7 +191,7 @@ class _CombineBalancesSheetState extends ConsumerState<CombineBalancesSheet> {
                           ),
                           Text(
                             AmountFormatter.formatWithCurrency(
-                                total, symbol, decimals),
+                                total, currency),
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: total >= 0

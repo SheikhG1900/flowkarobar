@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
@@ -144,8 +145,15 @@ class _AccountCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final symbol = currency.symbol;
+    final decimals = currency.decimalPlaces;
     final acc = awb.account;
     final type = awb.type;
 
@@ -158,9 +166,9 @@ class _AccountCard extends ConsumerWidget {
     final balanceText = type.isCreditCard
         ? (awb.creditBalance > 0
             ? AmountFormatter.formatWithCurrency(
-                awb.creditBalance, symbol, decimals)
-            : '($symbol${AmountFormatter.formatAmount(awb.balance.abs(), decimals)})')
-        : AmountFormatter.formatWithCurrency(awb.balance, symbol, decimals);
+                awb.creditBalance, currency)
+            : '($symbol${AmountFormatter.formatAmount(awb.balance.abs(), decimals, scaleFactor: currency.scaleFactor)})')
+        : AmountFormatter.formatWithCurrency(awb.balance, currency);
 
     return Container(
       margin: EdgeInsets.symmetric(
@@ -319,8 +327,7 @@ class _AccountCard extends ConsumerWidget {
                                   const SizedBox(height: 8),
                                   _DueBadge(
                                     dueAmount: awb.dueAmount ?? 0.0,
-                                    symbol: symbol,
-                                    decimals: decimals,
+                                    currency: currency,
                                     isDark: true,
                                   ),
                                 ],
@@ -408,14 +415,12 @@ class _AccountCard extends ConsumerWidget {
 
 class _DueBadge extends StatelessWidget {
   final double dueAmount;
-  final String symbol;
-  final int decimals;
+  final AppCurrency currency;
   final bool isDark;
 
   const _DueBadge({
     required this.dueAmount,
-    required this.symbol,
-    required this.decimals,
+    required this.currency,
     this.isDark = false,
   });
 
@@ -431,7 +436,7 @@ class _DueBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        '${l10n.due}: ${AmountFormatter.formatWithCurrency(dueAmount, symbol, decimals)}',
+        '${l10n.due}: ${AmountFormatter.formatWithCurrency(dueAmount, currency)}',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: isDark ? Colors.white : AppColors.expenseColor,
               fontWeight: FontWeight.w600,

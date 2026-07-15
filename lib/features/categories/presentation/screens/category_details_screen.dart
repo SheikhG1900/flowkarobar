@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
@@ -36,9 +37,15 @@ class CategoryDetailsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final isPremium = ref.watch(premiumProvider).isPremium;
     final budgetAsync = ref.watch(categoryDetailBudgetProvider(categoryUuid));
-    final currencySymbol = ref.watch(currencySymbolProvider);
-    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
     final selectedDateRange = ref.watch(categoryBudgetDateRangeProvider);
+
+    if (currency == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return budgetAsync.when(
       skipLoadingOnReload: true,
@@ -240,8 +247,7 @@ class CategoryDetailsScreen extends ConsumerWidget {
                         selectedDateRange: selectedDateRange,
                         color: color,
                         isExpense: isExpense,
-                        currencySymbol: currencySymbol,
-                        decimalPlaces: decimalPlaces,
+                        currency: currency,
                         l10n: l10n,
                         isLocked: isLocked,
                         isBudgetLocked: isBudgetLocked,
@@ -407,8 +413,7 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
   final DateRangeState selectedDateRange;
   final Color color;
   final bool isExpense;
-  final String currencySymbol;
-  final int decimalPlaces;
+  final AppCurrency currency;
   final AppLocalizations l10n;
   final bool isLocked;
   final bool isBudgetLocked;
@@ -421,8 +426,7 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
     required this.selectedDateRange,
     required this.color,
     required this.isExpense,
-    required this.currencySymbol,
-    required this.decimalPlaces,
+    required this.currency,
     required this.l10n,
     required this.isLocked,
     required this.isBudgetLocked,
@@ -451,27 +455,23 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
     final theme = Theme.of(context);
     final netStr = AmountFormatter.formatWithCurrency(
       snapshot.netAmount,
-      currencySymbol,
-      decimalPlaces,
+      currency,
     );
     final budgetStr = !isBudgetLocked && snapshot.budgetAmount != null
         ? AmountFormatter.formatWithCurrency(
             snapshot.budgetAmount!,
-            currencySymbol,
-            decimalPlaces,
+            currency,
           )
         : '';
 
     final overallNetStr = AmountFormatter.formatWithCurrency(
       snapshot.overallNetAmount,
-      currencySymbol,
-      decimalPlaces,
+      currency,
     );
     final overallBudgetStr = !isBudgetLocked && snapshot.overallBudgetAmount != null
         ? AmountFormatter.formatWithCurrency(
             snapshot.overallBudgetAmount!,
-            currencySymbol,
-            decimalPlaces,
+            currency,
           )
         : '';
 
@@ -706,8 +706,7 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
                 leftAmount: net > 0 ? net : 0.0,
                 rightLabel: l10n.remaining,
                 rightAmount: barRightAmount,
-                symbol: currencySymbol,
-                decimals: decimalPlaces,
+                currency: currency,
                 filledColor: barFillColor,
               ),
             ],
@@ -733,8 +732,7 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
                 leftAmount: overallNet > 0 ? overallNet : 0.0,
                 rightLabel: l10n.remaining,
                 rightAmount: overallBarRightAmount,
-                symbol: currencySymbol,
-                decimals: decimalPlaces,
+                currency: currency,
                 filledColor: overallBarFillColor,
               ),
             ],

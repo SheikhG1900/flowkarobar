@@ -354,8 +354,10 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
     final isExpense = type == 'EXPENSE';
     final color =
         isExpense ? AppColors.expenseColor : AppColors.incomeColor;
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) return const SizedBox.shrink();
 
     double categorizedNet = 0;
     double totalBudgetCap = 0;
@@ -425,33 +427,27 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
 
     final netStr = AmountFormatter.formatWithCurrency(
       totalNet,
-      symbol,
-      decimals,
+      currency,
     );
     final overallNetStr = AmountFormatter.formatWithCurrency(
       overallTotalNet,
-      symbol,
-      decimals,
+      currency,
     );
     final uncategorizedStr = AmountFormatter.formatWithCurrency(
       uncategorizedAmt,
-      symbol,
-      decimals,
+      currency,
     );
     final overallUncategorizedStr = AmountFormatter.formatWithCurrency(
       overallUncategorizedAmt,
-      symbol,
-      decimals,
+      currency,
     );
     final budgetStr = AmountFormatter.formatWithCurrency(
       totalBudgetCap,
-      symbol,
-      decimals,
+      currency,
     );
     final overallBudgetStr = AmountFormatter.formatWithCurrency(
       overallTotalBudgetCap,
-      symbol,
-      decimals,
+      currency,
     );
 
     final gradientCardDecoration = BoxDecoration(
@@ -758,8 +754,7 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
             leftAmount: totalNet > 0 ? totalNet : 0.0,
             rightLabel: l10n.remaining,
             rightAmount: barRightAmount,
-            symbol: symbol,
-            decimals: decimals,
+            currency: currency,
             filledColor: barFillColor,
             compact: true,
           ),
@@ -772,8 +767,7 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
             leftAmount: overallTotalNet > 0 ? overallTotalNet : 0.0,
             rightLabel: l10n.remaining,
             rightAmount: overallBarRightAmount,
-            symbol: symbol,
-            decimals: decimals,
+            currency: currency,
             filledColor: overallBarFillColor,
             compact: true,
           ),
@@ -838,8 +832,9 @@ class _CategoryCard extends ConsumerWidget {
     final color = category.color != null
         ? Color(int.parse(category.color!.replaceAll('#', '0xFF')))
         : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+    if (currency == null) return const SizedBox.shrink();
     final budget = (isLocked || isBudgetLocked) ? null : budgetAmountForPeriod(category, dateRange);
     final hasBudget = budget != null && budget > 0;
     
@@ -974,8 +969,7 @@ class _CategoryCard extends ConsumerWidget {
                                     Text(
                                       AmountFormatter.formatWithCurrency(
                                         netAmount,
-                                        symbol,
-                                        decimals,
+                                        currency,
                                       ),
                                       style: theme.textTheme.titleSmall?.copyWith(
                                         fontWeight: FontWeight.w700,
@@ -993,8 +987,7 @@ class _CategoryCard extends ConsumerWidget {
                                       Text(
                                         AmountFormatter.formatWithCurrency(
                                           budget,
-                                          symbol,
-                                          decimals,
+                                          currency,
                                         ),
                                         style: theme.textTheme.labelSmall?.copyWith(
                                           color: theme.colorScheme.onSurfaceVariant,
@@ -1022,8 +1015,7 @@ class _CategoryCard extends ConsumerWidget {
                                     Text(
                                       AmountFormatter.formatWithCurrency(
                                         overallNetAmount,
-                                        symbol,
-                                        decimals,
+                                        currency,
                                       ),
                                       style: theme.textTheme.labelSmall?.copyWith(
                                         fontWeight: FontWeight.w600,
@@ -1043,8 +1035,7 @@ class _CategoryCard extends ConsumerWidget {
                                       Text(
                                         AmountFormatter.formatWithCurrency(
                                           overallBudget,
-                                          symbol,
-                                          decimals,
+                                          currency,
                                         ),
                                         style: theme.textTheme.labelSmall?.copyWith(
                                           color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),

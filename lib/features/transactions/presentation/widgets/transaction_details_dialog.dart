@@ -17,7 +17,7 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/tabular_editor_sheet.dart';
 import 'package:flowpaisa/core/utils/tabular_parser.dart';
-import 'package:flowpaisa/core/database/database.dart' show Account, Category, Contact;
+import 'package:flowpaisa/core/database/database.dart' show Account, Category, Contact, AppCurrency;
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/core/utils/share_helper.dart';
@@ -275,7 +275,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   const SizedBox(height: 8),
                   Text(
                     key: const ValueKey('tx-details-amount-text'),
-                    '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
+                    '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency)}',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize:
@@ -1171,9 +1171,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final isRtl = Directionality.of(context) == TextDirection.rtl;
     final amountLine = AmountFormatter.formatWithCurrency(
       total,
-      currency.symbol,
-      currency.decimalPlaces,
-      isRtl: isRtl,
+      currency,
+      isRtl,
     );
     final quantityLine = AmountFormatter.formatQuantity(totalQuantity);
     final quantitySubtitle = l10n.itemizedHeaderQuantityLabel(quantityLine);
@@ -1276,8 +1275,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 final row = rows[index];
                 final unitPriceStr = AmountFormatter.formatWithCurrency(
                   row.unitAmount,
-                  currency.symbol,
-                  currency.decimalPlaces,
+                  currency,
                 );
                 final showQtyBreakdown =
                     (row.quantity - 1.0).abs() > 1e-9;
@@ -1322,8 +1320,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                             key: ValueKey('tx-details-tabular-amount-$index'),
                             AmountFormatter.formatWithCurrency(
                               row.totalAmount,
-                              currency.symbol,
-                              currency.decimalPlaces,
+                              currency,
                             ),
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
@@ -1394,7 +1391,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
             fit: BoxFit.scaleDown,
             child: Text(
               AmountFormatter.formatWithCurrency(
-                  amount, currency.symbol, currency.decimalPlaces),
+                  amount, currency),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
@@ -2359,7 +2356,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
         Text(
           key: ValueKey('mini-item-amount-$label'),
           AmountFormatter.formatWithCurrency(
-              amount, currency.symbol, currency.decimalPlaces),
+              amount, currency),
           style: theme.textTheme.bodyMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: color,

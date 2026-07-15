@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/core/database/database.dart';
 
 /// Balance Card with Gradient Background
 /// Prominent balance card displaying total balance with income/expense breakdown
@@ -77,7 +78,7 @@ class BalanceCard extends ConsumerWidget {
                 
                 // Balance Amount
                 Text(
-                  AmountFormatter.formatWithCurrency(balance, currency.symbol, currency.decimalPlaces),
+                  AmountFormatter.formatWithCurrency(balance, currency),
                   style: theme.textTheme.displayMedium?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -101,8 +102,7 @@ class BalanceCard extends ConsumerWidget {
                           label: l10n.income,
                           amount: income,
                           color: Colors.greenAccent,
-                          currency: currency.symbol,
-                          decimalPlaces: currency.decimalPlaces,
+                          currency: currency,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -113,8 +113,7 @@ class BalanceCard extends ConsumerWidget {
                           label: l10n.expense,
                           amount: expense,
                           color: Colors.redAccent,
-                          currency: currency.symbol,
-                          decimalPlaces: currency.decimalPlaces,
+                          currency: currency,
                         ),
                       ),
                     ],
@@ -136,8 +135,7 @@ class BalanceCard extends ConsumerWidget {
     required String label,
     required double amount,
     required Color color,
-    required String currency,
-    required int decimalPlaces,
+    required AppCurrency currency,
   }) {
     final theme = Theme.of(context);
 
@@ -179,7 +177,7 @@ class BalanceCard extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            AmountFormatter.formatWithCurrency(amount, currency, decimalPlaces),
+            AmountFormatter.formatWithCurrency(amount, currency),
             style: theme.textTheme.titleLarge?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -238,7 +236,7 @@ class CompactBalanceCard extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    AmountFormatter.formatWithCurrency(balance, currency.symbol, currency.decimalPlaces),
+                    AmountFormatter.formatWithCurrency(balance, currency),
                     style: theme.textTheme.titleLarge?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,

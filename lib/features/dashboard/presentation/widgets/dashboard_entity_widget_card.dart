@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
@@ -453,7 +454,7 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
                                 textDirection: TextDirection.ltr,
                                 child: Text(
                                   key: amountKey,
-                                  '${isExpense ? '\u200E−' : '\u200E+'} ${AmountFormatter.formatWithCurrency(amount, currency.symbol, currency.decimalPlaces)}',
+                                  '${isExpense ? '\u200E−' : '\u200E+'} ${AmountFormatter.formatWithCurrency(amount, currency)}',
                                   style: theme.textTheme.titleSmall?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: effectiveAmountColor,
@@ -767,13 +768,11 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
     final limit = acc.creditLimit ?? 0;
     if (limit <= 0) return null;
 
-    final symbol = currency.symbol;
-    final decimals = currency.decimalPlaces;
     final available = awb.availableCredit ?? 0;
 
     return Text(
       key: key,
-      '${l10n.available}: ${AmountFormatter.formatWithCurrency(available, symbol, decimals)}',
+      '${l10n.available}: ${AmountFormatter.formatWithCurrency(available, currency)}',
       style: theme.textTheme.labelSmall?.copyWith(
         color: AppColors.incomeColor,
         fontWeight: FontWeight.w600,

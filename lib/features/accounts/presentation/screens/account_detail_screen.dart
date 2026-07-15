@@ -1,3 +1,4 @@
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/shared/widgets/faded_bottom_logo.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
@@ -136,8 +137,15 @@ class _AccountDetailViewState extends ConsumerState<_AccountDetailView> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final symbol = currency.symbol;
+    final decimals = currency.decimalPlaces;
     final dateFormat = ref.watch(userProfileProvider).dateFormat;
     final acc = widget.awb.account;
     final type = widget.awb.type;
@@ -367,12 +375,11 @@ class _AccountDetailViewState extends ConsumerState<_AccountDetailView> {
                                         // Overpaid — show credit balance as positive
                                         ? AmountFormatter.formatWithCurrency(
                                             widget.awb.creditBalance,
-                                            symbol,
-                                            decimals)
+                                            currency)
                                         // Normal outstanding — show as (amount)
-                                        : '(${AmountFormatter.formatWithCurrency(widget.awb.balance.abs(), symbol, decimals)})')
+                                        : '(${AmountFormatter.formatWithCurrency(widget.awb.balance.abs(), currency)})')
                                     : AmountFormatter.formatWithCurrency(
-                                        widget.awb.balance, symbol, decimals),
+                                        widget.awb.balance, currency),
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -405,8 +412,7 @@ class _AccountDetailViewState extends ConsumerState<_AccountDetailView> {
                     _CreditCardStatsCard(
                       awb: widget.awb,
                       accountColor: accountColor,
-                      symbol: symbol,
-                      decimals: decimals,
+                      currency: currency,
                     ),
                     const SizedBox(height: 16),
                   ],
@@ -450,8 +456,7 @@ class _AccountDetailViewState extends ConsumerState<_AccountDetailView> {
                         label: l10n.openingBalance,
                         value: AmountFormatter.formatWithCurrency(
                           acc.openingBalance,
-                          symbol,
-                          decimals,
+                          currency,
                         ),
                       ),
                       const Divider(height: 1),
@@ -470,8 +475,7 @@ class _AccountDetailViewState extends ConsumerState<_AccountDetailView> {
                           label: l10n.creditLimit,
                           value: AmountFormatter.formatWithCurrency(
                             acc.creditLimit ?? 0,
-                            symbol,
-                            decimals,
+                            currency,
                           ),
                         ),
                         const Divider(height: 1),
@@ -602,14 +606,12 @@ class _AccountDetailViewState extends ConsumerState<_AccountDetailView> {
 class _CreditCardStatsCard extends StatelessWidget {
   final AccountWithBalance awb;
   final Color accountColor;
-  final String symbol;
-  final int decimals;
+  final AppCurrency currency;
 
   const _CreditCardStatsCard({
     required this.awb,
     required this.accountColor,
-    required this.symbol,
-    required this.decimals,
+    required this.currency,
   });
 
   @override
@@ -627,8 +629,7 @@ class _CreditCardStatsCard extends StatelessWidget {
             leftAmount: awb.balance < 0 ? awb.balance.abs() : 0.0,
             rightLabel: l10n.availableCredit,
             rightAmount: awb.availableCredit ?? 0.0,
-            symbol: symbol,
-            decimals: decimals,
+            currency: currency,
             filledColor: awb.balance < 0 &&
                     awb.balance.abs() / (awb.account.creditLimit ?? 1) > 0.8
                 ? AppColors.expenseColor
@@ -643,8 +644,7 @@ class _CreditCardStatsCard extends StatelessWidget {
             leftAmount: awb.dueAmount ?? 0.0,
             rightLabel: l10n.unbilledAmount,
             rightAmount: awb.unbilledAmount ?? 0.0,
-            symbol: symbol,
-            decimals: decimals,
+            currency: currency,
             filledColor: accountColor,
             rightFilledColor: theme.colorScheme.primary,
             cornerPercents: true,
@@ -659,15 +659,13 @@ class _CreditCardStatsCard extends StatelessWidget {
 class _CreditStat extends StatelessWidget {
   final String label;
   final double amount;
-  final String symbol;
-  final int decimals;
+  final AppCurrency currency;
   final Color color;
 
   const _CreditStat({
     required this.label,
     required this.amount,
-    required this.symbol,
-    required this.decimals,
+    required this.currency,
     required this.color,
   });
 
@@ -679,7 +677,7 @@ class _CreditStat extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            AmountFormatter.formatWithCurrency(amount, symbol, decimals),
+            AmountFormatter.formatWithCurrency(amount, currency),
             style: theme.textTheme.titleSmall?.copyWith(
               color: color,
               fontWeight: FontWeight.bold,
@@ -885,8 +883,15 @@ class _TransferTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final symbol = currency.symbol;
+    final decimals = currency.decimalPlaces;
     final dateFormat = ref.watch(userProfileProvider).dateFormat;
     final t = details.transfer;
     final desc = t.description?.trim();
@@ -947,7 +952,7 @@ class _TransferTile extends ConsumerWidget {
                 children: [
                   Text(
                     AmountFormatter.formatWithCurrency(
-                        t.amount, symbol, decimals),
+                        t.amount, currency),
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w600,

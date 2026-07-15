@@ -1,3 +1,5 @@
+import 'package:flowpaisa/core/database/database.dart';
+
 /// Utility class for formatting amounts with dynamic font sizes
 class AmountFormatter {
   /// Get the appropriate font size based on the amount's digit count
@@ -75,18 +77,47 @@ class AmountFormatter {
 
   /// Get formatted text with currency symbol
   static String formatWithCurrency(
-      double amount, String currency, int decimalPlaces,
+      dynamic amountOrCurrency, [dynamic symbolOrIsRtl, dynamic decimalPlaces, dynamic isRtl]) {
+    if (amountOrCurrency is num && symbolOrIsRtl is AppCurrency) {
+      final isRtlVal = decimalPlaces is bool ? decimalPlaces : false;
+      final isNegative = amountOrCurrency < 0;
+      final formattedAmount = formatAmount(amountOrCurrency.toDouble().abs(), symbolOrIsRtl.decimalPlaces, scaleFactor: symbolOrIsRtl.scaleFactor);
+      if (isRtlVal) {
+        return isNegative
+            ? '($formattedAmount ${symbolOrIsRtl.symbol})'
+            : '$formattedAmount ${symbolOrIsRtl.symbol}';
+      }
+      return isNegative
+          ? '(${symbolOrIsRtl.symbol}$formattedAmount)'
+          : '${symbolOrIsRtl.symbol}$formattedAmount';
+    } else if (amountOrCurrency is num && symbolOrIsRtl is String && decimalPlaces is int) {
+      final isRtlVal = isRtl is bool ? isRtl : false;
+      return formatWithCurrencyRaw(amountOrCurrency.toDouble(), symbolOrIsRtl, decimalPlaces, isRtl: isRtlVal);
+    }
+    throw ArgumentError('Invalid arguments passed to formatWithCurrency: amountOrCurrency=$amountOrCurrency, symbolOrIsRtl=$symbolOrIsRtl');
+  }
+
+  /// Legacy helper to format with raw symbol and decimal places (for backwards compatibility)
+  static String formatWithCurrencyRaw(
+      double amount, String symbol, int decimalPlaces,
       {bool isRtl = false, double scaleFactor = 1.0}) {
     final isNegative = amount < 0;
     final formattedAmount = formatAmount(amount.abs(), decimalPlaces, scaleFactor: scaleFactor);
     if (isRtl) {
       return isNegative
-          ? '($formattedAmount $currency)'
-          : '$formattedAmount $currency';
+          ? '($formattedAmount $symbol)'
+          : '$formattedAmount $symbol';
     }
     return isNegative
-        ? '($currency$formattedAmount)'
-        : '$currency$formattedAmount';
+        ? '($symbol$formattedAmount)'
+        : '$symbol$formattedAmount';
+  }
+
+  /// Temporary fallback for existing codebase calls that pass (double, String, int)
+  static String formatWithCurrencyLegacy(
+      double amount, String symbol, int decimalPlaces,
+      {bool isRtl = false, double scaleFactor = 1.0}) {
+    return formatWithCurrencyRaw(amount, symbol, decimalPlaces, isRtl: isRtl, scaleFactor: scaleFactor);
   }
 
   /// Units / quantity: no decimals when the value is a whole number; otherwise

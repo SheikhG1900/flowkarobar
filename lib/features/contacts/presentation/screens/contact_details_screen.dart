@@ -1,3 +1,4 @@
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -41,8 +42,12 @@ class ContactDetailsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final statsAsync = ref.watch(contactStatisticsProvider(contactUuid));
-    final currencySymbol = ref.watch(currencySymbolProvider);
-    final currencyDecimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     void showContactNavigationSheet({
       required String title,
@@ -383,8 +388,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                           Text(
                             AmountFormatter.formatWithCurrency(
                               netBalance.abs(),
-                              currencySymbol,
-                              currencyDecimalPlaces,
+                              currency,
                             ),
                             style: const TextStyle(
                               color: Colors.white,
@@ -440,8 +444,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                                   count: stats.receivablesCount,
                                   color: AppColors.receivableColor,
                                   icon: Icons.arrow_downward,
-                                  currencySymbol: currencySymbol,
-                                  currencyDecimalPlaces: currencyDecimalPlaces,
+                                  currency: currency,
                                   onTap: () => showContactNavigationSheet(
                                     title: l10n.receivable,
                                     color: AppColors.receivableColor,
@@ -477,8 +480,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                                   count: stats.payablesCount,
                                   color: AppColors.payableColor,
                                   icon: Icons.arrow_upward,
-                                  currencySymbol: currencySymbol,
-                                  currencyDecimalPlaces: currencyDecimalPlaces,
+                                  currency: currency,
                                   onTap: () => showContactNavigationSheet(
                                     title: l10n.payable,
                                     color: AppColors.payableColor,
@@ -518,8 +520,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                               totalAmount:
                                   stats.totalReceivable + stats.totalReceived,
                               color: AppColors.receivableColor,
-                              currencySymbol: currencySymbol,
-                              currencyDecimalPlaces: currencyDecimalPlaces,
+                              currency: currency,
                             ),
                             const SizedBox(height: 16),
                           ],
@@ -531,8 +532,7 @@ class ContactDetailsScreen extends ConsumerWidget {
                               completedAmount: stats.totalPaid,
                               totalAmount: stats.totalPayable + stats.totalPaid,
                               color: AppColors.payableColor,
-                              currencySymbol: currencySymbol,
-                              currencyDecimalPlaces: currencyDecimalPlaces,
+                              currency: currency,
                             ),
                             const SizedBox(height: 16),
                           ],
@@ -730,8 +730,7 @@ class ContactDetailsScreen extends ConsumerWidget {
     required int count,
     required Color color,
     required IconData icon,
-    required String currencySymbol,
-    required int currencyDecimalPlaces,
+    required AppCurrency currency,
     VoidCallback? onTap,
   }) {
     final theme = Theme.of(context);
@@ -781,8 +780,7 @@ class ContactDetailsScreen extends ConsumerWidget {
             Text(
               AmountFormatter.formatWithCurrency(
                 amount,
-                currencySymbol,
-                currencyDecimalPlaces,
+                currency,
               ),
               style: TextStyle(
                 fontSize: 18,
@@ -809,8 +807,7 @@ class ContactDetailsScreen extends ConsumerWidget {
     required double completedAmount,
     required double totalAmount,
     required Color color,
-    required String currencySymbol,
-    required int currencyDecimalPlaces,
+    required AppCurrency currency,
   }) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
@@ -819,13 +816,11 @@ class ContactDetailsScreen extends ConsumerWidget {
 
     final formattedCompleted = AmountFormatter.formatWithCurrency(
       completedAmount,
-      currencySymbol,
-      currencyDecimalPlaces,
+      currency,
     );
     final formattedTotal = AmountFormatter.formatWithCurrency(
       totalAmount,
-      currencySymbol,
-      currencyDecimalPlaces,
+      currency,
     );
 
     // Create the text row that will be used for both the background and foreground
@@ -1063,9 +1058,12 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final currencySymbol = widget.ref.watch(currencySymbolProvider);
-    final currencyDecimalPlaces =
-        widget.ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = widget.ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
 
     return SafeArea(
       top: false,
@@ -1120,8 +1118,7 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
                 Text(
                   AmountFormatter.formatWithCurrency(
                     _remainingAmount,
-                    currencySymbol,
-                    currencyDecimalPlaces,
+                    currency,
                   ),
                   style: const TextStyle(
                     color: Colors.white,
@@ -1158,7 +1155,7 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
                   setState(() {
                     _currentAmount = widget.absNet;
                     _amountController.text =
-                        widget.absNet.toStringAsFixed(currencyDecimalPlaces);
+                        widget.absNet.toStringAsFixed(currency.decimalPlaces);
                   });
                 },
                 child: Text(widget.l10n.settleAll),

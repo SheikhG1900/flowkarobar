@@ -170,7 +170,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '\u200E${AmountFormatter.formatWithCurrency(receivable.amount, currency.symbol, currency.decimalPlaces)}',
+                        '\u200E${AmountFormatter.formatWithCurrency(receivable.amount, currency)}',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: AmountFormatter.getFontSize(
@@ -977,7 +977,7 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency.symbol, currency.decimalPlaces)}',
+                    '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency)}',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isExpense

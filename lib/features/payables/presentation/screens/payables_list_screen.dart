@@ -894,7 +894,7 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      '\u200E${AmountFormatter.formatWithCurrency(payable.amount, currency.symbol, currency.decimalPlaces)}',
+                      '\u200E${AmountFormatter.formatWithCurrency(payable.amount, currency)}',
                       style: theme.textTheme.titleLarge?.copyWith(
                         color: AppColors.payableColor,
                         fontWeight: FontWeight.bold,
@@ -957,8 +957,12 @@ class _PayablesListSummaryContent extends ConsumerWidget {
     final totalAsync = ref.watch(payablesListTotalProvider(status));
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final currencySymbol = ref.watch(currencySymbolProvider);
-    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
 
     return totalAsync.when(
       data: (total) => Container(
@@ -985,7 +989,7 @@ class _PayablesListSummaryContent extends ConsumerWidget {
             ),
             Text(
               AmountFormatter.formatWithCurrency(
-                  total, currencySymbol, decimalPlaces),
+                  total, currency),
               style: theme.textTheme.titleMedium?.copyWith(
                 color: AppColors.payableColor,
                 fontWeight: FontWeight.bold,

@@ -1,4 +1,5 @@
 ﻿import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/main.dart';
 import 'dart:math';
 import 'dart:io';
@@ -97,7 +98,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
             icon: Icons.account_balance_wallet_outlined,
             color: AppColors.dashboardSectionColor,
             builder: (stats) => AmountFormatter.formatWithCurrency(
-                stats.totalBalance, currency!.symbol, currency.decimalPlaces),
+                stats.totalBalance, currency!),
             onTap: () {},
             onRemove: () => _removeAt(ref, layoutIndex),
           ),
@@ -130,8 +131,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
             color: AppColors.receivableColor,
             builder: (stats) => AmountFormatter.formatWithCurrency(
                 stats.receivable(filter),
-                currency!.symbol,
-                currency.decimalPlaces),
+                currency!),
             onTap: () => _openReceivables(ref, context, filter),
             onRemove: () => _removeAt(ref, layoutIndex),
           ),
@@ -151,8 +151,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
             color: AppColors.payableColor,
             builder: (stats) => AmountFormatter.formatWithCurrency(
                 stats.payable(filter),
-                currency!.symbol,
-                currency.decimalPlaces),
+                currency!),
             onTap: () => _openPayables(ref, context, filter),
             onRemove: () => _removeAt(ref, layoutIndex),
           ),
@@ -339,8 +338,6 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     Key? reorderKey,
   }) {
     final async = ref.watch(dashboardStatsProvider);
-    final symbol = currency?.symbol ?? '';
-    final decimals = currency?.decimalPlaces ?? 2;
 
     // Cache stats for loading state
     async.whenData((s) {
@@ -407,8 +404,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                               icon: Symbols.trending_down,
                               label: l10n.payableTag,
                               amount: payable,
-                              symbol: symbol,
-                              decimals: decimals,
+                              currency: currency!,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -421,8 +417,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                               icon: Symbols.trending_up,
                               label: l10n.receivableTag,
                               amount: receivable,
-                              symbol: symbol,
-                              decimals: decimals,
+                              currency: currency,
                             ),
                           ),
                         ],
@@ -440,8 +435,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                               icon: Symbols.trending_down,
                               label: l10n.expenses,
                               amount: expense,
-                              symbol: symbol,
-                              decimals: decimals,
+                              currency: currency,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -454,8 +448,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                               icon: Symbols.trending_up,
                               label: l10n.income,
                               amount: income,
-                              symbol: symbol,
-                              decimals: decimals,
+                              currency: currency,
                             ),
                           ),
                         ],
@@ -464,8 +457,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                       _buildBalanceRow(
                         key: ValueKey('fin-summary-bal1-${filter.name}'),
                         theme: theme,
-                        currencySymbol: symbol,
-                        decimalPlaces: decimals,
+                        currency: currency!,
                         isReceivableHigher: receivable >= payable,
                         amount: (receivable - payable).abs(),
                         labelWhenHigher: l10n.netReceivable,
@@ -477,8 +469,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                       _buildBalanceRow(
                         key: ValueKey('fin-summary-bal2-${filter.name}'),
                         theme: theme,
-                        currencySymbol: symbol,
-                        decimalPlaces: decimals,
+                        currency: currency,
                         isReceivableHigher: income >= expense,
                         amount: (income - expense).abs(),
                         labelWhenHigher: l10n.netIncome,
@@ -501,8 +492,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
 
   Widget _buildBalanceRow({
     required ThemeData theme,
-    required String currencySymbol,
-    required int decimalPlaces,
+    required AppCurrency currency,
     required bool isReceivableHigher,
     required double amount,
     required String labelWhenHigher,
@@ -546,8 +536,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
             ),
           ),
           Text(
-            AmountFormatter.formatWithCurrency(
-                amount, currencySymbol, decimalPlaces),
+            AmountFormatter.formatWithCurrency(amount, currency),
             style: theme.textTheme.titleSmall?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -741,18 +730,15 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
 
                     final netStr = AmountFormatter.formatWithCurrency(
                       totalNet,
-                      symbol,
-                      decimals,
+                      currency!,
                     );
                     final budgetStr = AmountFormatter.formatWithCurrency(
                       totalBudgetCap,
-                      symbol,
-                      decimals,
+                      currency,
                     );
                     final uncategorizedStr = AmountFormatter.formatWithCurrency(
                       uncategorizedAmt,
-                      symbol,
-                      decimals,
+                      currency,
                     );
 
                     final gradientCardDecoration = BoxDecoration(
@@ -1103,8 +1089,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                                 rightAmount: (totalBudgetCap - totalNet) > 0
                                     ? (totalBudgetCap - totalNet)
                                     : 0.0,
-                                symbol: symbol,
-                                decimals: decimals,
+                                currency: currency,
                                 filledColor: barFillColor,
                                 compact: true,
                               ),
@@ -1195,8 +1180,6 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     Key? reorderKey,
   }) {
     final accountsAsync = ref.watch(accountsWithBalanceProvider);
-    final symbol = currency?.symbol ?? '';
-    final decimals = currency?.decimalPlaces ?? 2;
 
     return accountsAsync.when(
       skipLoadingOnRefresh: true,
@@ -1287,7 +1270,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                             Text(
                               key: const ValueKey('net-worth-summary-amount'),
                               AmountFormatter.formatWithCurrency(
-                                  netWorth, symbol, decimals),
+                                  netWorth, currency!),
                               style: theme.textTheme.titleMedium?.copyWith(
                                 color: AppColors.receivableColor,
                                 fontWeight: FontWeight.bold,
@@ -1311,8 +1294,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                               icon: Symbols.trending_up,
                               label: l10n.totalAssets,
                               amount: totalAssets,
-                              symbol: symbol,
-                              decimals: decimals,
+                              currency: currency!,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -1325,8 +1307,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                               icon: Symbols.trending_down,
                               label: l10n.totalLiabilities,
                               amount: totalLiabilities,
-                              symbol: symbol,
-                              decimals: decimals,
+                              currency: currency,
                             ),
                           ),
                         ],
@@ -1350,8 +1331,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     required IconData icon,
     required String label,
     required double amount,
-    required String symbol,
-    required int decimals,
+    required AppCurrency currency,
     Key? key,
   }) {
     return Container(
@@ -1386,7 +1366,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            AmountFormatter.formatWithCurrency(amount, symbol, decimals),
+            AmountFormatter.formatWithCurrency(amount, currency),
             style: theme.textTheme.labelMedium?.copyWith(
               color: color,
               fontWeight: FontWeight.bold,
@@ -1411,8 +1391,6 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     Key? reorderKey,
   }) {
     final async = ref.watch(dashboardStatsProvider);
-    final symbol = currency?.symbol ?? '';
-    final decimals = currency?.decimalPlaces ?? 2;
 
     return async.when(
       skipLoadingOnRefresh: true,
@@ -1494,7 +1472,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                       ),
                       Text(
                         AmountFormatter.formatWithCurrency(
-                            amount, symbol, decimals),
+                            amount, currency!),
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -1531,8 +1509,6 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     Key? reorderKey,
   }) {
     final async = ref.watch(dashboardStatsProvider);
-    final symbol = currency?.symbol ?? '';
-    final decimals = currency?.decimalPlaces ?? 2;
 
     return async.when(
       skipLoadingOnRefresh: true,
@@ -1614,7 +1590,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                       ),
                       Text(
                         AmountFormatter.formatWithCurrency(
-                            amount, symbol, decimals),
+                            amount, currency!),
                         style: theme.textTheme.titleMedium?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

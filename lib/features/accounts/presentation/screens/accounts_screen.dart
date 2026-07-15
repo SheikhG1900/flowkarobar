@@ -245,15 +245,13 @@ class _AccountsScreenState extends ConsumerState<AccountsScreen> {
 class _NetWorthItem extends StatelessWidget {
   final String label;
   final double amount;
-  final String symbol;
-  final int decimals;
+  final AppCurrency currency;
   final Color accentColor;
 
   const _NetWorthItem({
     required this.label,
     required this.amount,
-    required this.symbol,
-    required this.decimals,
+    required this.currency,
     required this.accentColor,
   });
 
@@ -305,7 +303,7 @@ class _NetWorthItem extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            AmountFormatter.formatWithCurrency(amount, symbol, decimals),
+            AmountFormatter.formatWithCurrency(amount, currency),
             style: theme.textTheme.headlineMedium?.copyWith(
               color: accentColor,
               fontWeight: FontWeight.bold,
@@ -313,7 +311,7 @@ class _NetWorthItem extends StatelessWidget {
               fontSize: AmountFormatter.getFontSize(
                 amount,
                 baseSize: baseAmountSize,
-                decimalPlaces: decimals,
+                decimalPlaces: currency.decimalPlaces,
               ),
             ),
             textAlign: TextAlign.center,
@@ -333,8 +331,12 @@ class _NetWorthCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
 
     final totalAssets = accounts
         .where((a) => !a.type.balanceIsLiability)
@@ -350,8 +352,7 @@ class _NetWorthCard extends ConsumerWidget {
         _NetWorthItem(
           label: l10n.netWorth,
           amount: netWorth,
-          symbol: symbol,
-          decimals: decimals,
+          currency: currency,
           accentColor: AppColors.receivableColor,
         ),
         const SizedBox(height: 12),
@@ -365,8 +366,7 @@ class _NetWorthCard extends ConsumerWidget {
                   icon: Symbols.trending_up,
                   label: l10n.totalAssets,
                   amount: totalAssets,
-                  symbol: symbol,
-                  decimals: decimals,
+                  currency: currency,
                 ),
               ),
               const SizedBox(width: 10),
@@ -376,8 +376,7 @@ class _NetWorthCard extends ConsumerWidget {
                   icon: Symbols.trending_down,
                   label: l10n.totalLiabilities,
                   amount: totalLiabilities,
-                  symbol: symbol,
-                  decimals: decimals,
+                  currency: currency,
                 ),
               ),
             ],
@@ -393,16 +392,14 @@ class _StatItem extends StatelessWidget {
   final IconData icon;
   final String label;
   final double amount;
-  final String symbol;
-  final int decimals;
+  final AppCurrency currency;
 
   const _StatItem({
     required this.color,
     required this.icon,
     required this.label,
     required this.amount,
-    required this.symbol,
-    required this.decimals,
+    required this.currency,
   });
 
   @override
@@ -447,7 +444,7 @@ class _StatItem extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            AmountFormatter.formatWithCurrency(amount, symbol, decimals),
+            AmountFormatter.formatWithCurrency(amount, currency),
             style: theme.textTheme.titleSmall?.copyWith(
               color: color,
               fontWeight: FontWeight.bold,
@@ -507,8 +504,15 @@ class _AccountCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final symbol = currency.symbol;
+    final decimals = currency.decimalPlaces;
     final acc = awb.account;
     final type = awb.type;
 
@@ -524,9 +528,9 @@ class _AccountCard extends ConsumerWidget {
     final String balanceText = type.isCreditCard
         ? (awb.creditBalance > 0
             ? AmountFormatter.formatWithCurrency(
-                awb.creditBalance, symbol, decimals)
-            : '($symbol${AmountFormatter.formatAmount(awb.balance.abs(), decimals)})')
-        : AmountFormatter.formatWithCurrency(awb.balance, symbol, decimals);
+                awb.creditBalance, currency)
+            : '($symbol${AmountFormatter.formatAmount(awb.balance.abs(), decimals, scaleFactor: currency.scaleFactor)})')
+        : AmountFormatter.formatWithCurrency(awb.balance, currency);
 
     return Container(
       margin: EdgeInsets.symmetric(
@@ -683,8 +687,7 @@ class _AccountCard extends ConsumerWidget {
                                   const SizedBox(height: 8),
                                   _DueBadge(
                                     dueAmount: awb.dueAmount ?? 0.0,
-                                    symbol: symbol,
-                                    decimals: decimals,
+                                    currency: currency,
                                     isDark: true,
                                   ),
                                 ],
@@ -772,14 +775,12 @@ class _AccountCard extends ConsumerWidget {
 
 class _DueBadge extends StatelessWidget {
   final double dueAmount;
-  final String symbol;
-  final int decimals;
+  final AppCurrency currency;
   final bool isDark;
 
   const _DueBadge({
     required this.dueAmount,
-    required this.symbol,
-    required this.decimals,
+    required this.currency,
     this.isDark = false,
   });
 
@@ -795,7 +796,7 @@ class _DueBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        '${l10n.due}: ${AmountFormatter.formatWithCurrency(dueAmount, symbol, decimals)}',
+        '${l10n.due}: ${AmountFormatter.formatWithCurrency(dueAmount, currency)}',
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: isDark ? Colors.white : AppColors.expenseColor,
               fontWeight: FontWeight.w600,
@@ -944,8 +945,13 @@ class _TransferRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
     final dateFormat = ref.watch(userProfileProvider).dateFormat;
     final t = details.transfer;
     final desc = t.description?.trim();
@@ -1002,7 +1008,7 @@ class _TransferRow extends ConsumerWidget {
                 children: [
                   Text(
                     AmountFormatter.formatWithCurrency(
-                        t.amount, symbol, decimals),
+                        t.amount, currency),
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w600,

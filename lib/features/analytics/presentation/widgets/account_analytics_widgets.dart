@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
@@ -69,8 +70,15 @@ class AccountNetWorthCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accountsAsync = ref.watch(accountsWithBalanceProvider);
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final symbol = currency.symbol;
+    final decimals = currency.decimalPlaces;
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
@@ -125,7 +133,7 @@ class AccountNetWorthCard extends ConsumerWidget {
                   const SizedBox(height: 6),
                   Text(
                     AmountFormatter.formatWithCurrency(
-                        netWorth, symbol, decimals),
+                        netWorth, currency),
                     style: theme.textTheme.headlineMedium?.copyWith(
                         color: Colors.white, fontWeight: FontWeight.bold),
                   ),
@@ -141,8 +149,7 @@ class AccountNetWorthCard extends ConsumerWidget {
                   child: _NetWorthTile(
                     label: l10n.totalAssets,
                     amount: totalAssets,
-                    symbol: symbol,
-                    decimals: decimals,
+                    currency: currency,
                     color: AppColors.incomeColor,
                     icon: Symbols.trending_up,
                   ),
@@ -152,8 +159,7 @@ class AccountNetWorthCard extends ConsumerWidget {
                   child: _NetWorthTile(
                     label: l10n.totalLiabilities,
                     amount: totalLiabilities,
-                    symbol: symbol,
-                    decimals: decimals,
+                    currency: currency,
                     color: AppColors.expenseColor,
                     icon: Symbols.trending_down,
                   ),
@@ -212,16 +218,14 @@ class AccountNetWorthCard extends ConsumerWidget {
 class _NetWorthTile extends StatelessWidget {
   final String label;
   final double amount;
-  final String symbol;
-  final int decimals;
+  final AppCurrency currency;
   final Color color;
   final IconData icon;
 
   const _NetWorthTile({
     required this.label,
     required this.amount,
-    required this.symbol,
-    required this.decimals,
+    required this.currency,
     required this.color,
     required this.icon,
   });
@@ -253,7 +257,7 @@ class _NetWorthTile extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            AmountFormatter.formatWithCurrency(amount, symbol, decimals),
+            AmountFormatter.formatWithCurrency(amount, currency),
             style: theme.textTheme.titleMedium
                 ?.copyWith(color: color, fontWeight: FontWeight.bold),
           ),
@@ -273,8 +277,15 @@ class AccountSpendingChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final spendingAsync = ref.watch(accountSpendingProvider);
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final symbol = currency.symbol;
+    final decimals = currency.decimalPlaces;
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
@@ -361,7 +372,7 @@ class AccountSpendingChart extends ConsumerWidget {
                       child: _MaskedBar(
                         label: l10n.expenses,
                         amount: AmountFormatter.formatWithCurrency(
-                            item.totalExpense, symbol, decimals),
+                            item.totalExpense, currency),
                         barColor: AppColors.expenseColor,
                         fillFactor: maxVal > 0
                             ? (item.totalExpense / maxVal).clamp(0.0, 1.0)
@@ -395,7 +406,7 @@ class AccountSpendingChart extends ConsumerWidget {
                       child: _MaskedBar(
                         label: l10n.income,
                         amount: AmountFormatter.formatWithCurrency(
-                            item.totalIncome, symbol, decimals),
+                            item.totalIncome, currency),
                         barColor: AppColors.incomeColor,
                         fillFactor: maxVal > 0
                             ? (item.totalIncome / maxVal).clamp(0.0, 1.0)
@@ -426,8 +437,15 @@ class CreditUtilisationChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accountsAsync = ref.watch(accountsWithBalanceProvider);
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final symbol = currency.symbol;
+    final decimals = currency.decimalPlaces;
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
@@ -465,9 +483,9 @@ class CreditUtilisationChart extends ConsumerWidget {
             // Aggregate masked bar — same layout as per-card but larger text
             _MaskedBar(
               label: AmountFormatter.formatWithCurrency(
-                  totalOutstanding, symbol, decimals),
+                  totalOutstanding, currency),
               amount: AmountFormatter.formatWithCurrency(
-                  totalLimit, symbol, decimals),
+                  totalLimit, currency),
               barColor: overallColor,
               fillFactor: overallPct,
               icon: Symbols.credit_score,
@@ -526,9 +544,9 @@ class CreditUtilisationChart extends ConsumerWidget {
                       const SizedBox(height: 6),
                       _MaskedBar(
                         label: AmountFormatter.formatWithCurrency(
-                            outstanding, symbol, decimals),
+                            outstanding, currency),
                         amount: AmountFormatter.formatWithCurrency(
-                            limit, symbol, decimals),
+                            limit, currency),
                         barColor: barColor,
                         fillFactor: pct,
                         icon: Symbols.credit_card,
@@ -563,8 +581,15 @@ class BalanceDistributionChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final accountsAsync = ref.watch(accountsWithBalanceProvider);
     final selectedIndex = ref.watch(selectedBalanceAccountIndexProvider);
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final symbol = currency.symbol;
+    final decimals = currency.decimalPlaces;
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
@@ -759,7 +784,7 @@ class BalanceDistributionChart extends ConsumerWidget {
                           ),
                           Text(
                             AmountFormatter.formatWithCurrency(
-                                awb.balance, symbol, decimals),
+                                awb.balance, currency),
                             style: theme.textTheme.titleSmall
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
@@ -790,8 +815,15 @@ class TransferFlowChart extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final flowAsync = ref.watch(transferFlowProvider);
     final accountsAsync = ref.watch(accountsWithBalanceProvider);
-    final symbol = ref.watch(currencySymbolProvider);
-    final decimals = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAsync = ref.watch(currentCurrencyProvider);
+    final currency = currencyAsync.value;
+
+    if (currency == null) {
+      return const SizedBox.shrink();
+    }
+
+    final symbol = currency.symbol;
+    final decimals = currency.decimalPlaces;
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
@@ -957,7 +989,7 @@ class TransferFlowChart extends ConsumerWidget {
                                 icon: Symbols.arrow_downward,
                                 label: l10n.inflow,
                                 amount: AmountFormatter.formatWithCurrency(
-                                    totalIn, symbol, decimals),
+                                    totalIn, currency),
                                 color: AppColors.incomeColor,
                                 theme: theme,
                               ),
@@ -968,7 +1000,7 @@ class TransferFlowChart extends ConsumerWidget {
                                 icon: Symbols.arrow_upward,
                                 label: l10n.outflow,
                                 amount: AmountFormatter.formatWithCurrency(
-                                    totalOut, symbol, decimals),
+                                    totalOut, currency),
                                 color: AppColors.expenseColor,
                                 theme: theme,
                               ),
@@ -980,7 +1012,7 @@ class TransferFlowChart extends ConsumerWidget {
                                   : Symbols.trending_down,
                               label: l10n.netFlow,
                               amount: AmountFormatter.formatWithCurrency(
-                                  net.abs(), symbol, decimals),
+                                  net.abs(), currency),
                               color: netColor,
                               theme: theme,
                             ),
@@ -1017,7 +1049,7 @@ class TransferFlowChart extends ConsumerWidget {
                               child: _MaskedBar(
                                 label: srcAwb?.account.name ?? e.key,
                                 amount: AmountFormatter.formatWithCurrency(
-                                    e.value, symbol, decimals),
+                                    e.value, currency),
                                 barColor: srcColor,
                                 fillFactor: cardMax > 0
                                     ? (e.value / cardMax).clamp(0.0, 1.0)
@@ -1059,7 +1091,7 @@ class TransferFlowChart extends ConsumerWidget {
                               child: _MaskedBar(
                                 label: dstAwb?.account.name ?? e.key,
                                 amount: AmountFormatter.formatWithCurrency(
-                                    e.value, symbol, decimals),
+                                    e.value, currency),
                                 barColor: dstColor,
                                 fillFactor: cardMax > 0
                                     ? (e.value / cardMax).clamp(0.0, 1.0)

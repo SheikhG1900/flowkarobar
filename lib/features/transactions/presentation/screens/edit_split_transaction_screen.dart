@@ -948,7 +948,7 @@ class _EditSplitTransactionScreenState
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            '${isReceivable ? l10n.receivable : l10n.payable}: ${AmountFormatter.formatWithCurrency(balance.abs(), sym, dec, isRtl: Directionality.of(context) == TextDirection.rtl)}',
+                                            '${isReceivable ? l10n.receivable : l10n.payable}: ${AmountFormatter.formatWithCurrency(balance.abs(), sym, dec, Directionality.of(context) == TextDirection.rtl)}',
                                             style: theme.textTheme.labelSmall
                                                 ?.copyWith(
                                               color: color,

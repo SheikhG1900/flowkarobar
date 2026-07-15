@@ -6,6 +6,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 
 class EditCurrencyScreen extends ConsumerStatefulWidget {
@@ -75,6 +76,14 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
       );
 
       await repository.updateCurrency(updatedCurrency);
+
+      // Invalidate providers to refresh the UI immediately
+      ref.invalidate(currentCurrencyProvider);
+      ref.invalidate(selectedCurrencyIdProvider);
+      ref.invalidate(currenciesListProvider);
+      ref.invalidate(currencyScaleFactorProvider);
+      ref.invalidate(currencySymbolProvider);
+      ref.invalidate(currencyDecimalPlacesProvider);
 
       if (mounted) {
         Navigator.pop(context);
@@ -300,7 +309,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    l10n.positiveAmount(AmountFormatter.formatWithCurrency(1234567.89, _symbolController.text, _decimalPlaces, scaleFactor: _scaleFactor)),
+                    l10n.positiveAmount(AmountFormatter.formatAmount(1234567.89, _decimalPlaces, scaleFactor: _scaleFactor)),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.success,
@@ -308,7 +317,7 @@ class _EditCurrencyScreenState extends ConsumerState<EditCurrencyScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    l10n.negativeAmount(AmountFormatter.formatWithCurrency(-567890.12, _symbolController.text, _decimalPlaces, scaleFactor: _scaleFactor)),
+                    l10n.negativeAmount(AmountFormatter.formatAmount(-567890.12, _decimalPlaces, scaleFactor: _scaleFactor)),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.error,

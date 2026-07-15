@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_undraw/flutter_undraw.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -850,8 +851,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                     Text(
                       AmountFormatter.formatWithCurrency(
                         netAmount,
-                        currency?.symbol ?? '',
-                        currency?.decimalPlaces ?? 2,
+                        currency!,
                       ),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: netAmount >= 0
@@ -995,8 +995,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
   static Widget _buildBalanceRow({
     Key? key,
     required ThemeData theme,
-    required String currencySymbol,
-    required int decimalPlaces,
+    required AppCurrency currency,
     required bool isReceivableHigher,
     required double amount,
     required String labelWhenHigher,
@@ -1041,7 +1040,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
           Text(
             key: key != null ? ValueKey('${(key as ValueKey).value}-amount') : null,
             AmountFormatter.formatWithCurrency(
-                amount, currencySymbol, decimalPlaces),
+                amount, currency),
             style: theme.textTheme.titleSmall?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -1057,8 +1056,9 @@ class _TransactionListSummaryContent extends ConsumerWidget {
     final summaryAsync = ref.watch(transactionListSummaryProvider);
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final currencySymbol = ref.watch(currencySymbolProvider);
-    final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+    final currency = ref.watch(currentCurrencyProvider).value;
+
+    if (currency == null) return const SizedBox.shrink();
 
     return summaryAsync.when(
       skipLoadingOnRefresh: true,
@@ -1075,8 +1075,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
                   label: l10n.payableTag,
                   amount: s.totalPayable,
                   color: AppColors.payableColor,
-                  currencySymbol: currencySymbol,
-                  decimalPlaces: decimalPlaces,
+                  currency: currency,
                 ),
               ),
               const SizedBox(width: 8),
@@ -1086,8 +1085,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
                   label: l10n.receivableTag,
                   amount: s.totalReceivable,
                   color: AppColors.receivableColor,
-                  currencySymbol: currencySymbol,
-                  decimalPlaces: decimalPlaces,
+                  currency: currency,
                 ),
               ),
             ],
@@ -1102,8 +1100,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
                   label: l10n.expenses,
                   amount: s.totalExpense,
                   color: AppColors.expenseColor,
-                  currencySymbol: currencySymbol,
-                  decimalPlaces: decimalPlaces,
+                  currency: currency,
                 ),
               ),
               const SizedBox(width: 8),
@@ -1113,8 +1110,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
                   label: l10n.income,
                   amount: s.totalIncome,
                   color: AppColors.incomeColor,
-                  currencySymbol: currencySymbol,
-                  decimalPlaces: decimalPlaces,
+                  currency: currency,
                 ),
               ),
             ],
@@ -1123,8 +1119,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
           _buildBalanceRow(
             key: const ValueKey('tx-summary-net-receivable-payable'),
             theme: theme,
-            currencySymbol: currencySymbol,
-            decimalPlaces: decimalPlaces,
+            currency: currency,
             isReceivableHigher: s.totalReceivable >= s.totalPayable,
             amount: (s.totalReceivable - s.totalPayable).abs(),
             labelWhenHigher: l10n.netReceivable,
@@ -1136,8 +1131,7 @@ class _TransactionListSummaryContent extends ConsumerWidget {
           _buildBalanceRow(
             key: const ValueKey('tx-summary-net-income-expense'),
             theme: theme,
-            currencySymbol: currencySymbol,
-            decimalPlaces: decimalPlaces,
+            currency: currency,
             isReceivableHigher: s.totalIncome >= s.totalExpense,
             amount: (s.totalIncome - s.totalExpense).abs(),
             labelWhenHigher: l10n.netIncome,
@@ -1207,16 +1201,14 @@ class _SummaryTile extends StatelessWidget {
   final String label;
   final double amount;
   final Color color;
-  final String currencySymbol;
-  final int decimalPlaces;
+  final AppCurrency currency;
 
   const _SummaryTile({
     super.key,
     required this.label,
     required this.amount,
     required this.color,
-    required this.currencySymbol,
-    required this.decimalPlaces,
+    required this.currency,
   });
 
   @override
@@ -1246,7 +1238,7 @@ class _SummaryTile extends StatelessWidget {
           Text(
             key: ValueKey('summary-tile-amount-$label'),
             AmountFormatter.formatWithCurrency(
-                amount, currencySymbol, decimalPlaces),
+                amount, currency),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,

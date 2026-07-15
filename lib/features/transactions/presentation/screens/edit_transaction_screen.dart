@@ -1690,13 +1690,19 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                   snap.period.startDate,
                                   context: context);
 
+                              final currencyAsync = ref.watch(currentCurrencyProvider);
+                              final currency = currencyAsync.value;
+
+                              if (currency == null) {
+                                return const SizedBox.shrink();
+                              }
+
                               if (!snap.hasBudget) {
                                 // Premium feature: show consumption even without budget
                                 final consumedStr =
                                     AmountFormatter.formatWithCurrency(
                                   snap.netAmount,
-                                  sym,
-                                  dec,
+                                  currency,
                                 );
                                 return Padding(
                                   padding: const EdgeInsets.only(top: 12),
@@ -1737,13 +1743,11 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                               final rem = snap.remainingOrGap;
                               final remStr = AmountFormatter.formatWithCurrency(
                                 rem.abs(),
-                                sym,
-                                dec,
+                                currency,
                               );
                               final budStr = AmountFormatter.formatWithCurrency(
                                 snap.budgetAmount!,
-                                sym,
-                                dec,
+                                currency,
                               );
                               final sub = rem >= 0
                                   ? l10n.budgetRemainingOf(remStr, budStr)
@@ -1766,8 +1770,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                       rightAmount: snap.remainingOrGap > 0
                                           ? snap.remainingOrGap
                                           : 0.0,
-                                      symbol: sym,
-                                      decimals: dec,
+                                      currency: currency,
                                       filledColor: snap.progressRatio > 1
                                           ? AppColors.expenseColor
                                           : catColor,
@@ -1871,10 +1874,13 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                     final color = isReceivable
                                         ? AppColors.receivableColor
                                         : AppColors.payableColor;
-                                    final sym =
-                                        ref.watch(currencySymbolProvider);
-                                    final dec = ref.watch(
-                                        currencyDecimalPlacesProvider);
+                                    final currencyAsync = ref.watch(currentCurrencyProvider);
+                                    final currency = currencyAsync.value;
+
+                                    if (currency == null) {
+                                      return const SizedBox.shrink();
+                                    }
+
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 4),
                                       child: Row(
@@ -1889,7 +1895,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            '${isReceivable ? l10n.receivable : l10n.payable}: ${AmountFormatter.formatWithCurrency(balance.abs(), sym, dec, isRtl: Directionality.of(context) == TextDirection.rtl)}',
+                                            '${isReceivable ? l10n.receivable : l10n.payable}: ${AmountFormatter.formatWithCurrency(balance.abs(), currency, Directionality.of(context) == TextDirection.rtl)}',
                                             style: theme.textTheme.bodySmall
                                                 ?.copyWith(
                                               color: color,
@@ -2320,9 +2326,13 @@ class _SplitShareCardState extends State<_SplitShareCard> {
                               final color = isReceivable
                                   ? AppColors.receivableColor
                                   : AppColors.payableColor;
-                              final sym = ref.watch(currencySymbolProvider);
-                              final dec =
-                                  ref.watch(currencyDecimalPlacesProvider);
+                              final currencyAsync = ref.watch(currentCurrencyProvider);
+                              final currency = currencyAsync.value;
+
+                              if (currency == null) {
+                                return const SizedBox.shrink();
+                              }
+
                               return Padding(
                                 padding: const EdgeInsets.only(top: 2),
                                 child: Row(
@@ -2337,7 +2347,7 @@ class _SplitShareCardState extends State<_SplitShareCard> {
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      '${isReceivable ? widget.l10n.receivable : widget.l10n.payable}: ${AmountFormatter.formatWithCurrency(balance.abs(), sym, dec, isRtl: Directionality.of(context) == TextDirection.rtl)}',
+                                      '${isReceivable ? widget.l10n.receivable : widget.l10n.payable}: ${AmountFormatter.formatWithCurrency(balance.abs(), currency, Directionality.of(context) == TextDirection.rtl)}',
                                       style:
                                           theme.textTheme.labelSmall?.copyWith(
                                         color: color,
