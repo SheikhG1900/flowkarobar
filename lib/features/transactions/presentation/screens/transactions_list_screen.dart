@@ -496,10 +496,30 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   key: const ValueKey('tx-speed-dial'),
                   activeColor: AppColors.transactionsSectionColor,
                   onAddTransaction: () {
+                    final filters = ref.read(transactionsPaginatedProvider.notifier).currentFilters;
+                    String? initialType = filters.type;
+                    String? initialCategoryUuid;
+                    if (filters.categoryUuids != null && filters.categoryUuids!.length == 1) {
+                      initialCategoryUuid = filters.categoryUuids!.first;
+                    }
+                    String? initialContactUuid;
+                    if (filters.contactUuids != null && filters.contactUuids!.length == 1) {
+                      initialContactUuid = filters.contactUuids!.first;
+                    }
+                    String? initialAccountUuid;
+                    if (filters.accountUuids != null && filters.accountUuids!.length == 1) {
+                      initialAccountUuid = filters.accountUuids!.first;
+                    }
+
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const AddTransactionScreen(),
+                        builder: (context) => AddTransactionScreen(
+                          initialType: initialType,
+                          initialCategoryUuid: initialCategoryUuid,
+                          initialContactUuid: initialContactUuid,
+                          initialAccountUuid: initialAccountUuid,
+                        ),
                       ),
                     );
                   },

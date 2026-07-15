@@ -55,8 +55,10 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
   final String? initialCategoryName;
   final String? initialCategoryColor;
   final String? initialCategoryIcon;
+  final String? initialCategoryUuid;
   final String? initialContactName;
   final String? initialContactPhone;
+  final String? initialContactUuid;
   final String? initialExternalLinkId;
   final String? initialAccountUuid;
   final DateTime? initialDueDate;
@@ -72,8 +74,10 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
     this.initialCategoryName,
     this.initialCategoryColor,
     this.initialCategoryIcon,
+    this.initialCategoryUuid,
     this.initialContactName,
     this.initialContactPhone,
+    this.initialContactUuid,
     this.initialExternalLinkId,
     this.initialAccountUuid,
     this.initialDueDate,
@@ -155,8 +159,10 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       widget.initialCategoryName == null &&
       widget.initialCategoryColor == null &&
       widget.initialCategoryIcon == null &&
+      widget.initialCategoryUuid == null &&
       widget.initialContactName == null &&
       widget.initialContactPhone == null &&
+      widget.initialContactUuid == null &&
       widget.initialExternalLinkId == null &&
       widget.initialDueDate == null;
 
@@ -267,12 +273,21 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     }
 
     // 1. Handle Contact
-    if (widget.initialContactPhone != null ||
+    if (widget.initialContactUuid != null ||
+        widget.initialContactPhone != null ||
         widget.initialContactName != null) {
       final contactsRepo = ref.read(contactsRepositoryProvider);
 
       Contact? contact;
-      if (widget.initialContactPhone != null &&
+      if (widget.initialContactUuid != null) {
+        final allContacts = await contactsRepo.watchAllContacts().first;
+        try {
+          contact = allContacts.firstWhere((c) => c.uuid == widget.initialContactUuid);
+        } catch (_) {}
+      }
+
+      if (contact == null &&
+          widget.initialContactPhone != null &&
           widget.initialContactPhone!.isNotEmpty) {
         contact =
             await contactsRepo.getContactByPhone(widget.initialContactPhone!);
@@ -302,15 +317,23 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
     }
 
     // 2. Handle Category
-    if (widget.initialCategoryName != null) {
+    if (widget.initialCategoryUuid != null || widget.initialCategoryName != null) {
       final categoriesRepo = ref.read(categoriesRepositoryProvider);
       final allCategories = await categoriesRepo.watchAllCategories().first;
 
       Category? category;
-      try {
-        category = allCategories.firstWhere((c) =>
-            c.name.toLowerCase() == widget.initialCategoryName!.toLowerCase());
-      } catch (_) {}
+      if (widget.initialCategoryUuid != null) {
+        try {
+          category = allCategories.firstWhere((c) => c.uuid == widget.initialCategoryUuid);
+        } catch (_) {}
+      }
+
+      if (category == null && widget.initialCategoryName != null) {
+        try {
+          category = allCategories.firstWhere((c) =>
+              c.name.toLowerCase() == widget.initialCategoryName!.toLowerCase());
+        } catch (_) {}
+      }
 
       if (category != null) {
         if (mounted) {
