@@ -50,6 +50,7 @@ import 'package:flowpaisa/features/receipt_scan/presentation/screens/scan_receip
 import 'package:flowpaisa/features/voice_command/presentation/screens/voice_add_screen.dart';
 
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_details_dialog.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:flowpaisa/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:flowpaisa/shared/widgets/contextual_guide.dart';
@@ -462,10 +463,29 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                 onPressed: () async {
                   Navigator.pop(context);
                   try {
-                    await exportService.saveToDownloads(filePath);
-                    if (context.mounted) {
-                      ToastUtils.showSuccessToast(
-                          context, ref, l10n.savedToDownloads);
+                    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                      final FileSaveLocation? result = await getSaveLocation(
+                        suggestedName: fileName,
+                        acceptedTypeGroups: [
+                          const XTypeGroup(
+                            label: 'PDF',
+                            extensions: ['pdf'],
+                          ),
+                        ],
+                      );
+                      if (result != null) {
+                        await file.copy(result.path);
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.exportSavedTo(result.path));
+                        }
+                      }
+                    } else {
+                      await exportService.saveToDownloads(filePath);
+                      if (context.mounted) {
+                        ToastUtils.showSuccessToast(
+                            context, ref, l10n.savedToDownloads);
+                      }
                     }
                   } catch (e) {
                     if (context.mounted) {
@@ -480,7 +500,17 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                 onPressed: () async {
                   Navigator.pop(context);
                   try {
-                    await exportService.sharePDFFile(filePath);
+                    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                      // On desktop, "Share" is best handled by opening the file directly in the default viewer
+                      final fileUri = Uri.file(filePath);
+                      if (await canLaunchUrl(fileUri)) {
+                        await launchUrl(fileUri);
+                      } else {
+                        throw Exception('Could not open the PDF file.');
+                      }
+                    } else {
+                      await exportService.sharePDFFile(filePath);
+                    }
                   } catch (e) {
                     if (context.mounted) {
                       ToastUtils.showErrorToast(
@@ -488,7 +518,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                     }
                   }
                 },
-                child: Text(l10n.share),
+                child: Text(Platform.isWindows || Platform.isMacOS || Platform.isLinux ? 'Open File' : l10n.share),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(

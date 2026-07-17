@@ -36,6 +36,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/features/analytics/presentation/widgets/account_analytics_widgets.dart';
+import 'package:file_selector/file_selector.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 final exportServiceProvider = Provider<ExportService>((ref) {
   final db = ref.watch(databaseProvider);
@@ -123,10 +125,29 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 onPressed: () async {
                   Navigator.pop(context);
                   try {
-                    await exportService.saveToDownloads(filePath);
-                    if (context.mounted) {
-                      ToastUtils.showSuccessToast(
-                          context, ref, l10n.savedToDownloads);
+                    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                      final FileSaveLocation? result = await getSaveLocation(
+                        suggestedName: fileName,
+                        acceptedTypeGroups: [
+                          const XTypeGroup(
+                            label: 'PDF',
+                            extensions: ['pdf'],
+                          ),
+                        ],
+                      );
+                      if (result != null) {
+                        await file.copy(result.path);
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.exportSavedTo(result.path));
+                        }
+                      }
+                    } else {
+                      await exportService.saveToDownloads(filePath);
+                      if (context.mounted) {
+                        ToastUtils.showSuccessToast(
+                            context, ref, l10n.savedToDownloads);
+                      }
                     }
                   } catch (e) {
                     if (context.mounted) {
@@ -141,7 +162,17 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                 onPressed: () async {
                   Navigator.pop(context);
                   try {
-                    await exportService.sharePDFFile(filePath);
+                    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                      // On desktop, "Share" is best handled by opening the file directly in the default viewer
+                      final fileUri = Uri.file(filePath);
+                      if (await canLaunchUrl(fileUri)) {
+                        await launchUrl(fileUri);
+                      } else {
+                        throw Exception('Could not open the PDF file.');
+                      }
+                    } else {
+                      await exportService.sharePDFFile(filePath);
+                    }
                   } catch (e) {
                     if (context.mounted) {
                       ToastUtils.showErrorToast(
@@ -149,7 +180,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     }
                   }
                 },
-                child: Text(l10n.share),
+                child: Text(Platform.isWindows || Platform.isMacOS || Platform.isLinux ? 'Open File' : l10n.share),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(
