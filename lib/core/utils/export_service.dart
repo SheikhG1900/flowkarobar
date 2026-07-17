@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flowpaisa/core/utils/native_share.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/payables/data/payables_repository.dart';
 import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
 import 'package:flowpaisa/features/analytics/data/analytics_repository.dart';
@@ -199,11 +200,23 @@ class ExportService {
     required DateTime startDate,
     required DateTime endDate,
     AppLocalizations? l10n,
+    TransactionFilters? filters,
+    String? searchQuery,
   }) async {
     try {
-      // Get transactions in date range with details
-      final transactionsWithDetails = await _transactionsRepository
-          .getTransactionsWithDetailsByDateRange(startDate, endDate);
+      // Get transactions in date range with details or using filters
+      final List<TransactionWithDetails> transactionsWithDetails;
+      if (filters != null) {
+        transactionsWithDetails = await _transactionsRepository
+            .getTransactionsWithDetailsFilteredPaginated(
+          filters: filters,
+          searchQuery: searchQuery,
+          limit: 1000000,
+        );
+      } else {
+        transactionsWithDetails = await _transactionsRepository
+            .getTransactionsWithDetailsByDateRange(startDate, endDate);
+      }
 
       final statusHeader = l10n?.status ?? 'Status';
 
@@ -273,11 +286,15 @@ class ExportService {
     required DateTime startDate,
     required DateTime endDate,
     bool useCache = false,
+    TransactionFilters? filters,
+    String? searchQuery,
   }) async {
     try {
       final csvString = await generateCSVContent(
         startDate: startDate,
         endDate: endDate,
+        filters: filters,
+        searchQuery: searchQuery,
       );
 
       // Save to file
@@ -393,9 +410,21 @@ class ExportService {
   Future<ExportSummary> getExportSummary({
     required DateTime startDate,
     required DateTime endDate,
+    TransactionFilters? filters,
+    String? searchQuery,
   }) async {
-    final transactionsWithDetails = await _transactionsRepository
-        .getTransactionsWithDetailsByDateRange(startDate, endDate);
+    final List<TransactionWithDetails> transactionsWithDetails;
+    if (filters != null) {
+      transactionsWithDetails = await _transactionsRepository
+          .getTransactionsWithDetailsFilteredPaginated(
+        filters: filters,
+        searchQuery: searchQuery,
+        limit: 1000000,
+      );
+    } else {
+      transactionsWithDetails = await _transactionsRepository
+          .getTransactionsWithDetailsByDateRange(startDate, endDate);
+    }
 
     // Same filter as PDF and CSV: exclude expense linked to non-PAID payable,
     // and income linked to non-RECEIVED receivable
@@ -470,17 +499,34 @@ class ExportService {
     pw.Font? hindiFont,
     pw.Font? englishFont,
     AppLocalizations? l10n,
+    TransactionFilters? filters,
+    String? searchQuery,
   }) async {
     final payablesRepository = PayablesRepository(_database);
     final receivablesRepository = ReceivablesRepository(_database);
 
     // Fetch all data
-    final transactionsWithDetails = await _transactionsRepository
-        .getTransactionsWithDetailsByDateRange(startDate, endDate);
-    final payablesWithContacts = await payablesRepository
+    final List<TransactionWithDetails> transactionsWithDetails;
+    if (filters != null) {
+      transactionsWithDetails = await _transactionsRepository
+          .getTransactionsWithDetailsFilteredPaginated(
+        filters: filters,
+        searchQuery: searchQuery,
+        limit: 1000000,
+      );
+    } else {
+      transactionsWithDetails = await _transactionsRepository
+          .getTransactionsWithDetailsByDateRange(startDate, endDate);
+    }
+    var payablesWithContacts = await payablesRepository
         .getPayablesWithContactsByDateRange(startDate, endDate);
-    final receivablesWithContacts = await receivablesRepository
+    var receivablesWithContacts = await receivablesRepository
         .getReceivablesWithContactsByDateRange(startDate, endDate);
+
+    if (filters != null && filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
+      payablesWithContacts = payablesWithContacts.where((p) => filters.contactUuids!.contains(p.contact?.uuid)).toList();
+      receivablesWithContacts = receivablesWithContacts.where((r) => filters.contactUuids!.contains(r.contact?.uuid)).toList();
+    }
 
     // Filter transactions (same logic as CSV export)
     final filteredTransactions = transactionsWithDetails.where((item) {
@@ -1441,6 +1487,8 @@ class ExportService {
     String? currencySymbol,
     int decimalPlaces = 2,
     AppLocalizations? l10n,
+    TransactionFilters? filters,
+    String? searchQuery,
   }) async {
     try {
       // Load Material Icons and Unicode fonts
@@ -1459,6 +1507,8 @@ class ExportService {
         hindiFont: hindiFont,
         englishFont: englishFont,
         l10n: l10n,
+        filters: filters,
+        searchQuery: searchQuery,
       );
       return pdf.save();
     } catch (e) {
@@ -1474,6 +1524,8 @@ class ExportService {
     int decimalPlaces = 2,
     bool useCache = false,
     AppLocalizations? l10n,
+    TransactionFilters? filters,
+    String? searchQuery,
   }) async {
     try {
       final pdfBytes = await exportTransactionsToPDF(
@@ -1482,6 +1534,8 @@ class ExportService {
         currencySymbol: currencySymbol,
         decimalPlaces: decimalPlaces,
         l10n: l10n,
+        filters: filters,
+        searchQuery: searchQuery,
       );
 
       final directory = await (useCache

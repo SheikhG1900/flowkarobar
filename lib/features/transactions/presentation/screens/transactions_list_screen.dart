@@ -29,6 +29,12 @@ import 'package:flowpaisa/features/transactions/presentation/widgets/transaction
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_list_item.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/bulk_import_screen.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/export_screen.dart';
+import 'package:file_selector/file_selector.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flowpaisa/core/services/in_app_review_service.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
@@ -188,6 +194,319 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         ),
       ),
     );
+  }
+
+  void _showExportOptions(BuildContext parentContext) {
+    final l10n = AppLocalizations.of(parentContext)!;
+    final isPremium = ref.read(premiumProvider).isPremium;
+
+    showModalBottomSheet(
+      context: parentContext,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Text(
+                    l10n.exportData,
+                    style: Theme.of(sheetContext)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(width: 8),
+                  if (!isPremium)
+                    const Icon(Icons.lock, color: Colors.orange, size: 20),
+                  if (isPremium)
+                    const Icon(Icons.verified, color: Colors.blue, size: 20),
+                ],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.table_chart, color: Colors.green),
+              title: const Text("Export as CSV"),
+              subtitle: const Text("Free • Open in Excel or Google Sheets"),
+              onTap: () async {
+                Navigator.pop(sheetContext);
+                await _exportFilteredCSV();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+              title: const Text("Export as PDF"),
+              subtitle: const Text("Premium • Beautiful report with summaries"),
+              trailing: !isPremium
+                  ? const Icon(Icons.lock, color: Colors.orange)
+                  : const Icon(Icons.verified, color: Colors.blue),
+              onTap: () async {
+                Navigator.pop(sheetContext);
+                if (!isPremium) {
+                  Navigator.push(
+                    parentContext,
+                    MaterialPageRoute(
+                      builder: (context) => const PremiumScreen(),
+                    ),
+                  );
+                } else {
+                  await _exportFilteredPDF();
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _exportFilteredCSV() async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final notifier = ref.read(transactionsPaginatedProvider.notifier);
+    final filters = notifier.currentFilters;
+    final searchQuery = ref.read(transactionsPaginatedProvider).searchQuery;
+
+    final now = DateTime.now();
+    final startDate = filters.startDate ?? DateTime(now.year, now.month, 1);
+    final endDate = filters.endDate ?? DateTime(now.year, now.month + 1, 0);
+
+    bool isLoadingDialogOpen = true;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final exportService = ref.read(exportServiceProvider);
+
+      if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+        final csvContent = await exportService.generateCSVContent(
+          startDate: startDate,
+          endDate: endDate,
+          l10n: l10n,
+          filters: filters,
+          searchQuery: searchQuery,
+        );
+
+        if (mounted) {
+          Navigator.pop(context); // Close loading
+          isLoadingDialogOpen = false;
+
+          final fileName =
+              'flowpaisa_export_${AppDateFormatter.formatForFileName(DateTime.now())}.csv';
+          final FileSaveLocation? result = await getSaveLocation(
+            suggestedName: fileName,
+            acceptedTypeGroups: [
+              const XTypeGroup(
+                label: 'CSV',
+                extensions: ['csv'],
+              ),
+            ],
+          );
+
+          if (result != null) {
+            final file = File(result.path);
+            await file.writeAsString(csvContent);
+
+            if (mounted) {
+              ToastUtils.showSuccessToast(
+                  context, ref, l10n.exportSavedTo(result.path));
+              ref.read(inAppReviewServiceProvider).maybeRequestReview();
+            }
+          }
+        }
+      } else {
+        final filePath = await exportService.exportTransactionsToCSV(
+          startDate: startDate,
+          endDate: endDate,
+          useCache: true,
+          filters: filters,
+          searchQuery: searchQuery,
+        );
+
+        if (mounted) {
+          Navigator.pop(context); // Close loading
+          isLoadingDialogOpen = false;
+          ref.read(inAppReviewServiceProvider).maybeRequestReview();
+
+          await showDialog<void>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(l10n.exportSuccessful),
+              content: Text(l10n.transactionHistoryReady),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(l10n.done),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    try {
+                      await exportService.saveToDownloads(filePath);
+                      if (context.mounted) {
+                        ToastUtils.showSuccessToast(
+                            context, ref, l10n.savedToDownloads);
+                        Navigator.pop(context);
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ToastUtils.showErrorToast(
+                            context, ref, l10n.errorSaving(e.toString()));
+                      }
+                    }
+                  },
+                  child: Text(l10n.saveCopy),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                      foregroundColor: theme.colorScheme.onPrimary),
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await exportService.shareCSVFile(filePath);
+                  },
+                  child: Text(l10n.share),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        if (isLoadingDialogOpen) {
+          Navigator.pop(context);
+        }
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorExporting(e.toString()));
+      }
+    }
+  }
+
+  Future<void> _exportFilteredPDF() async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final currencySymbol = ref.read(currencySymbolProvider);
+    final decimalPlaces = ref.read(currencyDecimalPlacesProvider);
+
+    if (!PremiumGate.isPremium(ref)) {
+      PremiumGate.showPremiumDialog(context);
+      return;
+    }
+
+    final notifier = ref.read(transactionsPaginatedProvider.notifier);
+    final filters = notifier.currentFilters;
+    final searchQuery = ref.read(transactionsPaginatedProvider).searchQuery;
+
+    final now = DateTime.now();
+    final startDate = filters.startDate ?? DateTime(now.year, now.month, 1);
+    final endDate = filters.endDate ?? DateTime(now.year, now.month + 1, 0);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final exportService = ref.read(exportServiceProvider);
+
+      final pdfBytes = await exportService.exportTransactionsToPDF(
+        startDate: startDate,
+        endDate: endDate,
+        currencySymbol: currencySymbol,
+        decimalPlaces: decimalPlaces,
+        l10n: l10n,
+        filters: filters,
+        searchQuery: searchQuery,
+      );
+
+      final directory = await getTemporaryDirectory();
+      final fileName =
+          'flowpaisa_export_${AppDateFormatter.formatForFileName(DateTime.now())}.pdf';
+      final filePath = '${directory.path}/$fileName';
+      final file = File(filePath);
+      await file.writeAsBytes(pdfBytes);
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ref.read(inAppReviewServiceProvider).maybeRequestReview();
+
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(l10n.pdfReady),
+            content: Text(l10n.pdfReportReady),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    await exportService.saveToDownloads(filePath);
+                    if (context.mounted) {
+                      ToastUtils.showSuccessToast(
+                          context, ref, l10n.savedToDownloads);
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(
+                          context, ref, l10n.errorSaving(e.toString()));
+                    }
+                  }
+                },
+                child: Text(l10n.saveCopy),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    await exportService.sharePDFFile(filePath);
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(
+                          context, ref, l10n.errorSharing(e.toString()));
+                    }
+                  }
+                },
+                child: Text(l10n.share),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                    foregroundColor: theme.colorScheme.onPrimary),
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await Printing.layoutPdf(
+                    onLayout: (PdfPageFormat format) async => pdfBytes,
+                  );
+                },
+                child: Text(l10n.preview),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading if still open
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorExporting(e.toString()));
+      }
+    }
   }
 
   void _showImportOptions(BuildContext parentContext) {
@@ -438,6 +757,13 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   });
                 },
               ),
+              if (!_isSearching)
+                IconButton(
+                  key: const ValueKey('tx-export-btn'),
+                  icon: const Icon(Icons.file_download),
+                  tooltip: l10n.exportData,
+                  onPressed: () => _showExportOptions(context),
+                ),
               if (!_isSearching && kDebugMode)
                 PopupMenuButton<String>(
                   key: const ValueKey('tx-more-btn'),
