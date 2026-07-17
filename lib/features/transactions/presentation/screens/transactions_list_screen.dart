@@ -288,6 +288,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
     try {
       final exportService = ref.read(exportServiceProvider);
+      final currency = ref.read(currentCurrencyProvider).value;
 
       if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
         final csvContent = await exportService.generateCSVContent(
@@ -296,6 +297,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           l10n: l10n,
           filters: filters,
           searchQuery: searchQuery,
+          currency: currency,
         );
 
         if (mounted) {
@@ -332,6 +334,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           useCache: true,
           filters: filters,
           searchQuery: searchQuery,
+          currency: currency,
         );
 
         if (mounted) {
@@ -421,6 +424,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
     try {
       final exportService = ref.read(exportServiceProvider);
+      final currency = ref.read(currentCurrencyProvider).value;
 
       final pdfBytes = await exportService.exportTransactionsToPDF(
         startDate: startDate,
@@ -430,6 +434,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         l10n: l10n,
         filters: filters,
         searchQuery: searchQuery,
+        currency: currency,
       );
 
       final directory = await getTemporaryDirectory();
@@ -1403,6 +1408,8 @@ class _TransactionListSummaryContent extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final currency = ref.watch(currentCurrencyProvider).value;
+    final filters = ref.watch(transactionsPaginatedProvider.select((s) => s.filters));
+    final isAccountFilterActive = filters?.accountUuids != null && filters!.accountUuids!.isNotEmpty;
 
     if (currency == null) return const SizedBox.shrink();
 
@@ -1412,31 +1419,33 @@ class _TransactionListSummaryContent extends ConsumerWidget {
         key: const ValueKey('tx-list-summary-content-column'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            key: const ValueKey('tx-list-summary-row-1'),
-            children: [
-              Expanded(
-                child: _SummaryTile(
-                  key: const ValueKey('tx-summary-payable'),
-                  label: l10n.payableTag,
-                  amount: s.totalPayable,
-                  color: AppColors.payableColor,
-                  currency: currency,
+          if (!isAccountFilterActive) ...[
+            Row(
+              key: const ValueKey('tx-list-summary-row-1'),
+              children: [
+                Expanded(
+                  child: _SummaryTile(
+                    key: const ValueKey('tx-summary-payable'),
+                    label: l10n.payableTag,
+                    amount: s.totalPayable,
+                    color: AppColors.payableColor,
+                    currency: currency,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _SummaryTile(
-                  key: const ValueKey('tx-summary-receivable'),
-                  label: l10n.receivableTag,
-                  amount: s.totalReceivable,
-                  color: AppColors.receivableColor,
-                  currency: currency,
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _SummaryTile(
+                    key: const ValueKey('tx-summary-receivable'),
+                    label: l10n.receivableTag,
+                    amount: s.totalReceivable,
+                    color: AppColors.receivableColor,
+                    currency: currency,
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
           Row(
             key: const ValueKey('tx-list-summary-row-2'),
             children: [
@@ -1462,18 +1471,20 @@ class _TransactionListSummaryContent extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 8),
-          _buildBalanceRow(
-            key: const ValueKey('tx-summary-net-receivable-payable'),
-            theme: theme,
-            currency: currency,
-            isReceivableHigher: s.totalReceivable >= s.totalPayable,
-            amount: (s.totalReceivable - s.totalPayable).abs(),
-            labelWhenHigher: l10n.netReceivable,
-            labelWhenLower: l10n.netPayable,
-            gradientWhenHigher: AppColors.receivableGradient,
-            gradientWhenLower: AppColors.payableGradient,
-          ),
-          const SizedBox(height: 8),
+          if (!isAccountFilterActive) ...[
+            _buildBalanceRow(
+              key: const ValueKey('tx-summary-net-receivable-payable'),
+              theme: theme,
+              currency: currency,
+              isReceivableHigher: s.totalReceivable >= s.totalPayable,
+              amount: (s.totalReceivable - s.totalPayable).abs(),
+              labelWhenHigher: l10n.netReceivable,
+              labelWhenLower: l10n.netPayable,
+              gradientWhenHigher: AppColors.receivableGradient,
+              gradientWhenLower: AppColors.payableGradient,
+            ),
+            const SizedBox(height: 8),
+          ],
           _buildBalanceRow(
             key: const ValueKey('tx-summary-net-income-expense'),
             theme: theme,

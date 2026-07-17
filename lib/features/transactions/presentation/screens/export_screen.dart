@@ -99,6 +99,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
 
     try {
       final exportService = ref.read(exportServiceProvider);
+      final currency = ref.read(currentCurrencyProvider).value;
 
       // Check for Desktop platforms
       if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
@@ -107,6 +108,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
           startDate: _startDate!,
           endDate: _endDate!,
           l10n: l10n,
+          currency: currency,
         );
 
         if (mounted) {
@@ -144,6 +146,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
           endDate: _endDate!,
           useCache:
               true, // Use cache - share_plus FileProvider exposes this directory
+          currency: currency,
         );
 
         if (mounted) {
@@ -228,6 +231,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
 
     try {
       final exportService = ref.read(exportServiceProvider);
+      final currency = ref.read(currentCurrencyProvider).value;
 
       // Generate PDF bytes once
       final pdfBytes = await exportService.exportTransactionsToPDF(
@@ -236,6 +240,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
         currencySymbol: currencySymbol,
         decimalPlaces: decimalPlaces,
         l10n: l10n,
+        currency: currency,
       );
 
       // Save PDF to temporary file for save/share actions

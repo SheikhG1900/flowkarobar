@@ -202,6 +202,7 @@ class ExportService {
     AppLocalizations? l10n,
     TransactionFilters? filters,
     String? searchQuery,
+    AppCurrency? currency,
   }) async {
     try {
       // Get transactions in date range with details or using filters
@@ -234,6 +235,9 @@ class ExportService {
         ],
       ];
 
+      final scaleFactor = currency?.scaleFactor ?? 1.0;
+      final divisor = scaleFactor != 0 ? scaleFactor : 1.0;
+
       // Add transaction rows
       for (var item in transactionsWithDetails) {
         final t = item.transaction;
@@ -263,10 +267,11 @@ class ExportService {
           linkedReceivable: item.linkedReceivable,
           l10n: l10n,
         );
+        final scaledAmount = t.amount / divisor;
         csvData.add([
           AppDateFormatter.formatDate(t.date, pattern: _dateFormat),
           t.type,
-          t.amount.toStringAsFixed(2),
+          scaledAmount.toStringAsFixed(currency?.decimalPlaces ?? 2),
           item.category?.name ?? '', // Use name instead of ID
           item.contact?.name ?? '', // Use name instead of ID
           t.description ?? '',
@@ -288,6 +293,7 @@ class ExportService {
     bool useCache = false,
     TransactionFilters? filters,
     String? searchQuery,
+    AppCurrency? currency,
   }) async {
     try {
       final csvString = await generateCSVContent(
@@ -295,6 +301,7 @@ class ExportService {
         endDate: endDate,
         filters: filters,
         searchQuery: searchQuery,
+        currency: currency,
       );
 
       // Save to file
@@ -501,6 +508,7 @@ class ExportService {
     AppLocalizations? l10n,
     TransactionFilters? filters,
     String? searchQuery,
+    AppCurrency? currencyObj,
   }) async {
     final payablesRepository = PayablesRepository(_database);
     final receivablesRepository = ReceivablesRepository(_database);
@@ -526,6 +534,166 @@ class ExportService {
     if (filters != null && filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
       payablesWithContacts = payablesWithContacts.where((p) => filters.contactUuids!.contains(p.contact?.uuid)).toList();
       receivablesWithContacts = receivablesWithContacts.where((r) => filters.contactUuids!.contains(r.contact?.uuid)).toList();
+    }
+
+    if (filters != null && filters.accountUuids != null && filters.accountUuids!.isNotEmpty) {
+      payablesWithContacts = [];
+      receivablesWithContacts = [];
+    }
+
+    String? accountNames;
+    if (filters != null && filters.accountUuids != null && filters.accountUuids!.isNotEmpty) {
+      final accounts = await (_database.select(_database.accounts)
+            ..where((t) => t.uuid.isIn(filters.accountUuids!)))
+          .get();
+      accountNames = accounts.map((a) => a.name).join(', ');
+    }
+
+    String? categoryNames;
+    if (filters != null && filters.categoryUuids != null && filters.categoryUuids!.isNotEmpty) {
+      final categories = await (_database.select(_database.categories)
+            ..where((t) => t.uuid.isIn(filters.categoryUuids!)))
+          .get();
+      categoryNames = categories.map((c) => _getLocalizedCategoryName(c.name, l10n)).join(', ');
+    }
+
+    String? contactNames;
+    if (filters != null && filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
+      final contacts = await (_database.select(_database.contacts)
+            ..where((t) => t.uuid.isIn(filters.contactUuids!)))
+          .get();
+      contactNames = contacts.map((c) => c.name).join(', ');
+    }
+
+    final List<pw.TableRow> filterRows = [];
+    final isRtl = l10n?.localeName == 'ur' || l10n?.localeName == 'ar';
+
+    if (accountNames != null) {
+      filterRows.add(
+        _buildLocalizedTableRow(
+          [
+            _buildText(
+              l10n?.account ?? 'Account',
+              style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+            ),
+            _buildText(':', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+            _buildText(
+              accountNames,
+              style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.black,
+              ),
+              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+            ),
+          ],
+          l10n: l10n,
+        ),
+      );
+    }
+
+    if (categoryNames != null) {
+      filterRows.add(
+        _buildLocalizedTableRow(
+          [
+            _buildText(
+              l10n?.category ?? 'Category',
+              style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+            ),
+            _buildText(':', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+            _buildText(
+              categoryNames,
+              style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.black,
+              ),
+              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+            ),
+          ],
+          l10n: l10n,
+        ),
+      );
+    }
+
+    if (contactNames != null) {
+      filterRows.add(
+        _buildLocalizedTableRow(
+          [
+            _buildText(
+              l10n?.contact ?? 'Contact',
+              style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+            ),
+            _buildText(':', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+            _buildText(
+              contactNames,
+              style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.black,
+              ),
+              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+            ),
+          ],
+          l10n: l10n,
+        ),
+      );
+    }
+
+    if (filters?.type != null) {
+      final typeLabel = filters!.type == 'INCOME'
+          ? (l10n?.income ?? 'Income')
+          : (l10n?.expense ?? 'Expense');
+      filterRows.add(
+        _buildLocalizedTableRow(
+          [
+            _buildText(
+              l10n?.type ?? 'Type',
+              style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+            ),
+            _buildText(':', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+            _buildText(
+              typeLabel,
+              style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.black,
+              ),
+              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+            ),
+          ],
+          l10n: l10n,
+        ),
+      );
+    }
+
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      filterRows.add(
+        _buildLocalizedTableRow(
+          [
+            _buildText(
+              l10n?.search ?? 'Search',
+              style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+            ),
+            _buildText(':', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+            _buildText(
+              searchQuery,
+              style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.black,
+              ),
+              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+            ),
+          ],
+          l10n: l10n,
+        ),
+      );
     }
 
     // Filter transactions (same logic as CSV export)
@@ -577,8 +745,12 @@ class ExportService {
     }
 
     final currency = currencySymbol ?? '₹';
-    String fmt(num amount) =>
-        AmountFormatter.formatWithCurrency(amount.toDouble(), currency, decimalPlaces);
+    String fmt(num amount) {
+      if (currencyObj != null) {
+        return AmountFormatter.formatWithCurrency(amount.toDouble(), currencyObj);
+      }
+      return AmountFormatter.formatWithCurrency(amount.toDouble(), currency, decimalPlaces);
+    }
     final dateFormat = AppDateFormatter.getFormatter(_dateFormat);
     final dateTimeFormat = AppDateFormatter.getFormatter('dd MMM yyyy, HH:mm');
 
@@ -722,6 +894,7 @@ class ExportService {
                         ],
                         l10n: l10n,
                       ),
+                      ...filterRows,
                     ],
                   ),
                 ],
@@ -1489,6 +1662,7 @@ class ExportService {
     AppLocalizations? l10n,
     TransactionFilters? filters,
     String? searchQuery,
+    AppCurrency? currency,
   }) async {
     try {
       // Load Material Icons and Unicode fonts
@@ -1509,6 +1683,7 @@ class ExportService {
         l10n: l10n,
         filters: filters,
         searchQuery: searchQuery,
+        currencyObj: currency,
       );
       return pdf.save();
     } catch (e) {
@@ -1526,6 +1701,7 @@ class ExportService {
     AppLocalizations? l10n,
     TransactionFilters? filters,
     String? searchQuery,
+    AppCurrency? currency,
   }) async {
     try {
       final pdfBytes = await exportTransactionsToPDF(
@@ -1536,6 +1712,7 @@ class ExportService {
         l10n: l10n,
         filters: filters,
         searchQuery: searchQuery,
+        currency: currency,
       );
 
       final directory = await (useCache
@@ -1738,6 +1915,7 @@ class ExportService {
     String? currencySymbol,
     int decimalPlaces = 2,
     AppLocalizations? l10n,
+    AppCurrency? currency,
   }) async {
     try {
       // Load Material Icons and Unicode fonts
@@ -1756,6 +1934,7 @@ class ExportService {
         hindiFont: hindiFont,
         englishFont: englishFont,
         l10n: l10n,
+        currencyObj: currency,
       );
       return pdf.save();
     } catch (e) {
@@ -1774,6 +1953,7 @@ class ExportService {
     pw.Font? hindiFont,
     pw.Font? englishFont,
     AppLocalizations? l10n,
+    AppCurrency? currencyObj,
   }) async {
     // Fetch all analytics data
     final financialSummary =
@@ -1795,8 +1975,12 @@ class ExportService {
         .getPaymentStatusDistribution(startDate, endDate);
 
     final currency = currencySymbol ?? '₹';
-    String fmt(num amount) => AmountFormatter.formatWithCurrency(
-        amount.toDouble(), currency, decimalPlaces);
+    String fmt(num amount) {
+      if (currencyObj != null) {
+        return AmountFormatter.formatWithCurrency(amount.toDouble(), currencyObj);
+      }
+      return AmountFormatter.formatWithCurrency(amount.toDouble(), currency, decimalPlaces);
+    }
     final dateFormat = AppDateFormatter.getFormatter(_dateFormat);
     final dateTimeFormat = AppDateFormatter.getFormatter('dd MMM yyyy, HH:mm');
 
@@ -2228,7 +2412,8 @@ class ExportService {
                   materialIconsFont,
                   ExportService.getExpensePdfColor(),
                   self: self,
-                  l10n: l10n),
+                  l10n: l10n,
+                  currencyObj: currencyObj),
               pw.SizedBox(height: 30),
             ],
 
@@ -2253,7 +2438,8 @@ class ExportService {
                   materialIconsFont,
                   ExportService.getIncomePdfColor(),
                   self: self,
-                  l10n: l10n),
+                  l10n: l10n,
+                  currencyObj: currencyObj),
               pw.SizedBox(height: 30),
             ],
 
@@ -2598,7 +2784,8 @@ class ExportService {
                       Colors.orange,
                       currency,
                       decimalPlaces,
-                      l10n: l10n),
+                      l10n: l10n,
+                      currencyObj: currencyObj),
                 if (statusDistribution.paidPayables > 0)
                   _buildStatusRow(
                       '${l10n?.payables ?? 'Payables'} - ${l10n?.statusPaid ?? 'Paid'}',
@@ -2606,7 +2793,8 @@ class ExportService {
                       Colors.green,
                       currency,
                       decimalPlaces,
-                      l10n: l10n),
+                      l10n: l10n,
+                      currencyObj: currencyObj),
                 if (statusDistribution.cancelledPayables > 0)
                   _buildStatusRow(
                       '${l10n?.payables ?? 'Payables'} - ${l10n?.statusCancelled ?? 'Cancelled'}',
@@ -2614,7 +2802,8 @@ class ExportService {
                       Colors.grey,
                       currency,
                       decimalPlaces,
-                      l10n: l10n),
+                      l10n: l10n,
+                      currencyObj: currencyObj),
                 if (statusDistribution.pendingReceivables > 0)
                   _buildStatusRow(
                       '${l10n?.receivables ?? 'Receivables'} - ${l10n?.pending ?? 'Pending'}',
@@ -2622,7 +2811,8 @@ class ExportService {
                       Colors.orange,
                       currency,
                       decimalPlaces,
-                      l10n: l10n),
+                      l10n: l10n,
+                      currencyObj: currencyObj),
                 if (statusDistribution.receivedReceivables > 0)
                   _buildStatusRow(
                       '${l10n?.receivables ?? 'Receivables'} - ${l10n?.statusReceived ?? 'Received'}',
@@ -2630,7 +2820,8 @@ class ExportService {
                       Colors.green,
                       currency,
                       decimalPlaces,
-                      l10n: l10n),
+                      l10n: l10n,
+                      currencyObj: currencyObj),
                 if (statusDistribution.cancelledReceivables > 0)
                   _buildStatusRow(
                       '${l10n?.receivables ?? 'Receivables'} - ${l10n?.statusCancelled ?? 'Cancelled'}',
@@ -2638,7 +2829,8 @@ class ExportService {
                       Colors.grey,
                       currency,
                       decimalPlaces,
-                      l10n: l10n),
+                      l10n: l10n,
+                      currencyObj: currencyObj),
               ],
             ),
           ];
@@ -2658,7 +2850,8 @@ class ExportService {
       pw.Font? materialIconsFont,
       PdfColor defaultColor,
       {ExportService? self,
-      AppLocalizations? l10n}) {
+      AppLocalizations? l10n,
+      AppCurrency? currencyObj}) {
     final service = self ?? this;
     double total = 0;
     final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
@@ -2698,6 +2891,10 @@ class ExportService {
           final categoryColor = category.color != null
               ? hexToPdfColor(category.color!)
               : defaultColor;
+
+          final formattedAmount = currencyObj != null
+              ? AmountFormatter.formatWithCurrency(amount, currencyObj)
+              : AmountFormatter.formatWithCurrency(amount, currency, decimalPlaces);
 
           return service._buildLocalizedTableRow(
             [
@@ -2741,8 +2938,7 @@ class ExportService {
                 child: pw.Container(
                   alignment: pw.Alignment.centerLeft,
                   child: service._buildText(
-                    AmountFormatter.formatWithCurrency(
-                        amount, currency, decimalPlaces),
+                    formattedAmount,
                     style: pw.TextStyle(fontSize: 9, color: categoryColor),
                   ),
                 ),
@@ -2759,9 +2955,12 @@ class ExportService {
   pw.TableRow _buildStatusRow(
       String label, double amount, Color color, String currency,
       int decimalPlaces,
-      {AppLocalizations? l10n}) {
+      {AppLocalizations? l10n, AppCurrency? currencyObj}) {
     final pdfColor = PdfColor(color.r, color.g, color.b);
     final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
+    final formattedAmount = currencyObj != null
+        ? AmountFormatter.formatWithCurrency(amount, currencyObj)
+        : AmountFormatter.formatWithCurrency(amount, currency, decimalPlaces);
     return _buildLocalizedTableRow(
       [
         pw.Padding(
@@ -2780,8 +2979,7 @@ class ExportService {
             alignment:
                 isRtl ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
             child: _buildText(
-                AmountFormatter.formatWithCurrency(
-                    amount, currency, decimalPlaces),
+                formattedAmount,
                 style: pw.TextStyle(fontSize: 9, color: pdfColor),
                 align: isRtl ? pw.TextAlign.right : pw.TextAlign.left),
           ),

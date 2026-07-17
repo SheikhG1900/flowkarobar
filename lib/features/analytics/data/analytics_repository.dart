@@ -223,26 +223,30 @@ class AnalyticsRepository {
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
 
-    final totalPayable = _watchPayableTotalForFilters(
-      hasDateFilter: hasDateFilter,
-      startDate: startDate,
-      endDate: endDate,
-      categoryUuids: filters.categoryUuids,
-      contactUuids: filters.contactUuids,
-      minAmount: filters.minAmount,
-      maxAmount: filters.maxAmount,
-      statusCodes: filters.statusCodes,
-    );
-    final totalReceivable = _watchReceivableTotalForFilters(
-      hasDateFilter: hasDateFilter,
-      startDate: startDate,
-      endDate: endDate,
-      categoryUuids: filters.categoryUuids,
-      contactUuids: filters.contactUuids,
-      minAmount: filters.minAmount,
-      maxAmount: filters.maxAmount,
-      statusCodes: filters.statusCodes,
-    );
+    final totalPayable = (filters.accountUuids != null && filters.accountUuids!.isNotEmpty)
+        ? Stream.value(0.0)
+        : _watchPayableTotalForFilters(
+            hasDateFilter: hasDateFilter,
+            startDate: startDate,
+            endDate: endDate,
+            categoryUuids: filters.categoryUuids,
+            contactUuids: filters.contactUuids,
+            minAmount: filters.minAmount,
+            maxAmount: filters.maxAmount,
+            statusCodes: filters.statusCodes,
+          );
+    final totalReceivable = (filters.accountUuids != null && filters.accountUuids!.isNotEmpty)
+        ? Stream.value(0.0)
+        : _watchReceivableTotalForFilters(
+            hasDateFilter: hasDateFilter,
+            startDate: startDate,
+            endDate: endDate,
+            categoryUuids: filters.categoryUuids,
+            contactUuids: filters.contactUuids,
+            minAmount: filters.minAmount,
+            maxAmount: filters.maxAmount,
+            statusCodes: filters.statusCodes,
+          );
 
     return Rx.combineLatest4(
       totalPayable,

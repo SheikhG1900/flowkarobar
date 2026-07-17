@@ -85,6 +85,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
 
     try {
       final exportService = ref.read(exportServiceProvider);
+      final currency = ref.read(currentCurrencyProvider).value;
 
       // Generate PDF bytes once
       final pdfBytes = await exportService.exportAnalyticsToPDF(
@@ -93,6 +94,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         currencySymbol: currencySymbol,
         decimalPlaces: decimalPlaces,
         l10n: l10n,
+        currency: currency,
       );
 
       // Save PDF to temporary file for save/share actions
