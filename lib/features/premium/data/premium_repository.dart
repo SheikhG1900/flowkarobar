@@ -5,7 +5,6 @@ import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PremiumRepository {
-  final InAppPurchase _iap = InAppPurchase.instance;
   final SharedPreferences _prefs;
   
   // Product IDs configured in Google Play Console
@@ -21,9 +20,27 @@ class PremiumRepository {
 
   PremiumRepository(this._prefs);
 
-  Stream<List<PurchaseDetails>> get purchaseStream => _iap.purchaseStream;
+  bool get _isSupportedPlatform =>
+      !kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS);
+
+  InAppPurchase get _iap {
+    if (!_isSupportedPlatform) {
+      throw UnsupportedError('In-App Purchases are not supported on this platform.');
+    }
+    return InAppPurchase.instance;
+  }
+
+  Stream<List<PurchaseDetails>> get purchaseStream {
+    if (!_isSupportedPlatform) {
+      return const Stream.empty();
+    }
+    return _iap.purchaseStream;
+  }
 
   Future<bool> isAvailable() async {
+    if (!_isSupportedPlatform) {
+      return false;
+    }
     return await _iap.isAvailable();
   }
 
@@ -33,6 +50,9 @@ class PremiumRepository {
 
   /// Load products from the store
   Future<List<ProductDetails>> getProducts() async {
+    if (!_isSupportedPlatform) {
+      return [];
+    }
     final bool available = await _iap.isAvailable();
     if (!available) {
       return [];
@@ -59,6 +79,9 @@ class PremiumRepository {
 
   /// Initiate a purchase
   Future<bool> buyPremium(ProductDetails productDetails) async {
+    if (!_isSupportedPlatform) {
+      return false;
+    }
     final PurchaseParam purchaseParam = PurchaseParam(productDetails: productDetails);
     
     if (productDetails.id == premiumLifetimeId) {
@@ -72,6 +95,9 @@ class PremiumRepository {
 
   /// Restore purchases
   Future<void> restorePurchases() async {
+    if (!_isSupportedPlatform) {
+      return;
+    }
     await _iap.restorePurchases();
   }
 
@@ -83,6 +109,9 @@ class PremiumRepository {
 
   /// Complete the purchase flow
   Future<void> completePurchase(PurchaseDetails purchaseDetails) async {
+    if (!_isSupportedPlatform) {
+      return;
+    }
     if (purchaseDetails.pendingCompletePurchase) {
       await _iap.completePurchase(purchaseDetails);
     }

@@ -2829,6 +2829,8 @@ class _DashboardHeader extends ConsumerWidget {
         ),
       ),
       actions: [
+        if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows)
+          const WindowsUpdateStatusIcon(),
         Consumer(
           builder: (context, ref, child) {
             final notifications = ref.watch(notificationProvider);

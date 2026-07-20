@@ -43,6 +43,9 @@ class UpdateService {
   Future<void> checkForWindowsUpdate(BuildContext context, WidgetRef ref) async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.windows) return;
 
+    final notifier = ref.read(windowsUpdateStateProvider.notifier);
+    notifier.setStatus(WindowsUpdateStatus.checking);
+
     try {
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version;
@@ -60,19 +63,38 @@ class UpdateService {
 
       if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
+        debugPrint('UpdateService: Successfully fetched version.json from Firebase: $data');
         final serverVersion = data['version'] as String;
         final serverBuild = data['buildNumber'] as int;
         final downloadUrl = data['url'] as String;
         final changelog = data['changelog'] as String? ?? 'Bug fixes and improvements.';
 
+        debugPrint('UpdateService: Local Version: $currentVersion (Build: $currentBuild) | Server Version: $serverVersion (Build: $serverBuild)');
+
         if (_isNewerVersion(currentVersion, currentBuild, serverVersion, serverBuild)) {
+          notifier.setStatus(
+            WindowsUpdateStatus.updateAvailable,
+            currentVersion: currentVersion,
+            serverVersion: serverVersion,
+            downloadUrl: downloadUrl,
+            changelog: changelog,
+          );
           if (context.mounted) {
             _showUpdateDialog(context, ref, serverVersion, downloadUrl, changelog);
           }
+        } else {
+          notifier.setStatus(
+            WindowsUpdateStatus.upToDate,
+            currentVersion: currentVersion,
+            serverVersion: serverVersion,
+          );
         }
+      } else {
+        notifier.setStatus(WindowsUpdateStatus.failed);
       }
     } catch (e) {
       debugPrint('UpdateService: Desktop update check failed: $e');
+      notifier.setStatus(WindowsUpdateStatus.failed);
     }
   }
 
@@ -371,3 +393,152 @@ class UpdateService {
 
 /// Provider for [UpdateService].
 final updateServiceProvider = Provider<UpdateService>((ref) => UpdateService());
+
+/// Status of the Windows update check.
+enum WindowsUpdateStatus {
+  idle,
+  checking,
+  upToDate,
+  updateAvailable,
+  failed,
+}
+
+/// State for Windows update.
+class WindowsUpdateState {
+  final WindowsUpdateStatus status;
+  final String? currentVersion;
+  final String? serverVersion;
+  final String? downloadUrl;
+  final String? changelog;
+
+  WindowsUpdateState({
+    required this.status,
+    this.currentVersion,
+    this.serverVersion,
+    this.downloadUrl,
+    this.changelog,
+  });
+
+  WindowsUpdateState copyWith({
+    WindowsUpdateStatus? status,
+    String? currentVersion,
+    String? serverVersion,
+    String? downloadUrl,
+    String? changelog,
+  }) {
+    return WindowsUpdateState(
+      status: status ?? this.status,
+      currentVersion: currentVersion ?? this.currentVersion,
+      serverVersion: serverVersion ?? this.serverVersion,
+      downloadUrl: downloadUrl ?? this.downloadUrl,
+      changelog: changelog ?? this.changelog,
+    );
+  }
+}
+
+/// Notifier to manage Windows update state.
+class WindowsUpdateNotifier extends Notifier<WindowsUpdateState> {
+  @override
+  WindowsUpdateState build() {
+    return WindowsUpdateState(status: WindowsUpdateStatus.idle);
+  }
+
+  void setStatus(
+    WindowsUpdateStatus status, {
+    String? currentVersion,
+    String? serverVersion,
+    String? downloadUrl,
+    String? changelog,
+  }) {
+    state = state.copyWith(
+      status: status,
+      currentVersion: currentVersion,
+      serverVersion: serverVersion,
+      downloadUrl: downloadUrl,
+      changelog: changelog,
+    );
+  }
+}
+
+/// Provider for Windows update state.
+final windowsUpdateStateProvider =
+    NotifierProvider<WindowsUpdateNotifier, WindowsUpdateState>(
+        () => WindowsUpdateNotifier());
+
+/// Icon widget to display Windows update status in the app bar.
+class WindowsUpdateStatusIcon extends ConsumerWidget {
+  const WindowsUpdateStatusIcon({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.windows) {
+      return const SizedBox.shrink();
+    }
+
+    final updateState = ref.watch(windowsUpdateStateProvider);
+    final activeCashbook = ref.watch(activeCashbookProvider);
+    final primaryColor = activeCashbook.color;
+    final theme = Theme.of(context);
+
+    switch (updateState.status) {
+      case WindowsUpdateStatus.checking:
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onSurface),
+            ),
+          ),
+        );
+      case WindowsUpdateStatus.upToDate:
+        return Tooltip(
+          message: 'Flowpaisa is up to date',
+          child: IconButton(
+            icon: const Icon(Icons.check_circle_outline_rounded, color: Colors.green),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Flowpaisa is up to date! (v${updateState.currentVersion ?? ""})'),
+                  duration: const Duration(seconds: 2),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+          ),
+        );
+      case WindowsUpdateStatus.updateAvailable:
+        return Tooltip(
+          message: 'Update Available: Click to update',
+          child: IconButton(
+            icon: Icon(Icons.system_update_alt_rounded, color: primaryColor),
+            onPressed: () {
+              ref.read(updateServiceProvider).checkForWindowsUpdate(context, ref);
+            },
+          ),
+        );
+      case WindowsUpdateStatus.failed:
+        return Tooltip(
+          message: 'Update check failed: Click to retry',
+          child: IconButton(
+            icon: const Icon(Icons.error_outline_rounded, color: Colors.orange),
+            onPressed: () {
+              ref.read(updateServiceProvider).checkForWindowsUpdate(context, ref);
+            },
+          ),
+        );
+      case WindowsUpdateStatus.idle:
+        return Tooltip(
+          message: 'Check for updates',
+          child: IconButton(
+            icon: Icon(Icons.update_rounded, color: theme.colorScheme.onSurface),
+            onPressed: () {
+              ref.read(updateServiceProvider).checkForWindowsUpdate(context, ref);
+            },
+          ),
+        );
+    }
+  }
+}
