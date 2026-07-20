@@ -200,73 +200,88 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
   void _showExportOptions(BuildContext parentContext) {
     final l10n = AppLocalizations.of(parentContext)!;
     final isPremium = ref.read(premiumProvider).isPremium;
+    bool includePayablesAndReceivables = true;
 
     showModalBottomSheet(
       context: parentContext,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Text(
-                    l10n.exportData,
-                    style: Theme.of(sheetContext)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(width: 8),
-                  if (!isPremium)
-                    const Icon(Icons.lock, color: Colors.orange, size: 20),
-                  if (isPremium)
-                    const Icon(Icons.verified, color: Colors.blue, size: 20),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.table_chart, color: Colors.green),
-              title: const Text("Export as CSV"),
-              subtitle: const Text("Free • Open in Excel or Google Sheets"),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                await _exportFilteredCSV();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
-              title: const Text("Export as PDF"),
-              subtitle: const Text("Premium • Beautiful report with summaries"),
-              trailing: !isPremium
-                  ? const Icon(Icons.lock, color: Colors.orange)
-                  : const Icon(Icons.verified, color: Colors.blue),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                if (!isPremium) {
-                  Navigator.push(
-                    parentContext,
-                    MaterialPageRoute(
-                      builder: (context) => const PremiumScreen(),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setSheetState) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    Text(
+                      l10n.exportData,
+                      style: Theme.of(sheetContext)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                  );
-                } else {
-                  await _exportFilteredPDF();
-                }
-              },
-            ),
-            const SizedBox(height: 16),
-          ],
+                    const SizedBox(width: 8),
+                    if (!isPremium)
+                      const Icon(Icons.lock, color: Colors.orange, size: 20),
+                    if (isPremium)
+                      const Icon(Icons.verified, color: Colors.blue, size: 20),
+                  ],
+                ),
+              ),
+              SwitchListTile(
+                title: Text(l10n.includePayablesReceivables),
+                subtitle: Text(l10n.includePayablesReceivablesSubtitle),
+                value: includePayablesAndReceivables,
+                activeThumbColor: Theme.of(sheetContext).colorScheme.primary,
+                onChanged: (val) {
+                  setSheetState(() {
+                    includePayablesAndReceivables = val;
+                  });
+                },
+              ),
+              const Divider(),
+              ListTile(
+                leading: const Icon(Icons.table_chart, color: Colors.green),
+                title: Text(l10n.exportAsCSV),
+                subtitle: Text(l10n.exportAsCSVSubtitle),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  await _exportFilteredCSV(includePayablesAndReceivables: includePayablesAndReceivables);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+                title: Text(l10n.exportAsPDF),
+                subtitle: Text(l10n.exportAsPDFSubtitle),
+                trailing: !isPremium
+                    ? const Icon(Icons.lock, color: Colors.orange)
+                    : const Icon(Icons.verified, color: Colors.blue),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  if (!isPremium) {
+                    Navigator.push(
+                      parentContext,
+                      MaterialPageRoute(
+                        builder: (context) => const PremiumScreen(),
+                      ),
+                    );
+                  } else {
+                    await _exportFilteredPDF(includePayablesAndReceivables: includePayablesAndReceivables);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Future<void> _exportFilteredCSV() async {
+  Future<void> _exportFilteredCSV({bool includePayablesAndReceivables = true}) async {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final notifier = ref.read(transactionsPaginatedProvider.notifier);
@@ -299,6 +314,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           filters: filters,
           searchQuery: searchQuery,
           currency: currency,
+          includePayablesAndReceivables: includePayablesAndReceivables,
         );
 
         if (mounted) {
@@ -336,6 +352,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           filters: filters,
           searchQuery: searchQuery,
           currency: currency,
+          includePayablesAndReceivables: includePayablesAndReceivables,
         );
 
         if (mounted) {
@@ -396,7 +413,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     }
   }
 
-  Future<void> _exportFilteredPDF() async {
+  Future<void> _exportFilteredPDF({bool includePayablesAndReceivables = true}) async {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final currencySymbol = ref.read(currencySymbolProvider);
@@ -436,6 +453,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         filters: filters,
         searchQuery: searchQuery,
         currency: currency,
+        includePayablesAndReceivables: includePayablesAndReceivables,
       );
 
       final directory = await getTemporaryDirectory();

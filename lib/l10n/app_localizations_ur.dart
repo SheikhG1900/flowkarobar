@@ -2232,6 +2232,26 @@ class AppLocalizationsUr extends AppLocalizations {
   String get totalTransactions => 'کل لین دین';
 
   @override
+  String get includePayablesReceivables =>
+      'واجب الادا اور وصول طلب رقم شامل کریں';
+
+  @override
+  String get includePayablesReceivablesSubtitle =>
+      'رپورٹ میں بقایا جات اور فہرستیں شامل کریں';
+
+  @override
+  String get exportAsCSV => 'CSV کے طور پر ایکسپورٹ کریں';
+
+  @override
+  String get exportAsCSVSubtitle => 'مفت • ایکسل یا گوگل شیٹس میں کھولیں';
+
+  @override
+  String get exportAsPDF => 'PDF کے طور پر ایکسپورٹ کریں';
+
+  @override
+  String get exportAsPDFSubtitle => 'پریمیم • خلاصہ کے ساتھ خوبصورت رپورٹ';
+
+  @override
   String get csvInfoNote =>
       'سی ایس وی فائلیں ایکسل یا گوگل شیٹس میں کھولی جا سکتی ہیں۔ پی ڈی ایف رپورٹ شیئرنگ کے لیے بہترین ہیں۔';
 

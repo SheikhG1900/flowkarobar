@@ -4096,6 +4096,42 @@ abstract class AppLocalizations {
   /// **'Total Transactions'**
   String get totalTransactions;
 
+  /// No description provided for @includePayablesReceivables.
+  ///
+  /// In en, this message translates to:
+  /// **'Include Payables & Receivables'**
+  String get includePayablesReceivables;
+
+  /// No description provided for @includePayablesReceivablesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Include outstanding balances and lists in the report'**
+  String get includePayablesReceivablesSubtitle;
+
+  /// No description provided for @exportAsCSV.
+  ///
+  /// In en, this message translates to:
+  /// **'Export as CSV'**
+  String get exportAsCSV;
+
+  /// No description provided for @exportAsCSVSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Free • Open in Excel or Google Sheets'**
+  String get exportAsCSVSubtitle;
+
+  /// No description provided for @exportAsPDF.
+  ///
+  /// In en, this message translates to:
+  /// **'Export as PDF'**
+  String get exportAsPDF;
+
+  /// No description provided for @exportAsPDFSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium • Beautiful report with summaries'**
+  String get exportAsPDFSubtitle;
+
   /// No description provided for @csvInfoNote.
   ///
   /// In en, this message translates to:

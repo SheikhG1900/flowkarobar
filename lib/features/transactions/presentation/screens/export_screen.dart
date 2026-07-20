@@ -43,6 +43,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
   DateTime? _endDate;
   ExportSummary? _summary;
   bool _isLoading = false;
+  bool _includePayablesAndReceivables = true;
 
   @override
   void initState() {
@@ -109,6 +110,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
           endDate: _endDate!,
           l10n: l10n,
           currency: currency,
+          includePayablesAndReceivables: _includePayablesAndReceivables,
         );
 
         if (mounted) {
@@ -147,6 +149,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
           useCache:
               true, // Use cache - share_plus FileProvider exposes this directory
           currency: currency,
+          includePayablesAndReceivables: _includePayablesAndReceivables,
         );
 
         if (mounted) {
@@ -241,6 +244,7 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
         decimalPlaces: decimalPlaces,
         l10n: l10n,
         currency: currency,
+        includePayablesAndReceivables: _includePayablesAndReceivables,
       );
 
       // Save PDF to temporary file for save/share actions
@@ -561,7 +565,20 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
               const Center(child: CircularProgressIndicator())
             else if (_summary != null)
               _buildSummarySection(context, _summary!),
-            const SizedBox(height: 32),
+            const SizedBox(height: 24),
+
+            SwitchListTile(
+              title: Text(l10n.includePayablesReceivables),
+              subtitle: Text(l10n.includePayablesReceivablesSubtitle),
+              value: _includePayablesAndReceivables,
+              activeThumbColor: theme.colorScheme.primary,
+              onChanged: (val) {
+                setState(() {
+                  _includePayablesAndReceivables = val;
+                });
+              },
+            ),
+            const SizedBox(height: 24),
 
             // Export Buttons
             Row(

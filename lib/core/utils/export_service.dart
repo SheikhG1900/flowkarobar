@@ -203,6 +203,7 @@ class ExportService {
     TransactionFilters? filters,
     String? searchQuery,
     AppCurrency? currency,
+    bool includePayablesAndReceivables = true,
   }) async {
     try {
       // Get transactions in date range with details or using filters
@@ -244,6 +245,10 @@ class ExportService {
 
         // Filter out inactive transactions (unsettled linked entries)
         bool include = true;
+
+        if (!includePayablesAndReceivables && (t.linkedPayableUuid != null || t.linkedReceivableUuid != null)) {
+          include = false;
+        }
 
         // Exclude "Paid By" expenses (linked Payable) that are 'PENDING'
         if (t.type == 'EXPENSE' && t.linkedPayableUuid != null) {
@@ -294,6 +299,7 @@ class ExportService {
     TransactionFilters? filters,
     String? searchQuery,
     AppCurrency? currency,
+    bool includePayablesAndReceivables = true,
   }) async {
     try {
       final csvString = await generateCSVContent(
@@ -302,6 +308,7 @@ class ExportService {
         filters: filters,
         searchQuery: searchQuery,
         currency: currency,
+        includePayablesAndReceivables: includePayablesAndReceivables,
       );
 
       // Save to file
@@ -509,6 +516,7 @@ class ExportService {
     TransactionFilters? filters,
     String? searchQuery,
     AppCurrency? currencyObj,
+    bool includePayablesAndReceivables = true,
   }) async {
     final payablesRepository = PayablesRepository(_database);
     final receivablesRepository = ReceivablesRepository(_database);
@@ -530,6 +538,11 @@ class ExportService {
         .getPayablesWithContactsByDateRange(startDate, endDate);
     var receivablesWithContacts = await receivablesRepository
         .getReceivablesWithContactsByDateRange(startDate, endDate);
+
+    if (!includePayablesAndReceivables) {
+      payablesWithContacts = [];
+      receivablesWithContacts = [];
+    }
 
     if (filters != null && filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
       payablesWithContacts = payablesWithContacts.where((p) => filters.contactUuids!.contains(p.contact?.uuid)).toList();
@@ -943,55 +956,57 @@ class ExportService {
                   ],
                   l10n: l10n,
                 ),
-                _buildLocalizedTableRow(
-                  [
-                    _buildTableCell(
-                        '${l10n?.payables ?? 'Payables'} (${l10n?.pending ?? 'Pending'})',
-                        fmt(totalPayablePending),
-                        ExportService.getPayablePdfColor(),
-                        l10n),
-                    _buildTableCell(
-                        '${l10n?.payables ?? 'Payables'} (${l10n?.paid ?? 'Paid'})',
-                        fmt(totalPayablePaid),
-                        ExportService.getPayablePdfColor(),
-                        l10n),
-                  ],
-                  l10n: l10n,
-                ),
-                _buildLocalizedTableRow(
-                  [
-                    _buildTableCell(
-                        '${l10n?.receivables ?? 'Receivables'} (${l10n?.pending ?? 'Pending'})',
-                        fmt(totalReceivablePending),
-                        ExportService.getReceivablePdfColor(),
-                        l10n),
-                    _buildTableCell(
-                        '${l10n?.receivables ?? 'Receivables'} (${l10n?.receivedLabel ?? 'Received'})',
-                        fmt(totalReceivableReceived),
-                        ExportService.getReceivablePdfColor(),
-                        l10n),
-                  ],
-                  l10n: l10n,
-                ),
-                // Net Payable/Receivable row (only pending amounts)
-                _buildLocalizedTableRow(
-                  [
-                    _buildTableCell(
-                        totalPayablePending >= totalReceivablePending
-                            ? '${l10n?.netBalance ?? 'Net'} ${l10n?.payable ?? 'Payable'} (${l10n?.pending ?? 'Pending'})'
-                            : '${l10n?.netBalance ?? 'Net'} ${l10n?.receivable ?? 'Receivable'} (${l10n?.pending ?? 'Pending'})',
-                        fmt((totalPayablePending - totalReceivablePending).abs()),
-                        (totalPayablePending - totalReceivablePending).abs() ==
-                                0
-                            ? PdfColors.black
-                            : totalPayablePending >= totalReceivablePending
-                                ? ExportService.getPayablePdfColor()
-                                : ExportService.getReceivablePdfColor(),
-                        l10n),
-                    _buildTableCell('', null, null, l10n),
-                  ],
-                  l10n: l10n,
-                ),
+                if (includePayablesAndReceivables) ...[
+                  _buildLocalizedTableRow(
+                    [
+                      _buildTableCell(
+                          '${l10n?.payables ?? 'Payables'} (${l10n?.pending ?? 'Pending'})',
+                          fmt(totalPayablePending),
+                          ExportService.getPayablePdfColor(),
+                          l10n),
+                      _buildTableCell(
+                          '${l10n?.payables ?? 'Payables'} (${l10n?.paid ?? 'Paid'})',
+                          fmt(totalPayablePaid),
+                          ExportService.getPayablePdfColor(),
+                          l10n),
+                    ],
+                    l10n: l10n,
+                  ),
+                  _buildLocalizedTableRow(
+                    [
+                      _buildTableCell(
+                          '${l10n?.receivables ?? 'Receivables'} (${l10n?.pending ?? 'Pending'})',
+                          fmt(totalReceivablePending),
+                          ExportService.getReceivablePdfColor(),
+                          l10n),
+                      _buildTableCell(
+                          '${l10n?.receivables ?? 'Receivables'} (${l10n?.receivedLabel ?? 'Received'})',
+                          fmt(totalReceivableReceived),
+                          ExportService.getReceivablePdfColor(),
+                          l10n),
+                    ],
+                    l10n: l10n,
+                  ),
+                  // Net Payable/Receivable row (only pending amounts)
+                  _buildLocalizedTableRow(
+                    [
+                      _buildTableCell(
+                          totalPayablePending >= totalReceivablePending
+                              ? '${l10n?.netBalance ?? 'Net'} ${l10n?.payable ?? 'Payable'} (${l10n?.pending ?? 'Pending'})'
+                              : '${l10n?.netBalance ?? 'Net'} ${l10n?.receivable ?? 'Receivable'} (${l10n?.pending ?? 'Pending'})',
+                          fmt((totalPayablePending - totalReceivablePending).abs()),
+                          (totalPayablePending - totalReceivablePending).abs() ==
+                                  0
+                              ? PdfColors.black
+                              : totalPayablePending >= totalReceivablePending
+                                  ? ExportService.getPayablePdfColor()
+                                  : ExportService.getReceivablePdfColor(),
+                          l10n),
+                      _buildTableCell('', null, null, l10n),
+                    ],
+                    l10n: l10n,
+                  ),
+                ],
               ],
             ),
             pw.SizedBox(height: 30),
@@ -1663,6 +1678,7 @@ class ExportService {
     TransactionFilters? filters,
     String? searchQuery,
     AppCurrency? currency,
+    bool includePayablesAndReceivables = true,
   }) async {
     try {
       // Load Material Icons and Unicode fonts
@@ -1684,6 +1700,7 @@ class ExportService {
         filters: filters,
         searchQuery: searchQuery,
         currencyObj: currency,
+        includePayablesAndReceivables: includePayablesAndReceivables,
       );
       return pdf.save();
     } catch (e) {
@@ -1702,6 +1719,7 @@ class ExportService {
     TransactionFilters? filters,
     String? searchQuery,
     AppCurrency? currency,
+    bool includePayablesAndReceivables = true,
   }) async {
     try {
       final pdfBytes = await exportTransactionsToPDF(
@@ -1713,6 +1731,7 @@ class ExportService {
         filters: filters,
         searchQuery: searchQuery,
         currency: currency,
+        includePayablesAndReceivables: includePayablesAndReceivables,
       );
 
       final directory = await (useCache

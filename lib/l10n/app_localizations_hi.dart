@@ -2227,6 +2227,25 @@ class AppLocalizationsHi extends AppLocalizations {
   String get totalTransactions => 'कुल लेन-देन';
 
   @override
+  String get includePayablesReceivables => 'देय और प्राप्य शामिल करें';
+
+  @override
+  String get includePayablesReceivablesSubtitle =>
+      'रिपोर्ट में बकाया शेष और सूचियाँ शामिल करें';
+
+  @override
+  String get exportAsCSV => 'CSV के रूप में एक्सपोर्ट करें';
+
+  @override
+  String get exportAsCSVSubtitle => 'निःशुल्क • एक्सेल या गूगल शीट्स में खोलें';
+
+  @override
+  String get exportAsPDF => 'PDF के रूप में एक्सपोर्ट करें';
+
+  @override
+  String get exportAsPDFSubtitle => 'प्रीमियम • सारांश के साथ सुंदर रिपोर्ट';
+
+  @override
   String get csvInfoNote =>
       'सीएसवी फाइलें एक्सेल या Google शीट्स में खोली जा सकती हैं। पीडीएफ रिपोर्ट साझा करने के लिए सर्वोत्तम हैं।';
 

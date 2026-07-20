@@ -2218,6 +2218,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get totalTransactions => 'Total Transactions';
 
   @override
+  String get includePayablesReceivables => 'Include Payables & Receivables';
+
+  @override
+  String get includePayablesReceivablesSubtitle =>
+      'Include outstanding balances and lists in the report';
+
+  @override
+  String get exportAsCSV => 'Export as CSV';
+
+  @override
+  String get exportAsCSVSubtitle => 'Free • Open in Excel or Google Sheets';
+
+  @override
+  String get exportAsPDF => 'Export as PDF';
+
+  @override
+  String get exportAsPDFSubtitle => 'Premium • Beautiful report with summaries';
+
+  @override
   String get csvInfoNote =>
       'CSV files can be opened in Excel or Google Sheets. PDF reports are great for sharing.';
 
