@@ -2150,6 +2150,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get exportSuccessful => 'ایکسپورٹ کامیاب';
 
   @override
+  String get openFile => 'فائل کھولیں';
+
+  @override
   String get transactionHistoryReady =>
       'آپ کی لین دین کی ہسٹری شیئر کرنے کے لیے تیار ہے۔';
 

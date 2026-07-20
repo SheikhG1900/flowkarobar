@@ -3946,6 +3946,12 @@ abstract class AppLocalizations {
   /// **'Export Successful'**
   String get exportSuccessful;
 
+  /// No description provided for @openFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Open File'**
+  String get openFile;
+
   /// No description provided for @transactionHistoryReady.
   ///
   /// In en, this message translates to:

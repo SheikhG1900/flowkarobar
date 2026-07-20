@@ -2146,6 +2146,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get exportSuccessful => 'एक्सपोर्ट सफल';
 
   @override
+  String get openFile => 'फ़ाइल खोलें';
+
+  @override
   String get transactionHistoryReady =>
       'आपका लेन-देन इतिहास साझा करने के लिए तैयार है।';
 

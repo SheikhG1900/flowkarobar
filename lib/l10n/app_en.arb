@@ -1080,6 +1080,7 @@
     }
   },
   "exportSuccessful": "Export Successful",
+  "openFile": "Open File",
   "transactionHistoryReady": "Your transaction history is ready to share.",
   "done": "Done",
   "pdfReportReady": "Your PDF report is ready. Choose an action:",

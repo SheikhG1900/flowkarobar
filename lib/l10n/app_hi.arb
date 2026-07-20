@@ -746,6 +746,7 @@
   "selectDateRange": "तारीख सीमा चुनें",
   "exportSavedTo": "एक्सपोर्ट {path} में सहेजा गया",
   "exportSuccessful": "एक्सपोर्ट सफल",
+  "openFile": "फ़ाइल खोलें",
   "transactionHistoryReady": "आपका लेन-देन इतिहास साझा करने के लिए तैयार है।",
   "done": "हो गया",
   "pdfReportReady": "आपकी पीडीएफ रिपोर्ट तैयार है। एक क्रिया चुनें:",

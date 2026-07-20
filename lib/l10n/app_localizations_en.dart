@@ -2137,6 +2137,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportSuccessful => 'Export Successful';
 
   @override
+  String get openFile => 'Open File';
+
+  @override
   String get transactionHistoryReady =>
       'Your transaction history is ready to share.';
 

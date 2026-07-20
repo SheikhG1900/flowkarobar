@@ -746,6 +746,7 @@
   "selectDateRange": "تاریخ کی حد منتخب کریں",
   "exportSavedTo": "ایکسپورٹ {path} میں محفوظ ہو گیا",
   "exportSuccessful": "ایکسپورٹ کامیاب",
+  "openFile": "فائل کھولیں",
   "transactionHistoryReady": "آپ کی لین دین کی ہسٹری شیئر کرنے کے لیے تیار ہے۔",
   "done": "ہو گیا",
   "pdfReportReady": "آپ کی پی ڈی ایف رپورٹ تیار ہے۔ کوئی عمل منتخب کریں:",

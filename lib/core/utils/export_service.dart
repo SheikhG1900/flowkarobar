@@ -1024,15 +1024,25 @@ class ExportService {
             else
               pw.Table(
                 border: pw.TableBorder.all(color: PdfColors.grey300),
-                columnWidths: {
-                  0: const pw.FixedColumnWidth(80),
-                  1: const pw.FixedColumnWidth(80),
-                  2: const pw.FixedColumnWidth(100),
-                  3: const pw.FlexColumnWidth(2),
-                  4: const pw.FlexColumnWidth(2),
-                  5: const pw.FlexColumnWidth(3),
-                  6: const pw.FixedColumnWidth(90),
-                },
+                columnWidths: isRtl
+                    ? {
+                        0: const pw.FixedColumnWidth(70), // Status
+                        1: const pw.FlexColumnWidth(3),   // Description
+                        2: const pw.FlexColumnWidth(2.5), // Contact
+                        3: const pw.FlexColumnWidth(2.5), // Category
+                        4: const pw.FixedColumnWidth(80), // Amount
+                        5: const pw.FixedColumnWidth(45), // Type
+                        6: const pw.FixedColumnWidth(65), // Date
+                      }
+                    : {
+                        0: const pw.FixedColumnWidth(65), // Date
+                        1: const pw.FixedColumnWidth(45), // Type
+                        2: const pw.FixedColumnWidth(80), // Amount
+                        3: const pw.FlexColumnWidth(2.5), // Category
+                        4: const pw.FlexColumnWidth(2.5), // Contact
+                        5: const pw.FlexColumnWidth(3),   // Description
+                        6: const pw.FixedColumnWidth(70), // Status
+                      },
                 children: [
                   _buildLocalizedTableRow(
                     [

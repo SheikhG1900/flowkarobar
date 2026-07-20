@@ -180,7 +180,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                     }
                   }
                 },
-                child: Text(Platform.isWindows || Platform.isMacOS || Platform.isLinux ? 'Open File' : l10n.share),
+                child: Text(Platform.isWindows || Platform.isMacOS || Platform.isLinux ? l10n.openFile : l10n.share),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(
