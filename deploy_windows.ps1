@@ -43,19 +43,34 @@ if ($SkipBuild -and !$SkipRelease) {
     Write-Host "[SkipBuild] Mode Active: Skipping Flutter Compilation." -ForegroundColor Yellow
 }
 
-# 1. Read version and build number from version.json
-$VersionJsonPath = "$WebsiteDir\version.json"
+# 1. Read version and build number from pubspec.yaml
+$PubspecPath = ".\pubspec.yaml"
 $AppVersion = "1.0.0"
-$BuildNumber = "58"
+$BuildNumber = "61"
 
+if (Test-Path $PubspecPath) {
+    $pubspecContent = Get-Content -Path $PubspecPath
+    foreach ($line in $pubspecContent) {
+        if ($line -match "^version:\s*([0-9\.]+)\+(\d+)") {
+            $AppVersion = $Matches[1]
+            $BuildNumber = [int]$Matches[2]
+            break
+        }
+    }
+    Write-Host "Detected Version from pubspec.yaml: $AppVersion (Build: $BuildNumber)" -ForegroundColor Gray
+} else {
+    Write-Host "ERROR: pubspec.yaml is missing from workspace root!" -ForegroundColor Red
+    exit 1
+}
+
+# Update version.json dynamically to match pubspec.yaml
+$VersionJsonPath = "$WebsiteDir\version.json"
 if (Test-Path $VersionJsonPath) {
     $jsonContent = Get-Content -Raw -Path $VersionJsonPath | ConvertFrom-Json
-    $AppVersion = $jsonContent.version
-    $BuildNumber = $jsonContent.buildNumber
-    Write-Host "Detected Version: $AppVersion (Build: $BuildNumber)" -ForegroundColor Gray
-} else {
-    Write-Host "ERROR: version.json is missing from website folder!" -ForegroundColor Red
-    exit 1
+    $jsonContent.version = $AppVersion
+    $jsonContent.buildNumber = [int]$BuildNumber
+    $jsonContent | ConvertTo-Json | Out-File -FilePath $VersionJsonPath -Encoding utf8 -Force
+    Write-Host "Updated version.json to match pubspec.yaml: $AppVersion (Build: $BuildNumber)" -ForegroundColor Gray
 }
 
 # 2. Build the Flutter Windows Release

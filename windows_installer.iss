@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Flowpaisa"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.0+61"
 #define MyAppPublisher "Flowpaisa"
 #define MyAppURL "https://flow-paisa.firebaseapp.com"
 #define MyAppExeName "flowpaisa.exe"
