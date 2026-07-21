@@ -2261,5 +2261,38 @@
   "premiumTokenSyncedSuccess": "Premium status synced successfully!",
   "premiumTokenNotFound": "No premium verification found on Google Drive.",
   "premiumTokenDescription": "This token allows you to use your Premium purchase on Windows and other platforms. Log in with the same Google account to sync your Premium status automatically.",
-  "googleDriveNotConnected": "Google Drive not connected. Cloud verification will not be available."
+  "googleDriveNotConnected": "Google Drive not connected. Cloud verification will not be available.",
+  "updateAvailable": "Update Available",
+  "updateAvailableMessage": "A new version ({version}) of Flowpaisa is available. Update now to get the latest features and improvements!",
+  "@updateAvailableMessage": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "whatsNew": "What's New:",
+  "later": "Later",
+  "updateNow": "Update Now",
+  "downloadingUpdate": "Downloading Update",
+  "downloadingPercentage": "Downloading: {percentage}%",
+  "@downloadingPercentage": {
+    "placeholders": {
+      "percentage": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadingProgress": "Downloading...",
+  "doNotCloseApp": "Please do not close the application. Once finished, the installer will launch automatically.",
+  "updateFailed": "Update Failed",
+  "updateFailedMessage": "An error occurred while downloading the update:\n\n{error}\n\nPlease check your internet connection and try again.",
+  "@updateFailedMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "close": "Close"
 }

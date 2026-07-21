@@ -4447,4 +4447,44 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get googleDriveNotConnected =>
       'Google Drive not connected. Cloud verification will not be available.';
+
+  @override
+  String get updateAvailable => 'Update Available';
+
+  @override
+  String updateAvailableMessage(String version) {
+    return 'A new version ($version) of Flowpaisa is available. Update now to get the latest features and improvements!';
+  }
+
+  @override
+  String get whatsNew => 'What\'s New:';
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get updateNow => 'Update Now';
+
+  @override
+  String get downloadingUpdate => 'Downloading Update';
+
+  @override
+  String downloadingPercentage(String percentage) {
+    return 'Downloading: $percentage%';
+  }
+
+  @override
+  String get downloadingProgress => 'Downloading...';
+
+  @override
+  String get doNotCloseApp =>
+      'Please do not close the application. Once finished, the installer will launch automatically.';
+
+  @override
+  String get updateFailed => 'Update Failed';
+
+  @override
+  String updateFailedMessage(String error) {
+    return 'An error occurred while downloading the update:\n\n$error\n\nPlease check your internet connection and try again.';
+  }
 }

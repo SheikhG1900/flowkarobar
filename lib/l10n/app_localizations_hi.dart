@@ -4460,4 +4460,44 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get googleDriveNotConnected =>
       'Google Drive कनेक्ट नहीं है। क्लाउड सत्यापन उपलब्ध नहीं होगा।';
+
+  @override
+  String get updateAvailable => 'अपडेट उपलब्ध है';
+
+  @override
+  String updateAvailableMessage(String version) {
+    return 'फ्लोपैसा का एक नया संस्करण ($version) उपलब्ध है। नवीनतम सुविधाओं और सुधारों को प्राप्त करने के लिए अभी अपडेट करें!';
+  }
+
+  @override
+  String get whatsNew => 'नया क्या है:';
+
+  @override
+  String get later => 'बाद में';
+
+  @override
+  String get updateNow => 'अभी अपडेट करें';
+
+  @override
+  String get downloadingUpdate => 'अपडेट डाउनलोड हो रहा है';
+
+  @override
+  String downloadingPercentage(String percentage) {
+    return 'डाउनलोड हो रहा है: $percentage%';
+  }
+
+  @override
+  String get downloadingProgress => 'डाउनलोड हो रहा है...';
+
+  @override
+  String get doNotCloseApp =>
+      'कृपया एप्लिकेशन बंद न करें। समाप्त होने के बाद, इंस्टॉलर स्वचालित रूप से लॉन्च हो जाएगा।';
+
+  @override
+  String get updateFailed => 'अपडेट विफल रहा';
+
+  @override
+  String updateFailedMessage(String error) {
+    return 'अपडेट डाउनलोड करते समय एक त्रुटि हुई:\n\n$error\n\nकृपया अपना इंटरनेट कनेक्शन जांचें और पुनः प्रयास करें.';
+  }
 }

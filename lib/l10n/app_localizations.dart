@@ -8128,6 +8128,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Google Drive not connected. Cloud verification will not be available.'**
   String get googleDriveNotConnected;
+
+  /// No description provided for @updateAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Available'**
+  String get updateAvailable;
+
+  /// No description provided for @updateAvailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A new version ({version}) of Flowpaisa is available. Update now to get the latest features and improvements!'**
+  String updateAvailableMessage(String version);
+
+  /// No description provided for @whatsNew.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s New:'**
+  String get whatsNew;
+
+  /// No description provided for @later.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get later;
+
+  /// No description provided for @updateNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Now'**
+  String get updateNow;
+
+  /// No description provided for @downloadingUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading Update'**
+  String get downloadingUpdate;
+
+  /// No description provided for @downloadingPercentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading: {percentage}%'**
+  String downloadingPercentage(String percentage);
+
+  /// No description provided for @downloadingProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading...'**
+  String get downloadingProgress;
+
+  /// No description provided for @doNotCloseApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Please do not close the application. Once finished, the installer will launch automatically.'**
+  String get doNotCloseApp;
+
+  /// No description provided for @updateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Failed'**
+  String get updateFailed;
+
+  /// No description provided for @updateFailedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'An error occurred while downloading the update:\n\n{error}\n\nPlease check your internet connection and try again.'**
+  String updateFailedMessage(String error);
 }
 
 class _AppLocalizationsDelegate

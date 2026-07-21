@@ -1710,5 +1710,38 @@
   "premiumTokenSyncedSuccess": "प्रीमियम स्थिति सफलतापूर्वक सिंक की गई!",
   "premiumTokenNotFound": "Google Drive पर कोई प्रीमियम सत्यापन नहीं मिला।",
   "premiumTokenDescription": "यह टोकन आपको विंडोज और अन्य प्लेटफॉर्म पर अपनी प्रीमियम खरीद का उपयोग करने की अनुमति देता है। अपनी प्रीमियम स्थिति को स्वचालित रूप से सिंक करने के लिए उसी Google खाते से लॉग इन करें।",
-  "googleDriveNotConnected": "Google Drive कनेक्ट नहीं है। क्लाउड सत्यापन उपलब्ध नहीं होगा।"
+  "googleDriveNotConnected": "Google Drive कनेक्ट नहीं है। क्लाउड सत्यापन उपलब्ध नहीं होगा।",
+  "updateAvailable": "अपडेट उपलब्ध है",
+  "updateAvailableMessage": "फ्लोपैसा का एक नया संस्करण ({version}) उपलब्ध है। नवीनतम सुविधाओं और सुधारों को प्राप्त करने के लिए अभी अपडेट करें!",
+  "@updateAvailableMessage": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "whatsNew": "नया क्या है:",
+  "later": "बाद में",
+  "updateNow": "अभी अपडेट करें",
+  "downloadingUpdate": "अपडेट डाउनलोड हो रहा है",
+  "downloadingPercentage": "डाउनलोड हो रहा है: {percentage}%",
+  "@downloadingPercentage": {
+    "placeholders": {
+      "percentage": {
+        "type": "String"
+      }
+    }
+  },
+  "downloadingProgress": "डाउनलोड हो रहा है...",
+  "doNotCloseApp": "कृपया एप्लिकेशन बंद न करें। समाप्त होने के बाद, इंस्टॉलर स्वचालित रूप से लॉन्च हो जाएगा।",
+  "updateFailed": "अपडेट विफल रहा",
+  "updateFailedMessage": "अपडेट डाउनलोड करते समय एक त्रुटि हुई:\n\n{error}\n\nकृपया अपना इंटरनेट कनेक्शन जांचें और पुनः प्रयास करें.",
+  "@updateFailedMessage": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "close": "बंद करें"
 }

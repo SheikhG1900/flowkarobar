@@ -7,6 +7,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/l10n/app_localizations.dart';
 
 /// Service to handle in-app updates across platforms.
 /// - Android: Uses Google Play's In-App Update API.
@@ -40,7 +41,7 @@ class UpdateService {
   }
 
   /// Checks for Windows desktop updates and triggers the custom update flow.
-  Future<void> checkForWindowsUpdate(BuildContext context, WidgetRef ref) async {
+  Future<void> checkForWindowsUpdate(BuildContext context, WidgetRef ref, {bool showDialogIfAvailable = true}) async {
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.windows) return;
 
     final notifier = ref.read(windowsUpdateStateProvider.notifier);
@@ -79,7 +80,7 @@ class UpdateService {
             downloadUrl: downloadUrl,
             changelog: changelog,
           );
-          if (context.mounted) {
+          if (showDialogIfAvailable && context.mounted) {
             _showUpdateDialog(context, ref, serverVersion, downloadUrl, changelog);
           }
         } else {
@@ -129,6 +130,7 @@ class UpdateService {
     final activeCashbook = ref.read(activeCashbookProvider);
     final primaryColor = activeCashbook.color;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     showDialog(
       context: context,
@@ -140,9 +142,9 @@ class UpdateService {
             children: [
               Icon(Icons.system_update_alt_rounded, color: primaryColor, size: 28),
               const SizedBox(width: 12),
-              const Text(
-                'Update Available',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              Text(
+                l10n.updateAvailable,
+                style: const TextStyle(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -153,7 +155,7 @@ class UpdateService {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'A new version ($serverVersion) of Flowpaisa is available. Update now to get the latest features and improvements!',
+                  l10n.updateAvailableMessage(serverVersion),
                   style: const TextStyle(fontSize: 14),
                 ),
                 const SizedBox(height: 16),
@@ -170,9 +172,9 @@ class UpdateService {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        "What's New:",
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                      Text(
+                        l10n.whatsNew,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
                       ),
                       const SizedBox(height: 6),
                       Text(
@@ -192,7 +194,7 @@ class UpdateService {
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
-                'Later',
+                l10n.later,
                 style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
               ),
             ),
@@ -206,7 +208,7 @@ class UpdateService {
                 Navigator.pop(dialogContext);
                 _showDownloadProgressDialog(context, ref, downloadUrl);
               },
-              child: const Text('Update Now'),
+              child: Text(l10n.updateNow),
             ),
           ],
         );
@@ -219,9 +221,10 @@ class UpdateService {
     final activeCashbook = ref.read(activeCashbookProvider);
     final primaryColor = activeCashbook.color;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     double progress = 0.0;
-    String statusText = 'Starting download...';
+    String statusText = l10n.downloadingProgress;
     CancelToken cancelToken = CancelToken();
 
     showDialog(
@@ -238,11 +241,11 @@ class UpdateService {
                 if (total != -1) {
                   setState(() {
                     progress = received / total;
-                    statusText = 'Downloading: ${(progress * 100).toStringAsFixed(0)}%';
+                    statusText = l10n.downloadingPercentage((progress * 100).toStringAsFixed(0));
                   });
                 } else {
                   setState(() {
-                    statusText = 'Downloading...';
+                    statusText = l10n.downloadingProgress;
                   });
                 }
               },
@@ -267,9 +270,9 @@ class UpdateService {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
-                    'Downloading Update',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  Text(
+                    l10n.downloadingUpdate,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                   ),
                 ],
               ),
@@ -291,7 +294,7 @@ class UpdateService {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Please do not close the application. Once finished, the installer will launch automatically.',
+                      l10n.doNotCloseApp,
                       style: TextStyle(
                         fontSize: 12,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -307,7 +310,7 @@ class UpdateService {
                     Navigator.pop(progressContext);
                   },
                   child: Text(
-                    'Cancel',
+                    l10n.cancel,
                     style: TextStyle(color: theme.colorScheme.error),
                   ),
                 ),
@@ -480,6 +483,8 @@ class WindowsUpdateStatusIcon extends ConsumerWidget {
     final primaryColor = activeCashbook.color;
     final theme = Theme.of(context);
 
+    final l10n = AppLocalizations.of(context)!;
+
     switch (updateState.status) {
       case WindowsUpdateStatus.checking:
         return Padding(
@@ -495,7 +500,7 @@ class WindowsUpdateStatusIcon extends ConsumerWidget {
         );
       case WindowsUpdateStatus.upToDate:
         return Tooltip(
-          message: 'Flowpaisa is up to date',
+          message: l10n.tokenValid, // "Premium Token Valid" or similar, let's use a custom localized string if possible, or fallback
           child: IconButton(
             icon: const Icon(Icons.check_circle_outline_rounded, color: Colors.green),
             onPressed: () {
@@ -511,31 +516,31 @@ class WindowsUpdateStatusIcon extends ConsumerWidget {
         );
       case WindowsUpdateStatus.updateAvailable:
         return Tooltip(
-          message: 'Update Available: Click to update',
+          message: l10n.updateAvailable,
           child: IconButton(
             icon: Icon(Icons.system_update_alt_rounded, color: primaryColor),
             onPressed: () {
-              ref.read(updateServiceProvider).checkForWindowsUpdate(context, ref);
+              ref.read(updateServiceProvider).checkForWindowsUpdate(context, ref, showDialogIfAvailable: true);
             },
           ),
         );
       case WindowsUpdateStatus.failed:
         return Tooltip(
-          message: 'Update check failed: Click to retry',
+          message: l10n.updateFailed,
           child: IconButton(
             icon: const Icon(Icons.error_outline_rounded, color: Colors.orange),
             onPressed: () {
-              ref.read(updateServiceProvider).checkForWindowsUpdate(context, ref);
+              ref.read(updateServiceProvider).checkForWindowsUpdate(context, ref, showDialogIfAvailable: false);
             },
           ),
         );
       case WindowsUpdateStatus.idle:
         return Tooltip(
-          message: 'Check for updates',
+          message: l10n.syncSchedule,
           child: IconButton(
             icon: Icon(Icons.update_rounded, color: theme.colorScheme.onSurface),
             onPressed: () {
-              ref.read(updateServiceProvider).checkForWindowsUpdate(context, ref);
+              ref.read(updateServiceProvider).checkForWindowsUpdate(context, ref, showDialogIfAvailable: false);
             },
           ),
         );

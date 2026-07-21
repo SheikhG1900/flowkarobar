@@ -161,7 +161,7 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
       if (defaultTargetPlatform == TargetPlatform.android) {
         ref.read(updateServiceProvider).checkForUpdate();
       } else if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) {
-        ref.read(updateServiceProvider).checkForWindowsUpdate(context, ref);
+        ref.read(updateServiceProvider).checkForWindowsUpdate(context, ref, showDialogIfAvailable: false);
       }
     });
   }

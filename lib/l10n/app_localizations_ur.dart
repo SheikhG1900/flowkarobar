@@ -4465,4 +4465,44 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get googleDriveNotConnected =>
       'گوگل ڈرائیو منسلک نہیں ہے۔ کلاؤڈ تصدیق دستیاب نہیں ہوگی۔';
+
+  @override
+  String get updateAvailable => 'اپ ڈیٹ دستیاب ہے';
+
+  @override
+  String updateAvailableMessage(String version) {
+    return 'فلوپیسا کا ایک نیا ورژن ($version) دستیاب ہے۔ تازہ ترین خصوصیات اور بہتری حاصل کرنے کے لیے ابھی اپ ڈیٹ کریں!';
+  }
+
+  @override
+  String get whatsNew => 'نیا کیا ہے:';
+
+  @override
+  String get later => 'بعد میں';
+
+  @override
+  String get updateNow => 'ابھی اپ ڈیٹ کریں';
+
+  @override
+  String get downloadingUpdate => 'اپ ڈیٹ ڈاؤن لوڈ ہو رہا ہے';
+
+  @override
+  String downloadingPercentage(String percentage) {
+    return 'ڈاؤن لوڈ ہو رہا ہے: $percentage%';
+  }
+
+  @override
+  String get downloadingProgress => 'ڈاؤن لوڈ ہو رہا ہے...';
+
+  @override
+  String get doNotCloseApp =>
+      'براہ کرم ایپلیکیشن بند نہ کریں۔ ختم ہونے کے بعد، انسٹالر خود بخود لانچ ہو جائے گا۔';
+
+  @override
+  String get updateFailed => 'اپ ڈیٹ ناکام ہو گیا';
+
+  @override
+  String updateFailedMessage(String error) {
+    return 'اپ ڈیٹ ڈاؤن لوڈ کرنے کے دوران ایک خرابی پیش آئی:\n\n$error\n\nبراہ کرم اپنا انٹرنیٹ کنکشن چیک کریں اور دوبارہ کوشش کریں۔';
+  }
 }

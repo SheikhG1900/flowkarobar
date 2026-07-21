@@ -107,231 +107,234 @@ class TransactionListItem extends ConsumerWidget {
           ),
           child: Material(
             type: MaterialType.transparency,
-            child: ListTile(
-              key: ValueKey('tx-card-listtile-${transaction.uuid}'),
-              contentPadding: EdgeInsets.all(isCompact ? 12 : 16),
-              leading: leadingOverride ??
-                  Container(
-                    key: ValueKey('tx-card-icon-${transaction.uuid}'),
-                    width: isCompact ? 40 : 50,
-                    height: isCompact ? 40 : 50,
-                    decoration: BoxDecoration(
-                      color: displayColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(isCompact ? 10 : 14),
-                      border: Border.all(
-                        color: displayColor.withValues(alpha: 0.3),
-                        width: 1,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(isCompact ? 16 : 20),
+              onTap: onTap ?? () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TransactionDetailsDialog(transactionUuid: transaction.uuid),
+                  ),
+                );
+              },
+              child: ListTile(
+                key: ValueKey('tx-card-listtile-${transaction.uuid}'),
+                contentPadding: EdgeInsets.all(isCompact ? 12 : 16),
+                leading: leadingOverride ??
+                    Container(
+                      key: ValueKey('tx-card-icon-${transaction.uuid}'),
+                      width: isCompact ? 40 : 50,
+                      height: isCompact ? 40 : 50,
+                      decoration: BoxDecoration(
+                        color: displayColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(isCompact ? 10 : 14),
+                        border: Border.all(
+                          color: displayColor.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: CategoryHelper.buildCategoryIcon(
+                          category?.icon, displayColor, isExpense),
+                    ),
+                title: Text(
+                  key: ValueKey('tx-card-title-${transaction.uuid}'),
+                  titleOverride ??
+                      (category != null
+                          ? LocalizationHelper.getLocalizedCategoryName(
+                              context, category.name)
+                          : l10n.uncategorized),
+                  style: (isCompact ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: textColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Column(
+                  key: ValueKey('tx-card-subtitle-col-${transaction.uuid}'),
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      key: ValueKey('tx-card-desc-${transaction.uuid}'),
+                      transaction.description ??
+                          (isExpense ? l10n.expense : l10n.income),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant
+                            .withValues(alpha: isInactive ? 0.5 : 1.0),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    // Contact tag
+                    if (contact != null) ...[
+                      SizedBox(height: isCompact ? 4 : 6),
+                      Container(
+                        key: ValueKey('tx-card-contact-${transaction.uuid}'),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: isCompact ? 4 : 6, 
+                            vertical: isCompact ? 2 : 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.getContactColor(contact.name).withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: AppColors.getContactColor(contact.name).withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          key: ValueKey('tx-card-contact-row-${transaction.uuid}'),
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              key: ValueKey('tx-card-contact-avatar-${transaction.uuid}'),
+                              width: 14,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              gradient: AppColors.getContactGradient(contact.name),
+                              shape: BoxShape.circle,
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              key: ValueKey('tx-card-contact-initial-${transaction.uuid}'),
+                              contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 7,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              key: ValueKey('tx-card-contact-name-${transaction.uuid}'),
+                              contact.name,
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    alignment: Alignment.center,
-                    child: CategoryHelper.buildCategoryIcon(
-                        category?.icon, displayColor, isExpense),
-                  ),
-              title: Text(
-                key: ValueKey('tx-card-title-${transaction.uuid}'),
-                titleOverride ??
-                    (category != null
-                        ? LocalizationHelper.getLocalizedCategoryName(
-                            context, category.name)
-                        : l10n.uncategorized),
-                style: (isCompact ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                  ],
+                ],
               ),
-              subtitle: Column(
-                key: ValueKey('tx-card-subtitle-col-${transaction.uuid}'),
-                crossAxisAlignment: CrossAxisAlignment.start,
+              trailing: Column(
+                key: ValueKey('tx-card-trailing-${transaction.uuid}'),
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    key: ValueKey('tx-card-desc-${transaction.uuid}'),
-                    transaction.description ??
-                        (isExpense ? l10n.expense : l10n.income),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant
-                          .withValues(alpha: isInactive ? 0.5 : 1.0),
+                    key: ValueKey('tx-card-amount-${transaction.uuid}'),
+                    '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency!)}',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      color: isExpense
+                          ? (isInactive ? AppColors.expenseColor.withValues(alpha: 0.5) : AppColors.expenseColor)
+                          : (isInactive ? AppColors.incomeColor.withValues(alpha: 0.5) : AppColors.incomeColor),
+                      fontWeight: FontWeight.bold,
+                      fontSize: amountFontSize,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                  // Contact tag
-                  if (contact != null) ...[
-                    SizedBox(height: isCompact ? 4 : 6),
+                  // Show status badge
+                  if (transaction.paidRelationship != null) ...[
+                    SizedBox(height: isCompact ? 2 : 4),
                     Container(
-                      key: ValueKey('tx-card-contact-${transaction.uuid}'),
+                      key: ValueKey('tx-card-status-${transaction.uuid}'),
                       padding: EdgeInsets.symmetric(
                           horizontal: isCompact ? 4 : 6, 
-                          vertical: isCompact ? 2 : 3),
+                          vertical: isCompact ? 1 : 2),
                       decoration: BoxDecoration(
-                        color: AppColors.getContactColor(contact.name).withValues(alpha: 0.1),
+                        color: AppColors.getRelationshipColor(transaction.paidRelationship!)
+                            .withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                          color: AppColors.getContactColor(contact.name).withValues(alpha: 0.3),
+                          color: AppColors.getRelationshipColor(transaction.paidRelationship!)
+                            .withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
                       child: Row(
-                        key: ValueKey('tx-card-contact-row-${transaction.uuid}'),
+                        key: ValueKey('tx-card-status-row-${transaction.uuid}'),
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(
-                            key: ValueKey('tx-card-contact-avatar-${transaction.uuid}'),
-                            width: 14,
-                          height: 14,
-                          decoration: BoxDecoration(
-                            gradient: AppColors.getContactGradient(contact.name),
-                            shape: BoxShape.circle,
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            key: ValueKey('tx-card-contact-initial-${transaction.uuid}'),
-                            contact.name.isNotEmpty ? contact.name[0].toUpperCase() : '?',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 7,
-                              fontWeight: FontWeight.bold,
+                          if (item.isLinkedEntryMarked) ...[
+                            Icon(
+                              key: ValueKey('tx-card-status-icon-${transaction.uuid}'),
+                              Icons.check_circle,
+                              size: isCompact ? 8 : 10,
+                              color: AppColors.getRelationshipColor(transaction.paidRelationship!),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            key: ValueKey('tx-card-contact-name-${transaction.uuid}'),
-                            contact.name,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: theme.colorScheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w600,
+                            SizedBox(width: isCompact ? 2 : 3),
+                          ],
+                          Text(
+                            key: ValueKey('tx-card-status-text-${transaction.uuid}'),
+                            _getStatusLabel(
+                              l10n,
+                              transaction.paidRelationship!,
+                              item.isLinkedEntryMarked,
+                              isExpense: transaction.type == 'EXPENSE',
                             ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            trailing: Column(
-              key: ValueKey('tx-card-trailing-${transaction.uuid}'),
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  key: ValueKey('tx-card-amount-${transaction.uuid}'),
-                  '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency!)}',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    color: isExpense
-                        ? (isInactive ? AppColors.expenseColor.withValues(alpha: 0.5) : AppColors.expenseColor)
-                        : (isInactive ? AppColors.incomeColor.withValues(alpha: 0.5) : AppColors.incomeColor),
-                    fontWeight: FontWeight.bold,
-                    fontSize: amountFontSize,
-                  ),
-                ),
-                // Show status badge
-                if (transaction.paidRelationship != null) ...[
-                  SizedBox(height: isCompact ? 2 : 4),
-                  Container(
-                    key: ValueKey('tx-card-status-${transaction.uuid}'),
-                    padding: EdgeInsets.symmetric(
-                        horizontal: isCompact ? 4 : 6, 
-                        vertical: isCompact ? 1 : 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.getRelationshipColor(transaction.paidRelationship!)
-                          .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: AppColors.getRelationshipColor(transaction.paidRelationship!)
-                            .withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      key: ValueKey('tx-card-status-row-${transaction.uuid}'),
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (item.isLinkedEntryMarked) ...[
-                          Icon(
-                            key: ValueKey('tx-card-status-icon-${transaction.uuid}'),
-                            Icons.check_circle,
-                            size: isCompact ? 8 : 10,
-                            color: AppColors.getRelationshipColor(transaction.paidRelationship!),
-                          ),
-                          SizedBox(width: isCompact ? 2 : 3),
-                        ],
-                        Text(
-                          key: ValueKey('tx-card-status-text-${transaction.uuid}'),
-                          _getStatusLabel(
-                            l10n,
-                            transaction.paidRelationship!,
-                            item.isLinkedEntryMarked,
-                            isExpense: transaction.type == 'EXPENSE',
-                          ),
-                          style: TextStyle(
-                            fontSize: isCompact ? 8 : 10,
-                            color: AppColors.getRelationshipColor(transaction.paidRelationship!),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                // Show "Auto" badge
-                if (transaction.isAutoGenerated == true) ...[
-                  SizedBox(height: isCompact ? 2 : 4),
-                  Container(
-                    key: ValueKey('tx-card-auto-${transaction.uuid}'),
-                    padding: EdgeInsets.symmetric(
-                        horizontal: isCompact ? 4 : 6, 
-                        vertical: isCompact ? 1 : 2),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: Colors.grey.withValues(alpha: 0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      key: ValueKey('tx-card-auto-row-${transaction.uuid}'),
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          key: ValueKey('tx-card-auto-icon-${transaction.uuid}'),
-                          Icons.auto_awesome,
-                          size: isCompact ? 8 : 10,
-                          color: Colors.grey[600],
-                        ),
-                        SizedBox(width: isCompact ? 2 : 3),
-                        Flexible(
-                          child: Text(
-                            key: ValueKey('tx-card-auto-text-${transaction.uuid}'),
-                            l10n.autoBadge,
                             style: TextStyle(
                               fontSize: isCompact ? 8 : 10,
-                              color: Colors.grey[600],
+                              color: AppColors.getRelationshipColor(transaction.paidRelationship!),
                               fontWeight: FontWeight.bold,
                             ),
-                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
+                  // Show "Auto" badge
+                  if (transaction.isAutoGenerated == true) ...[
+                    SizedBox(height: isCompact ? 2 : 4),
+                    Container(
+                      key: ValueKey('tx-card-auto-${transaction.uuid}'),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: isCompact ? 4 : 6, 
+                          vertical: isCompact ? 1 : 2),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: Colors.grey.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        key: ValueKey('tx-card-auto-row-${transaction.uuid}'),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            key: ValueKey('tx-card-auto-icon-${transaction.uuid}'),
+                            Icons.auto_awesome,
+                            size: isCompact ? 8 : 10,
+                            color: Colors.grey[600],
+                          ),
+                          SizedBox(width: isCompact ? 2 : 3),
+                          Flexible(
+                            child: Text(
+                              key: ValueKey('tx-card-auto-text-${transaction.uuid}'),
+                              l10n.autoBadge,
+                              style: TextStyle(
+                                fontSize: isCompact ? 8 : 10,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
-            onTap: onTap ?? () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => TransactionDetailsDialog(transactionUuid: transaction.uuid),
-                ),
-              );
-            },
           ),
         ),),
         // Schedule icon badge
