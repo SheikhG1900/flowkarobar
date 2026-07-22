@@ -126,7 +126,7 @@ class AccountSlider extends ConsumerWidget {
   }
 }
 
-class _AccountCard extends ConsumerWidget {
+class _AccountCard extends ConsumerStatefulWidget {
   final AccountWithBalance awb;
   final VoidCallback onTap;
   final bool isLocked;
@@ -142,7 +142,19 @@ class _AccountCard extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_AccountCard> createState() => _AccountCardState();
+}
+
+class _AccountCardState extends ConsumerState<_AccountCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final awb = widget.awb;
+    final isLocked = widget.isLocked;
+    final expandHorizontally = widget.expandHorizontally;
+    final onTap = widget.onTap;
+
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final currencyAsync = ref.watch(currentCurrencyProvider);
@@ -196,6 +208,12 @@ class _AccountCard extends ConsumerWidget {
             color: Colors.transparent,
             child: InkWell(
               onTap: onTap,
+              onHover: (hovering) {
+                setState(() {
+                  _isHovered = hovering;
+                });
+              },
+              hoverColor: Colors.transparent,
               borderRadius: BorderRadius.circular(24),
               child: Stack(
                 clipBehavior: Clip.none,
@@ -206,6 +224,12 @@ class _AccountCard extends ConsumerWidget {
                       decoration: BoxDecoration(
                         gradient: _accountCardGradient(accountColor, theme),
                         borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: _isHovered
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: 0.15),
+                          width: 1,
+                        ),
                       ),
                       child: Stack(
                         clipBehavior: Clip.none,

@@ -485,7 +485,7 @@ class _SectionHeader extends StatelessWidget {
 // ────────────────────────────────────────────────────────────
 // Individual account card — mirrors contact card style
 // ────────────────────────────────────────────────────────────
-class _AccountCard extends ConsumerWidget {
+class _AccountCard extends ConsumerStatefulWidget {
   final AccountWithBalance awb;
   final VoidCallback onTap;
   final bool isLocked;
@@ -501,7 +501,19 @@ class _AccountCard extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_AccountCard> createState() => _AccountCardState();
+}
+
+class _AccountCardState extends ConsumerState<_AccountCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final awb = widget.awb;
+    final isLocked = widget.isLocked;
+    final expandHorizontally = widget.expandHorizontally;
+    final onTap = widget.onTap;
+
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final currencyAsync = ref.watch(currentCurrencyProvider);
@@ -558,6 +570,12 @@ class _AccountCard extends ConsumerWidget {
             color: Colors.transparent,
             child: InkWell(
               onTap: onTap,
+              onHover: (hovering) {
+                setState(() {
+                  _isHovered = hovering;
+                });
+              },
+              hoverColor: Colors.transparent,
               borderRadius: BorderRadius.circular(24),
               child: Stack(
                 clipBehavior: Clip.none,
@@ -568,6 +586,12 @@ class _AccountCard extends ConsumerWidget {
                       decoration: BoxDecoration(
                         gradient: _accountCardGradient(accountColor, theme),
                         borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: _isHovered
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: 0.15),
+                          width: 1,
+                        ),
                       ),
                       child: Stack(
                         clipBehavior: Clip.none,
@@ -916,13 +940,7 @@ class _RecentTransfersSection extends ConsumerWidget {
                         context, ref, l10n.transferDeleted);
                   }
                 },
-                child: Container(
-                  decoration: AppColors.transactionListItemDecoration(
-                    theme,
-                    cashbookAccent,
-                  ),
-                  child: _TransferRow(details: recent[i]),
-                ),
+                child: _TransferRow(details: recent[i], cashbookAccent: cashbookAccent),
               ),
             ],
             const SizedBox(height: 40),
@@ -936,14 +954,28 @@ class _RecentTransfersSection extends ConsumerWidget {
   }
 }
 
-class _TransferRow extends ConsumerWidget {
+class _TransferRow extends ConsumerStatefulWidget {
   final AccountTransferWithDetails details;
+  final Color cashbookAccent;
 
-  const _TransferRow({required this.details});
+  const _TransferRow({
+    required this.details,
+    required this.cashbookAccent,
+  });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_TransferRow> createState() => _TransferRowState();
+}
+
+class _TransferRowState extends ConsumerState<_TransferRow> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final details = widget.details;
+    final cashbookAccent = widget.cashbookAccent;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value;
@@ -956,102 +988,137 @@ class _TransferRow extends ConsumerWidget {
     final t = details.transfer;
     final desc = t.description?.trim();
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Row(
-                  children: [
-                    TransferAccountBox(
-                      account: details.fromAccount,
-                      theme: theme,
-                      arrowBesideIcon: true,
-                      showBorder: false,
-                      onAccountTap: details.fromAccount != null
-                          ? () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => AccountDetailScreen(
-                                    accountUuid: details.fromAccount!.uuid,
-                                  ),
-                                ),
-                              )
-                          : null,
-                    ),
-                    const SizedBox(width: 8),
-                    TransferAccountBox(
-                      account: details.toAccount,
-                      theme: theme,
-                      showBorder: false,
-                      onAccountTap: details.toAccount != null
-                          ? () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => AccountDetailScreen(
-                                    accountUuid: details.toAccount!.uuid,
-                                  ),
-                                ),
-                              )
-                          : null,
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: _isHovered
+              ? cashbookAccent
+              : cashbookAccent.withValues(alpha: isDark ? 0.2 : 0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: cashbookAccent.withValues(alpha: isDark ? 0.05 : 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(19),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onHover: (hovering) {
+              setState(() {
+                _isHovered = hovering;
+              });
+            },
+            hoverColor: Colors.transparent,
+            onTap: () {}, // InkWell needs onTap to show hover effects, we already have SwipeableListItem for slides/actions
+            borderRadius: BorderRadius.circular(19),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Row(
+                          children: [
+                            TransferAccountBox(
+                              account: details.fromAccount,
+                              theme: theme,
+                              arrowBesideIcon: true,
+                              showBorder: false,
+                              onAccountTap: details.fromAccount != null
+                                  ? () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => AccountDetailScreen(
+                                            accountUuid: details.fromAccount!.uuid,
+                                          ),
+                                        ),
+                                      )
+                                  : null,
+                            ),
+                            const SizedBox(width: 8),
+                            TransferAccountBox(
+                              account: details.toAccount,
+                              theme: theme,
+                              showBorder: false,
+                              onAccountTap: details.toAccount != null
+                                  ? () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => AccountDetailScreen(
+                                            accountUuid: details.toAccount!.uuid,
+                                          ),
+                                        ),
+                                      )
+                                  : null,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            AmountFormatter.formatWithCurrency(
+                                t.amount, currency),
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            AppDateFormatter.formatDate(t.date, pattern: dateFormat),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  if (desc != null && desc.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Icon(
+                            Symbols.notes,
+                            size: 16,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            desc,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    AmountFormatter.formatWithCurrency(
-                        t.amount, currency),
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    AppDateFormatter.formatDate(t.date, pattern: dateFormat),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
                 ],
               ),
-            ],
-          ),
-          if (desc != null && desc.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: Icon(
-                    Symbols.notes,
-                    size: 16,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    desc,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      height: 1.35,
-                    ),
-                  ),
-                ),
-              ],
             ),
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }

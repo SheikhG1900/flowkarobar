@@ -580,7 +580,7 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                               }
                             }
                           : null,
-                      child: _buildReceivableCard(item, currency),
+                      child: _ReceivableCard(item: item, currency: currency),
                     ),
                   );
                 },
@@ -670,8 +670,28 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
       ),
     );
   }
+}
 
-  Widget _buildReceivableCard(dynamic item, AppCurrency currency) {
+class _ReceivableCard extends ConsumerStatefulWidget {
+  final dynamic item;
+  final AppCurrency currency;
+
+  const _ReceivableCard({
+    required this.item,
+    required this.currency,
+  });
+
+  @override
+  ConsumerState<_ReceivableCard> createState() => _ReceivableCardState();
+}
+
+class _ReceivableCardState extends ConsumerState<_ReceivableCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
+    final currency = widget.currency;
     if (item == null || item.receivable == null) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
     final userProfile = ref.watch(userProfileProvider);
@@ -691,8 +711,9 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
         color: theme.cardColor,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color:
-              AppColors.receivableColor.withValues(alpha: isDark ? 0.2 : 0.1),
+          color: _isHovered
+              ? AppColors.receivableColor
+              : AppColors.receivableColor.withValues(alpha: isDark ? 0.2 : 0.1),
           width: 1,
         ),
         boxShadow: [
@@ -704,273 +725,282 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
           ),
         ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    ReceivableDetailsDialog(receivableUuid: receivable.uuid),
-              ),
-            );
-          },
-          borderRadius: BorderRadius.circular(20),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                // Contact Avatar
-                Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    gradient: AppColors.getContactGradient(contact?.name ?? ''),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.getContactColor(contact?.name ?? '')
-                            .withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(19),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onHover: (hovering) {
+              setState(() {
+                _isHovered = hovering;
+              });
+            },
+            hoverColor: Colors.transparent,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ReceivableDetailsDialog(receivableUuid: receivable.uuid),
+                ),
+              );
+            },
+            borderRadius: BorderRadius.circular(19),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  // Contact Avatar
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.getContactGradient(contact?.name ?? ''),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.getContactColor(contact?.name ?? '')
+                              .withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      contact?.name.isNotEmpty == true
+                          ? contact!.name[0].toUpperCase()
+                          : '?',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    contact?.name.isNotEmpty == true
-                        ? contact!.name[0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
+                  const SizedBox(width: 16),
 
-                // Details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        contact?.name ?? l10n.unknown,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
+                  // Details
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          contact?.name ?? l10n.unknown,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      // Linked category or transaction type tag
-                      if (linkedCategory != null) ...[
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: linkedCategory.color != null
-                                ? Color(int.parse(linkedCategory.color!
-                                        .replaceAll('#', '0xFF')))
-                                    .withValues(alpha: 0.1)
-                                : AppColors.incomeColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
+                        // Linked category or transaction type tag
+                        if (linkedCategory != null) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
                               color: linkedCategory.color != null
                                   ? Color(int.parse(linkedCategory.color!
                                           .replaceAll('#', '0xFF')))
-                                      .withValues(alpha: 0.3)
-                                  : AppColors.incomeColor
-                                      .withValues(alpha: 0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                linkedCategory.icon != null
-                                    ? IconHelper.getIconData(
-                                        linkedCategory.icon)
-                                    : Symbols.category,
+                                      .withValues(alpha: 0.1)
+                                  : AppColors.incomeColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
                                 color: linkedCategory.color != null
                                     ? Color(int.parse(linkedCategory.color!
-                                        .replaceAll('#', '0xFF')))
-                                    : AppColors.incomeColor,
-                                size: 14,
+                                            .replaceAll('#', '0xFF')))
+                                        .withValues(alpha: 0.3)
+                                    : AppColors.incomeColor
+                                        .withValues(alpha: 0.3),
+                                width: 1,
                               ),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  LocalizationHelper.getLocalizedCategoryName(
-                                      context, linkedCategory.name),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  linkedCategory.icon != null
+                                      ? IconHelper.getIconData(
+                                          linkedCategory.icon)
+                                      : Symbols.category,
+                                  color: linkedCategory.color != null
+                                      ? Color(int.parse(linkedCategory.color!
+                                          .replaceAll('#', '0xFF')))
+                                      : AppColors.incomeColor,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Text(
+                                    LocalizationHelper.getLocalizedCategoryName(
+                                        context, linkedCategory.name),
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: linkedCategory.color != null
+                                          ? Color(int.parse(linkedCategory.color!
+                                              .replaceAll('#', '0xFF')))
+                                          : AppColors.incomeColor,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ] else if (linkedTransaction != null) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: linkedTransaction.type == 'EXPENSE'
+                                  ? AppColors.expenseColor.withValues(alpha: 0.1)
+                                  : AppColors.incomeColor.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: linkedTransaction.type == 'EXPENSE'
+                                    ? AppColors.expenseColor
+                                        .withValues(alpha: 0.3)
+                                    : AppColors.incomeColor
+                                        .withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  linkedTransaction.type == 'EXPENSE'
+                                      ? Icons.payment
+                                      : Icons.monetization_on,
+                                  color: linkedTransaction.type == 'EXPENSE'
+                                      ? AppColors.expenseColor
+                                      : AppColors.incomeColor,
+                                  size: 10,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  linkedTransaction.type == 'EXPENSE'
+                                      ? l10n.expense
+                                      : l10n.income,
                                   style: TextStyle(
                                     fontSize: 10,
-                                    color: linkedCategory.color != null
-                                        ? Color(int.parse(linkedCategory.color!
-                                            .replaceAll('#', '0xFF')))
+                                    color: linkedTransaction.type == 'EXPENSE'
+                                        ? AppColors.expenseColor
                                         : AppColors.incomeColor,
                                     fontWeight: FontWeight.w600,
                                   ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        if (receivable.description != null &&
+                            receivable.description!.isNotEmpty)
+                          Text(
+                            receivable.description!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        if (receivable.dueDate != null) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.event,
+                                size: 12,
+                                color: isPending
+                                    ? (receivable.dueDate!
+                                            .isBefore(DateTime.now())
+                                        ? Colors.red
+                                        : Colors.orange)
+                                    : theme.colorScheme.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  l10n.dueAt(AppDateFormatter.formatDate(
+                                      receivable.dueDate!,
+                                      pattern: userProfile.dateFormat ??
+                                          'MMM dd, yyyy')),
+                                  style: theme.textTheme.labelSmall?.copyWith(
+                                    color: isPending
+                                        ? (receivable.dueDate!
+                                                .isBefore(DateTime.now())
+                                            ? Colors.red
+                                            : Colors.orange)
+                                        : theme.colorScheme.onSurfaceVariant,
+                                    fontWeight:
+                                        isPending ? FontWeight.bold : null,
+                                  ),
+                                  maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ] else if (linkedTransaction != null) ...[
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: linkedTransaction.type == 'EXPENSE'
-                                ? AppColors.expenseColor.withValues(alpha: 0.1)
-                                : AppColors.incomeColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: linkedTransaction.type == 'EXPENSE'
-                                  ? AppColors.expenseColor
-                                      .withValues(alpha: 0.3)
-                                  : AppColors.incomeColor
-                                      .withValues(alpha: 0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                linkedTransaction.type == 'EXPENSE'
-                                    ? Icons.payment
-                                    : Icons.monetization_on,
-                                color: linkedTransaction.type == 'EXPENSE'
-                                    ? AppColors.expenseColor
-                                    : AppColors.incomeColor,
-                                size: 10,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                linkedTransaction.type == 'EXPENSE'
-                                    ? l10n.expense
-                                    : l10n.income,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: linkedTransaction.type == 'EXPENSE'
-                                      ? AppColors.expenseColor
-                                      : AppColors.incomeColor,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                        ],
                       ],
-                      if (receivable.description != null &&
-                          receivable.description!.isNotEmpty)
-                        Text(
-                          receivable.description!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+
+                  // Amount and Tags
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '\u200E${AmountFormatter.formatWithCurrency(receivable.amount, currency)}',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: AppColors.receivableColor,
+                          fontWeight: FontWeight.bold,
+                          fontSize: amountFontSize,
                         ),
-                      if (receivable.dueDate != null) ...[
-                        const SizedBox(height: 4),
-                        Row(
+                      ),
+                      const SizedBox(height: 4),
+                      // Status badge (Receivable or Received)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.receivableColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color:
+                                AppColors.receivableColor.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(
-                              Icons.event,
-                              size: 12,
-                              color: isPending
-                                  ? (receivable.dueDate!
-                                          .isBefore(DateTime.now())
-                                      ? Colors.red
-                                      : Colors.orange)
-                                  : theme.colorScheme.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                l10n.dueAt(AppDateFormatter.formatDate(
-                                    receivable.dueDate!,
-                                    pattern: userProfile.dateFormat ??
-                                        'MMM dd, yyyy')),
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: isPending
-                                      ? (receivable.dueDate!
-                                              .isBefore(DateTime.now())
-                                          ? Colors.red
-                                          : Colors.orange)
-                                      : theme.colorScheme.onSurfaceVariant,
-                                  fontWeight:
-                                      isPending ? FontWeight.bold : null,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                            if (!isPending) ...[
+                              Icon(
+                                Icons.check_circle,
+                                size: 10,
+                                color: AppColors.receivableColor,
+                              ),
+                              const SizedBox(width: 3),
+                            ],
+                            Text(
+                              isPending ? l10n.receivableTag : l10n.receivedTag,
+                              style: TextStyle(
+                                color: AppColors.receivableColor,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ],
                   ),
-                ),
-
-                // Amount and Tags
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '\u200E${AmountFormatter.formatWithCurrency(receivable.amount, currency)}',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: AppColors.receivableColor,
-                        fontWeight: FontWeight.bold,
-                        fontSize: amountFontSize,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    // Status badge (Receivable or Received)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppColors.receivableColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color:
-                              AppColors.receivableColor.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (!isPending) ...[
-                            Icon(
-                              Icons.check_circle,
-                              size: 10,
-                              color: AppColors.receivableColor,
-                            ),
-                            const SizedBox(width: 3),
-                          ],
-                          Text(
-                            isPending ? l10n.receivableTag : l10n.receivedTag,
-                            style: TextStyle(
-                              color: AppColors.receivableColor,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

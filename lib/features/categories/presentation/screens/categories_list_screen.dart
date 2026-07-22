@@ -777,7 +777,7 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
   }
 }
 
-class _CategoryCard extends ConsumerWidget {
+class _CategoryCard extends ConsumerStatefulWidget {
   final Category category;
   final double netAmount;
   final double overallNetAmount;
@@ -795,18 +795,25 @@ class _CategoryCard extends ConsumerWidget {
     this.isBudgetLocked = false,
   });
 
+  @override
+  ConsumerState<_CategoryCard> createState() => _CategoryCardState();
+}
+
+class _CategoryCardState extends ConsumerState<_CategoryCard> {
+  bool _isHovered = false;
+
   Future<void> _deleteCategory(BuildContext context, WidgetRef ref) async {
     final repository = ref.read(categoriesRepositoryProvider);
     final l10n = AppLocalizations.of(context)!;
 
     // Check if category has transactions
     final hasTransactions =
-        await repository.categoryHasTransactions(category.uuid);
+        await repository.categoryHasTransactions(widget.category.uuid);
 
     if (!context.mounted) return;
 
     try {
-      await repository.softDeleteCategory(category.uuid);
+      await repository.softDeleteCategory(widget.category.uuid);
       if (context.mounted) {
         ToastUtils.showSuccessToast(
           context,
@@ -825,7 +832,14 @@ class _CategoryCard extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final category = widget.category;
+    final netAmount = widget.netAmount;
+    final overallNetAmount = widget.overallNetAmount;
+    final dateRange = widget.dateRange;
+    final isLocked = widget.isLocked;
+    final isBudgetLocked = widget.isBudgetLocked;
+
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final isExpense = category.type == 'EXPENSE';
@@ -892,6 +906,12 @@ class _CategoryCard extends ConsumerWidget {
                     ),
                   );
                 },
+          onHover: (hovering) {
+            setState(() {
+              _isHovered = hovering;
+            });
+          },
+          hoverColor: Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           child: Stack(
             key: ValueKey('category-stack-${category.uuid}'),
@@ -907,7 +927,9 @@ class _CategoryCard extends ConsumerWidget {
                     color: theme.cardColor,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: theme.dividerColor.withValues(alpha: 0.5),
+                      color: _isHovered
+                          ? color
+                          : theme.dividerColor.withValues(alpha: 0.5),
                       width: 1,
                     ),
                   ),
