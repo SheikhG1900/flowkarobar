@@ -87,7 +87,7 @@ class CurrenciesListScreen extends ConsumerWidget {
   }
 }
 
-class _CurrencyCard extends ConsumerWidget {
+class _CurrencyCard extends ConsumerStatefulWidget {
   final AppCurrency currency;
   final bool isSelected;
 
@@ -96,12 +96,19 @@ class _CurrencyCard extends ConsumerWidget {
     required this.isSelected,
   });
 
+  @override
+  ConsumerState<_CurrencyCard> createState() => _CurrencyCardState();
+}
+
+class _CurrencyCardState extends ConsumerState<_CurrencyCard> {
+  bool _isHovered = false;
+
   Future<void> _deleteCurrency(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
     final repository = ref.read(currenciesRepositoryProvider);
 
     try {
-      await repository.deleteCurrency(currency.uuid);
+      await repository.deleteCurrency(widget.currency.uuid);
       if (context.mounted) {
         ToastUtils.showSuccessToast(context, ref, l10n.currencyDeleted);
       }
@@ -116,16 +123,18 @@ class _CurrencyCard extends ConsumerWidget {
   Future<void> _selectCurrency(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
     final notifier = ref.read(currencyNotifierProvider.notifier);
-    await notifier.setSelectedCurrency(currency.uuid);
+    await notifier.setSelectedCurrency(widget.currency.uuid);
 
     if (context.mounted) {
       ToastUtils.showSuccessToast(
-          context, ref, l10n.currencySetTo(currency.name));
+          context, ref, l10n.currencySetTo(widget.currency.name));
     }
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final currency = widget.currency;
+    final isSelected = widget.isSelected;
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final color =
@@ -153,81 +162,101 @@ class _CurrencyCard extends ConsumerWidget {
             : () async {
                 await _deleteCurrency(context, ref);
               },
-        child: GlassCard(
-          padding: const EdgeInsets.all(16),
-          child: InkWell(
-            onTap: () => _selectCurrency(context, ref),
+        child: Container(
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: color.withValues(
-                        alpha:
-                            theme.brightness == Brightness.dark ? 0.1 : 0.15),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: color.withValues(alpha: 0.3),
-                      width: 1,
+            border: Border.all(
+              color: _isHovered
+                  ? color
+                  : theme.dividerColor.withValues(alpha: 0.1),
+              width: 1,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: GlassCard(
+              padding: const EdgeInsets.all(16),
+              child: InkWell(
+                onHover: (hovering) {
+                  setState(() {
+                    _isHovered = hovering;
+                  });
+                },
+                hoverColor: Colors.transparent,
+                onTap: () => _selectCurrency(context, ref),
+                borderRadius: BorderRadius.circular(15),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: color.withValues(
+                            alpha:
+                                theme.brightness == Brightness.dark ? 0.1 : 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: color.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: currency.symbol.isEmpty
+                          ? Icon(Icons.money_off, size: 20, color: color)
+                          : Text(
+                              currency.symbol,
+                              style: TextStyle(
+                                fontSize: 24,
+                                color: color,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
-                  ),
-                  alignment: Alignment.center,
-                  child: currency.symbol.isEmpty
-                      ? Icon(Icons.money_off, size: 20, color: color)
-                      : Text(
-                          currency.symbol,
-                          style: TextStyle(
-                            fontSize: 24,
-                            color: color,
-                            fontWeight: FontWeight.bold,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            currency.name,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            currency.code,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (isSelected)
+                      Icon(
+                        Icons.check_circle,
+                        color: AppColors.success,
+                        size: 24,
+                      ),
+                    if (currency.isDefault)
+                      Container(
+                        margin: const EdgeInsets.only(left: 8),
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          l10n.defaultLabel,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
+                      ),
+                  ],
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        currency.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        currency.code,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (isSelected)
-                  Icon(
-                    Icons.check_circle,
-                    color: AppColors.success,
-                    size: 24,
-                  ),
-                if (currency.isDefault)
-                  Container(
-                    margin: const EdgeInsets.only(left: 8),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      l10n.defaultLabel,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-              ],
+              ),
             ),
           ),
         ),
@@ -235,3 +264,4 @@ class _CurrencyCard extends ConsumerWidget {
     );
   }
 }
+

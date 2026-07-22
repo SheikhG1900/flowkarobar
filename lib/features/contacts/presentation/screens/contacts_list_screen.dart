@@ -178,7 +178,7 @@ class _ContactsListScreenState extends ConsumerState<ContactsListScreen> {
   }
 }
 
-class _ContactCard extends ConsumerWidget {
+class _ContactCard extends ConsumerStatefulWidget {
   final dynamic contact;
   final bool isLocked;
 
@@ -187,11 +187,18 @@ class _ContactCard extends ConsumerWidget {
     this.isLocked = false,
   });
 
+  @override
+  ConsumerState<_ContactCard> createState() => _ContactCardState();
+}
+
+class _ContactCardState extends ConsumerState<_ContactCard> {
+  bool _isHovered = false;
+
   Future<void> _deleteContact(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
     try {
       final repository = ref.read(contactsRepositoryProvider);
-      await repository.deleteContact(contact.uuid);
+      await repository.deleteContact(widget.contact.uuid);
       if (context.mounted) {
         ToastUtils.showSuccessToast(
             context, ref, l10n.contactDeletedSuccessfully);
@@ -205,15 +212,20 @@ class _ContactCard extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    final contact = widget.contact;
+    final isLocked = widget.isLocked;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final contactColor = AppColors.getContactColor(contact.name);
 
     return Padding(
+      key: ValueKey('contact-card-padding-${contact.uuid}'),
       padding: const EdgeInsets.only(bottom: 12),
       child: SwipeableListItem(
         enableEdit: !isLocked,
         enableDelete: !isLocked,
-        editBackgroundColor: AppColors.getContactColor(contact.name),
+        editBackgroundColor: contactColor,
         deleteBackgroundColor: AppColors.error,
         borderRadius: 16,
         backgroundMargin: const EdgeInsets.only(bottom: 12),
@@ -245,164 +257,173 @@ class _ContactCard extends ConsumerWidget {
               ),
             ],
             border: Border.all(
-              color: theme.dividerColor.withValues(alpha: 0.1),
+              color: _isHovered
+                  ? contactColor
+                  : theme.dividerColor.withValues(alpha: 0.1),
+              width: 1,
             ),
           ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: isLocked
-                  ? () => PremiumGate.showPremiumDialog(context)
-                  : () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ContactDetailsScreen(contactUuid: contact.uuid),
-                        ),
-                      );
-                    },
-              borderRadius: BorderRadius.circular(16),
-              child: Stack(
-                children: [
-                  Opacity(
-                    opacity: isLocked ? 0.5 : 1.0,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          // Avatar
-                          Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              gradient:
-                                  AppColors.getContactGradient(contact.name),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: AppColors.getContactColor(contact.name)
-                                      .withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              NameUtils.getInitials(contact.name),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 24,
-                              ),
-                            ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onHover: (hovering) {
+                  setState(() {
+                    _isHovered = hovering;
+                  });
+                },
+                hoverColor: Colors.transparent,
+                onTap: isLocked
+                    ? () => PremiumGate.showPremiumDialog(context)
+                    : () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                ContactDetailsScreen(contactUuid: contact.uuid),
                           ),
-                          const SizedBox(width: 16),
-
-                          // Details
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  contact.name,
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                if (contact.phone != null &&
-                                    contact.phone!.isNotEmpty) ...[
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.phone_iphone,
-                                        size: 14,
-                                        color:
-                                            theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        contact.phone!,
-                                        style:
-                                            theme.textTheme.bodyMedium?.copyWith(
-                                          color:
-                                              theme.colorScheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ] else if (contact.email != null &&
-                                    contact.email!.isNotEmpty) ...[
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.email_outlined,
-                                        size: 14,
-                                        color:
-                                            theme.colorScheme.onSurfaceVariant,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        contact.email!,
-                                        style:
-                                            theme.textTheme.bodyMedium?.copyWith(
-                                          color:
-                                              theme.colorScheme.onSurfaceVariant,
-                                        ),
-                                      ),
-                                    ],
+                        );
+                      },
+                borderRadius: BorderRadius.circular(15),
+                child: Stack(
+                  children: [
+                    Opacity(
+                      opacity: isLocked ? 0.5 : 1.0,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            // Avatar
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                gradient:
+                                    AppColors.getContactGradient(contact.name),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: contactColor
+                                        .withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
-                              ],
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                NameUtils.getInitials(contact.name),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 24,
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 16),
 
-                          // Arrow
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.surfaceContainerHighest
-                                  .withValues(alpha: 0.5),
-                              shape: BoxShape.circle,
+                            // Details
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    contact.name,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  if (contact.phone != null &&
+                                      contact.phone!.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.phone_iphone,
+                                          size: 14,
+                                          color:
+                                              theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          contact.phone!,
+                                          style:
+                                              theme.textTheme.bodySmall?.copyWith(
+                                            color: theme
+                                                .colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                  if (contact.email != null &&
+                                      contact.email!.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.email_outlined,
+                                          size: 14,
+                                          color:
+                                              theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          contact.email!,
+                                          style:
+                                              theme.textTheme.bodySmall?.copyWith(
+                                            color: theme
+                                                .colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ],
+                              ),
                             ),
-                            child: Icon(
-                              Icons.chevron_right,
-                              size: 20,
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (isLocked)
-                    Positioned(
-                      top: 6,
-                      right: 6,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: theme.scaffoldBackgroundColor,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 2,
+
+                            // Arrow
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceContainerHighest
+                                    .withValues(alpha: 0.5),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.chevron_right,
+                                size: 20,
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         ),
-                        child: Icon(
-                          Icons.lock,
-                          size: 14,
-                          color: theme.colorScheme.primary,
-                        ),
                       ),
                     ),
-                ],
+                    if (isLocked)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.95),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.lock,
+                            size: 14,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

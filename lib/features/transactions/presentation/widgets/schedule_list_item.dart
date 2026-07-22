@@ -13,7 +13,7 @@ import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_de
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
-class ScheduleListItem extends ConsumerWidget {
+class ScheduleListItem extends ConsumerStatefulWidget {
   final ScheduleWithDetails item;
 
   const ScheduleListItem({
@@ -22,7 +22,15 @@ class ScheduleListItem extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ScheduleListItem> createState() => _ScheduleListItemState();
+}
+
+class _ScheduleListItemState extends ConsumerState<ScheduleListItem> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
     final schedule = item.schedule;
     final category = item.category;
     final contact = item.contact;
@@ -61,16 +69,20 @@ class ScheduleListItem extends ConsumerWidget {
         ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
         : theme.colorScheme.onSurface;
 
+    final key = widget.key;
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Container(
-          key: key,
+          key: widget.key,
           decoration: BoxDecoration(
             color: theme.cardColor.withValues(alpha: isInactive ? 0.6 : 1.0),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: displayColor.withValues(alpha: isDark ? 0.2 : 0.1),
+              color: _isHovered
+                  ? displayColor
+                  : displayColor.withValues(alpha: isDark ? 0.2 : 0.1),
               width: 1,
             ),
             boxShadow: [
@@ -81,72 +93,80 @@ class ScheduleListItem extends ConsumerWidget {
               ),
             ],
           ),
-          child: Material(
-            key: key != null
-                ? ValueKey('${(key as ValueKey).value}-material')
-                : null,
-            color: Colors.transparent,
-            child: InkWell(
-              key: key != null
-                  ? ValueKey('${(key as ValueKey).value}-inkwell')
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(19),
+            child: Material(
+              key: widget.key != null
+                  ? ValueKey('${(widget.key as ValueKey).value}-material')
                   : null,
-              onTap: () {
-                if (isLocked) {
-                  PremiumGate.showPremiumDialog(context);
-                  return;
-                }
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ScheduleDetailsDialog(
-                      scheduleUuid: schedule.uuid,
-                    ),
-                  ),
-                );
-              },
-              borderRadius: BorderRadius.circular(20),
-              child: Padding(
-                key: key != null
-                    ? ValueKey('${(key as ValueKey).value}-padding')
+              color: Colors.transparent,
+              child: InkWell(
+                key: widget.key != null
+                    ? ValueKey('${(widget.key as ValueKey).value}-inkwell')
                     : null,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-                child: Row(
-                  key: key != null
-                      ? ValueKey('${(key as ValueKey).value}-row')
-                      : null,
-                  children: [
-                    // Leading
-                    Container(
-                      key: key != null
-                          ? ValueKey('${(key as ValueKey).value}-leading')
-                          : null,
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: displayColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: displayColor.withValues(alpha: 0.3),
-                          width: 1,
-                        ),
+                onHover: (hovering) {
+                  setState(() {
+                    _isHovered = hovering;
+                  });
+                },
+                hoverColor: Colors.transparent,
+                onTap: () {
+                  if (isLocked) {
+                    PremiumGate.showPremiumDialog(context);
+                    return;
+                  }
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ScheduleDetailsDialog(
+                        scheduleUuid: schedule.uuid,
                       ),
-                      alignment: Alignment.center,
-                      child: CategoryHelper.buildCategoryIcon(
-                          category?.icon, displayColor, isExpense),
                     ),
-                    const SizedBox(width: 16),
-                    // Title & Subtitle
-                    Expanded(
-                      key: key != null
-                          ? ValueKey(
-                              '${(key as ValueKey).value}-content-expanded')
-                          : null,
-                      child: Column(
-                        key: key != null
-                            ? ValueKey('${(key as ValueKey).value}-content-col')
+                  );
+                },
+                borderRadius: BorderRadius.circular(19),
+                child: Padding(
+                  key: widget.key != null
+                      ? ValueKey('${(widget.key as ValueKey).value}-padding')
+                      : null,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  child: Row(
+                    key: widget.key != null
+                        ? ValueKey('${(widget.key as ValueKey).value}-row')
+                        : null,
+                    children: [
+                      // Leading
+                      Container(
+                        key: widget.key != null
+                            ? ValueKey('${(widget.key as ValueKey).value}-leading')
                             : null,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: displayColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: displayColor.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        alignment: Alignment.center,
+                        child: CategoryHelper.buildCategoryIcon(
+                            category?.icon, displayColor, isExpense),
+                      ),
+                      const SizedBox(width: 16),
+                      // Title & Subtitle
+                      Expanded(
+                        key: widget.key != null
+                            ? ValueKey(
+                                '${(widget.key as ValueKey).value}-content-expanded')
+                            : null,
+                        child: Column(
+                          key: widget.key != null
+                              ? ValueKey('${(widget.key as ValueKey).value}-content-col')
+                              : null,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
@@ -404,6 +424,7 @@ class ScheduleListItem extends ConsumerWidget {
             ),
           ),
         ),
+      ),
         if (item.account != null)
           TransactionAccountIconBadge(
             key: key != null

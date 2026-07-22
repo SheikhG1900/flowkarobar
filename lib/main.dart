@@ -2433,7 +2433,7 @@ class _DashboardRecentTransactionsBody extends ConsumerWidget {
   }
 }
 
-class _DashboardRecentTransactionTile extends StatelessWidget {
+class _DashboardRecentTransactionTile extends StatefulWidget {
   const _DashboardRecentTransactionTile({
     super.key,
     required this.item,
@@ -2452,7 +2452,23 @@ class _DashboardRecentTransactionTile extends StatelessWidget {
   final bool isDark;
 
   @override
+  State<_DashboardRecentTransactionTile> createState() =>
+      _DashboardRecentTransactionTileState();
+}
+
+class _DashboardRecentTransactionTileState
+    extends State<_DashboardRecentTransactionTile> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
+    final item = widget.item;
+    final currency = widget.currency;
+    final dateFormat = widget.dateFormat;
+    final l10n = widget.l10n;
+    final theme = widget.theme;
+    final isDark = widget.isDark;
+
     final transaction = item.transaction;
     final category = item.category;
     final isExpense = transaction.type == 'EXPENSE';
@@ -2482,7 +2498,9 @@ class _DashboardRecentTransactionTile extends StatelessWidget {
           color: theme.cardColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: categoryColor.withValues(alpha: isDark ? 0.2 : 0.1),
+            color: _isHovered
+                ? categoryColor
+                : categoryColor.withValues(alpha: isDark ? 0.2 : 0.1),
             width: 1,
           ),
           boxShadow: [
@@ -2493,35 +2511,56 @@ class _DashboardRecentTransactionTile extends StatelessWidget {
             ),
           ],
         ),
-        child: Material(
-          type: MaterialType.transparency,
-          child: ListTile(
-            contentPadding: const EdgeInsets.all(12),
-            leading: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: categoryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              alignment: Alignment.center,
-              child: CategoryHelper.buildCategoryIcon(
-                  category?.icon, categoryColor, isExpense),
-            ),
-            title: Text(
-              transaction.description ?? (isExpense ? l10n.expense : l10n.income),
-              style: const TextStyle(fontWeight: FontWeight.w600),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Text(AppDateFormatter.formatDate(transaction.date,
-                pattern: dateFormat)),
-            trailing: Text(
-              '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency)}',
-              style: TextStyle(
-                color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(15),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onHover: (hovering) {
+                setState(() {
+                  _isHovered = hovering;
+                });
+              },
+              hoverColor: Colors.transparent,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        TransactionDetailsDialog(transactionUuid: transaction.uuid),
+                  ),
+                );
+              },
+              borderRadius: BorderRadius.circular(15),
+              child: ListTile(
+                contentPadding: const EdgeInsets.all(12),
+                leading: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: categoryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: CategoryHelper.buildCategoryIcon(
+                      category?.icon, categoryColor, isExpense),
+                ),
+                title: Text(
+                  transaction.description ?? (isExpense ? l10n.expense : l10n.income),
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                subtitle: Text(AppDateFormatter.formatDate(transaction.date,
+                    pattern: dateFormat)),
+                trailing: Text(
+                  '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency)}',
+                  style: TextStyle(
+                    color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ),
             ),
           ),
@@ -2530,6 +2569,7 @@ class _DashboardRecentTransactionTile extends StatelessWidget {
     );
   }
 }
+
 
 class _DashboardHeader extends ConsumerWidget {
   const _DashboardHeader({super.key, required this.logoRevealPull});
@@ -3649,7 +3689,7 @@ class _DashboardStatsGrid extends ConsumerWidget {
   }
 }
 
-class _QuickActionButton extends StatelessWidget {
+class _QuickActionButton extends StatefulWidget {
   final IconData icon;
   final String label;
   final Gradient gradient;
@@ -3665,71 +3705,112 @@ class _QuickActionButton extends StatelessWidget {
   });
 
   @override
+  State<_QuickActionButton> createState() => _QuickActionButtonState();
+}
+
+class _QuickActionButtonState extends State<_QuickActionButton> {
+  bool _isHovered = false;
+
+  @override
   Widget build(BuildContext context) {
+    final icon = widget.icon;
+    final label = widget.label;
+    final gradient = widget.gradient;
+    final onTap = widget.onTap;
+    final showLock = widget.showLock;
+
     return _AnimatedPressScale(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 0),
         decoration: BoxDecoration(
           gradient: gradient.withOpacity(0.2),
           border: Border.all(
-              color: gradient.colors.first.withValues(alpha: 0.5), width: 1),
+              color: _isHovered
+                  ? gradient.colors.first
+                  : gradient.colors.first.withValues(alpha: 0.5),
+              width: 1),
           borderRadius: const BorderRadiusDirectional.only(
             topStart: Radius.circular(20),
             bottomEnd: Radius.circular(20),
           ),
           // Diagonal beveled
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              alignment: Alignment.topRight,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                        color: gradient.colors.first.withValues(alpha: 0.8),
-                        width: 1),
-                    color: gradient.colors.first.withValues(alpha: 0.2 / 1.0),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, size: 24),
+        child: ClipRRect(
+          borderRadius: const BorderRadiusDirectional.only(
+            topStart: Radius.circular(19),
+            bottomEnd: Radius.circular(19),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onHover: (hovering) {
+                setState(() {
+                  _isHovered = hovering;
+                });
+              },
+              hoverColor: Colors.transparent,
+              onTap: onTap,
+              borderRadius: const BorderRadiusDirectional.only(
+                topStart: Radius.circular(19),
+                bottomEnd: Radius.circular(19),
+              ).resolve(Directionality.of(context)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Stack(
+                      alignment: Alignment.topRight,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                                color: gradient.colors.first.withValues(alpha: 0.8),
+                                width: 1),
+                            color: gradient.colors.first.withValues(alpha: 0.2 / 1.0),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(icon, size: 24),
+                        ),
+                        if (showLock)
+                          const Positioned(
+                            top: 0,
+                            right: 0,
+                            child: Icon(Icons.lock, size: 12, color: Colors.white),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        letterSpacing: 0.5,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black26,
+                            offset: Offset(0, 1),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                if (showLock)
-                  const Positioned(
-                    top: 0,
-                    right: 0,
-                    child: Icon(Icons.lock, size: 12, color: Colors.white),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                letterSpacing: 0.5,
-                shadows: [
-                  Shadow(
-                    color: Colors.black26,
-                    offset: Offset(0, 1),
-                    blurRadius: 2,
-                  ),
-                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
+
 
 /// Helper widget for press & scale micro-animation
 class _AnimatedPressScale extends StatefulWidget {

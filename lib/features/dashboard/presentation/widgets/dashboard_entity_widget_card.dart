@@ -34,7 +34,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 /// A single entity widget card on the dashboard. Shows key info and opens detail on tap.
 /// Long-press to remove from dashboard.
-class DashboardEntityWidgetCard extends ConsumerWidget {
+class DashboardEntityWidgetCard extends ConsumerStatefulWidget {
   final DashboardWidgetConfig config;
   final int layoutIndex;
 
@@ -45,7 +45,18 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardEntityWidgetCard> createState() =>
+      _DashboardEntityWidgetCardState();
+}
+
+class _DashboardEntityWidgetCardState
+    extends ConsumerState<DashboardEntityWidgetCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final config = widget.config;
+    final layoutIndex = widget.layoutIndex;
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
     final currencyAsync = ref.watch(currentCurrencyProvider);
@@ -377,118 +388,133 @@ class DashboardEntityWidgetCard extends ConsumerWidget {
   }) {
     final effectiveAmountColor = amountColor ??
         (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
+    final isDark = theme.brightness == Brightness.dark;
+
     return RepaintBoundary(
       key: key,
       child: Padding(
         padding: const EdgeInsets.only(bottom: 10),
-        child: Material(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(16),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: isLocked
-                ? () => PremiumGate.showPremiumDialog(context)
-                : onTap,
-            onLongPress: () => _showEntityActionsSheet(
-                  context, ref, onRemove, l10n, kind, entityUuid),
-            child: Stack(
-              children: [
-                Opacity(
-                  opacity: isLocked ? 0.5 : 1.0,
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                          color: color.withValues(alpha: 0.4), width: 1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Row(
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: _isHovered
+                  ? color
+                  : color.withValues(alpha: isDark ? 0.2 : 0.1),
+              width: 1,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: Material(
+              color: theme.cardColor,
+              child: InkWell(
+                onHover: (hovering) {
+                  setState(() {
+                    _isHovered = hovering;
+                  });
+                },
+                hoverColor: Colors.transparent,
+                onTap: isLocked
+                    ? () => PremiumGate.showPremiumDialog(context)
+                    : onTap,
+                onLongPress: () => _showEntityActionsSheet(
+                      context, ref, onRemove, l10n, kind, entityUuid),
+                child: Stack(
+                  children: [
+                    Opacity(
+                      opacity: isLocked ? 0.5 : 1.0,
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            leadingChild ??
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: color.withValues(alpha: 0.15),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Icon(
-                                    _iconForKind(kind),
-                                    color: color,
-                                    size: 22,
+                            Row(
+                              children: [
+                                leadingChild ??
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: color.withValues(alpha: 0.15),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      alignment: Alignment.center,
+                                      child: Icon(
+                                        _iconForKind(kind),
+                                        color: color,
+                                        size: 22,
+                                      ),
+                                    ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                    child: Column(
+                                      key: contentKey,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                      Text(
+                                        title,
+                                        style: theme.textTheme.titleSmall?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        subtitle,
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
                                   ),
                                 ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                                child: Column(
-                                  key: contentKey,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                  Text(
-                                    title,
-                                    style: theme.textTheme.titleSmall?.copyWith(
-                                      fontWeight: FontWeight.w600,
+                                if (currency != null)
+                                  Directionality(
+                                    textDirection: TextDirection.ltr,
+                                    child: Text(
+                                      key: amountKey,
+                                      '${isExpense ? '\u200E−' : '\u200E+'} ${AmountFormatter.formatWithCurrency(amount, currency)}',
+                                      style: theme.textTheme.titleSmall?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: effectiveAmountColor,
+                                      ),
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    subtitle,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
+                              ],
                             ),
-                            if (currency != null)
-                              Directionality(
-                                textDirection: TextDirection.ltr,
-                                child: Text(
-                                  key: amountKey,
-                                  '${isExpense ? '\u200E−' : '\u200E+'} ${AmountFormatter.formatWithCurrency(amount, currency)}',
-                                  style: theme.textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: effectiveAmountColor,
-                                  ),
-                                ),
-                              ),
+                            if (titleColumnExtra != null) ...[
+                              titleColumnExtra!,
+                            ],
                           ],
                         ),
-                        if (titleColumnExtra != null) ...[
-                          titleColumnExtra!,
-                        ],
-                      ],
+                      ),
                     ),
-                  ),
+                    if (isLocked)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.95),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.lock,
+                            size: 16,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                if (isLocked)
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest
-                            .withValues(alpha: 0.95),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.lock,
-                        size: 16,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-              ],
+              ),
             ),
           ),
         ),
