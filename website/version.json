@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "buildNumber": 61,
+  "buildNumber": 64,
   "url": "https://github.com/tamatasoft/flowpaisa/releases/latest/download/flowpaisa_setup.exe",
   "changelog": "Initial Windows release with Google Drive sync, voice commands, and elegant ambient background."
 }
