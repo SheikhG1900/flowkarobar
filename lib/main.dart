@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'dart:async';
 
 import 'dart:io';
@@ -195,6 +196,14 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
     return MaterialApp(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
+      scrollBehavior: const MaterialScrollBehavior().copyWith(
+        dragDevices: {
+          PointerDeviceKind.touch,
+          PointerDeviceKind.mouse,
+          PointerDeviceKind.trackpad,
+          PointerDeviceKind.stylus,
+        },
+      ),
       builder: (context, child) {
         if (kIsWeb || !Platform.isWindows) return child!;
         
