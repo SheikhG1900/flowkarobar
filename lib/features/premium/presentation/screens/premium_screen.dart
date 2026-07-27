@@ -113,7 +113,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                             color: Colors.white,
                           ),
                         ),
-                        if (premiumState.isPremium)
+                        if (premiumState.isPremiumActive)
                           const Positioned(
                             bottom: 0,
                             right: 0,
@@ -141,7 +141,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    if (premiumState.isPremium)
+                    if (premiumState.isPremiumActive)
                       const PremiumBadge(isLarge: true)
                     else
                       Text(
@@ -172,7 +172,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                 children: [
                   const SizedBox(height: 8),
                   // Premium Active Card (Moved to top but keep features below)
-                  if (premiumState.isPremium) ...[
+                  if (premiumState.isPremiumActive) ...[
                     Container(
                       margin: const EdgeInsets.only(bottom: 24),
                       padding: const EdgeInsets.all(24),
@@ -219,7 +219,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                   ],
 
                     // Plan selection (non-premium): show at top before features
-                    if (!premiumState.isPremium) ...[
+                    if (!premiumState.isPremiumActive) ...[
                       if (Platform.isWindows)
                         Container(
                           margin: const EdgeInsets.only(bottom: 24),
@@ -422,7 +422,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureUnlimitedAccountsTitle,
                     description: l10n.featureUnlimitedAccountsDesc,
                     color: Colors.blue,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
 
@@ -432,7 +432,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureCategoryBudgetsTitle,
                     description: l10n.featureCategoryBudgetsDesc,
                     color: Colors.orange,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
 
@@ -442,7 +442,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureTemplatesTitle,
                     description: l10n.featureTemplatesDesc,
                     color: Colors.teal,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
 
@@ -452,7 +452,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureCloudBackupTitle,
                     description: l10n.featureCloudBackupDesc,
                     color: theme.colorScheme.primary,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
 
@@ -462,7 +462,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureAnalyticsTitle,
                     description: l10n.featureAnalyticsDesc,
                     color: Colors.purple,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
 
@@ -472,7 +472,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featurePdfReportsTitle,
                     description: l10n.featurePdfReportsDesc,
                     color: Colors.red,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
 
@@ -482,7 +482,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureUnlimitedTitle,
                     description: l10n.featureUnlimitedDesc,
                     color: Colors.green,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
 
@@ -492,7 +492,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureSupportTitle,
                     description: l10n.featureSupportDesc,
                     color: Colors.orange,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
 
@@ -502,7 +502,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureEarlyAccessTitle,
                     description: l10n.featureEarlyAccessDesc,
                     color: theme.colorScheme.primary,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
                   _buildFeatureCard(
@@ -511,7 +511,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureMultiDeviceSyncTitle,
                     description: l10n.featureMultiDeviceSyncDesc,
                     color: Colors.blue,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
                   _buildFeatureCard(
@@ -520,7 +520,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureMultipleCashbooksTitle,
                     description: l10n.featureMultipleCashbooksDesc,
                     color: Colors.indigo,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
                   _buildFeatureCard(
@@ -529,7 +529,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureUnlimitedSchedulesTitle,
                     description: l10n.featureUnlimitedSchedulesDesc,
                     color: Colors.cyan,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
                   _buildFeatureCard(
@@ -538,7 +538,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureUnlimitedVoiceExtractionTitle,
                     description: l10n.featureUnlimitedVoiceExtractionDesc,
                     color: Colors.deepPurple,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
                   _buildFeatureCard(
@@ -547,7 +547,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureUnlimitedReceiptExtractionTitle,
                     description: l10n.featureUnlimitedReceiptExtractionDesc,
                     color: Colors.teal,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
                   _buildFeatureCard(
@@ -556,7 +556,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureBulkImportTitle,
                     description: l10n.featureBulkImportDesc,
                     color: Colors.orange,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 12),
                   _buildFeatureCard(
@@ -565,7 +565,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                     title: l10n.featureBulkSettlementTitle,
                     description: l10n.featureBulkSettlementDesc,
                     color: Colors.deepOrange,
-                    isPremium: premiumState.isPremium,
+                    isPremium: premiumState.isPremiumActive,
                   ),
                   const SizedBox(height: 32),
                 ],

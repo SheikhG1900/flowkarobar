@@ -40,6 +40,15 @@ class PremiumState {
     this.premiumTokenExpiry,
   });
 
+  bool get isPremiumActive {
+    if (!isPremium) return false;
+    if (subscriptionType == 'lifetime') return true;
+    if (expiryDate != null) {
+      return expiryDate!.isAfter(DateTime.now());
+    }
+    return true;
+  }
+
   PremiumState copyWith({
     bool? isPremium,
     bool? isLoading,
@@ -72,13 +81,35 @@ class PremiumNotifier extends Notifier<PremiumState> {
   PremiumState build() {
     _repository = ref.watch(premiumRepositoryProvider);
     _init();
+
+    final isPremiumStored = _repository.getPremiumStatus();
+    final expiryDate = _repository.getExpiryDate();
+    final subscriptionType = _repository.getSubscriptionType();
+
+    bool isPremiumActive = isPremiumStored;
+    if (isPremiumStored) {
+      if (subscriptionType != 'lifetime' && expiryDate != null) {
+        if (expiryDate.isBefore(DateTime.now())) {
+          isPremiumActive = false;
+          _handleExpiredPremium();
+        }
+      }
+    }
+
     return PremiumState(
-      isPremium: _repository.getPremiumStatus(),
-      expiryDate: _repository.getExpiryDate(),
-      subscriptionType: _repository.getSubscriptionType(),
+      isPremium: isPremiumActive,
+      expiryDate: expiryDate,
+      subscriptionType: subscriptionType,
       premiumToken: _repository.getPremiumToken(),
       premiumTokenExpiry: _repository.getPremiumTokenExpiry(),
     );
+  }
+
+  Future<void> _handleExpiredPremium() async {
+    await _repository.setPremiumStatus(false);
+    await _repository.setSubscriptionType(null);
+    await _repository.setExpiryDate(null);
+    await _repository.setPremiumToken(null, null);
   }
 
   Future<void> _init() async {

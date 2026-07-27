@@ -252,18 +252,12 @@ class BackupNotifier extends Notifier<BackupState> {
 
     if (_driveService.isSignedIn) {
       // Try to verify premium from Google Drive first if not already premium
-      if (!ref.read(premiumProvider).isPremium) {
+      if (!ref.read(premiumProvider).isPremiumActive) {
         await ref.read(premiumProvider.notifier).verifyPremiumFromGoogleDrive();
       }
 
       // Check premium status (same logic as PremiumGate.isPremium but using Ref)
-      final premiumState = ref.read(premiumProvider);
-      bool isPremium = premiumState.isPremium;
-      if (isPremium &&
-          premiumState.subscriptionType != 'lifetime' &&
-          premiumState.expiryDate != null) {
-        isPremium = premiumState.expiryDate!.isAfter(DateTime.now());
-      }
+      bool isPremium = ref.read(premiumProvider).isPremiumActive;
       if (!isPremium) {
         if (kDebugMode) {
           print('BackupNotifier: User is not premium but signed in. Signing out.');
@@ -311,7 +305,7 @@ class BackupNotifier extends Notifier<BackupState> {
       if (cashbooksJson == null || cashbooksJson.isEmpty) return;
 
       final activeCashbook = ref.read(activeCashbookProvider);
-      final isPremium = ref.read(premiumProvider).isPremium;
+      final isPremium = ref.read(premiumProvider).isPremiumActive;
       
       final cashbooks = cashbooksJson.map((j) => Cashbook.fromJson(j)).toList();
       

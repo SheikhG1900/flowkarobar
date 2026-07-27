@@ -523,7 +523,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     String statusText = l10n.premiumTokenMissing;
                     IconData statusIcon = Icons.token_outlined;
 
-                    if (!premiumState.isPremium) {
+                    if (!premiumState.isPremiumActive) {
                       statusColor = theme.colorScheme.error;
                       statusText = l10n.premiumTokenMissing;
                       statusIcon = Icons.token_outlined;
@@ -590,7 +590,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                         style: theme.textTheme.bodySmall,
                                       )
                                     : Text(
-                                        premiumState.isPremium
+                                        premiumState.isPremiumActive
                                             ? l10n.noTokenGenerated
                                             : l10n.upgradeToPremium,
                                         style: theme.textTheme.bodySmall,
@@ -622,7 +622,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                               }
                                             }
                                           } else {
-                                            if (premiumState.isPremium) {
+                                            if (premiumState.isPremiumActive) {
                                               await ref
                                                   .read(premiumProvider.notifier)
                                                   .generatePremiumToken();
