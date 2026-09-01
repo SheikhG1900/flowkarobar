@@ -132,10 +132,17 @@ class _TabularRowInputState extends State<_TabularRowInput> {
     _unitAmountController =
         TextEditingController(text: widget.row.unitAmount.toString());
     _descController = TextEditingController(text: widget.row.description);
+    _descController.addListener(_onDescChanged);
+  }
+
+  void _onDescChanged() {
+    widget.row.description = _descController.text;
+    widget.onChanged();
   }
 
   @override
   void dispose() {
+    _descController.removeListener(_onDescChanged);
     _qtyController.dispose();
     _unitAmountController.dispose();
     _descController.dispose();
@@ -263,10 +270,6 @@ class _TabularRowInputState extends State<_TabularRowInput> {
                 size: 18.0,
               ),
             ),
-            onChanged: (val) {
-              widget.row.description = val;
-              widget.onChanged();
-            },
           ),
           const SizedBox(height: 12),
           Row(
