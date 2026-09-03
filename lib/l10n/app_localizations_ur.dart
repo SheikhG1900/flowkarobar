@@ -313,6 +313,18 @@ class AppLocalizationsUr extends AppLocalizations {
   String get searchTransactions => 'Search transactions...';
 
   @override
+  String get recentSearches => 'حالیہ تلاشیں';
+
+  @override
+  String get renameSearch => 'تلاش کا نام تبدیل کریں';
+
+  @override
+  String get enterNewName => 'نیا نام درج کریں';
+
+  @override
+  String get rename => 'نام تبدیل کریں';
+
+  @override
   String get noTransactions => 'کوئی لین دین نہیں ملا';
 
   @override

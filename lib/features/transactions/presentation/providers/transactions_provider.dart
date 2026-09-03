@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:rxdart/rxdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
@@ -12,6 +14,11 @@ import 'package:collection/collection.dart';
 
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
+import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Repository provider
 final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
@@ -348,4 +355,300 @@ class TransactionsPaginatedNotifier
 final transactionsPaginatedProvider = NotifierProvider<
     TransactionsPaginatedNotifier, PaginatedState<TransactionWithDetails>>(() {
   return TransactionsPaginatedNotifier();
+});
+
+class RecentSearch {
+  final String id;
+  final String name;
+  final String searchQuery;
+  final String? type; // 'INCOME', 'EXPENSE', or null
+  final List<String>? categoryUuids;
+  final List<String>? contactUuids;
+  final List<String>? accountUuids;
+  final double? minAmount;
+  final double? maxAmount;
+  final List<String>? statusCodes;
+  final DateTime timestamp;
+
+  RecentSearch({
+    required this.id,
+    required this.name,
+    this.searchQuery = '',
+    this.type,
+    this.categoryUuids,
+    this.contactUuids,
+    this.accountUuids,
+    this.minAmount,
+    this.maxAmount,
+    this.statusCodes,
+    required this.timestamp,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'searchQuery': searchQuery,
+      'type': type,
+      'categoryUuids': categoryUuids,
+      'contactUuids': contactUuids,
+      'accountUuids': accountUuids,
+      'minAmount': minAmount,
+      'maxAmount': maxAmount,
+      'statusCodes': statusCodes,
+      'timestamp': timestamp.toIso8601String(),
+    };
+  }
+
+  factory RecentSearch.fromJson(Map<String, dynamic> json) {
+    return RecentSearch(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      searchQuery: json['searchQuery'] as String? ?? '',
+      type: json['type'] as String?,
+      categoryUuids: (json['categoryUuids'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      contactUuids: (json['contactUuids'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      accountUuids: (json['accountUuids'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      minAmount: (json['minAmount'] as num?)?.toDouble(),
+      maxAmount: (json['maxAmount'] as num?)?.toDouble(),
+      statusCodes: (json['statusCodes'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      timestamp: DateTime.parse(json['timestamp'] as String),
+    );
+  }
+
+  String generateDefaultName({
+    required List<Category> categories,
+    required List<Contact> contacts,
+    required List<Account> accounts,
+  }) {
+    final parts = <String>[];
+
+    if (searchQuery.trim().isNotEmpty) {
+      parts.add('"${searchQuery.trim()}"');
+    }
+
+    if (type != null) {
+      parts.add(type == 'INCOME' ? 'Income' : 'Expense');
+    }
+
+    if (categoryUuids != null && categoryUuids!.isNotEmpty) {
+      final names = categoryUuids!
+          .map((uuid) => categories.firstWhereOrNull((c) => c.uuid == uuid)?.name)
+          .whereNotNull()
+          .join(', ');
+      if (names.isNotEmpty) {
+        parts.add('in $names');
+      }
+    }
+
+    if (contactUuids != null && contactUuids!.isNotEmpty) {
+      final names = contactUuids!
+          .map((uuid) => contacts.firstWhereOrNull((c) => c.uuid == uuid)?.name)
+          .whereNotNull()
+          .join(', ');
+      if (names.isNotEmpty) {
+        parts.add('with $names');
+      }
+    }
+
+    if (accountUuids != null && accountUuids!.isNotEmpty) {
+      final names = accountUuids!
+          .map((uuid) => accounts.firstWhereOrNull((a) => a.uuid == uuid)?.name)
+          .whereNotNull()
+          .join(', ');
+      if (names.isNotEmpty) {
+        parts.add('from $names');
+      }
+    }
+
+    if (minAmount != null && maxAmount != null) {
+      parts.add('amount $minAmount - $maxAmount');
+    } else if (minAmount != null) {
+      parts.add('amount >= $minAmount');
+    } else if (maxAmount != null) {
+      parts.add('amount <= $maxAmount');
+    }
+
+    if (statusCodes != null && statusCodes!.isNotEmpty) {
+      parts.add('status: ${statusCodes!.join(", ")}');
+    }
+
+    if (parts.isEmpty) {
+      return 'All Transactions';
+    }
+
+    return parts.join(' ');
+  }
+}
+
+class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
+  static const _key = 'recent_transaction_searches';
+
+  @override
+  List<RecentSearch> build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final jsonStrList = prefs.getStringList(_key) ?? [];
+    try {
+      return jsonStrList
+          .map((str) => RecentSearch.fromJson(json.decode(str) as Map<String, dynamic>))
+          .toList()
+        ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    } catch (e) {
+      if (kDebugMode) {
+        print('Error loading recent searches: $e');
+      }
+      return [];
+    }
+  }
+
+  Future<void> saveSearch({
+    required String searchQuery,
+    required TransactionFilters filters,
+  }) async {
+    // Exclude date filters for simplicity
+    final cleanFilters = filters.copyWith(
+      clearStartDate: true,
+      clearEndDate: true,
+    );
+
+    // If both query and filters are empty, don't save
+    if (searchQuery.trim().isEmpty && cleanFilters.isEmpty) {
+      return;
+    }
+
+    final prefs = ref.read(sharedPreferencesProvider);
+    
+    // Check if an identical search already exists (ignoring id, name, timestamp)
+    final existingIndex = state.indexWhere((item) {
+      final itemFilters = TransactionFilters(
+        type: item.type,
+        categoryUuids: item.categoryUuids,
+        contactUuids: item.contactUuids,
+        accountUuids: item.accountUuids,
+        minAmount: item.minAmount,
+        maxAmount: item.maxAmount,
+        statusCodes: item.statusCodes,
+      );
+      return item.searchQuery == searchQuery && itemFilters == cleanFilters;
+    });
+
+    List<RecentSearch> updatedList = List.from(state);
+
+    if (existingIndex != -1) {
+      // Move existing to top by updating timestamp
+      final existing = updatedList.removeAt(existingIndex);
+      updatedList.insert(
+        0,
+        RecentSearch(
+          id: existing.id,
+          name: existing.name, // Keep the custom name if renamed
+          searchQuery: existing.searchQuery,
+          type: existing.type,
+          categoryUuids: existing.categoryUuids,
+          contactUuids: existing.contactUuids,
+          accountUuids: existing.accountUuids,
+          minAmount: existing.minAmount,
+          maxAmount: existing.maxAmount,
+          statusCodes: existing.statusCodes,
+          timestamp: DateTime.now(),
+        ),
+      );
+    } else {
+      // Generate default name
+      final categories = ref.read(categoriesListProvider).value ?? [];
+      final contacts = ref.read(contactsListProvider).value ?? [];
+      final accounts = ref.read(accountsStreamProvider).value ?? [];
+
+      final id = DateTime.now().millisecondsSinceEpoch.toString();
+      
+      final tempSearch = RecentSearch(
+        id: id,
+        name: '',
+        searchQuery: searchQuery,
+        type: cleanFilters.type,
+        categoryUuids: cleanFilters.categoryUuids,
+        contactUuids: cleanFilters.contactUuids,
+        accountUuids: cleanFilters.accountUuids,
+        minAmount: cleanFilters.minAmount,
+        maxAmount: cleanFilters.maxAmount,
+        statusCodes: cleanFilters.statusCodes,
+        timestamp: DateTime.now(),
+      );
+
+      final defaultName = tempSearch.generateDefaultName(
+        categories: categories,
+        contacts: contacts,
+        accounts: accounts,
+      );
+
+      final newSearch = RecentSearch(
+        id: id,
+        name: defaultName,
+        searchQuery: searchQuery,
+        type: cleanFilters.type,
+        categoryUuids: cleanFilters.categoryUuids,
+        contactUuids: cleanFilters.contactUuids,
+        accountUuids: cleanFilters.accountUuids,
+        minAmount: cleanFilters.minAmount,
+        maxAmount: cleanFilters.maxAmount,
+        statusCodes: cleanFilters.statusCodes,
+        timestamp: DateTime.now(),
+      );
+
+      updatedList.insert(0, newSearch);
+    }
+
+    // Limit to 20 recent searches
+    if (updatedList.length > 20) {
+      updatedList = updatedList.sublist(0, 20);
+    }
+
+    state = updatedList;
+    await _saveToPrefs(prefs);
+  }
+
+  Future<void> renameSearch(String id, String newName) async {
+    if (newName.trim().isEmpty) return;
+    final prefs = ref.read(sharedPreferencesProvider);
+    state = state.map((item) {
+      if (item.id == id) {
+        return RecentSearch(
+          id: item.id,
+          name: newName.trim(),
+          searchQuery: item.searchQuery,
+          type: item.type,
+          categoryUuids: item.categoryUuids,
+          contactUuids: item.contactUuids,
+          accountUuids: item.accountUuids,
+          minAmount: item.minAmount,
+          maxAmount: item.maxAmount,
+          statusCodes: item.statusCodes,
+          timestamp: item.timestamp,
+        );
+      }
+      return item;
+    }).toList();
+    await _saveToPrefs(prefs);
+  }
+
+  Future<void> deleteSearch(String id) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    state = state.where((item) => item.id != id).toList();
+    await _saveToPrefs(prefs);
+  }
+
+  Future<void> clearHistory() async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    state = [];
+    await prefs.remove(_key);
+  }
+
+  Future<void> _saveToPrefs(SharedPreferences prefs) async {
+    final jsonList = state.map((item) => json.encode(item.toJson())).toList();
+    await prefs.setStringList(_key, jsonList);
+  }
+}
+
+final recentSearchesProvider = NotifierProvider<RecentSearchesNotifier, List<RecentSearch>>(() {
+  return RecentSearchesNotifier();
 });

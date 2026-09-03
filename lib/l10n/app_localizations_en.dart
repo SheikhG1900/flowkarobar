@@ -312,6 +312,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchTransactions => 'Search transactions...';
 
   @override
+  String get recentSearches => 'Recent Searches';
+
+  @override
+  String get renameSearch => 'Rename Search';
+
+  @override
+  String get enterNewName => 'Enter new name';
+
+  @override
+  String get rename => 'Rename';
+
+  @override
   String get noTransactions => 'No transactions found';
 
   @override

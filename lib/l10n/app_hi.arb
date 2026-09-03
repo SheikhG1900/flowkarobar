@@ -95,6 +95,10 @@
     }
   },
   "search": "खोजें",
+  "recentSearches": "हाल की खोजें",
+  "renameSearch": "खोज का नाम बदलें",
+  "enterNewName": "नया नाम दर्ज करें",
+  "rename": "नाम बदलें",
   "noTransactions": "कोई लेन-देन नहीं मिला",
   "selectCategory": "श्रेणी चुनें",
   "all": "सभी",

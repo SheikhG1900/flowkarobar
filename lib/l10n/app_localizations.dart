@@ -604,6 +604,30 @@ abstract class AppLocalizations {
   /// **'Search transactions...'**
   String get searchTransactions;
 
+  /// No description provided for @recentSearches.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Searches'**
+  String get recentSearches;
+
+  /// No description provided for @renameSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Search'**
+  String get renameSearch;
+
+  /// No description provided for @enterNewName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter new name'**
+  String get enterNewName;
+
+  /// No description provided for @rename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get rename;
+
   /// No description provided for @noTransactions.
   ///
   /// In en, this message translates to:

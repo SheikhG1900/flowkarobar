@@ -95,6 +95,10 @@
     }
   },
   "search": "تلاش کریں",
+  "recentSearches": "حالیہ تلاشیں",
+  "renameSearch": "تلاش کا نام تبدیل کریں",
+  "enterNewName": "نیا نام درج کریں",
+  "rename": "نام تبدیل کریں",
   "noTransactions": "کوئی لین دین نہیں ملا",
   "selectCategory": "زمرہ منتخب کریں",
   "all": "تمام",

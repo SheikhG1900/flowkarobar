@@ -314,6 +314,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get searchTransactions => 'Search transactions...';
 
   @override
+  String get recentSearches => 'हाल की खोजें';
+
+  @override
+  String get renameSearch => 'खोज का नाम बदलें';
+
+  @override
+  String get enterNewName => 'नया नाम दर्ज करें';
+
+  @override
+  String get rename => 'नाम बदलें';
+
+  @override
   String get noTransactions => 'कोई लेन-देन नहीं मिला';
 
   @override
