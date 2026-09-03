@@ -833,23 +833,27 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                 icon: const Icon(Icons.history),
                 tooltip: l10n.recentSearches,
                 onPressed: () {
-                  final recentSearches = ref.read(recentSearchesProvider);
-                  showModalBottomSheet(
-                    context: context,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                    ),
-                    builder: (context) {
-                      final theme = Theme.of(context);
-                      return Container(
-                        constraints: BoxConstraints(
-                          maxHeight: MediaQuery.of(context).size.height * 0.6,
-                        ),
-                        child: _buildRecentSearchesList(recentSearches, theme),
-                      );
-                    },
-                  );
-                },
+                showModalBottomSheet(
+                  context: context,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  ),
+                  builder: (context) {
+                    final theme = Theme.of(context);
+                    return Consumer(
+                      builder: (context, ref, child) {
+                        final recentSearches = ref.watch(recentSearchesProvider);
+                        return Container(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height * 0.6,
+                          ),
+                          child: _buildRecentSearchesList(recentSearches, theme),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
               ),
               if (!_isSearching)
                 IconButton(
@@ -1158,25 +1162,36 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                     ),
                   ),
                   subtitle: _buildSearchTags(search, theme, categories, contacts),
-                  trailing: Platform.isWindows || Platform.isMacOS || Platform.isLinux
-                      ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined, size: 20),
-                              onPressed: () => _showRenameDialog(search),
-                              tooltip: l10n.renameSearch,
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete_outline, size: 20),
-                              onPressed: () {
-                                ref.read(recentSearchesProvider.notifier).deleteSearch(search.id);
-                              },
-                              tooltip: l10n.delete,
-                            ),
-                          ],
-                        )
-                      : null,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          search.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                          size: 20,
+                          color: search.isPinned ? theme.colorScheme.primary : null,
+                        ),
+                        onPressed: () {
+                          ref.read(recentSearchesProvider.notifier).togglePinSearch(search.id);
+                        },
+                        tooltip: search.isPinned ? 'Unpin search' : 'Pin search',
+                      ),
+                      if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) ...[
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 20),
+                          onPressed: () => _showRenameDialog(search),
+                          tooltip: l10n.renameSearch,
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, size: 20),
+                          onPressed: () {
+                            ref.read(recentSearchesProvider.notifier).deleteSearch(search.id);
+                          },
+                          tooltip: l10n.delete,
+                        ),
+                      ],
+                    ],
+                  ),
                   onTap: () {
                     _applyRecentSearch(search);
                     Navigator.pop(context);
@@ -1487,7 +1502,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
       try {
         final dateKey = AppDateFormatter.formatDate(item.transaction.date,
-            pattern: userProfile.dateFormat ?? 'MMM dd, yyyy');
+            pattern: userProfile.dateFormat);
 
         // Grouping
         groupedTransactions.putIfAbsent(dateKey, () => []);

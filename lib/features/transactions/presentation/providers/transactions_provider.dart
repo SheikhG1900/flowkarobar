@@ -382,7 +382,10 @@ class RecentSearch {
     this.maxAmount,
     this.statusCodes,
     required this.timestamp,
+    this.isPinned = false,
   });
+
+  final bool isPinned;
 
   Map<String, dynamic> toJson() {
     return {
@@ -397,6 +400,7 @@ class RecentSearch {
       'maxAmount': maxAmount,
       'statusCodes': statusCodes,
       'timestamp': timestamp.toIso8601String(),
+      'isPinned': isPinned,
     };
   }
 
@@ -413,6 +417,7 @@ class RecentSearch {
       maxAmount: (json['maxAmount'] as num?)?.toDouble(),
       statusCodes: (json['statusCodes'] as List<dynamic>?)?.map((e) => e as String).toList(),
       timestamp: DateTime.parse(json['timestamp'] as String),
+      isPinned: json['isPinned'] as bool? ?? false,
     );
   }
 
@@ -492,7 +497,12 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
       return jsonStrList
           .map((str) => RecentSearch.fromJson(json.decode(str) as Map<String, dynamic>))
           .toList()
-        ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+        ..sort((a, b) {
+          // Pinned items stay at the top, then sort by timestamp
+          if (a.isPinned && !b.isPinned) return -1;
+          if (!a.isPinned && b.isPinned) return 1;
+          return b.timestamp.compareTo(a.timestamp);
+        });
     } catch (e) {
       if (kDebugMode) {
         print('Error loading recent searches: $e');
@@ -535,7 +545,7 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
     List<RecentSearch> updatedList = List.from(state);
 
     if (existingIndex != -1) {
-      // Move existing to top by updating timestamp
+      // Move existing to top (unless pinned, keep order) by updating timestamp
       final existing = updatedList.removeAt(existingIndex);
       updatedList.insert(
         0,
@@ -551,6 +561,7 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
           maxAmount: existing.maxAmount,
           statusCodes: existing.statusCodes,
           timestamp: DateTime.now(),
+          isPinned: existing.isPinned,
         ),
       );
     } else {
@@ -598,10 +609,25 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
       updatedList.insert(0, newSearch);
     }
 
-    // Limit to 20 recent searches
+    // Limit to 20 recent searches, but don't delete pinned ones if possible
     if (updatedList.length > 20) {
-      updatedList = updatedList.sublist(0, 20);
+      // Keep pinned ones and fill the rest with unpinned ones up to 20
+      final pinned = updatedList.where((item) => item.isPinned).toList();
+      final unpinned = updatedList.where((item) => !item.isPinned).toList();
+      final allowedUnpinnedCount = 20 - pinned.length;
+      if (allowedUnpinnedCount > 0) {
+        updatedList = [...pinned, ...unpinned.sublist(0, allowedUnpinnedCount)];
+      } else {
+        updatedList = pinned.sublist(0, 20);
+      }
     }
+
+    // Sort to ensure pinned are at top
+    updatedList.sort((a, b) {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return b.timestamp.compareTo(a.timestamp);
+    });
 
     state = updatedList;
     await _saveToPrefs(prefs);
@@ -624,10 +650,40 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
           maxAmount: item.maxAmount,
           statusCodes: item.statusCodes,
           timestamp: item.timestamp,
+          isPinned: item.isPinned,
         );
       }
       return item;
     }).toList();
+    await _saveToPrefs(prefs);
+  }
+
+  Future<void> togglePinSearch(String id) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    state = state.map((item) {
+      if (item.id == id) {
+        return RecentSearch(
+          id: item.id,
+          name: item.name,
+          searchQuery: item.searchQuery,
+          type: item.type,
+          categoryUuids: item.categoryUuids,
+          contactUuids: item.contactUuids,
+          accountUuids: item.accountUuids,
+          minAmount: item.minAmount,
+          maxAmount: item.maxAmount,
+          statusCodes: item.statusCodes,
+          timestamp: item.timestamp,
+          isPinned: !item.isPinned,
+        );
+      }
+      return item;
+    }).toList()
+      ..sort((a, b) {
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        return b.timestamp.compareTo(a.timestamp);
+      });
     await _saveToPrefs(prefs);
   }
 
@@ -639,8 +695,9 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
 
   Future<void> clearHistory() async {
     final prefs = ref.read(sharedPreferencesProvider);
-    state = [];
-    await prefs.remove(_key);
+    // Only clear unpinned searches!
+    state = state.where((item) => item.isPinned).toList();
+    await _saveToPrefs(prefs);
   }
 
   Future<void> _saveToPrefs(SharedPreferences prefs) async {
