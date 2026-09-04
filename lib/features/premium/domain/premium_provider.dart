@@ -6,8 +6,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'dart:io';
-import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/features/premium/data/premium_repository.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
@@ -276,6 +274,14 @@ class PremiumNotifier extends Notifier<PremiumState> {
 
   /// Verify premium status from Google Drive (for cross-platform support)
   Future<bool> verifyPremiumFromGoogleDrive() async {
+    // If the user already has an active native premium subscription, do not overwrite it with cross_platform
+    if (state.isPremiumActive && state.subscriptionType != 'cross_platform') {
+      if (kDebugMode) {
+        print('PremiumNotifier: User already has an active native subscription (${state.subscriptionType}). Skipping Google Drive verification.');
+      }
+      return true;
+    }
+
     final driveService = ref.read(googleDriveServiceProvider);
     if (!driveService.isSignedIn) return false;
 
@@ -355,10 +361,24 @@ class PremiumNotifier extends Notifier<PremiumState> {
 
   /// Token generation logic
   Future<void> checkAndGenerateToken() async {
+    // Windows apps should NEVER generate or upload premium tokens.
+    if (Platform.isWindows) {
+      return;
+    }
+
     if (!state.isPremium) {
       if (state.premiumToken != null) {
         await _repository.setPremiumToken(null, null);
         state = state.copyWith(premiumToken: null, premiumTokenExpiry: null);
+      }
+      return;
+    }
+
+    // Only native subscribers can generate and upload premium tokens.
+    // Cross-platform consumers should never generate/upload tokens.
+    if (state.subscriptionType == 'cross_platform') {
+      if (kDebugMode) {
+        print('PremiumNotifier: Skip token generation for cross-platform subscriber.');
       }
       return;
     }
@@ -387,6 +407,14 @@ class PremiumNotifier extends Notifier<PremiumState> {
   }
 
   Future<void> generatePremiumToken() async {
+    // Windows apps should NEVER generate or upload premium tokens.
+    if (Platform.isWindows) {
+      if (kDebugMode) {
+        print('PremiumNotifier: Windows app is blocked from generating premium tokens.');
+      }
+      return;
+    }
+
     final driveService = ref.read(googleDriveServiceProvider);
     if (!driveService.isSignedIn) {
       if (kDebugMode) {

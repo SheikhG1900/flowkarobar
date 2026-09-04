@@ -254,6 +254,9 @@ class BackupNotifier extends Notifier<BackupState> {
       // Try to verify premium from Google Drive first if not already premium
       if (!ref.read(premiumProvider).isPremiumActive) {
         await ref.read(premiumProvider.notifier).verifyPremiumFromGoogleDrive();
+      } else {
+        // If already premium, check if we need to regenerate and upload the token (only for native subscribers)
+        await ref.read(premiumProvider.notifier).checkAndGenerateToken();
       }
 
       // Check premium status (same logic as PremiumGate.isPremium but using Ref)
