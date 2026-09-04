@@ -8218,6 +8218,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'An error occurred while downloading the update:\n\n{error}\n\nPlease check your internet connection and try again.'**
   String updateFailedMessage(String error);
+
+  /// No description provided for @accountStatement.
+  ///
+  /// In en, this message translates to:
+  /// **'Account Statement'**
+  String get accountStatement;
+
+  /// No description provided for @startingBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Starting Balance'**
+  String get startingBalance;
+
+  /// No description provided for @endingBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Ending Balance'**
+  String get endingBalance;
+
+  /// No description provided for @totalCredits.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Credits'**
+  String get totalCredits;
+
+  /// No description provided for @totalDebits.
+  ///
+  /// In en, this message translates to:
+  /// **'Total Debits'**
+  String get totalDebits;
+
+  /// No description provided for @statementPeriod.
+  ///
+  /// In en, this message translates to:
+  /// **'Statement Period'**
+  String get statementPeriod;
+
+  /// No description provided for @noStatementEntries.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions or transfers found for this period.'**
+  String get noStatementEntries;
+
+  /// No description provided for @credit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit'**
+  String get credit;
+
+  /// No description provided for @debit.
+  ///
+  /// In en, this message translates to:
+  /// **'Debit'**
+  String get debit;
+
+  /// No description provided for @runningBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Running Balance'**
+  String get runningBalance;
 }
 
 class _AppLocalizationsDelegate

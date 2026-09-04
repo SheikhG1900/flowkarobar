@@ -4512,4 +4512,35 @@ class AppLocalizationsHi extends AppLocalizations {
   String updateFailedMessage(String error) {
     return 'अपडेट डाउनलोड करते समय एक त्रुटि हुई:\n\n$error\n\nकृपया अपना इंटरनेट कनेक्शन जांचें और पुनः प्रयास करें.';
   }
+
+  @override
+  String get accountStatement => 'खाता विवरण';
+
+  @override
+  String get startingBalance => 'प्रारंभिक शेष';
+
+  @override
+  String get endingBalance => 'अंतिम शेष';
+
+  @override
+  String get totalCredits => 'कुल क्रेडिट';
+
+  @override
+  String get totalDebits => 'कुल डेबिट';
+
+  @override
+  String get statementPeriod => 'विवरण अवधि';
+
+  @override
+  String get noStatementEntries =>
+      'इस अवधि के लिए कोई लेनदेन या ट्रांसफर नहीं मिला।';
+
+  @override
+  String get credit => 'क्रेडिट';
+
+  @override
+  String get debit => 'डेबिट';
+
+  @override
+  String get runningBalance => 'शेष राशि';
 }

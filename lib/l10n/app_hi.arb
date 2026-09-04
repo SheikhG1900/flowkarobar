@@ -1747,5 +1747,15 @@
       }
     }
   },
-  "close": "बंद करें"
+  "close": "बंद करें",
+  "accountStatement": "खाता विवरण",
+  "startingBalance": "प्रारंभिक शेष",
+  "endingBalance": "अंतिम शेष",
+  "totalCredits": "कुल क्रेडिट",
+  "totalDebits": "कुल डेबिट",
+  "statementPeriod": "विवरण अवधि",
+  "noStatementEntries": "इस अवधि के लिए कोई लेनदेन या ट्रांसफर नहीं मिला।",
+  "credit": "क्रेडिट",
+  "debit": "डेबिट",
+  "runningBalance": "शेष राशि"
 }

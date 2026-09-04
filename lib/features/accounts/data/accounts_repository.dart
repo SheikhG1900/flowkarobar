@@ -3,6 +3,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:uuid/uuid.dart';
+import 'package:collection/collection.dart';
 
 class AccountSpending {
   final Account account;
@@ -572,5 +573,153 @@ class AccountsRepository {
     final list = map.values.toList()
       ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
     return list;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Account Statement
+  // ---------------------------------------------------------------------------
+
+  /// Fetches a unified chronological statement for a specific account.
+  ///
+  /// Calculates starting balance, running balances, and maps transactions
+  /// and transfers to unified StatementEntry objects.
+  Future<List<StatementEntry>> getAccountStatement({
+    required String accountUuid,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    final account = await getAccountByUuid(accountUuid);
+    if (account == null) return [];
+
+    final isCreditCard = AccountType.fromValue(account.type).isCreditCard;
+    final openingDate = account.openingDate;
+
+    // 1. Fetch all transactions for this account (not deleted, processed)
+    final txs = await (_db.select(_db.transactions)
+          ..where((t) =>
+              t.accountUuid.equals(accountUuid) &
+              t.isDeleted.equals(false) &
+              t.processedDate.isNotNull() &
+              t.processedDate.isBiggerOrEqualValue(openingDate)))
+        .get();
+
+    // 2. Fetch all transfers involving this account (not deleted)
+    final transfers = await (_db.select(_db.accountTransfers)
+          ..where((t) =>
+              (t.fromAccountUuid.equals(accountUuid) |
+                  t.toAccountUuid.equals(accountUuid)) &
+              t.isDeleted.equals(false) &
+              t.date.isBiggerOrEqualValue(openingDate)))
+        .get();
+
+    // 3. Fetch categories and accounts for descriptive titles
+    final categories = await _db.select(_db.categories).get();
+    final otherAccounts = await _db.select(_db.accounts).get();
+
+    // 4. Calculate starting balance (balance before startDate)
+    // We start with the opening balance (negative for credit card)
+    double balance = isCreditCard ? -account.openingBalance.abs() : account.openingBalance;
+
+    // Combine all history prior to startDate to compute starting balance
+    final priorTxs = txs.where((t) => t.processedDate!.isBefore(startDate));
+    final priorTransfers = transfers.where((t) => t.date.isBefore(startDate));
+
+    for (final tx in priorTxs) {
+      final isExpense = tx.type == 'EXPENSE';
+      if (isCreditCard) {
+        // Credit card: expenses increase liability (decrease balance)
+        // incomes decrease liability (increase balance)
+        balance += isExpense ? -tx.amount : tx.amount;
+      } else {
+        // Cash/Bank: income increases balance, expense decreases balance
+        balance += isExpense ? -tx.amount : tx.amount;
+      }
+    }
+
+    for (final tf in priorTransfers) {
+      final isFromThis = tf.fromAccountUuid == accountUuid;
+      if (isCreditCard) {
+        // Credit card: transfer out (from this) increases liability (decreases balance)
+        // transfer in (to this) decreases liability (increases balance)
+        balance += isFromThis ? -tf.amount : tf.amount;
+      } else {
+        // Cash/Bank: transfer in increases balance, transfer out decreases balance
+        balance += isFromThis ? -tf.amount : tf.amount;
+      }
+    }
+
+    // 5. Filter transactions and transfers that fall within the period
+    final periodTxs = txs.where((t) =>
+        t.processedDate!.isAtSameMomentAs(startDate) ||
+        t.processedDate!.isAfter(startDate) && t.processedDate!.isBefore(endDate.add(const Duration(days: 1))));
+
+    final periodTransfers = transfers.where((t) =>
+        t.date.isAtSameMomentAs(startDate) ||
+        t.date.isAfter(startDate) && t.date.isBefore(endDate.add(const Duration(days: 1))));
+
+    // 6. Merge and sort all period items chronologically
+    final mergedItems = <({DateTime date, dynamic object})>[];
+    for (final tx in periodTxs) {
+      mergedItems.add((date: tx.processedDate!, object: tx));
+    }
+    for (final tf in periodTransfers) {
+      mergedItems.add((date: tf.date, object: tf));
+    }
+
+    // Sort ascending by date
+    mergedItems.sort((a, b) => a.date.compareTo(b.date));
+
+    // 7. Generate StatementEntry list with running balances
+    final entries = <StatementEntry>[];
+    double runningBal = balance;
+
+    for (final item in mergedItems) {
+      final obj = item.object;
+      if (obj is Transaction) {
+        final isExpense = obj.type == 'EXPENSE';
+        final entryType = isExpense ? StatementEntryType.debit : StatementEntryType.credit;
+        
+        runningBal += isExpense ? -obj.amount : obj.amount;
+
+        final category = categories.firstWhereOrNull((c) => c.uuid == obj.categoryUuid);
+        final title = category?.name ?? (isExpense ? 'Expense' : 'Income');
+
+        entries.add(StatementEntry(
+          id: obj.uuid,
+          date: obj.processedDate!,
+          title: title,
+          description: obj.description,
+          amount: obj.amount,
+          entryType: entryType,
+          runningBalance: runningBal,
+          originalObject: obj,
+        ));
+      } else if (obj is AccountTransfer) {
+        final isFromThis = obj.fromAccountUuid == accountUuid;
+        final entryType = isFromThis ? StatementEntryType.debit : StatementEntryType.credit;
+
+        runningBal += isFromThis ? -obj.amount : obj.amount;
+
+        final otherAccountUuid = isFromThis ? obj.toAccountUuid : obj.fromAccountUuid;
+        final otherAcc = otherAccounts.firstWhereOrNull((a) => a.uuid == otherAccountUuid);
+        final title = isFromThis
+            ? 'Transfer to ${otherAcc?.name ?? 'Unknown'}'
+            : 'Transfer from ${otherAcc?.name ?? 'Unknown'}';
+
+        entries.add(StatementEntry(
+          id: obj.uuid,
+          date: obj.date,
+          title: title,
+          description: obj.description,
+          amount: obj.amount,
+          entryType: entryType,
+          runningBalance: runningBal,
+          originalObject: obj,
+        ));
+      }
+    }
+
+    // Return descending (most recent first) for UI presentation
+    return entries.reversed.toList();
   }
 }

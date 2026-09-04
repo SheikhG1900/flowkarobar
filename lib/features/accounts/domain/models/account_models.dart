@@ -92,3 +92,27 @@ class AccountTransferWithDetails {
     this.toAccount,
   });
 }
+
+enum StatementEntryType { debit, credit }
+
+class StatementEntry {
+  final String id;
+  final DateTime date;
+  final String title;
+  final String? description;
+  final double amount;
+  final StatementEntryType entryType;
+  final double runningBalance;
+  final dynamic originalObject; // Can be Transaction or AccountTransfer
+
+  StatementEntry({
+    required this.id,
+    required this.date,
+    required this.title,
+    this.description,
+    required this.amount,
+    required this.entryType,
+    required this.runningBalance,
+    required this.originalObject,
+  });
+}

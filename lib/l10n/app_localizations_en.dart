@@ -4499,4 +4499,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String updateFailedMessage(String error) {
     return 'An error occurred while downloading the update:\n\n$error\n\nPlease check your internet connection and try again.';
   }
+
+  @override
+  String get accountStatement => 'Account Statement';
+
+  @override
+  String get startingBalance => 'Starting Balance';
+
+  @override
+  String get endingBalance => 'Ending Balance';
+
+  @override
+  String get totalCredits => 'Total Credits';
+
+  @override
+  String get totalDebits => 'Total Debits';
+
+  @override
+  String get statementPeriod => 'Statement Period';
+
+  @override
+  String get noStatementEntries =>
+      'No transactions or transfers found for this period.';
+
+  @override
+  String get credit => 'Credit';
+
+  @override
+  String get debit => 'Debit';
+
+  @override
+  String get runningBalance => 'Running Balance';
 }

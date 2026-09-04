@@ -1,3 +1,4 @@
+import 'package:flowpaisa/features/accounts/presentation/screens/account_statement_screen.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/shared/widgets/faded_bottom_logo.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -251,6 +252,17 @@ class _AccountDetailViewState extends ConsumerState<_AccountDetailView> {
                     },
                   );
                 },
+              ),
+              IconButton(
+                icon: const Icon(Icons.receipt_long_outlined),
+                color: Colors.white,
+                tooltip: l10n.accountStatement,
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => AccountStatementScreen(account: acc),
+                  ),
+                ),
               ),
               IconButton(
                 icon: const Icon(Icons.edit_outlined),

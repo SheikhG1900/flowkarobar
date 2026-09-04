@@ -4517,4 +4517,35 @@ class AppLocalizationsUr extends AppLocalizations {
   String updateFailedMessage(String error) {
     return 'اپ ڈیٹ ڈاؤن لوڈ کرنے کے دوران ایک خرابی پیش آئی:\n\n$error\n\nبراہ کرم اپنا انٹرنیٹ کنکشن چیک کریں اور دوبارہ کوشش کریں۔';
   }
+
+  @override
+  String get accountStatement => 'खाता विवरण / اکاؤنٹ اسٹیٹمنٹ';
+
+  @override
+  String get startingBalance => 'ابتدائی بیلنس';
+
+  @override
+  String get endingBalance => 'آخری بیلنس';
+
+  @override
+  String get totalCredits => 'کل کریڈٹ';
+
+  @override
+  String get totalDebits => 'کل ڈیبٹ';
+
+  @override
+  String get statementPeriod => 'اسٹیٹمنٹ کی مدت';
+
+  @override
+  String get noStatementEntries =>
+      'اس مدت کے لیے کوئی لین دین یا ٹرانسفر نہیں ملا۔';
+
+  @override
+  String get credit => 'کریڈٹ';
+
+  @override
+  String get debit => 'ڈیبٹ';
+
+  @override
+  String get runningBalance => 'بیلنس';
 }

@@ -1747,5 +1747,15 @@
       }
     }
   },
-  "close": "بند کریں"
+  "close": "بند کریں",
+  "accountStatement": "खाता विवरण / اکاؤنٹ اسٹیٹمنٹ",
+  "startingBalance": "ابتدائی بیلنس",
+  "endingBalance": "آخری بیلنس",
+  "totalCredits": "کل کریڈٹ",
+  "totalDebits": "کل ڈیبٹ",
+  "statementPeriod": "اسٹیٹمنٹ کی مدت",
+  "noStatementEntries": "اس مدت کے لیے کوئی لین دین یا ٹرانسفر نہیں ملا۔",
+  "credit": "کریڈٹ",
+  "debit": "ڈیبٹ",
+  "runningBalance": "بیلنس"
 }

@@ -2298,5 +2298,15 @@
       }
     }
   },
-  "close": "Close"
+  "close": "Close",
+  "accountStatement": "Account Statement",
+  "startingBalance": "Starting Balance",
+  "endingBalance": "Ending Balance",
+  "totalCredits": "Total Credits",
+  "totalDebits": "Total Debits",
+  "statementPeriod": "Statement Period",
+  "noStatementEntries": "No transactions or transfers found for this period.",
+  "credit": "Credit",
+  "debit": "Debit",
+  "runningBalance": "Running Balance"
 }

@@ -72,3 +72,40 @@ final transfersForAccountProvider =
       .watch(accountsRepositoryProvider)
       .watchTransfersForAccountWithDetails(accountUuid);
 });
+
+class AccountStatementParams {
+  final String accountUuid;
+  final DateTime startDate;
+  final DateTime endDate;
+
+  AccountStatementParams({
+    required this.accountUuid,
+    required this.startDate,
+    required this.endDate,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is AccountStatementParams &&
+          runtimeType == other.runtimeType &&
+          accountUuid == other.accountUuid &&
+          startDate == other.startDate &&
+          endDate == other.endDate;
+
+  @override
+  int get hashCode => accountUuid.hashCode ^ startDate.hashCode ^ endDate.hashCode;
+}
+
+final accountStatementProvider = FutureProvider.family<List<StatementEntry>, AccountStatementParams>((ref, params) async {
+  // Watch accounts stream to trigger refresh if accounts table changes
+  ref.watch(accountsStreamProvider);
+  // Watch transfers stream to trigger refresh if transfers change
+  ref.watch(allTransfersWithDetailsProvider);
+  
+  return ref.read(accountsRepositoryProvider).getAccountStatement(
+    accountUuid: params.accountUuid,
+    startDate: params.startDate,
+    endDate: params.endDate,
+  );
+});
