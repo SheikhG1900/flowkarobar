@@ -103,7 +103,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Cashbook'**
+  /// **'Flowpaisa'**
   String get appTitle;
 
   /// No description provided for @backgroundActivityStarted.
@@ -3121,7 +3121,7 @@ abstract class AppLocalizations {
   /// No description provided for @tourWelcome.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Cashbook!'**
+  /// **'Welcome to Flowpaisa!'**
   String get tourWelcome;
 
   /// No description provided for @tourWelcomeDesc.

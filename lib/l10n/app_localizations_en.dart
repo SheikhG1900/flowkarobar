@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Cashbook';
+  String get appTitle => 'Flowpaisa';
 
   @override
   String get backgroundActivityStarted => 'Activity started in background';
@@ -1667,7 +1667,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingResetSuccess => 'App tour reset successfully';
 
   @override
-  String get tourWelcome => 'Welcome to Cashbook!';
+  String get tourWelcome => 'Welcome to Flowpaisa!';
 
   @override
   String get tourWelcomeDesc =>

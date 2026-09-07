@@ -832,7 +832,10 @@ class ExportService {
                     child: pw.Container(
                       width: 250,
                       height: 250,
-                      child: pw.SvgImage(svg: logoSvgString!),
+                      child: pw.SvgImage(
+                        svg: logoSvgString!,
+                        colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                      ),
                     ),
                   ),
                 ),
@@ -885,7 +888,10 @@ class ExportService {
                             pw.Container(
                               width: 12,
                               height: 12,
-                              child: pw.SvgImage(svg: logoSvgString),
+                              child: pw.SvgImage(
+                                svg: logoSvgString,
+                                colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                              ),
                             ),
                           ],
                         ],
@@ -898,7 +904,10 @@ class ExportService {
                             pw.Container(
                               width: 12,
                               height: 12,
-                              child: pw.SvgImage(svg: logoSvgString),
+                              child: pw.SvgImage(
+                                svg: logoSvgString,
+                                colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                              ),
                             ),
                             pw.SizedBox(width: 4),
                           ],
@@ -2189,7 +2198,10 @@ class ExportService {
                     child: pw.Container(
                       width: 250,
                       height: 250,
-                      child: pw.SvgImage(svg: logoSvgString!),
+                      child: pw.SvgImage(
+                        svg: logoSvgString!,
+                        colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                      ),
                     ),
                   ),
                 ),
@@ -2241,7 +2253,10 @@ class ExportService {
                             pw.Container(
                               width: 12,
                               height: 12,
-                              child: pw.SvgImage(svg: logoSvgString),
+                              child: pw.SvgImage(
+                                svg: logoSvgString,
+                                colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                              ),
                             ),
                           ],
                         ],
@@ -2254,7 +2269,10 @@ class ExportService {
                             pw.Container(
                               width: 12,
                               height: 12,
-                              child: pw.SvgImage(svg: logoSvgString),
+                              child: pw.SvgImage(
+                                svg: logoSvgString,
+                                colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                              ),
                             ),
                             pw.SizedBox(width: 4),
                           ],

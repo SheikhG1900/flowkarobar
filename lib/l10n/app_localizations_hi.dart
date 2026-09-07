@@ -9,7 +9,7 @@ class AppLocalizationsHi extends AppLocalizations {
   AppLocalizationsHi([String locale = 'hi']) : super(locale);
 
   @override
-  String get appTitle => 'कैशबुक';
+  String get appTitle => 'फ्लोपैसा';
 
   @override
   String get backgroundActivityStarted => 'गतिविधि बैकग्राउंड में शुरू हुई';

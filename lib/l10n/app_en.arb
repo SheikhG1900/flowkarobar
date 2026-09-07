@@ -1,6 +1,6 @@
 {
   "@@locale": "en",
-  "appTitle": "Cashbook",
+  "appTitle": "Flowpaisa",
   "backgroundActivityStarted": "Activity started in background",
   "backgroundBackupStarted": "Backup started in background",
   "backgroundCloudClearStarted": "Cloud clear started in background",
@@ -910,7 +910,7 @@
   "resetOnboardingSubtitle": "Reset the app tour to see it again",
   "resetOnboardingConfirmation": "Are you sure you want to reset the app tour? You will see the onboarding screens again on next restart.",
   "onboardingResetSuccess": "App tour reset successfully",
-  "tourWelcome": "Welcome to Cashbook!",
+  "tourWelcome": "Welcome to Flowpaisa!",
   "tourWelcomeDesc": "Let's take a quick tour to help you get started",
   "tourDashboardHeaderTitle": "Cashbook Selector",
   "tourDashboardHeaderDesc": "Tap here to switch between your cashbooks or create a new one",

@@ -9,7 +9,7 @@ class AppLocalizationsUr extends AppLocalizations {
   AppLocalizationsUr([String locale = 'ur']) : super(locale);
 
   @override
-  String get appTitle => 'کیش بک';
+  String get appTitle => 'فلوپیسہ';
 
   @override
   String get backgroundActivityStarted => 'سرگرمی پس منظر میں شروع ہوگئی';
