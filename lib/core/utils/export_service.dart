@@ -518,6 +518,15 @@ class ExportService {
     AppCurrency? currencyObj,
     bool includePayablesAndReceivables = true,
   }) async {
+    String? logoSvgString;
+    try {
+      logoSvgString = await rootBundle.loadString('assets/images/logo_square.svg');
+    } catch (e) {
+      if (kDebugMode) {
+        print('ExportService: Failed to load logo SVG: $e');
+      }
+    }
+
     final payablesRepository = PayablesRepository(_database);
     final receivablesRepository = ReceivablesRepository(_database);
 
@@ -809,12 +818,111 @@ class ExportService {
       return name[0].toUpperCase();
     }
 
+    final pageTheme = pw.PageTheme(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.all(40),
+      theme: theme,
+      buildBackground: logoSvgString != null
+          ? (pw.Context context) {
+              return pw.FullPage(
+                ignoreMargins: true,
+                child: pw.Center(
+                  child: pw.Opacity(
+                    opacity: 0.03,
+                    child: pw.Container(
+                      width: 250,
+                      height: 250,
+                      child: pw.SvgImage(svg: logoSvgString!),
+                    ),
+                  ),
+                ),
+              );
+            }
+          : null,
+    );
+
     // Add pages
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(40),
-        theme: theme,
+        pageTheme: pageTheme,
+        footer: (pw.Context context) {
+          final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
+          final pageText = 'Page ${context.pageNumber} / ${context.pagesCount}';
+          final appTitle = l10n?.appTitle ?? 'Flowpaisa';
+
+          return pw.Container(
+            alignment: pw.Alignment.center,
+            margin: const pw.EdgeInsets.only(top: 10),
+            decoration: const pw.BoxDecoration(
+              border: pw.Border(
+                top: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
+              ),
+            ),
+            padding: const pw.EdgeInsets.only(top: 10),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: isRtl
+                  ? [
+                      _buildText(
+                        pageText,
+                        style: const pw.TextStyle(
+                          color: PdfColors.grey600,
+                          fontSize: 8,
+                        ),
+                      ),
+                      pw.Row(
+                        children: [
+                          _buildText(
+                            appTitle,
+                            style: pw.TextStyle(
+                              color: PdfColors.grey600,
+                              fontSize: 8,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                          if (logoSvgString != null) ...[
+                            pw.SizedBox(width: 4),
+                            pw.Container(
+                              width: 12,
+                              height: 12,
+                              child: pw.SvgImage(svg: logoSvgString),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ]
+                  : [
+                      pw.Row(
+                        children: [
+                          if (logoSvgString != null) ...[
+                            pw.Container(
+                              width: 12,
+                              height: 12,
+                              child: pw.SvgImage(svg: logoSvgString),
+                            ),
+                            pw.SizedBox(width: 4),
+                          ],
+                          _buildText(
+                            appTitle,
+                            style: pw.TextStyle(
+                              color: PdfColors.grey600,
+                              fontSize: 8,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      _buildText(
+                        pageText,
+                        style: const pw.TextStyle(
+                          color: PdfColors.grey600,
+                          fontSize: 8,
+                        ),
+                      ),
+                    ],
+            ),
+          );
+        },
         build: (pw.Context context) {
           // Capture this reference for use in closure
           final self = this;
@@ -1984,6 +2092,15 @@ class ExportService {
     AppLocalizations? l10n,
     AppCurrency? currencyObj,
   }) async {
+    String? logoSvgString;
+    try {
+      logoSvgString = await rootBundle.loadString('assets/images/logo_square.svg');
+    } catch (e) {
+      if (kDebugMode) {
+        print('ExportService: Failed to load logo SVG: $e');
+      }
+    }
+
     // Fetch all analytics data
     final financialSummary =
         await _analyticsRepository.getFinancialSummary(startDate, endDate);
@@ -2058,11 +2175,110 @@ class ExportService {
     // Capture this for use in closure
     final self = this;
 
+    final pageTheme = pw.PageTheme(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.all(40),
+      theme: theme,
+      buildBackground: logoSvgString != null
+          ? (pw.Context context) {
+              return pw.FullPage(
+                ignoreMargins: true,
+                child: pw.Center(
+                  child: pw.Opacity(
+                    opacity: 0.03,
+                    child: pw.Container(
+                      width: 250,
+                      height: 250,
+                      child: pw.SvgImage(svg: logoSvgString!),
+                    ),
+                  ),
+                ),
+              );
+            }
+          : null,
+    );
+
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(40),
-        theme: theme,
+        pageTheme: pageTheme,
+        footer: (pw.Context context) {
+          final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
+          final pageText = 'Page ${context.pageNumber} / ${context.pagesCount}';
+          final appTitle = l10n?.appTitle ?? 'Flowpaisa';
+
+          return pw.Container(
+            alignment: pw.Alignment.center,
+            margin: const pw.EdgeInsets.only(top: 10),
+            decoration: const pw.BoxDecoration(
+              border: pw.Border(
+                top: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
+              ),
+            ),
+            padding: const pw.EdgeInsets.only(top: 10),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: isRtl
+                  ? [
+                      _buildText(
+                        pageText,
+                        style: const pw.TextStyle(
+                          color: PdfColors.grey600,
+                          fontSize: 8,
+                        ),
+                      ),
+                      pw.Row(
+                        children: [
+                          _buildText(
+                            appTitle,
+                            style: pw.TextStyle(
+                              color: PdfColors.grey600,
+                              fontSize: 8,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                          if (logoSvgString != null) ...[
+                            pw.SizedBox(width: 4),
+                            pw.Container(
+                              width: 12,
+                              height: 12,
+                              child: pw.SvgImage(svg: logoSvgString),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ]
+                  : [
+                      pw.Row(
+                        children: [
+                          if (logoSvgString != null) ...[
+                            pw.Container(
+                              width: 12,
+                              height: 12,
+                              child: pw.SvgImage(svg: logoSvgString),
+                            ),
+                            pw.SizedBox(width: 4),
+                          ],
+                          _buildText(
+                            appTitle,
+                            style: pw.TextStyle(
+                              color: PdfColors.grey600,
+                              fontSize: 8,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      _buildText(
+                        pageText,
+                        style: const pw.TextStyle(
+                          color: PdfColors.grey600,
+                          fontSize: 8,
+                        ),
+                      ),
+                    ],
+            ),
+          );
+        },
         build: (pw.Context context) {
           final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
 
