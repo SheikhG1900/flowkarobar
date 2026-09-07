@@ -4370,6 +4370,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get itemizedDetails => 'Itemized Details';
 
   @override
+  String get addItemizedDetails => 'Add Itemized Details';
+
+  @override
   String itemizedHeaderQuantityLabel(String quantity) {
     return '$quantity units';
   }

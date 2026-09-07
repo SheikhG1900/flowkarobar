@@ -2233,6 +2233,7 @@
   "dashboardHeroCombineNoSummary": "Open once to load amounts.",
   "dashboardHeroCombineNoOthers": "There are no other cashbooks to include.",
   "itemizedDetails": "Itemized Details",
+  "addItemizedDetails": "Add Itemized Details",
   "itemizedHeaderQuantityLabel": "{quantity} units",
   "@itemizedHeaderQuantityLabel": {
     "placeholders": {

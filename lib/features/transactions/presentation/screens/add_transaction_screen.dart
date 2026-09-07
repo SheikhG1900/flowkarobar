@@ -2517,9 +2517,19 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                                 : null,
                           ),
                           onPressed: () {
+                            final currentAmount = double.tryParse(_amountController.text) ?? 0.0;
                             TabularEditorSheet.show(
                               context,
-                              initialRows: _tabularRows,
+                              initialRows: _tabularRows.isEmpty && currentAmount > 0
+                                  ? [
+                                      TabularRow(
+                                        date: _selectedDate,
+                                        quantity: 1.0,
+                                        unitAmount: currentAmount,
+                                        description: '',
+                                      )
+                                    ]
+                                  : _tabularRows,
                               currencySymbol: currencySymbol,
                               decimalPlaces: decimalPlaces,
                               currentTransactionAmount:

@@ -4382,6 +4382,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get itemizedDetails => 'मदवार विवरण';
 
   @override
+  String get addItemizedDetails => 'मदवार विवरण जोड़ें';
+
+  @override
   String itemizedHeaderQuantityLabel(String quantity) {
     return '$quantity इकाई';
   }

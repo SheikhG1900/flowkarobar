@@ -7985,6 +7985,12 @@ abstract class AppLocalizations {
   /// **'Itemized Details'**
   String get itemizedDetails;
 
+  /// No description provided for @addItemizedDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Itemized Details'**
+  String get addItemizedDetails;
+
   /// No description provided for @itemizedHeaderQuantityLabel.
   ///
   /// In en, this message translates to:

@@ -1681,6 +1681,7 @@
   "dashboardHeroCombineNoSummary": "رقم لوڈ کرنے کے لیے ایک بار کھولیں۔",
   "dashboardHeroCombineNoOthers": "شامل کرنے کے لیے کوئی دوسری کیش بُک نہیں۔",
   "itemizedDetails": "آئٹم وار تفصیلات",
+  "addItemizedDetails": "آئٹم وار تفصیلات شامل کریں",
   "itemizedHeaderQuantityLabel": "{quantity} یونٹ",
   "@itemizedHeaderQuantityLabel": {
     "placeholders": {

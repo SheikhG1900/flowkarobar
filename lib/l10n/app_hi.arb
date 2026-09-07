@@ -1681,6 +1681,7 @@
   "dashboardHeroCombineNoSummary": "राशि लोड करने के लिए एक बार खोलें।",
   "dashboardHeroCombineNoOthers": "शामिल करने के लिए कोई अन्य कैशबुक नहीं है।",
   "itemizedDetails": "मदवार विवरण",
+  "addItemizedDetails": "मदवार विवरण जोड़ें",
   "itemizedHeaderQuantityLabel": "{quantity} इकाई",
   "@itemizedHeaderQuantityLabel": {
     "placeholders": {
