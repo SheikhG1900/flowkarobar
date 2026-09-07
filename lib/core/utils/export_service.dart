@@ -1,3 +1,4 @@
+import 'package:flowpaisa/core/utils/tabular_parser.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
@@ -73,10 +74,14 @@ class ExportService {
   }
 
   // Helper to translate transaction type abbreviations
-  String _getLocalizedTypeShort(String type, AppLocalizations? l10n) {
-    if (l10n == null) return type;
-    if (type == 'I') return l10n.incomeShort.replaceAll(':', '').trim();
-    if (type == 'E') return l10n.expenseShort.replaceAll(':', '').trim();
+  String _getLocalizedType(String type, AppLocalizations? l10n) {
+    if (l10n == null) {
+      if (type == 'INCOME') return 'Income';
+      if (type == 'EXPENSE') return 'Expense';
+      return type;
+    }
+    if (type == 'INCOME') return l10n.income;
+    if (type == 'EXPENSE') return l10n.expense;
     if (type == 'P') return l10n.payableTag;
     if (type == 'R') return l10n.receivableTag;
     return type;
@@ -273,13 +278,20 @@ class ExportService {
           l10n: l10n,
         );
         final scaledAmount = t.amount / divisor;
+        
+        // If description is tabular (itemized), extract only the summary text
+        String cleanDescription = t.description ?? '';
+        if (TabularParser.isTabular(cleanDescription)) {
+          cleanDescription = TabularParser.parse(cleanDescription).$1;
+        }
+
         csvData.add([
           AppDateFormatter.formatDate(t.date, pattern: _dateFormat),
           t.type,
           scaledAmount.toStringAsFixed(currency?.decimalPlaces ?? 2),
           item.category?.name ?? '', // Use name instead of ID
           item.contact?.name ?? '', // Use name instead of ID
-          t.description ?? '',
+          cleanDescription,
           paymentStatus,
         ]);
       }
@@ -1213,7 +1225,7 @@ class ExportService {
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
                             child: _buildText(
-                                _getLocalizedTypeShort(t.type[0], l10n),
+                                _getLocalizedType(t.type, l10n),
                                 style: const pw.TextStyle(fontSize: 9),
                                 align: isRtl
                                     ? pw.TextAlign.right
@@ -1309,13 +1321,22 @@ class ExportService {
                             alignment: isRtl
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
-                            child: _buildText(
-                              t.description ?? '-',
-                              style: const pw.TextStyle(fontSize: 9),
-                              align: isRtl
-                                  ? pw.TextAlign.right
-                                  : pw.TextAlign.left,
-                            ),
+                            child: () {
+                              String cleanDescription = t.description ?? '-';
+                              if (TabularParser.isTabular(cleanDescription)) {
+                                cleanDescription = TabularParser.parse(cleanDescription).$1;
+                                if (cleanDescription.isEmpty) {
+                                  cleanDescription = '-';
+                                }
+                              }
+                              return _buildText(
+                                cleanDescription,
+                                style: const pw.TextStyle(fontSize: 9),
+                                align: isRtl
+                                    ? pw.TextAlign.right
+                                    : pw.TextAlign.left,
+                              );
+                            }(),
                           ),
                         ),
                         pw.Padding(
@@ -1469,13 +1490,22 @@ class ExportService {
                             alignment: isRtl
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
-                            child: _buildText(
-                              p.description ?? '-',
-                              style: const pw.TextStyle(fontSize: 9),
-                              align: isRtl
-                                  ? pw.TextAlign.right
-                                  : pw.TextAlign.left,
-                            ),
+                            child: () {
+                              String cleanDescription = p.description ?? '-';
+                              if (TabularParser.isTabular(cleanDescription)) {
+                                cleanDescription = TabularParser.parse(cleanDescription).$1;
+                                if (cleanDescription.isEmpty) {
+                                  cleanDescription = '-';
+                                }
+                              }
+                              return _buildText(
+                                cleanDescription,
+                                style: const pw.TextStyle(fontSize: 9),
+                                align: isRtl
+                                    ? pw.TextAlign.right
+                                    : pw.TextAlign.left,
+                              );
+                            }(),
                           ),
                         ),
                       ],
@@ -1612,13 +1642,22 @@ class ExportService {
                             alignment: isRtl
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
-                            child: _buildText(
-                              r.description ?? '-',
-                              style: const pw.TextStyle(fontSize: 9),
-                              align: isRtl
-                                  ? pw.TextAlign.right
-                                  : pw.TextAlign.left,
-                            ),
+                            child: () {
+                              String cleanDescription = r.description ?? '-';
+                              if (TabularParser.isTabular(cleanDescription)) {
+                                cleanDescription = TabularParser.parse(cleanDescription).$1;
+                                if (cleanDescription.isEmpty) {
+                                  cleanDescription = '-';
+                                }
+                              }
+                              return _buildText(
+                                cleanDescription,
+                                style: const pw.TextStyle(fontSize: 9),
+                                align: isRtl
+                                    ? pw.TextAlign.right
+                                    : pw.TextAlign.left,
+                              );
+                            }(),
                           ),
                         ),
                       ],
