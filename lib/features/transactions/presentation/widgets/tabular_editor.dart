@@ -205,6 +205,17 @@ class _TabularRowInputState extends State<_TabularRowInput> {
                   ),
                 ),
               ),
+              const SizedBox(width: 12),
+              // Copy Button
+              IconButton(
+                icon: const Icon(Icons.copy_outlined, size: 18),
+                tooltip: l10n.copy,
+                onPressed: widget.onCopy,
+                style: IconButton.styleFrom(
+                  foregroundColor: theme.colorScheme.primary,
+                  padding: const EdgeInsets.all(8),
+                ),
+              ),
               const Spacer(),
               // Calculated Item Total (Price) on Top
               Text(
@@ -215,41 +226,15 @@ class _TabularRowInputState extends State<_TabularRowInput> {
                   color: theme.colorScheme.primary,
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: widget.onCopy,
-                  icon: const Icon(Icons.copy_outlined, size: 18),
-                  label: Text(l10n.copy),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: theme.colorScheme.primary,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-              ),
               const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: widget.onDelete,
-                  icon: const Icon(Icons.delete_outline, size: 18),
-                  label: Text(l10n.delete),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: theme.colorScheme.error,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    side: BorderSide(
-                      color: theme.colorScheme.error.withValues(alpha: 0.45),
-                    ),
-                  ),
+              // Delete Button
+              IconButton(
+                icon: const Icon(Icons.delete_outline, size: 18),
+                tooltip: l10n.delete,
+                onPressed: widget.onDelete,
+                style: IconButton.styleFrom(
+                  foregroundColor: theme.colorScheme.error,
+                  padding: const EdgeInsets.all(8),
                 ),
               ),
             ],
@@ -281,9 +266,41 @@ class _TabularRowInputState extends State<_TabularRowInput> {
                   controller: _qtyController,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
+                  textAlign: TextAlign.center,
                   decoration: InputDecoration(
                     labelText: l10n.unitsQuantity,
                     isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    prefixIcon: IconButton(
+                      icon: const Icon(Icons.remove, size: 16),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      onPressed: () {
+                        final current = double.tryParse(_qtyController.text) ?? 1.0;
+                        if (current > 1) {
+                          final newValue = current - 1;
+                          final displayValue = newValue % 1 == 0 ? newValue.toInt().toString() : newValue.toString();
+                          _qtyController.text = displayValue;
+                          widget.row.quantity = newValue;
+                          widget.onChanged();
+                          setState(() {});
+                        }
+                      },
+                    ),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.add, size: 16),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      onPressed: () {
+                        final current = double.tryParse(_qtyController.text) ?? 1.0;
+                        final newValue = current + 1;
+                        final displayValue = newValue % 1 == 0 ? newValue.toInt().toString() : newValue.toString();
+                        _qtyController.text = displayValue;
+                        widget.row.quantity = newValue;
+                        widget.onChanged();
+                        setState(() {});
+                      },
+                    ),
                   ),
                   onChanged: (val) {
                     widget.row.quantity = double.tryParse(val) ?? 0.0;
