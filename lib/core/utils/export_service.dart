@@ -1,4 +1,5 @@
 import 'package:flowpaisa/core/utils/tabular_parser.dart';
+import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
@@ -3135,6 +3136,433 @@ class ExportService {
                       currencyObj: currencyObj),
               ],
             ),
+          ];
+        },
+      ),
+    );
+
+    return pdf;
+  }
+
+  Future<pw.Document> generateAccountStatementPDF({
+    required String accountName,
+    required DateTime startDate,
+    required DateTime endDate,
+    required List<StatementEntry> entries,
+    required AppCurrency currency,
+    AppLocalizations? l10n,
+  }) async {
+    pw.SvgImage? logoSvg;
+    String? logoSvgString;
+    try {
+      logoSvgString = await rootBundle.loadString('assets/images/logo_square.svg');
+      logoSvg = pw.SvgImage(svg: logoSvgString);
+    } catch (e) {
+      if (kDebugMode) {
+        print('ExportService: Failed to load logo SVG: $e');
+      }
+    }
+
+    final unicodeFont = await loadUnicodeFont();
+    final hindiFont = await loadHindiFont();
+    final englishFont = await loadEnglishFont();
+
+    final theme = pw.ThemeData.withFont(
+      base: englishFont ?? unicodeFont,
+      bold: englishFont ?? unicodeFont,
+      fontFallback: [
+        if (unicodeFont != null) unicodeFont,
+        if (hindiFont != null) hindiFont,
+        if (englishFont != null) englishFont,
+      ],
+    );
+
+    final pageTheme = pw.PageTheme(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.all(40),
+      theme: theme,
+      buildBackground: logoSvgString != null
+          ? (pw.Context context) {
+              return pw.FullPage(
+                ignoreMargins: true,
+                child: pw.Center(
+                  child: pw.Opacity(
+                    opacity: 0.03,
+                    child: pw.Container(
+                      width: 250,
+                      height: 250,
+                      child: pw.SvgImage(
+                        svg: logoSvgString!,
+                        colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }
+          : null,
+    );
+
+    final pdf = pw.Document();
+
+    // Calculate Summary Values
+    double totalCredits = 0.0;
+    double totalDebits = 0.0;
+    double startingBalance = 0.0;
+    double endingBalance = 0.0;
+
+    if (entries.isNotEmpty) {
+      final lastEntry = entries.first;
+      final firstEntry = entries.last;
+
+      for (final entry in entries) {
+        if (entry.entryType == StatementEntryType.credit) {
+          totalCredits += entry.amount;
+        } else {
+          totalDebits += entry.amount;
+        }
+      }
+
+      endingBalance = lastEntry.runningBalance;
+      final firstIsExpense = firstEntry.entryType == StatementEntryType.debit;
+      startingBalance = firstEntry.runningBalance - (firstIsExpense ? -firstEntry.amount : firstEntry.amount);
+    }
+
+    final dateFormat = AppDateFormatter.getFormatter(_dateFormat);
+    final dateTimeFormat = AppDateFormatter.getFormatter('dd MMM yyyy, HH:mm');
+
+    String fmt(num amount) {
+      return AmountFormatter.formatWithCurrency(amount.toDouble(), currency);
+    }
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageTheme: pageTheme,
+        footer: (pw.Context context) {
+          final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
+          final pageText = 'Page ${context.pageNumber} / ${context.pagesCount}';
+          final appTitle = l10n?.appTitle ?? 'Flowpaisa';
+
+          return pw.Container(
+            alignment: pw.Alignment.center,
+            margin: const pw.EdgeInsets.only(top: 10),
+            decoration: const pw.BoxDecoration(
+              border: pw.Border(
+                top: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
+              ),
+            ),
+            padding: const pw.EdgeInsets.only(top: 10),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: isRtl
+                  ? [
+                      _buildText(
+                        pageText,
+                        style: const pw.TextStyle(
+                          color: PdfColors.grey600,
+                          fontSize: 8,
+                        ),
+                      ),
+                      pw.Row(
+                        children: [
+                          _buildText(
+                            appTitle,
+                            style: pw.TextStyle(
+                              color: PdfColors.grey600,
+                              fontSize: 8,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                          if (logoSvgString != null) ...[
+                            pw.SizedBox(width: 4),
+                            pw.Container(
+                              width: 12,
+                              height: 12,
+                              child: pw.SvgImage(
+                                svg: logoSvgString,
+                                colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ]
+                  : [
+                      pw.Row(
+                        children: [
+                          if (logoSvgString != null) ...[
+                            pw.Container(
+                              width: 12,
+                              height: 12,
+                              child: pw.SvgImage(
+                                svg: logoSvgString,
+                                colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                              ),
+                            ),
+                            pw.SizedBox(width: 4),
+                          ],
+                          _buildText(
+                            appTitle,
+                            style: pw.TextStyle(
+                              color: PdfColors.grey600,
+                              fontSize: 8,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      _buildText(
+                        pageText,
+                        style: const pw.TextStyle(
+                          color: PdfColors.grey600,
+                          fontSize: 8,
+                        ),
+                      ),
+                    ],
+            ),
+          );
+        },
+        build: (pw.Context context) {
+          final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
+
+          return [
+            // Header
+            pw.Header(
+              level: 0,
+              child: pw.Column(
+                crossAxisAlignment: isRtl
+                    ? pw.CrossAxisAlignment.end
+                    : pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Container(
+                    width: double.infinity,
+                    alignment: isRtl
+                        ? pw.Alignment.centerRight
+                        : pw.Alignment.centerLeft,
+                    child: _buildText(
+                      l10n?.accountStatement ?? 'Account Statement',
+                      style: pw.TextStyle(
+                        fontSize: 24,
+                        fontWeight: pw.FontWeight.bold,
+                        color: const PdfColor(0 / 255.0, 100 / 255.0, 150 / 255.0),
+                      ),
+                      align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                    ),
+                  ),
+                  pw.SizedBox(height: 8),
+                  pw.Table(
+                    columnWidths: {
+                      0: const pw.IntrinsicColumnWidth(),
+                      1: const pw.FixedColumnWidth(5),
+                      2: const pw.IntrinsicColumnWidth(),
+                    },
+                    children: [
+                      _buildLocalizedTableRow(
+                        [
+                          _buildText(
+                            l10n?.account ?? 'Account',
+                            style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                          ),
+                          _buildText(':', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                          _buildText(
+                            accountName,
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.black,
+                            ),
+                            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                          ),
+                        ],
+                        l10n: l10n,
+                      ),
+                      _buildLocalizedTableRow(
+                        [
+                          _buildText(
+                            l10n?.dateRange ?? 'Date Range',
+                            style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                          ),
+                          _buildText(':', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                          _buildText(
+                            '${dateFormat.format(startDate)} - ${dateFormat.format(endDate)}',
+                            style: pw.TextStyle(
+                              fontSize: 10,
+                              fontWeight: pw.FontWeight.bold,
+                              color: PdfColors.black,
+                            ),
+                            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                          ),
+                        ],
+                        l10n: l10n,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            pw.SizedBox(height: 20),
+
+            // Summary Section
+            _buildLocalizedHeader(l10n?.summary ?? 'Summary', level: 1, l10n: l10n),
+            pw.SizedBox(height: 10),
+            pw.Table(
+              border: pw.TableBorder.all(color: PdfColors.grey300),
+              children: [
+                _buildLocalizedTableRow(
+                  [
+                    _buildTableCell(
+                      l10n?.startingBalance ?? 'Starting Balance',
+                      fmt(startingBalance),
+                      null,
+                      l10n,
+                    ),
+                    _buildTableCell(
+                      l10n?.endingBalance ?? 'Ending Balance',
+                      fmt(endingBalance),
+                      null,
+                      l10n,
+                    ),
+                  ],
+                  l10n: l10n,
+                ),
+                _buildLocalizedTableRow(
+                  [
+                    _buildTableCell(
+                      l10n?.totalCredits ?? 'Total Credits',
+                      fmt(totalCredits),
+                      ExportService.getIncomePdfColor(),
+                      l10n,
+                    ),
+                    _buildTableCell(
+                      l10n?.totalDebits ?? 'Total Debits',
+                      fmt(totalDebits),
+                      ExportService.getExpensePdfColor(),
+                      l10n,
+                    ),
+                  ],
+                  l10n: l10n,
+                ),
+              ],
+            ),
+            pw.SizedBox(height: 30),
+
+            // Entries Section
+            _buildLocalizedHeader(l10n?.transactions ?? 'Transactions', level: 1, l10n: l10n),
+            pw.SizedBox(height: 10),
+            if (entries.isEmpty)
+              _buildText(
+                l10n?.noStatementEntries ?? 'No statement entries in this date range.',
+                style: pw.TextStyle(color: PdfColors.grey700),
+                align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+              )
+            else
+              pw.Table(
+                border: pw.TableBorder.all(color: PdfColors.grey300),
+                columnWidths: {
+                  0: const pw.FixedColumnWidth(80),
+                  1: const pw.FlexColumnWidth(3),
+                  2: const pw.FixedColumnWidth(80),
+                  3: const pw.FixedColumnWidth(80),
+                  4: const pw.FixedColumnWidth(100),
+                },
+                children: [
+                  _buildLocalizedTableRow(
+                    [
+                      _buildTableHeaderCell(l10n?.date ?? 'Date'),
+                      _buildTableHeaderCell(l10n?.description ?? 'Description'),
+                      _buildTableHeaderCell(l10n?.debit ?? 'Debit'),
+                      _buildTableHeaderCell(l10n?.credit ?? 'Credit'),
+                      _buildTableHeaderCell(l10n?.runningBalance ?? 'Balance'),
+                    ],
+                    l10n: l10n,
+                    decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                  ),
+                  ...entries.reversed.map((entry) {
+                    final isDebit = entry.entryType == StatementEntryType.debit;
+                    final amountColor = isDebit
+                        ? ExportService.getExpensePdfColor()
+                        : ExportService.getIncomePdfColor();
+
+                    // Extract clean description if tabular
+                    String cleanDescription = entry.description ?? '';
+                    if (TabularParser.isTabular(cleanDescription)) {
+                      cleanDescription = TabularParser.parse(cleanDescription).$1;
+                    }
+                    if (cleanDescription.isEmpty) {
+                      cleanDescription = entry.title;
+                    }
+
+                    return _buildLocalizedTableRow(
+                      [
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Container(
+                            alignment: isRtl ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
+                            child: _buildText(
+                              dateFormat.format(entry.date),
+                              style: const pw.TextStyle(fontSize: 9),
+                              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                            ),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Container(
+                            alignment: isRtl ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
+                            child: _buildText(
+                              cleanDescription,
+                              style: const pw.TextStyle(fontSize: 9),
+                              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                            ),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: _buildText(
+                              isDebit ? fmt(entry.amount) : '-',
+                              style: pw.TextStyle(
+                                fontSize: 9,
+                                color: isDebit ? amountColor : PdfColors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: _buildText(
+                              !isDebit ? fmt(entry.amount) : '-',
+                              style: pw.TextStyle(
+                                fontSize: 9,
+                                color: !isDebit ? amountColor : PdfColors.black,
+                              ),
+                            ),
+                          ),
+                        ),
+                        pw.Padding(
+                          padding: const pw.EdgeInsets.all(4),
+                          child: pw.Container(
+                            alignment: pw.Alignment.centerLeft,
+                            child: _buildText(
+                              fmt(entry.runningBalance),
+                              style: const pw.TextStyle(
+                                fontSize: 9,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                      l10n: l10n,
+                    );
+                  }),
+                ],
+              ),
           ];
         },
       ),

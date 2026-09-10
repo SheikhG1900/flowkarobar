@@ -18,11 +18,16 @@ import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/shared/models/date_range_state.dart';
 import 'package:flowpaisa/shared/widgets/collapsible_list_summary.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
+import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/core/utils/export_service.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:printing/printing.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:collection/collection.dart';
 
 class AccountStatementScreen extends ConsumerStatefulWidget {
@@ -132,6 +137,193 @@ class _AccountStatementScreenState extends ConsumerState<AccountStatementScreen>
     }
   }
 
+  Future<void> _exportPDF(List<StatementEntry> entries, AppCurrency currency) async {
+    final l10n = AppLocalizations.of(context)!;
+    final db = ref.read(databaseProvider);
+    final txRepo = ref.read(transactionsRepositoryProvider);
+    final exportService = ExportService(txRepo, db);
+
+    // Show loading indicator dialog
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: AppLoadingIndicator(),
+      ),
+    );
+
+    try {
+      final pdfDoc = await exportService.generateAccountStatementPDF(
+        accountName: widget.account.name,
+        startDate: _dateRangeState.startDate,
+        endDate: _dateRangeState.endDate,
+        entries: entries,
+        currency: currency,
+        l10n: l10n,
+      );
+      final pdfBytes = await pdfDoc.save();
+      final fileName = 'Statement_${widget.account.name}_${AppDateFormatter.formatDate(_dateRangeState.startDate, pattern: "yyyyMMdd")}_${AppDateFormatter.formatDate(_dateRangeState.endDate, pattern: "yyyyMMdd")}.pdf';
+
+      final directory = await getTemporaryDirectory();
+      final filePath = '${directory.path}/$fileName';
+      final file = File(filePath);
+      await file.writeAsBytes(pdfBytes);
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading indicator
+
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(l10n.pdfReady),
+            content: Text(l10n.pdfReportReady),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                      final FileSaveLocation? result = await getSaveLocation(
+                        suggestedName: fileName,
+                        acceptedTypeGroups: [
+                          const XTypeGroup(label: 'PDF', extensions: ['pdf']),
+                        ],
+                      );
+                      if (result != null) {
+                        await file.copy(result.path);
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.exportSavedTo(result.path));
+                        }
+                      }
+                    } else {
+                      await exportService.saveToDownloads(filePath);
+                      if (context.mounted) {
+                        ToastUtils.showSuccessToast(
+                            context, ref, l10n.savedToDownloads);
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(
+                          context, ref, l10n.errorSaving(e.toString()));
+                    }
+                  }
+                },
+                child: Text(l10n.saveCopy),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                      final fileUri = Uri.file(filePath);
+                      if (await canLaunchUrl(fileUri)) {
+                        await launchUrl(fileUri);
+                      } else {
+                        throw Exception('Could not open the PDF file.');
+                      }
+                    } else {
+                      await exportService.sharePDFFile(filePath);
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(
+                          context, ref, l10n.errorSharing(e.toString()));
+                    }
+                  }
+                },
+                child: Text(Platform.isWindows || Platform.isMacOS || Platform.isLinux ? l10n.openFile : l10n.share),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary),
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await Printing.layoutPdf(
+                    onLayout: (PdfPageFormat format) async => pdfBytes,
+                  );
+                },
+                child: Text(l10n.preview),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading indicator if open
+        ToastUtils.showErrorToast(context, ref, 'Failed to export PDF: $e');
+      }
+    }
+  }
+
+  void _showExportOptions(BuildContext context, List<StatementEntry> entries, AppCurrency currency) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final isPremium = ref.read(premiumProvider).isPremium;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                children: [
+                  Text(
+                    l10n.exportData,
+                    style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.table_chart, color: Colors.green),
+              title: Text(l10n.exportAsCSV),
+              subtitle: Text(l10n.exportAsCSVSubtitle),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _exportCSV(entries, currency);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.picture_as_pdf, color: Colors.red),
+              title: Text(l10n.exportAsPDF),
+              subtitle: Text(l10n.exportAsPDFSubtitle),
+              trailing: !isPremium
+                  ? const Icon(Icons.lock, color: Colors.orange)
+                  : const Icon(Icons.verified, color: Colors.blue),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                if (!isPremium) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PremiumScreen(),
+                    ),
+                  );
+                } else {
+                  _exportPDF(entries, currency);
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   String _generateCSVContent(List<StatementEntry> entries, AppCurrency currency, AppLocalizations l10n) {
     final csvRows = <List<String>>[];
     
@@ -190,8 +382,8 @@ class _AccountStatementScreenState extends ConsumerState<AccountStatementScreen>
           if (statementAsync.hasValue && statementAsync.value!.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.file_download),
-              tooltip: 'Export CSV',
-              onPressed: () => _exportCSV(statementAsync.value!, currency),
+              tooltip: l10n.exportData,
+              onPressed: () => _showExportOptions(context, statementAsync.value!, currency),
             ),
         ],
       ),
