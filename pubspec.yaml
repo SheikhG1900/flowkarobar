@@ -66,6 +66,7 @@ dependencies:
   csv: ^6.0.0
   pdf: ^3.10.8
   printing: ^5.12.2
+  archive: ^3.6.1
   material_symbols_icons: ^4.2928.0
   # Contacts
   flutter_contacts: ^1.1.7+1  # Modern replacement for contacts_service

@@ -3550,7 +3550,7 @@ class ExportService {
                             alignment: pw.Alignment.centerLeft,
                             child: _buildText(
                               fmt(entry.runningBalance),
-                              style: const pw.TextStyle(
+                              style: pw.TextStyle(
                                 fontSize: 9,
                                 fontWeight: pw.FontWeight.bold,
                               ),

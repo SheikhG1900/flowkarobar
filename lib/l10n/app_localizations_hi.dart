@@ -4546,4 +4546,63 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get runningBalance => 'शेष राशि';
+
+  @override
+  String get attachments => 'संलग्नक';
+
+  @override
+  String get addAttachment => 'संलग्नक जोड़ें';
+
+  @override
+  String get noAttachments => 'अभी तक कोई संलग्नक नहीं जोड़ा गया';
+
+  @override
+  String get documents => 'दस्तावेज़';
+
+  @override
+  String get storage => 'स्टोरेज';
+
+  @override
+  String get storageUsed => 'उपयोग की गई स्टोरेज';
+
+  @override
+  String get documentBackup => 'दस्तावेज़ बैकअप';
+
+  @override
+  String get exportBackup => 'बैकअप निर्यात करें';
+
+  @override
+  String get importBackup => 'बैकअप आयात करें';
+
+  @override
+  String get backupExported => 'बैकअप सफलतापूर्वक निर्यात किया गया';
+
+  @override
+  String get backupImported => 'बैकअप सफलतापूर्वक आयात किया गया';
+
+  @override
+  String get documentsAndStorage => 'दस्तावेज़ और स्टोरेज';
+
+  @override
+  String get viewAllDocuments => 'सभी दस्तावेज़ देखें';
+
+  @override
+  String get deleteAttachmentConfirm =>
+      'क्या आप वाकई इस संलग्नक को हटाना चाहते हैं?';
+
+  @override
+  String get deleteAttachmentEditWarning =>
+      'यह संलग्नक केवल तभी स्थायी रूप से हटाया जाएगा जब आप लेनदेन को सहेजेंगे।';
+
+  @override
+  String get chooseDocument => 'दस्तावेज़ चुनें';
+
+  @override
+  String get cameraSubtitle => 'अपने रसीद या दस्तावेज़ की फ़ोटो लें';
+
+  @override
+  String get gallerySubtitle => 'अपनी गैलरी से चित्र चुनें';
+
+  @override
+  String get chooseDocumentSubtitle => 'पीडीएफ या अन्य दस्तावेज़ फ़ाइलें चुनें';
 }

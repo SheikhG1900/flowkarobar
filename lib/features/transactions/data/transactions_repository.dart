@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
+import 'package:flowpaisa/features/transactions/data/transaction_documents_repository.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/dashboard/domain/models.dart';
 import 'package:rxdart/rxdart.dart';
@@ -407,6 +408,10 @@ class TransactionsRepository {
   // Delete transaction
   Future<int> deleteTransaction(String uuid) async {
     return await _database.transaction(() async {
+      // Delete associated physical documents and database rows
+      final docRepo = TransactionDocumentsRepository(_database);
+      await docRepo.deleteDocumentsForTransaction(uuid);
+
       return await (_database.update(_database.transactions)
             ..where((t) => t.uuid.equals(uuid)))
           .write(const TransactionsCompanion(

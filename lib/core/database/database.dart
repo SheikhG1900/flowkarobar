@@ -343,12 +343,29 @@ class AccountTransfers extends Table {
   Set<Column> get primaryKey => {uuid};
 }
 
+class TransactionDocuments extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get transactionUuid => text().references(Transactions, #uuid)();
+  TextColumn get fileName => text()(); // Unique local file name: doc_uuid.ext
+  TextColumn get originalName => text()(); // Original file name: receipt.jpg
+  IntColumn get fileSize => integer()(); // File size in bytes
+  TextColumn get mimeType => text().nullable()(); // MIME type or extension
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
 @DriftDatabase(tables: [
   Categories,
   Contacts,
   Accounts,
   Transactions,
   AccountTransfers,
+  TransactionDocuments,
   Receivables,
   Payables,
   Reminders,
@@ -366,7 +383,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 26;
+  int get schemaVersion => 27;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -674,6 +691,17 @@ class AppDatabase extends _$AppDatabase {
             } catch (e) {
               if (kDebugMode) {
                 print('Migration: Failed to backfill scale_factor: $e');
+              }
+            }
+          }
+
+          // Migration from version 26 to 27: Add TransactionDocuments table
+          if (from <= 26) {
+            try {
+              await m.createTable(transactionDocuments);
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: transaction_documents table might already exist: $e');
               }
             }
           }

@@ -6,6 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/features/transactions/data/schedules_repository.dart';
+import 'package:flowpaisa/features/transactions/data/transaction_documents_repository.dart';
+import 'package:flowpaisa/core/services/document_backup_service.dart';
+import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
@@ -24,6 +27,32 @@ import 'package:shared_preferences/shared_preferences.dart';
 final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
   final database = ref.watch(databaseProvider);
   return TransactionsRepository(database);
+});
+
+// Transaction Documents Repository provider
+final transactionDocumentsRepositoryProvider = Provider<TransactionDocumentsRepository>((ref) {
+  final database = ref.watch(databaseProvider);
+  return TransactionDocumentsRepository(database);
+});
+
+// Document Backup Service provider
+final documentBackupServiceProvider = Provider<DocumentBackupService>((ref) {
+  final docRepo = ref.watch(transactionDocumentsRepositoryProvider);
+  final database = ref.watch(databaseProvider);
+  final driveService = ref.watch(googleDriveServiceProvider);
+  return DocumentBackupService(docRepo, database, driveService);
+});
+
+// Watch documents for a specific transaction
+final transactionDocumentsProvider = StreamProvider.family<List<TransactionDocument>, String>((ref, transactionUuid) {
+  final repository = ref.watch(transactionDocumentsRepositoryProvider);
+  return repository.watchDocumentsForTransaction(transactionUuid);
+});
+
+// Watch all documents
+final allDocumentsProvider = StreamProvider<List<TransactionDocument>>((ref) {
+  final repository = ref.watch(transactionDocumentsRepositoryProvider);
+  return repository.watchAllDocuments();
 });
 
 // Schedules repository provider

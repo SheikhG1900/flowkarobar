@@ -8284,6 +8284,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Running Balance'**
   String get runningBalance;
+
+  /// No description provided for @attachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments'**
+  String get attachments;
+
+  /// No description provided for @addAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Attachments'**
+  String get addAttachment;
+
+  /// No description provided for @noAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'No attachments added yet'**
+  String get noAttachments;
+
+  /// No description provided for @documents.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents'**
+  String get documents;
+
+  /// No description provided for @storage.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get storage;
+
+  /// No description provided for @storageUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage Used'**
+  String get storageUsed;
+
+  /// No description provided for @documentBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Document Backup'**
+  String get documentBackup;
+
+  /// No description provided for @exportBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Backup'**
+  String get exportBackup;
+
+  /// No description provided for @importBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Backup'**
+  String get importBackup;
+
+  /// No description provided for @backupExported.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup exported successfully'**
+  String get backupExported;
+
+  /// No description provided for @backupImported.
+  ///
+  /// In en, this message translates to:
+  /// **'Backup imported successfully'**
+  String get backupImported;
+
+  /// No description provided for @documentsAndStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Documents & Storage'**
+  String get documentsAndStorage;
+
+  /// No description provided for @viewAllDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'View All Documents'**
+  String get viewAllDocuments;
+
+  /// No description provided for @deleteAttachmentConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this attachment?'**
+  String get deleteAttachmentConfirm;
+
+  /// No description provided for @deleteAttachmentEditWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This attachment will be permanently deleted only when you save the transaction.'**
+  String get deleteAttachmentEditWarning;
+
+  /// No description provided for @chooseDocument.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Documents'**
+  String get chooseDocument;
+
+  /// No description provided for @cameraSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Take a photo of your receipt or document'**
+  String get cameraSubtitle;
+
+  /// No description provided for @gallerySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose images from your gallery'**
+  String get gallerySubtitle;
+
+  /// No description provided for @chooseDocumentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Select PDF or other document files'**
+  String get chooseDocumentSubtitle;
 }
 
 class _AppLocalizationsDelegate

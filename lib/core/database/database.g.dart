@@ -3614,6 +3614,530 @@ class AccountTransfersCompanion extends UpdateCompanion<AccountTransfer> {
   }
 }
 
+class $TransactionDocumentsTable extends TransactionDocuments
+    with TableInfo<$TransactionDocumentsTable, TransactionDocument> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TransactionDocumentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _transactionUuidMeta =
+      const VerificationMeta('transactionUuid');
+  @override
+  late final GeneratedColumn<String> transactionUuid = GeneratedColumn<String>(
+      'transaction_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES transactions (uuid)'));
+  static const VerificationMeta _fileNameMeta =
+      const VerificationMeta('fileName');
+  @override
+  late final GeneratedColumn<String> fileName = GeneratedColumn<String>(
+      'file_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _originalNameMeta =
+      const VerificationMeta('originalName');
+  @override
+  late final GeneratedColumn<String> originalName = GeneratedColumn<String>(
+      'original_name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _fileSizeMeta =
+      const VerificationMeta('fileSize');
+  @override
+  late final GeneratedColumn<int> fileSize = GeneratedColumn<int>(
+      'file_size', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _mimeTypeMeta =
+      const VerificationMeta('mimeType');
+  @override
+  late final GeneratedColumn<String> mimeType = GeneratedColumn<String>(
+      'mime_type', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        transactionUuid,
+        fileName,
+        originalName,
+        fileSize,
+        mimeType,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'transaction_documents';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<TransactionDocument> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('transaction_uuid')) {
+      context.handle(
+          _transactionUuidMeta,
+          transactionUuid.isAcceptableOrUnknown(
+              data['transaction_uuid']!, _transactionUuidMeta));
+    } else if (isInserting) {
+      context.missing(_transactionUuidMeta);
+    }
+    if (data.containsKey('file_name')) {
+      context.handle(_fileNameMeta,
+          fileName.isAcceptableOrUnknown(data['file_name']!, _fileNameMeta));
+    } else if (isInserting) {
+      context.missing(_fileNameMeta);
+    }
+    if (data.containsKey('original_name')) {
+      context.handle(
+          _originalNameMeta,
+          originalName.isAcceptableOrUnknown(
+              data['original_name']!, _originalNameMeta));
+    } else if (isInserting) {
+      context.missing(_originalNameMeta);
+    }
+    if (data.containsKey('file_size')) {
+      context.handle(_fileSizeMeta,
+          fileSize.isAcceptableOrUnknown(data['file_size']!, _fileSizeMeta));
+    } else if (isInserting) {
+      context.missing(_fileSizeMeta);
+    }
+    if (data.containsKey('mime_type')) {
+      context.handle(_mimeTypeMeta,
+          mimeType.isAcceptableOrUnknown(data['mime_type']!, _mimeTypeMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  TransactionDocument map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TransactionDocument(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      transactionUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}transaction_uuid'])!,
+      fileName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}file_name'])!,
+      originalName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}original_name'])!,
+      fileSize: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}file_size'])!,
+      mimeType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}mime_type']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $TransactionDocumentsTable createAlias(String alias) {
+    return $TransactionDocumentsTable(attachedDatabase, alias);
+  }
+}
+
+class TransactionDocument extends DataClass
+    implements Insertable<TransactionDocument> {
+  final String uuid;
+  final String transactionUuid;
+  final String fileName;
+  final String originalName;
+  final int fileSize;
+  final String? mimeType;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const TransactionDocument(
+      {required this.uuid,
+      required this.transactionUuid,
+      required this.fileName,
+      required this.originalName,
+      required this.fileSize,
+      this.mimeType,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['transaction_uuid'] = Variable<String>(transactionUuid);
+    map['file_name'] = Variable<String>(fileName);
+    map['original_name'] = Variable<String>(originalName);
+    map['file_size'] = Variable<int>(fileSize);
+    if (!nullToAbsent || mimeType != null) {
+      map['mime_type'] = Variable<String>(mimeType);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  TransactionDocumentsCompanion toCompanion(bool nullToAbsent) {
+    return TransactionDocumentsCompanion(
+      uuid: Value(uuid),
+      transactionUuid: Value(transactionUuid),
+      fileName: Value(fileName),
+      originalName: Value(originalName),
+      fileSize: Value(fileSize),
+      mimeType: mimeType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(mimeType),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory TransactionDocument.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TransactionDocument(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      transactionUuid: serializer.fromJson<String>(json['transactionUuid']),
+      fileName: serializer.fromJson<String>(json['fileName']),
+      originalName: serializer.fromJson<String>(json['originalName']),
+      fileSize: serializer.fromJson<int>(json['fileSize']),
+      mimeType: serializer.fromJson<String?>(json['mimeType']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'transactionUuid': serializer.toJson<String>(transactionUuid),
+      'fileName': serializer.toJson<String>(fileName),
+      'originalName': serializer.toJson<String>(originalName),
+      'fileSize': serializer.toJson<int>(fileSize),
+      'mimeType': serializer.toJson<String?>(mimeType),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  TransactionDocument copyWith(
+          {String? uuid,
+          String? transactionUuid,
+          String? fileName,
+          String? originalName,
+          int? fileSize,
+          Value<String?> mimeType = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      TransactionDocument(
+        uuid: uuid ?? this.uuid,
+        transactionUuid: transactionUuid ?? this.transactionUuid,
+        fileName: fileName ?? this.fileName,
+        originalName: originalName ?? this.originalName,
+        fileSize: fileSize ?? this.fileSize,
+        mimeType: mimeType.present ? mimeType.value : this.mimeType,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  TransactionDocument copyWithCompanion(TransactionDocumentsCompanion data) {
+    return TransactionDocument(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      transactionUuid: data.transactionUuid.present
+          ? data.transactionUuid.value
+          : this.transactionUuid,
+      fileName: data.fileName.present ? data.fileName.value : this.fileName,
+      originalName: data.originalName.present
+          ? data.originalName.value
+          : this.originalName,
+      fileSize: data.fileSize.present ? data.fileSize.value : this.fileSize,
+      mimeType: data.mimeType.present ? data.mimeType.value : this.mimeType,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TransactionDocument(')
+          ..write('uuid: $uuid, ')
+          ..write('transactionUuid: $transactionUuid, ')
+          ..write('fileName: $fileName, ')
+          ..write('originalName: $originalName, ')
+          ..write('fileSize: $fileSize, ')
+          ..write('mimeType: $mimeType, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(uuid, transactionUuid, fileName, originalName,
+      fileSize, mimeType, createdAt, updatedAt, isDeleted, isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TransactionDocument &&
+          other.uuid == this.uuid &&
+          other.transactionUuid == this.transactionUuid &&
+          other.fileName == this.fileName &&
+          other.originalName == this.originalName &&
+          other.fileSize == this.fileSize &&
+          other.mimeType == this.mimeType &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class TransactionDocumentsCompanion
+    extends UpdateCompanion<TransactionDocument> {
+  final Value<String> uuid;
+  final Value<String> transactionUuid;
+  final Value<String> fileName;
+  final Value<String> originalName;
+  final Value<int> fileSize;
+  final Value<String?> mimeType;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const TransactionDocumentsCompanion({
+    this.uuid = const Value.absent(),
+    this.transactionUuid = const Value.absent(),
+    this.fileName = const Value.absent(),
+    this.originalName = const Value.absent(),
+    this.fileSize = const Value.absent(),
+    this.mimeType = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TransactionDocumentsCompanion.insert({
+    required String uuid,
+    required String transactionUuid,
+    required String fileName,
+    required String originalName,
+    required int fileSize,
+    this.mimeType = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        transactionUuid = Value(transactionUuid),
+        fileName = Value(fileName),
+        originalName = Value(originalName),
+        fileSize = Value(fileSize);
+  static Insertable<TransactionDocument> custom({
+    Expression<String>? uuid,
+    Expression<String>? transactionUuid,
+    Expression<String>? fileName,
+    Expression<String>? originalName,
+    Expression<int>? fileSize,
+    Expression<String>? mimeType,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (transactionUuid != null) 'transaction_uuid': transactionUuid,
+      if (fileName != null) 'file_name': fileName,
+      if (originalName != null) 'original_name': originalName,
+      if (fileSize != null) 'file_size': fileSize,
+      if (mimeType != null) 'mime_type': mimeType,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TransactionDocumentsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? transactionUuid,
+      Value<String>? fileName,
+      Value<String>? originalName,
+      Value<int>? fileSize,
+      Value<String?>? mimeType,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return TransactionDocumentsCompanion(
+      uuid: uuid ?? this.uuid,
+      transactionUuid: transactionUuid ?? this.transactionUuid,
+      fileName: fileName ?? this.fileName,
+      originalName: originalName ?? this.originalName,
+      fileSize: fileSize ?? this.fileSize,
+      mimeType: mimeType ?? this.mimeType,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (transactionUuid.present) {
+      map['transaction_uuid'] = Variable<String>(transactionUuid.value);
+    }
+    if (fileName.present) {
+      map['file_name'] = Variable<String>(fileName.value);
+    }
+    if (originalName.present) {
+      map['original_name'] = Variable<String>(originalName.value);
+    }
+    if (fileSize.present) {
+      map['file_size'] = Variable<int>(fileSize.value);
+    }
+    if (mimeType.present) {
+      map['mime_type'] = Variable<String>(mimeType.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TransactionDocumentsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('transactionUuid: $transactionUuid, ')
+          ..write('fileName: $fileName, ')
+          ..write('originalName: $originalName, ')
+          ..write('fileSize: $fileSize, ')
+          ..write('mimeType: $mimeType, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ReceivablesTable extends Receivables
     with TableInfo<$ReceivablesTable, Receivable> {
   @override
@@ -9395,6 +9919,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $TransactionsTable transactions = $TransactionsTable(this);
   late final $AccountTransfersTable accountTransfers =
       $AccountTransfersTable(this);
+  late final $TransactionDocumentsTable transactionDocuments =
+      $TransactionDocumentsTable(this);
   late final $ReceivablesTable receivables = $ReceivablesTable(this);
   late final $PayablesTable payables = $PayablesTable(this);
   late final $RemindersTable reminders = $RemindersTable(this);
@@ -9420,6 +9946,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         accounts,
         transactions,
         accountTransfers,
+        transactionDocuments,
         receivables,
         payables,
         reminders,
@@ -11426,6 +11953,26 @@ final class $$TransactionsTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
   }
+
+  static MultiTypedResultKey<$TransactionDocumentsTable,
+      List<TransactionDocument>> _transactionDocumentsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.transactionDocuments,
+          aliasName: $_aliasNameGenerator(
+              db.transactions.uuid, db.transactionDocuments.transactionUuid));
+
+  $$TransactionDocumentsTableProcessedTableManager
+      get transactionDocumentsRefs {
+    final manager = $$TransactionDocumentsTableTableManager(
+            $_db, $_db.transactionDocuments)
+        .filter((f) =>
+            f.transactionUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_transactionDocumentsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$TransactionsTableFilterComposer
@@ -11534,6 +12081,28 @@ class $$TransactionsTableFilterComposer
                   $removeJoinBuilderFromRootComposer,
             ));
     return composer;
+  }
+
+  Expression<bool> transactionDocumentsRefs(
+      Expression<bool> Function($$TransactionDocumentsTableFilterComposer f)
+          f) {
+    final $$TransactionDocumentsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.transactionDocuments,
+        getReferencedColumn: (t) => t.transactionUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionDocumentsTableFilterComposer(
+              $db: $db,
+              $table: $db.transactionDocuments,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
   }
 }
 
@@ -11750,6 +12319,29 @@ class $$TransactionsTableAnnotationComposer
             ));
     return composer;
   }
+
+  Expression<T> transactionDocumentsRefs<T extends Object>(
+      Expression<T> Function($$TransactionDocumentsTableAnnotationComposer a)
+          f) {
+    final $$TransactionDocumentsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.transactionDocuments,
+            getReferencedColumn: (t) => t.transactionUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$TransactionDocumentsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.transactionDocuments,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
 }
 
 class $$TransactionsTableTableManager extends RootTableManager<
@@ -11763,7 +12355,8 @@ class $$TransactionsTableTableManager extends RootTableManager<
     $$TransactionsTableUpdateCompanionBuilder,
     (Transaction, $$TransactionsTableReferences),
     Transaction,
-    PrefetchHooks Function({bool categoryUuid, bool contactUuid})> {
+    PrefetchHooks Function(
+        {bool categoryUuid, bool contactUuid, bool transactionDocumentsRefs})> {
   $$TransactionsTableTableManager(_$AppDatabase db, $TransactionsTable table)
       : super(TableManagerState(
           db: db,
@@ -11872,10 +12465,15 @@ class $$TransactionsTableTableManager extends RootTableManager<
                     $$TransactionsTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({categoryUuid = false, contactUuid = false}) {
+          prefetchHooksCallback: (
+              {categoryUuid = false,
+              contactUuid = false,
+              transactionDocumentsRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [],
+              explicitlyWatchedTables: [
+                if (transactionDocumentsRefs) db.transactionDocuments
+              ],
               addJoins: <
                   T extends TableManagerState<
                       dynamic,
@@ -11915,7 +12513,21 @@ class $$TransactionsTableTableManager extends RootTableManager<
                 return state;
               },
               getPrefetchedDataCallback: (items) async {
-                return [];
+                return [
+                  if (transactionDocumentsRefs)
+                    await $_getPrefetchedData<Transaction, $TransactionsTable,
+                            TransactionDocument>(
+                        currentTable: table,
+                        referencedTable: $$TransactionsTableReferences
+                            ._transactionDocumentsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$TransactionsTableReferences(db, table, p0)
+                                .transactionDocumentsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.transactionUuid == item.uuid),
+                        typedResults: items)
+                ];
               },
             );
           },
@@ -11933,7 +12545,8 @@ typedef $$TransactionsTableProcessedTableManager = ProcessedTableManager<
     $$TransactionsTableUpdateCompanionBuilder,
     (Transaction, $$TransactionsTableReferences),
     Transaction,
-    PrefetchHooks Function({bool categoryUuid, bool contactUuid})>;
+    PrefetchHooks Function(
+        {bool categoryUuid, bool contactUuid, bool transactionDocumentsRefs})>;
 typedef $$AccountTransfersTableCreateCompanionBuilder
     = AccountTransfersCompanion Function({
   required String uuid,
@@ -12365,6 +12978,363 @@ typedef $$AccountTransfersTableProcessedTableManager = ProcessedTableManager<
     (AccountTransfer, $$AccountTransfersTableReferences),
     AccountTransfer,
     PrefetchHooks Function({bool fromAccountUuid, bool toAccountUuid})>;
+typedef $$TransactionDocumentsTableCreateCompanionBuilder
+    = TransactionDocumentsCompanion Function({
+  required String uuid,
+  required String transactionUuid,
+  required String fileName,
+  required String originalName,
+  required int fileSize,
+  Value<String?> mimeType,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$TransactionDocumentsTableUpdateCompanionBuilder
+    = TransactionDocumentsCompanion Function({
+  Value<String> uuid,
+  Value<String> transactionUuid,
+  Value<String> fileName,
+  Value<String> originalName,
+  Value<int> fileSize,
+  Value<String?> mimeType,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$TransactionDocumentsTableReferences extends BaseReferences<
+    _$AppDatabase, $TransactionDocumentsTable, TransactionDocument> {
+  $$TransactionDocumentsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $TransactionsTable _transactionUuidTable(_$AppDatabase db) =>
+      db.transactions.createAlias($_aliasNameGenerator(
+          db.transactionDocuments.transactionUuid, db.transactions.uuid));
+
+  $$TransactionsTableProcessedTableManager get transactionUuid {
+    final $_column = $_itemColumn<String>('transaction_uuid')!;
+
+    final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_transactionUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$TransactionDocumentsTableFilterComposer
+    extends Composer<_$AppDatabase, $TransactionDocumentsTable> {
+  $$TransactionDocumentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get fileName => $composableBuilder(
+      column: $table.fileName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get originalName => $composableBuilder(
+      column: $table.originalName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get fileSize => $composableBuilder(
+      column: $table.fileSize, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get mimeType => $composableBuilder(
+      column: $table.mimeType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$TransactionsTableFilterComposer get transactionUuid {
+    final $$TransactionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.transactionUuid,
+        referencedTable: $db.transactions,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionsTableFilterComposer(
+              $db: $db,
+              $table: $db.transactions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$TransactionDocumentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TransactionDocumentsTable> {
+  $$TransactionDocumentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get fileName => $composableBuilder(
+      column: $table.fileName, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get originalName => $composableBuilder(
+      column: $table.originalName,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get fileSize => $composableBuilder(
+      column: $table.fileSize, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get mimeType => $composableBuilder(
+      column: $table.mimeType, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$TransactionsTableOrderingComposer get transactionUuid {
+    final $$TransactionsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.transactionUuid,
+        referencedTable: $db.transactions,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionsTableOrderingComposer(
+              $db: $db,
+              $table: $db.transactions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$TransactionDocumentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TransactionDocumentsTable> {
+  $$TransactionDocumentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get fileName =>
+      $composableBuilder(column: $table.fileName, builder: (column) => column);
+
+  GeneratedColumn<String> get originalName => $composableBuilder(
+      column: $table.originalName, builder: (column) => column);
+
+  GeneratedColumn<int> get fileSize =>
+      $composableBuilder(column: $table.fileSize, builder: (column) => column);
+
+  GeneratedColumn<String> get mimeType =>
+      $composableBuilder(column: $table.mimeType, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$TransactionsTableAnnotationComposer get transactionUuid {
+    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.transactionUuid,
+        referencedTable: $db.transactions,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.transactions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$TransactionDocumentsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $TransactionDocumentsTable,
+    TransactionDocument,
+    $$TransactionDocumentsTableFilterComposer,
+    $$TransactionDocumentsTableOrderingComposer,
+    $$TransactionDocumentsTableAnnotationComposer,
+    $$TransactionDocumentsTableCreateCompanionBuilder,
+    $$TransactionDocumentsTableUpdateCompanionBuilder,
+    (TransactionDocument, $$TransactionDocumentsTableReferences),
+    TransactionDocument,
+    PrefetchHooks Function({bool transactionUuid})> {
+  $$TransactionDocumentsTableTableManager(
+      _$AppDatabase db, $TransactionDocumentsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TransactionDocumentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TransactionDocumentsTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TransactionDocumentsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> transactionUuid = const Value.absent(),
+            Value<String> fileName = const Value.absent(),
+            Value<String> originalName = const Value.absent(),
+            Value<int> fileSize = const Value.absent(),
+            Value<String?> mimeType = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TransactionDocumentsCompanion(
+            uuid: uuid,
+            transactionUuid: transactionUuid,
+            fileName: fileName,
+            originalName: originalName,
+            fileSize: fileSize,
+            mimeType: mimeType,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String transactionUuid,
+            required String fileName,
+            required String originalName,
+            required int fileSize,
+            Value<String?> mimeType = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TransactionDocumentsCompanion.insert(
+            uuid: uuid,
+            transactionUuid: transactionUuid,
+            fileName: fileName,
+            originalName: originalName,
+            fileSize: fileSize,
+            mimeType: mimeType,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$TransactionDocumentsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({transactionUuid = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (transactionUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.transactionUuid,
+                    referencedTable: $$TransactionDocumentsTableReferences
+                        ._transactionUuidTable(db),
+                    referencedColumn: $$TransactionDocumentsTableReferences
+                        ._transactionUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$TransactionDocumentsTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $TransactionDocumentsTable,
+        TransactionDocument,
+        $$TransactionDocumentsTableFilterComposer,
+        $$TransactionDocumentsTableOrderingComposer,
+        $$TransactionDocumentsTableAnnotationComposer,
+        $$TransactionDocumentsTableCreateCompanionBuilder,
+        $$TransactionDocumentsTableUpdateCompanionBuilder,
+        (TransactionDocument, $$TransactionDocumentsTableReferences),
+        TransactionDocument,
+        PrefetchHooks Function({bool transactionUuid})>;
 typedef $$ReceivablesTableCreateCompanionBuilder = ReceivablesCompanion
     Function({
   required String uuid,
@@ -16172,6 +17142,8 @@ class $AppDatabaseManager {
       $$TransactionsTableTableManager(_db, _db.transactions);
   $$AccountTransfersTableTableManager get accountTransfers =>
       $$AccountTransfersTableTableManager(_db, _db.accountTransfers);
+  $$TransactionDocumentsTableTableManager get transactionDocuments =>
+      $$TransactionDocumentsTableTableManager(_db, _db.transactionDocuments);
   $$ReceivablesTableTableManager get receivables =>
       $$ReceivablesTableTableManager(_db, _db.receivables);
   $$PayablesTableTableManager get payables =>

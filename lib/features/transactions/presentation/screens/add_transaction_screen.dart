@@ -38,6 +38,7 @@ import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_selection_drawer.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_scenario_picker.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_attachment_section.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
 import 'package:flowpaisa/shared/widgets/amount_calculator_sheet.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
@@ -118,6 +119,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
 
   // Account & processing state
   Account? _selectedAccount;
+  final List<AttachmentItem> _attachments = [];
 
   /// Value persisted on the transaction (`'PROCESSED'` is never stored).
   String? get _paidRelationshipForDb =>
@@ -559,6 +561,19 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           accountUuid: _selectedAccount?.uuid,
           isPending: _saveIsPending,
         );
+
+        // Save attachments
+        if (_attachments.isNotEmpty) {
+          final docRepo = ref.read(transactionDocumentsRepositoryProvider);
+          for (final att in _attachments) {
+            await docRepo.addDocument(
+              transactionUuid: transactionUuid,
+              file: att.file,
+              originalName: att.originalName,
+              mimeType: att.mimeType,
+            );
+          }
+        }
 
         // Fetch full transaction with details for toast action
         final repository = ref.read(transactionsRepositoryProvider);
@@ -2715,6 +2730,21 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                     ),
                   ),
                 ),
+
+              const SizedBox(height: 16),
+              TransactionAttachmentSection(
+                attachments: _attachments,
+                onAddMultiple: (items) {
+                  setState(() {
+                    _attachments.addAll(items);
+                  });
+                },
+                onDelete: (index) {
+                  setState(() {
+                    _attachments.removeAt(index);
+                  });
+                },
+              ),
 
               // Bottom padding for FABs
               const SizedBox(height: 100),

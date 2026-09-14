@@ -486,6 +486,40 @@ class GoogleDriveService {
     }
   }
 
+  /// Upload a binary file (like a ZIP backup)
+  Future<String> uploadBinaryFile(File file, {
+    required String name,
+    required String parentId,
+  }) async {
+    if (_driveApi == null) throw Exception('Drive API not initialized');
+
+    final driveFile = drive.File()
+      ..name = name
+      ..parents = [parentId];
+
+    final fileSize = await file.length();
+    final media = drive.Media(file.openRead(), fileSize);
+
+    try {
+      final result = await _driveApi!.files.create(
+        driveFile,
+        uploadMedia: media,
+      );
+      return result.id!;
+    } catch (e) {
+      if (e.toString().contains('Access was denied') ||
+          e.toString().contains('invalid_token')) {
+        await reauthenticate();
+        final result = await _driveApi!.files.create(
+          driveFile,
+          uploadMedia: media,
+        );
+        return result.id!;
+      }
+      rethrow;
+    }
+  }
+
   /// Get file ID by name in a specific folder
   Future<String?> getFileIdByName(String name, String folderId) async {
     if (_driveApi == null) throw Exception('Drive API not initialized');

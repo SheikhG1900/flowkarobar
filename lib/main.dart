@@ -43,6 +43,7 @@ import 'package:flowpaisa/features/notifications/presentation/providers/notifica
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/messages/presentation/screens/message_templates_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/export_screen.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/documents_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/user_guide_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -4154,6 +4155,20 @@ class _SettingsTab extends ConsumerWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const ExportScreen(),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.folder_open),
+            title: Text(l10n.documentsAndStorage),
+            subtitle: Text(l10n.viewAllDocuments),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const DocumentsScreen(),
                 ),
               );
             },

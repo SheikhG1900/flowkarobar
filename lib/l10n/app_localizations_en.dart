@@ -4533,4 +4533,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get runningBalance => 'Running Balance';
+
+  @override
+  String get attachments => 'Attachments';
+
+  @override
+  String get addAttachment => 'Add Attachments';
+
+  @override
+  String get noAttachments => 'No attachments added yet';
+
+  @override
+  String get documents => 'Documents';
+
+  @override
+  String get storage => 'Storage';
+
+  @override
+  String get storageUsed => 'Storage Used';
+
+  @override
+  String get documentBackup => 'Document Backup';
+
+  @override
+  String get exportBackup => 'Export Backup';
+
+  @override
+  String get importBackup => 'Import Backup';
+
+  @override
+  String get backupExported => 'Backup exported successfully';
+
+  @override
+  String get backupImported => 'Backup imported successfully';
+
+  @override
+  String get documentsAndStorage => 'Documents & Storage';
+
+  @override
+  String get viewAllDocuments => 'View All Documents';
+
+  @override
+  String get deleteAttachmentConfirm =>
+      'Are you sure you want to delete this attachment?';
+
+  @override
+  String get deleteAttachmentEditWarning =>
+      'This attachment will be permanently deleted only when you save the transaction.';
+
+  @override
+  String get chooseDocument => 'Choose Documents';
+
+  @override
+  String get cameraSubtitle => 'Take a photo of your receipt or document';
+
+  @override
+  String get gallerySubtitle => 'Choose images from your gallery';
+
+  @override
+  String get chooseDocumentSubtitle => 'Select PDF or other document files';
 }

@@ -4551,4 +4551,64 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get runningBalance => 'بیلنس';
+
+  @override
+  String get attachments => 'منسلکات';
+
+  @override
+  String get addAttachment => 'منسلکات شامل کریں';
+
+  @override
+  String get noAttachments => 'ابھی تک کوئی منسلک فائل نہیں ہے';
+
+  @override
+  String get documents => 'دستاویزات';
+
+  @override
+  String get storage => 'اسٹوریج';
+
+  @override
+  String get storageUsed => 'استعمال شدہ اسٹوریج';
+
+  @override
+  String get documentBackup => 'دستاویزات کا بیک اپ';
+
+  @override
+  String get exportBackup => 'بیک اپ ایکسپورٹ کریں';
+
+  @override
+  String get importBackup => 'بیک اپ امپورٹ کریں';
+
+  @override
+  String get backupExported => 'بیک اپ کامیابی سے ایکسپورٹ ہو گیا';
+
+  @override
+  String get backupImported => 'بیک اپ کامیابی سے امپورٹ ہو گیا';
+
+  @override
+  String get documentsAndStorage => 'دستاویزات اور اسٹوریج';
+
+  @override
+  String get viewAllDocuments => 'تمام دستاویزات دیکھیں';
+
+  @override
+  String get deleteAttachmentConfirm =>
+      'کیا آپ واقعی اس منسلک فائل کو حذف کرنا چاہتے ہیں؟';
+
+  @override
+  String get deleteAttachmentEditWarning =>
+      'یہ منسلک فائل صرف تب ہی مستقل طور پر حذف ہوگی جب آپ لین دین کو محفوظ کریں گے۔';
+
+  @override
+  String get chooseDocument => 'دستاویزات منتخب کریں';
+
+  @override
+  String get cameraSubtitle => 'اپنی رسید یا دستاویز کی تصویر لیں';
+
+  @override
+  String get gallerySubtitle => 'اپنی گیلری سے تصاویر منتخب کریں';
+
+  @override
+  String get chooseDocumentSubtitle =>
+      'پی ڈی ایف یا دیگر دستاویزات کی فائلیں منتخب کریں';
 }

@@ -17,7 +17,7 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/tabular_editor_sheet.dart';
 import 'package:flowpaisa/core/utils/tabular_parser.dart';
-import 'package:flowpaisa/core/database/database.dart' show Account, Category, Contact, AppCurrency;
+import 'package:flowpaisa/core/database/database.dart' show Account, Category, Contact;
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/core/utils/share_helper.dart';
@@ -38,6 +38,9 @@ import 'package:flutter/services.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_attachment_section.dart';
+import 'package:path/path.dart' as p;
+import 'dart:io';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -810,6 +813,75 @@ class TransactionDetailsDialog extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
+          // Attachments Section
+          ref.watch(transactionDocumentsProvider(transaction.uuid)).when(
+                data: (docs) {
+                  return FutureBuilder<Directory>(
+                    future: ref.read(transactionDocumentsRepositoryProvider).getDocumentsDirectory(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+                      final docDir = snapshot.data!;
+                      final attachments = docs.map((doc) => AttachmentItem(
+                        uuid: doc.uuid,
+                        file: File(p.join(docDir.path, doc.fileName)),
+                        originalName: doc.originalName,
+                        mimeType: doc.mimeType ?? 'application/octet-stream',
+                        fileSize: doc.fileSize,
+                      )).toList();
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerLow,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                                width: 1,
+                              ),
+                            ),
+                            child: TransactionAttachmentSection(
+                              attachments: attachments,
+                              onAddMultiple: (items) async {
+                                final docRepo = ref.read(transactionDocumentsRepositoryProvider);
+                                for (final item in items) {
+                                  await docRepo.addDocument(
+                                    transactionUuid: transaction.uuid,
+                                    file: item.file,
+                                    originalName: item.originalName,
+                                    mimeType: item.mimeType,
+                                  );
+                                }
+                              },
+                              onDelete: (index) async {
+                                final item = attachments[index];
+                                if (item.uuid != null) {
+                                  final docRepo = ref.read(transactionDocumentsRepositoryProvider);
+                                  await docRepo.deleteDocument(item.uuid!);
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      );
+                    },
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
+
           if (ref.watch(premiumProvider).isPremium) ...[
             if (transaction.description != null &&
                 TabularParser.isTabular(transaction.description)) ...[
@@ -1408,6 +1480,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
       ),
     );
   }
+
 
   static Widget _buildSectionCard(
     BuildContext context, {

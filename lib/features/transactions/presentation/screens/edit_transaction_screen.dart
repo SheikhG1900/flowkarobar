@@ -35,6 +35,9 @@ import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_split_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_scenario_picker.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_attachment_section.dart';
+import 'package:path/path.dart' as p;
+import 'dart:io';
 import 'package:flowpaisa/features/transactions/presentation/widgets/split_bill_multi_contact_picker_sheet.dart';
 import 'package:flowpaisa/shared/widgets/amount_calculator_sheet.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
@@ -98,6 +101,8 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
 
   List<SplitShare> _groupShares = [];
   bool _isGroupSplit = false;
+  List<AttachmentItem> _attachments = [];
+  final List<String> _pendingDeletions = [];
 
   // Tabular Description fields
   bool _isTabularMode = false;
@@ -139,6 +144,24 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
 
     // Fetch due date from linked payable/receivable if exists
     _loadLinkedEntryDueDate();
+    _loadAttachments();
+  }
+
+  Future<void> _loadAttachments() async {
+    final docRepo = ref.read(transactionDocumentsRepositoryProvider);
+    final docs = await docRepo.getDocumentsForTransaction(widget.transaction.uuid);
+    final docDir = await docRepo.getDocumentsDirectory();
+    if (mounted) {
+      setState(() {
+        _attachments = docs.map<AttachmentItem>((doc) => AttachmentItem(
+          uuid: doc.uuid,
+          file: File(p.join(docDir.path, doc.fileName)),
+          originalName: doc.originalName,
+          mimeType: doc.mimeType ?? 'application/octet-stream',
+          fileSize: doc.fileSize,
+        )).toList();
+      });
+    }
   }
 
   Future<void> _loadLinkedEntryDueDate() async {
@@ -319,6 +342,22 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
           dueDate: _dueDate,
           isPending: _saveIsPending,
         );
+
+        // Process document deletions and additions
+        final docRepo = ref.read(transactionDocumentsRepositoryProvider);
+        for (final docUuid in _pendingDeletions) {
+          await docRepo.deleteDocument(docUuid);
+        }
+        for (final att in _attachments) {
+          if (att.uuid == null) {
+            await docRepo.addDocument(
+              transactionUuid: widget.transaction.uuid,
+              file: att.file,
+              originalName: att.originalName,
+              mimeType: att.mimeType,
+            );
+          }
+        }
       }
 
       if (mounted) {
@@ -2107,6 +2146,26 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                   _groupShares = [];
                 }),
                 showSplitButton: !isSplitted,
+              ),
+
+              const SizedBox(height: 16),
+              TransactionAttachmentSection(
+                attachments: _attachments,
+                showEditWarning: true,
+                onAddMultiple: (items) {
+                  setState(() {
+                    _attachments.addAll(items);
+                  });
+                },
+                onDelete: (index) {
+                  setState(() {
+                    final item = _attachments[index];
+                    if (item.uuid != null) {
+                      _pendingDeletions.add(item.uuid!);
+                    }
+                    _attachments.removeAt(index);
+                  });
+                },
               ),
 
               const SizedBox(height: 100),
