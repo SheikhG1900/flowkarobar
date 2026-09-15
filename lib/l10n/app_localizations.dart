@@ -8518,6 +8518,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select PDF or other document files'**
   String get chooseDocumentSubtitle;
+
+  /// No description provided for @exportAsPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Export as PDF'**
+  String get exportAsPdf;
+
+  /// No description provided for @exportAsPdfSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate a PDF with transaction details and attachments'**
+  String get exportAsPdfSubtitle;
 }
 
 class _AppLocalizationsDelegate

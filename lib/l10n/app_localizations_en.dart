@@ -4662,4 +4662,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get chooseDocumentSubtitle => 'Select PDF or other document files';
+
+  @override
+  String get exportAsPdf => 'Export as PDF';
+
+  @override
+  String get exportAsPdfSubtitle =>
+      'Generate a PDF with transaction details and attachments';
 }

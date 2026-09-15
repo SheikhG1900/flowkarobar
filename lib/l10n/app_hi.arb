@@ -1806,5 +1806,7 @@
   "chooseDocument": "दस्तावेज़ चुनें",
   "cameraSubtitle": "अपने रसीद या दस्तावेज़ की फ़ोटो लें",
   "gallerySubtitle": "अपनी गैलरी से चित्र चुनें",
-  "chooseDocumentSubtitle": "पीडीएफ या अन्य दस्तावेज़ फ़ाइलें चुनें"
+  "chooseDocumentSubtitle": "पीडीएफ या अन्य दस्तावेज़ फ़ाइलें चुनें",
+  "exportAsPdf": "पीडीएफ के रूप में निर्यात करें",
+  "exportAsPdfSubtitle": "लेन-देन के विवरण और अनुलग्नकों के साथ एक पीडीएफ बनाएं"
 }

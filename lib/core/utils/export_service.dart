@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flowpaisa/core/utils/native_share.dart';
+import 'package:path/path.dart' as p;
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
@@ -1913,6 +1914,439 @@ class ExportService {
     } catch (e) {
       throw Exception('Error saving PDF: $e');
     }
+  }
+
+  // Generate PDF containing all transactions with attachments and their physical files
+  Future<Uint8List> exportTransactionsWithAttachmentsToPDF({
+    String? currencySymbol,
+    int decimalPlaces = 2,
+    AppLocalizations? l10n,
+    AppCurrency? currencyObj,
+  }) async {
+    try {
+      // 1. Load fonts and logo
+      final unicodeFont = await loadUnicodeFont();
+      final hindiFont = await loadHindiFont();
+      final englishFont = await loadEnglishFont();
+
+      String? logoSvgString;
+      try {
+        logoSvgString = await rootBundle.loadString('assets/images/logo_square.svg');
+      } catch (e) {
+        if (kDebugMode) {
+          print('ExportService: Failed to load logo SVG: $e');
+        }
+      }
+
+      // 2. Fetch all active documents
+      final documents = await (_database.select(_database.transactionDocuments)
+            ..where((d) => d.isDeleted.equals(false)))
+          .get();
+
+      // Group by transactionUuid
+      final Map<String, List<TransactionDocument>> groupedDocs = {};
+      for (final doc in documents) {
+        groupedDocs.putIfAbsent(doc.transactionUuid, () => []).add(doc);
+      }
+
+      // Fetch transaction details for each transactionUuid
+      final List<({TransactionWithDetails details, List<TransactionDocument> docs})> transactionsWithAttachments = [];
+      for (final entry in groupedDocs.entries) {
+        final details = await _transactionsRepository.getTransactionWithDetailsByUuid(entry.key);
+        if (details != null) {
+          transactionsWithAttachments.add((details: details, docs: entry.value));
+        }
+      }
+
+      // Sort by transaction date descending
+      transactionsWithAttachments.sort((a, b) => b.details.transaction.date.compareTo(a.details.transaction.date));
+
+      // 3. Pre-load attachment files and PDF pages asynchronously
+      final appDir = await getApplicationDocumentsDirectory();
+      final docDir = Directory(p.join(appDir.path, 'documents'));
+
+      final List<({
+        TransactionWithDetails details,
+        List<({
+          TransactionDocument doc,
+          Uint8List? imageBytes,
+          bool isImage,
+          bool isPdf,
+        })> attachments,
+      })> preloadedData = [];
+
+      for (final item in transactionsWithAttachments) {
+        final List<({TransactionDocument doc, Uint8List? imageBytes, bool isImage, bool isPdf})> attachments = [];
+        for (final doc in item.docs) {
+          final file = File(p.join(docDir.path, doc.fileName));
+          Uint8List? bytes;
+          bool isImage = false;
+          bool isPdf = false;
+
+          if (await file.exists()) {
+            final mime = (doc.mimeType ?? '').toLowerCase();
+            final isImgType = mime.startsWith('image/') ||
+                ['jpg', 'jpeg', 'png', 'webp', 'gif'].contains(p.extension(doc.originalName).replaceAll('.', '').toLowerCase());
+            final isPdfType = mime == 'application/pdf' || p.extension(doc.originalName).toLowerCase() == '.pdf';
+
+            if (isImgType) {
+              isImage = true;
+              try {
+                bytes = await file.readAsBytes();
+              } catch (e) {
+                if (kDebugMode) print('Error reading image file: $e');
+              }
+            } else if (isPdfType) {
+              isPdf = true;
+              try {
+                final pdfBytes = await file.readAsBytes();
+                // Rasterize the first page of the PDF
+                await for (final page in Printing.raster(pdfBytes, pages: [0], dpi: 150)) {
+                  bytes = await page.toPng();
+                  break; // Only take the first page
+                }
+              } catch (e) {
+                if (kDebugMode) print('Error rasterizing PDF file: $e');
+              }
+            }
+          }
+          attachments.add((doc: doc, imageBytes: bytes, isImage: isImage, isPdf: isPdf));
+        }
+        preloadedData.add((details: item.details, attachments: attachments));
+      }
+
+      // 4. Create PDF document
+      final pdf = pw.Document();
+
+      // Set default theme with Unicode font and fallbacks
+      final theme = pw.ThemeData.withFont(
+        base: englishFont ?? unicodeFont,
+        bold: englishFont ?? unicodeFont,
+        fontFallback: [
+          if (unicodeFont != null) unicodeFont,
+          if (hindiFont != null) hindiFont,
+          if (englishFont != null) englishFont,
+        ],
+      );
+
+      final pageTheme = pw.PageTheme(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        theme: theme,
+      );
+
+      if (preloadedData.isEmpty) {
+        pdf.addPage(
+          pw.Page(
+            pageTheme: pageTheme,
+            build: (pw.Context context) {
+              return pw.Center(
+                child: pw.Text(
+                  'No transactions with attachments found.',
+                  style: pw.TextStyle(fontSize: 14, color: PdfColors.grey600),
+                ),
+              );
+            },
+          ),
+        );
+      } else {
+        bool isFirstPage = true;
+        for (final item in preloadedData) {
+          final formattedAmount = AmountFormatter.formatWithCurrency(
+            item.details.transaction.amount.toDouble(),
+            currencyObj,
+          );
+          final categoryName = _getLocalizedCategoryName(item.details.category?.name, l10n);
+
+          final currentIsFirstPage = isFirstPage;
+          isFirstPage = false;
+
+          pdf.addPage(
+            pw.MultiPage(
+              pageTheme: pageTheme,
+              header: (pw.Context context) {
+                return pw.Container(
+                  alignment: pw.Alignment.centerRight,
+                  margin: const pw.EdgeInsets.only(bottom: 20),
+                  child: pw.Text(
+                    'Flowpaisa - Transactions with Attachments',
+                    style: pw.TextStyle(color: PdfColors.grey500, fontSize: 9),
+                  ),
+                );
+              },
+              footer: (pw.Context context) {
+                final appTitle = l10n?.appTitle ?? 'Flowpaisa';
+                return pw.Container(
+                  alignment: pw.Alignment.center,
+                  margin: const pw.EdgeInsets.only(top: 20),
+                  decoration: const pw.BoxDecoration(
+                    border: pw.Border(
+                      top: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
+                    ),
+                  ),
+                  padding: const pw.EdgeInsets.only(top: 10),
+                  child: pw.Row(
+                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Left: Logo & App Title
+                      pw.Row(
+                        children: [
+                          if (logoSvgString != null) ...[
+                            pw.Container(
+                              width: 12,
+                              height: 12,
+                              child: pw.SvgImage(
+                                svg: logoSvgString,
+                                colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                              ),
+                            ),
+                            pw.SizedBox(width: 4),
+                          ],
+                          _buildText(
+                            appTitle,
+                            style: pw.TextStyle(
+                              color: PdfColors.grey600,
+                              fontSize: 8,
+                              fontWeight: pw.FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      // Center: Category & Amount
+                      _buildText(
+                        '$categoryName • $formattedAmount',
+                        style: pw.TextStyle(
+                          color: PdfColors.grey600,
+                          fontSize: 8,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                      // Right: Page number
+                      _buildText(
+                        'Page ${context.pageNumber} / ${context.pagesCount}',
+                        style: const pw.TextStyle(color: PdfColors.grey600, fontSize: 8),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              build: (pw.Context context) {
+                return [
+                  // Title on the first page of the document
+                  if (currentIsFirstPage) ...[
+                    pw.Container(
+                      margin: const pw.EdgeInsets.only(bottom: 24),
+                      child: pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          pw.Text(
+                            'Transactions Attachment Report',
+                            style: pw.TextStyle(
+                              fontSize: 24,
+                              fontWeight: pw.FontWeight.bold,
+                              color: const PdfColor(0 / 255.0, 100 / 255.0, 150 / 255.0),
+                            ),
+                          ),
+                          pw.SizedBox(height: 4),
+                          pw.Text(
+                            'Generated on ${AppDateFormatter.formatDate(DateTime.now())}',
+                            style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                          ),
+                        ],
+                      ),
+                    ),
+                    pw.Divider(color: PdfColors.grey300, thickness: 1),
+                    pw.SizedBox(height: 16),
+                  ],
+                  _buildTransactionAttachmentBlock(
+                    item.details,
+                    item.attachments,
+                    l10n,
+                    currencySymbol,
+                    decimalPlaces,
+                    currencyObj,
+                  ),
+                ];
+              },
+            ),
+          );
+        }
+      }
+
+      return pdf.save();
+    } catch (e) {
+      throw Exception('Error generating attachments PDF: $e');
+    }
+  }
+
+  pw.Widget _buildTransactionAttachmentBlock(
+    TransactionWithDetails details,
+    List<({TransactionDocument doc, Uint8List? imageBytes, bool isImage, bool isPdf})> attachments,
+    AppLocalizations? l10n,
+    String? currencySymbol,
+    int decimalPlaces,
+    AppCurrency? currencyObj,
+  ) {
+    final isIncome = details.transaction.type == 'INCOME';
+    final amountColor = isIncome ? PdfColors.green700 : PdfColors.red700;
+    
+    // Format amount
+    final formattedAmount = AmountFormatter.formatWithCurrency(
+      details.transaction.amount.toDouble(),
+      currencyObj,
+    );
+
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        // Transaction Card
+        pw.Container(
+          decoration: pw.BoxDecoration(
+            color: PdfColors.grey100,
+            borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
+            border: pw.Border.all(color: PdfColors.grey300, width: 1),
+          ),
+          padding: const pw.EdgeInsets.all(16),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      _buildText(
+                        _getLocalizedCategoryName(details.category?.name, l10n),
+                        style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+                      ),
+                      pw.SizedBox(height: 4),
+                      _buildText(
+                        details.account?.name ?? 'Cashbook',
+                        style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                      ),
+                    ],
+                  ),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.end,
+                    children: [
+                      _buildText(
+                        formattedAmount,
+                        style: pw.TextStyle(
+                          fontSize: 16,
+                          fontWeight: pw.FontWeight.bold,
+                          color: amountColor,
+                        ),
+                      ),
+                      pw.SizedBox(height: 4),
+                      _buildText(
+                        AppDateFormatter.formatDate(details.transaction.date),
+                        style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              if (details.contact != null || details.transaction.description != null) ...[
+                pw.SizedBox(height: 12),
+                pw.Divider(color: PdfColors.grey300, thickness: 0.5),
+                pw.SizedBox(height: 8),
+                if (details.contact != null)
+                  _buildText(
+                    '${l10n?.contact ?? "Contact"}: ${details.contact!.name}',
+                    style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                  ),
+                if (details.transaction.description != null && details.transaction.description!.isNotEmpty) ...[
+                  pw.SizedBox(height: 4),
+                  _buildText(
+                    '${l10n?.description ?? "Description"}: ${details.transaction.description!}',
+                    style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                  ),
+                ],
+              ],
+            ],
+          ),
+        ),
+        pw.SizedBox(height: 12),
+        
+        // Attachments
+        pw.Padding(
+          padding: const pw.EdgeInsets.only(left: 8),
+          child: _buildText(
+            'Attachments (${attachments.length}):',
+            style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColors.grey800),
+          ),
+        ),
+        pw.SizedBox(height: 8),
+        
+        for (final att in attachments) ...[
+          pw.Container(
+            margin: const pw.EdgeInsets.only(bottom: 12),
+            padding: const pw.EdgeInsets.all(12),
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(color: PdfColors.grey200, width: 1),
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildText(
+                      att.doc.originalName,
+                      style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.grey700),
+                    ),
+                    _buildText(
+                      _formatFileSize(att.doc.fileSize),
+                      style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 8),
+                if (att.imageBytes != null)
+                  pw.Center(
+                    child: pw.Container(
+                      constraints: const pw.BoxConstraints(maxHeight: 250),
+                      child: pw.Image(
+                        pw.MemoryImage(att.imageBytes!),
+                        fit: pw.BoxFit.contain,
+                      ),
+                    ),
+                  )
+                else
+                  pw.Center(
+                    child: pw.Container(
+                      padding: const pw.EdgeInsets.symmetric(vertical: 16),
+                      child: pw.Column(
+                        children: [
+                          pw.Text(
+                            att.isPdf ? '📄' : '📎',
+                            style: const pw.TextStyle(fontSize: 24),
+                          ),
+                          pw.SizedBox(height: 4),
+                          _buildText(
+                            att.isPdf 
+                                ? 'PDF Document (Could not render preview)'
+                                : 'Attachment File',
+                            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
   }
 
   // Test PDF: Generate a PDF with all symbol icons showing icon, codepoint, and glyph code

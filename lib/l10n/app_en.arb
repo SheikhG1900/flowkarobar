@@ -2385,5 +2385,7 @@
   "chooseDocument": "Choose Documents",
   "cameraSubtitle": "Take a photo of your receipt or document",
   "gallerySubtitle": "Choose images from your gallery",
-  "chooseDocumentSubtitle": "Select PDF or other document files"
+  "chooseDocumentSubtitle": "Select PDF or other document files",
+  "exportAsPdf": "Export as PDF",
+  "exportAsPdfSubtitle": "Generate a PDF with transaction details and attachments"
 }

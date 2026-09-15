@@ -4677,4 +4677,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get chooseDocumentSubtitle => 'पीडीएफ या अन्य दस्तावेज़ फ़ाइलें चुनें';
+
+  @override
+  String get exportAsPdf => 'पीडीएफ के रूप में निर्यात करें';
+
+  @override
+  String get exportAsPdfSubtitle =>
+      'लेन-देन के विवरण और अनुलग्नकों के साथ एक पीडीएफ बनाएं';
 }

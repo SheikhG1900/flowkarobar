@@ -4683,4 +4683,11 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get chooseDocumentSubtitle =>
       'پی ڈی ایف یا دیگر دستاویزات کی فائلیں منتخب کریں';
+
+  @override
+  String get exportAsPdf => 'پی ڈی ایف کے طور پر برآمد کریں';
+
+  @override
+  String get exportAsPdfSubtitle =>
+      'لین دین کی تفصیلات اور منسلکات کے ساتھ پی ڈی ایف بنائیں';
 }

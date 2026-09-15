@@ -15,7 +15,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
+import 'package:flowpaisa/features/transactions/presentation/screens/export_screen.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 
@@ -194,46 +199,239 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   Future<void> _exportLocalBackup(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
     try {
-      final backupService = ref.read(documentBackupServiceProvider);
-      final zipFile = await backupService.exportToZip();
-      
-      if (Platform.isAndroid || Platform.isIOS) {
-        await NativeShare.shareFile(zipFile.path);
-        if (context.mounted) {
-          ToastUtils.showSuccessToast(context, ref, l10n.backupExported);
-        }
-      } else if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-        final FileSaveLocation? result = await getSaveLocation(
-          suggestedName: p.basename(zipFile.path),
-          acceptedTypeGroups: [
-            const XTypeGroup(
-              label: 'ZIP Backup',
-              extensions: ['zip'],
-            ),
-          ],
-        );
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _loadingStatus = 'Preparing Backup...';
+          _progressValue = null;
+        });
+      }
 
-        if (result != null) {
-          final targetFile = File(result.path);
-          await zipFile.copy(targetFile.path);
-          if (context.mounted) {
-            ToastUtils.showSuccessToast(context, ref, l10n.backupExported);
-          }
-        }
-      } else {
-        final xFile = XFile(
-          zipFile.path,
-          mimeType: 'application/zip',
-          name: p.basename(zipFile.path),
+      final backupService = ref.read(documentBackupServiceProvider);
+      final exportService = ref.read(exportServiceProvider);
+      final zipFile = await backupService.exportToZip();
+      final fileName = p.basename(zipFile.path);
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+
+      if (context.mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.backupReady),
+            content: Text(l10n.backupReadyMessage),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(dialogContext);
+                  try {
+                    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                      final FileSaveLocation? result = await getSaveLocation(
+                        suggestedName: fileName,
+                        acceptedTypeGroups: [
+                          const XTypeGroup(
+                            label: 'ZIP Backup',
+                            extensions: ['zip'],
+                          ),
+                        ],
+                      );
+                      if (result != null) {
+                        await zipFile.copy(result.path);
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.exportSavedTo(result.path));
+                        }
+                      }
+                    } else {
+                      await exportService.saveToDownloads(zipFile.path);
+                      if (context.mounted) {
+                        ToastUtils.showSuccessToast(
+                            context, ref, l10n.savedToDownloads);
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(
+                          context, ref, l10n.errorSaving(e.toString()));
+                    }
+                  }
+                },
+                child: Text(l10n.saveCopy),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(dialogContext);
+                  try {
+                    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                      final fileUri = Uri.file(zipFile.path);
+                      if (await canLaunchUrl(fileUri)) {
+                        await launchUrl(fileUri);
+                      } else {
+                        throw Exception('Could not open the backup file.');
+                      }
+                    } else {
+                      await NativeShare.shareFile(zipFile.path);
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(
+                          context, ref, l10n.errorSharing(e.toString()));
+                    }
+                  }
+                },
+                child: Text(Platform.isWindows || Platform.isMacOS || Platform.isLinux ? l10n.openFile : l10n.share),
+              ),
+            ],
+          ),
         );
-        await SharePlus.instance.share(ShareParams(
-          files: [xFile],
-        ));
-        if (context.mounted) {
-          ToastUtils.showSuccessToast(context, ref, l10n.backupExported);
-        }
       }
     } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+      if (context.mounted) {
+        ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+      }
+    }
+  }
+
+  Future<void> _exportToPdf(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    try {
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _loadingStatus = 'Generating PDF...';
+          _progressValue = null;
+        });
+      }
+
+      final exportService = ref.read(exportServiceProvider);
+      final currencySymbol = ref.read(currencySymbolProvider);
+      final decimalPlaces = ref.read(currencyDecimalPlacesProvider);
+      final currencyObj = ref.read(currentCurrencyProvider).value;
+
+      final pdfBytes = await exportService.exportTransactionsWithAttachmentsToPDF(
+        currencySymbol: currencySymbol,
+        decimalPlaces: decimalPlaces,
+        l10n: l10n,
+        currencyObj: currencyObj,
+      );
+
+      final tempDir = await getTemporaryDirectory();
+      final fileName = 'attachments_report_${AppDateFormatter.formatForFileName(DateTime.now())}.pdf';
+      final pdfFile = File(p.join(tempDir.path, fileName));
+      await pdfFile.writeAsBytes(pdfBytes);
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+
+      if (context.mounted) {
+        await showDialog<void>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.pdfReady),
+            content: Text(l10n.pdfReportReady),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(dialogContext);
+                  try {
+                    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                      final FileSaveLocation? result = await getSaveLocation(
+                        suggestedName: fileName,
+                        acceptedTypeGroups: [
+                          const XTypeGroup(
+                            label: 'PDF Document',
+                            extensions: ['pdf'],
+                          ),
+                        ],
+                      );
+                      if (result != null) {
+                        await pdfFile.copy(result.path);
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.exportSavedTo(result.path));
+                        }
+                      }
+                    } else {
+                      await exportService.saveToDownloads(pdfFile.path);
+                      if (context.mounted) {
+                        ToastUtils.showSuccessToast(
+                            context, ref, l10n.savedToDownloads);
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(
+                          context, ref, l10n.errorSaving(e.toString()));
+                    }
+                  }
+                },
+                child: Text(l10n.saveCopy),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(dialogContext);
+                  try {
+                    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                      final fileUri = Uri.file(pdfFile.path);
+                      if (await canLaunchUrl(fileUri)) {
+                        await launchUrl(fileUri);
+                      } else {
+                        throw Exception('Could not open the PDF file.');
+                      }
+                    } else {
+                      await exportService.sharePDFFile(pdfFile.path);
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(
+                          context, ref, l10n.errorSharing(e.toString()));
+                    }
+                  }
+                },
+                child: Text(Platform.isWindows || Platform.isMacOS || Platform.isLinux ? l10n.openFile : l10n.share),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                    foregroundColor: theme.colorScheme.onPrimary),
+                onPressed: () async {
+                  Navigator.pop(dialogContext);
+                  await Printing.layoutPdf(
+                    onLayout: (PdfPageFormat format) async => pdfBytes,
+                  );
+                },
+                child: Text(l10n.preview),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
       if (context.mounted) {
         ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
       }
@@ -406,21 +604,21 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
     }
   }
 
-  void _showExportOptionsSheet(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
+  void _showExportOptionsSheet(BuildContext parentContext) {
+    final l10n = AppLocalizations.of(parentContext)!;
+    final theme = Theme.of(parentContext);
     final driveService = ref.read(googleDriveServiceProvider);
     final isDriveConnected = driveService.isSignedIn;
 
     showModalBottomSheet(
-      context: context,
+      context: parentContext,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       backgroundColor: theme.colorScheme.surface,
       builder: (sheetContext) {
         return StatefulBuilder(
-          builder: (context, setSheetState) {
+          builder: (builderContext, setSheetState) {
             return SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -496,7 +694,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                         ),
                         onTap: () {
                           Navigator.pop(sheetContext);
-                          _exportLocalBackup(context, ref);
+                          _exportLocalBackup(parentContext, ref);
                         },
                       ),
                     ),
@@ -558,7 +756,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                 !isDriveConnected
                                     ? 'Sign in to Google Drive to backup'
                                     : _latestCloudBackup != null
-                                        ? l10n.lastBackedUp(_getRelativeTime(context, _latestCloudBackup!.createdTime!))
+                                        ? l10n.lastBackedUp(_getRelativeTime(parentContext, _latestCloudBackup!.createdTime!))
                                         : l10n.createCloudBackup,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: isDriveConnected 
@@ -581,6 +779,46 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                         },
                       ),
                     ),
+                    const SizedBox(height: 16),
+
+                    // Option 3: Export as PDF
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: theme.colorScheme.outline,
+                          width: 1.5,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        leading: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(Icons.picture_as_pdf_rounded, color: theme.colorScheme.error),
+                        ),
+                        title: Text(
+                          l10n.exportAsPdf,
+                          style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          l10n.exportAsPdfSubtitle,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(sheetContext);
+                          _exportToPdf(parentContext, ref);
+                        },
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -591,21 +829,21 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
     );
   }
 
-  void _showImportOptionsSheet(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
+  void _showImportOptionsSheet(BuildContext parentContext) {
+    final l10n = AppLocalizations.of(parentContext)!;
+    final theme = Theme.of(parentContext);
     final driveService = ref.read(googleDriveServiceProvider);
     final isDriveConnected = driveService.isSignedIn;
 
     showModalBottomSheet(
-      context: context,
+      context: parentContext,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       backgroundColor: theme.colorScheme.surface,
       builder: (sheetContext) {
         return StatefulBuilder(
-          builder: (context, setSheetState) {
+          builder: (builderContext, setSheetState) {
             return SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -746,7 +984,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                 !isDriveConnected
                                     ? 'Sign in to Google Drive to restore'
                                     : _latestCloudBackup != null
-                                        ? '${l10n.lastBackedUp(_getRelativeTime(context, _latestCloudBackup!.createdTime!))} • ${_formatFileSize(int.parse(_latestCloudBackup!.size ?? '0'))}'
+                                        ? '${l10n.lastBackedUp(_getRelativeTime(parentContext, _latestCloudBackup!.createdTime!))} • ${_formatFileSize(int.parse(_latestCloudBackup!.size ?? '0'))}'
                                         : l10n.noCloudBackupFound,
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: (isDriveConnected && _latestCloudBackup != null)
