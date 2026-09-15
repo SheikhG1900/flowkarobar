@@ -253,7 +253,8 @@ class ExportService {
         // Filter out inactive transactions (unsettled linked entries)
         bool include = true;
 
-        if (!includePayablesAndReceivables && (t.linkedPayableUuid != null || t.linkedReceivableUuid != null)) {
+        if (!includePayablesAndReceivables &&
+            (t.linkedPayableUuid != null || t.linkedReceivableUuid != null)) {
           include = false;
         }
 
@@ -280,7 +281,7 @@ class ExportService {
           l10n: l10n,
         );
         final scaledAmount = t.amount / divisor;
-        
+
         // If description is tabular (itemized), extract only the summary text
         String cleanDescription = t.description ?? '';
         if (TabularParser.isTabular(cleanDescription)) {
@@ -534,7 +535,8 @@ class ExportService {
   }) async {
     String? logoSvgString;
     try {
-      logoSvgString = await rootBundle.loadString('assets/images/logo_square.svg');
+      logoSvgString =
+          await rootBundle.loadString('assets/images/logo_square.svg');
     } catch (e) {
       if (kDebugMode) {
         print('ExportService: Failed to load logo SVG: $e');
@@ -567,18 +569,28 @@ class ExportService {
       receivablesWithContacts = [];
     }
 
-    if (filters != null && filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
-      payablesWithContacts = payablesWithContacts.where((p) => filters.contactUuids!.contains(p.contact?.uuid)).toList();
-      receivablesWithContacts = receivablesWithContacts.where((r) => filters.contactUuids!.contains(r.contact?.uuid)).toList();
+    if (filters != null &&
+        filters.contactUuids != null &&
+        filters.contactUuids!.isNotEmpty) {
+      payablesWithContacts = payablesWithContacts
+          .where((p) => filters.contactUuids!.contains(p.contact?.uuid))
+          .toList();
+      receivablesWithContacts = receivablesWithContacts
+          .where((r) => filters.contactUuids!.contains(r.contact?.uuid))
+          .toList();
     }
 
-    if (filters != null && filters.accountUuids != null && filters.accountUuids!.isNotEmpty) {
+    if (filters != null &&
+        filters.accountUuids != null &&
+        filters.accountUuids!.isNotEmpty) {
       payablesWithContacts = [];
       receivablesWithContacts = [];
     }
 
     String? accountNames;
-    if (filters != null && filters.accountUuids != null && filters.accountUuids!.isNotEmpty) {
+    if (filters != null &&
+        filters.accountUuids != null &&
+        filters.accountUuids!.isNotEmpty) {
       final accounts = await (_database.select(_database.accounts)
             ..where((t) => t.uuid.isIn(filters.accountUuids!)))
           .get();
@@ -586,15 +598,21 @@ class ExportService {
     }
 
     String? categoryNames;
-    if (filters != null && filters.categoryUuids != null && filters.categoryUuids!.isNotEmpty) {
+    if (filters != null &&
+        filters.categoryUuids != null &&
+        filters.categoryUuids!.isNotEmpty) {
       final categories = await (_database.select(_database.categories)
             ..where((t) => t.uuid.isIn(filters.categoryUuids!)))
           .get();
-      categoryNames = categories.map((c) => _getLocalizedCategoryName(c.name, l10n)).join(', ');
+      categoryNames = categories
+          .map((c) => _getLocalizedCategoryName(c.name, l10n))
+          .join(', ');
     }
 
     String? contactNames;
-    if (filters != null && filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
+    if (filters != null &&
+        filters.contactUuids != null &&
+        filters.contactUuids!.isNotEmpty) {
       final contacts = await (_database.select(_database.contacts)
             ..where((t) => t.uuid.isIn(filters.contactUuids!)))
           .get();
@@ -613,7 +631,8 @@ class ExportService {
               style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
               align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
             ),
-            _buildText(':', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+            _buildText(':',
+                style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
             _buildText(
               accountNames,
               style: pw.TextStyle(
@@ -638,7 +657,8 @@ class ExportService {
               style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
               align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
             ),
-            _buildText(':', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+            _buildText(':',
+                style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
             _buildText(
               categoryNames,
               style: pw.TextStyle(
@@ -663,7 +683,8 @@ class ExportService {
               style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
               align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
             ),
-            _buildText(':', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+            _buildText(':',
+                style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
             _buildText(
               contactNames,
               style: pw.TextStyle(
@@ -691,7 +712,8 @@ class ExportService {
               style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
               align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
             ),
-            _buildText(':', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+            _buildText(':',
+                style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
             _buildText(
               typeLabel,
               style: pw.TextStyle(
@@ -716,7 +738,8 @@ class ExportService {
               style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
               align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
             ),
-            _buildText(':', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+            _buildText(':',
+                style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
             _buildText(
               searchQuery,
               style: pw.TextStyle(
@@ -783,10 +806,13 @@ class ExportService {
     final currency = currencySymbol ?? '₹';
     String fmt(num amount) {
       if (currencyObj != null) {
-        return AmountFormatter.formatWithCurrency(amount.toDouble(), currencyObj);
+        return AmountFormatter.formatWithCurrency(
+            amount.toDouble(), currencyObj);
       }
-      return AmountFormatter.formatWithCurrency(amount.toDouble(), currency, decimalPlaces);
+      return AmountFormatter.formatWithCurrency(
+          amount.toDouble(), currency, decimalPlaces);
     }
+
     final dateFormat = AppDateFormatter.getFormatter(_dateFormat);
     final dateTimeFormat = AppDateFormatter.getFormatter('dd MMM yyyy, HH:mm');
 
@@ -848,7 +874,8 @@ class ExportService {
                       height: 250,
                       child: pw.SvgImage(
                         svg: logoSvgString!,
-                        colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                        colorFilter: const PdfColor(0 / 255.0, 102 / 255.0,
+                            153 / 255.0), // #006699 (Deep Brand Blue)
                       ),
                     ),
                   ),
@@ -904,7 +931,10 @@ class ExportService {
                               height: 12,
                               child: pw.SvgImage(
                                 svg: logoSvgString,
-                                colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                                colorFilter: const PdfColor(
+                                    0 / 255.0,
+                                    102 / 255.0,
+                                    153 / 255.0), // #006699 (Deep Brand Blue)
                               ),
                             ),
                           ],
@@ -920,7 +950,10 @@ class ExportService {
                               height: 12,
                               child: pw.SvgImage(
                                 svg: logoSvgString,
-                                colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                                colorFilter: const PdfColor(
+                                    0 / 255.0,
+                                    102 / 255.0,
+                                    153 / 255.0), // #006699 (Deep Brand Blue)
                               ),
                             ),
                             pw.SizedBox(width: 4),
@@ -1125,8 +1158,10 @@ class ExportService {
                           totalPayablePending >= totalReceivablePending
                               ? '${l10n?.netBalance ?? 'Net'} ${l10n?.payable ?? 'Payable'} (${l10n?.pending ?? 'Pending'})'
                               : '${l10n?.netBalance ?? 'Net'} ${l10n?.receivable ?? 'Receivable'} (${l10n?.pending ?? 'Pending'})',
-                          fmt((totalPayablePending - totalReceivablePending).abs()),
-                          (totalPayablePending - totalReceivablePending).abs() ==
+                          fmt((totalPayablePending - totalReceivablePending)
+                              .abs()),
+                          (totalPayablePending - totalReceivablePending)
+                                      .abs() ==
                                   0
                               ? PdfColors.black
                               : totalPayablePending >= totalReceivablePending
@@ -1158,7 +1193,7 @@ class ExportService {
                 columnWidths: isRtl
                     ? {
                         0: const pw.FixedColumnWidth(70), // Status
-                        1: const pw.FlexColumnWidth(3),   // Description
+                        1: const pw.FlexColumnWidth(3), // Description
                         2: const pw.FlexColumnWidth(2.5), // Contact
                         3: const pw.FlexColumnWidth(2.5), // Category
                         4: const pw.FixedColumnWidth(80), // Amount
@@ -1171,7 +1206,7 @@ class ExportService {
                         2: const pw.FixedColumnWidth(80), // Amount
                         3: const pw.FlexColumnWidth(2.5), // Category
                         4: const pw.FlexColumnWidth(2.5), // Contact
-                        5: const pw.FlexColumnWidth(3),   // Description
+                        5: const pw.FlexColumnWidth(3), // Description
                         6: const pw.FixedColumnWidth(70), // Status
                       },
                 children: [
@@ -1226,8 +1261,7 @@ class ExportService {
                             alignment: isRtl
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
-                            child: _buildText(
-                                _getLocalizedType(t.type, l10n),
+                            child: _buildText(_getLocalizedType(t.type, l10n),
                                 style: const pw.TextStyle(fontSize: 9),
                                 align: isRtl
                                     ? pw.TextAlign.right
@@ -1240,8 +1274,7 @@ class ExportService {
                             alignment: isRtl
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
-                            child: _buildText(
-                                fmt(t.amount),
+                            child: _buildText(fmt(t.amount),
                                 style: pw.TextStyle(
                                     fontSize: 9, color: amountColor),
                                 align: isRtl
@@ -1326,7 +1359,8 @@ class ExportService {
                             child: () {
                               String cleanDescription = t.description ?? '-';
                               if (TabularParser.isTabular(cleanDescription)) {
-                                cleanDescription = TabularParser.parse(cleanDescription).$1;
+                                cleanDescription =
+                                    TabularParser.parse(cleanDescription).$1;
                                 if (cleanDescription.isEmpty) {
                                   cleanDescription = '-';
                                 }
@@ -1452,8 +1486,7 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: _buildText(
-                                fmt(p.amount),
+                            child: _buildText(fmt(p.amount),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color: ExportService.getPayablePdfColor())),
@@ -1495,7 +1528,8 @@ class ExportService {
                             child: () {
                               String cleanDescription = p.description ?? '-';
                               if (TabularParser.isTabular(cleanDescription)) {
-                                cleanDescription = TabularParser.parse(cleanDescription).$1;
+                                cleanDescription =
+                                    TabularParser.parse(cleanDescription).$1;
                                 if (cleanDescription.isEmpty) {
                                   cleanDescription = '-';
                                 }
@@ -1603,8 +1637,7 @@ class ExportService {
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
                             alignment: pw.Alignment.centerLeft,
-                            child: _buildText(
-                                fmt(r.amount),
+                            child: _buildText(fmt(r.amount),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color:
@@ -1647,7 +1680,8 @@ class ExportService {
                             child: () {
                               String cleanDescription = r.description ?? '-';
                               if (TabularParser.isTabular(cleanDescription)) {
-                                cleanDescription = TabularParser.parse(cleanDescription).$1;
+                                cleanDescription =
+                                    TabularParser.parse(cleanDescription).$1;
                                 if (cleanDescription.isEmpty) {
                                   cleanDescription = '-';
                                 }
@@ -1931,7 +1965,8 @@ class ExportService {
 
       String? logoSvgString;
       try {
-        logoSvgString = await rootBundle.loadString('assets/images/logo_square.svg');
+        logoSvgString =
+            await rootBundle.loadString('assets/images/logo_square.svg');
       } catch (e) {
         if (kDebugMode) {
           print('ExportService: Failed to load logo SVG: $e');
@@ -1950,33 +1985,48 @@ class ExportService {
       }
 
       // Fetch transaction details for each transactionUuid
-      final List<({TransactionWithDetails details, List<TransactionDocument> docs})> transactionsWithAttachments = [];
+      final List<
+          ({
+            TransactionWithDetails details,
+            List<TransactionDocument> docs
+          })> transactionsWithAttachments = [];
       for (final entry in groupedDocs.entries) {
-        final details = await _transactionsRepository.getTransactionWithDetailsByUuid(entry.key);
+        final details = await _transactionsRepository
+            .getTransactionWithDetailsByUuid(entry.key);
         if (details != null) {
-          transactionsWithAttachments.add((details: details, docs: entry.value));
+          transactionsWithAttachments
+              .add((details: details, docs: entry.value));
         }
       }
 
       // Sort by transaction date descending
-      transactionsWithAttachments.sort((a, b) => b.details.transaction.date.compareTo(a.details.transaction.date));
+      transactionsWithAttachments.sort((a, b) =>
+          b.details.transaction.date.compareTo(a.details.transaction.date));
 
       // 3. Pre-load attachment files and PDF pages asynchronously
       final appDir = await getApplicationDocumentsDirectory();
       final docDir = Directory(p.join(appDir.path, 'documents'));
 
-      final List<({
-        TransactionWithDetails details,
-        List<({
-          TransactionDocument doc,
-          Uint8List? imageBytes,
-          bool isImage,
-          bool isPdf,
-        })> attachments,
-      })> preloadedData = [];
+      final List<
+          ({
+            TransactionWithDetails details,
+            List<
+                ({
+                  TransactionDocument doc,
+                  Uint8List? imageBytes,
+                  bool isImage,
+                  bool isPdf,
+                })> attachments,
+          })> preloadedData = [];
 
       for (final item in transactionsWithAttachments) {
-        final List<({TransactionDocument doc, Uint8List? imageBytes, bool isImage, bool isPdf})> attachments = [];
+        final List<
+            ({
+              TransactionDocument doc,
+              Uint8List? imageBytes,
+              bool isImage,
+              bool isPdf
+            })> attachments = [];
         for (final doc in item.docs) {
           final file = File(p.join(docDir.path, doc.fileName));
           Uint8List? bytes;
@@ -1986,8 +2036,12 @@ class ExportService {
           if (await file.exists()) {
             final mime = (doc.mimeType ?? '').toLowerCase();
             final isImgType = mime.startsWith('image/') ||
-                ['jpg', 'jpeg', 'png', 'webp', 'gif'].contains(p.extension(doc.originalName).replaceAll('.', '').toLowerCase());
-            final isPdfType = mime == 'application/pdf' || p.extension(doc.originalName).toLowerCase() == '.pdf';
+                ['jpg', 'jpeg', 'png', 'webp', 'gif'].contains(p
+                    .extension(doc.originalName)
+                    .replaceAll('.', '')
+                    .toLowerCase());
+            final isPdfType = mime == 'application/pdf' ||
+                p.extension(doc.originalName).toLowerCase() == '.pdf';
 
             if (isImgType) {
               isImage = true;
@@ -2001,7 +2055,8 @@ class ExportService {
               try {
                 final pdfBytes = await file.readAsBytes();
                 // Rasterize the first page of the PDF
-                await for (final page in Printing.raster(pdfBytes, pages: [0], dpi: 150)) {
+                await for (final page
+                    in Printing.raster(pdfBytes, pages: [0], dpi: 150)) {
                   bytes = await page.toPng();
                   break; // Only take the first page
                 }
@@ -2010,7 +2065,8 @@ class ExportService {
               }
             }
           }
-          attachments.add((doc: doc, imageBytes: bytes, isImage: isImage, isPdf: isPdf));
+          attachments.add(
+              (doc: doc, imageBytes: bytes, isImage: isImage, isPdf: isPdf));
         }
         preloadedData.add((details: item.details, attachments: attachments));
       }
@@ -2056,7 +2112,8 @@ class ExportService {
             item.details.transaction.amount.toDouble(),
             currencyObj,
           );
-          final categoryName = _getLocalizedCategoryName(item.details.category?.name, l10n);
+          final categoryName =
+              _getLocalizedCategoryName(item.details.category?.name, l10n);
 
           final currentIsFirstPage = isFirstPage;
           isFirstPage = false;
@@ -2097,7 +2154,10 @@ class ExportService {
                               height: 12,
                               child: pw.SvgImage(
                                 svg: logoSvgString,
-                                colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                                colorFilter: const PdfColor(
+                                    0 / 255.0,
+                                    102 / 255.0,
+                                    153 / 255.0), // #006699 (Deep Brand Blue)
                               ),
                             ),
                             pw.SizedBox(width: 4),
@@ -2124,7 +2184,8 @@ class ExportService {
                       // Right: Page number
                       _buildText(
                         'Page ${context.pageNumber} / ${context.pagesCount}',
-                        style: const pw.TextStyle(color: PdfColors.grey600, fontSize: 8),
+                        style: const pw.TextStyle(
+                            color: PdfColors.grey600, fontSize: 8),
                       ),
                     ],
                   ),
@@ -2144,13 +2205,15 @@ class ExportService {
                             style: pw.TextStyle(
                               fontSize: 24,
                               fontWeight: pw.FontWeight.bold,
-                              color: const PdfColor(0 / 255.0, 100 / 255.0, 150 / 255.0),
+                              color: const PdfColor(
+                                  0 / 255.0, 100 / 255.0, 150 / 255.0),
                             ),
                           ),
                           pw.SizedBox(height: 4),
                           pw.Text(
                             'Generated on ${AppDateFormatter.formatDate(DateTime.now())}',
-                            style: pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                            style: pw.TextStyle(
+                                fontSize: 10, color: PdfColors.grey600),
                           ),
                         ],
                       ),
@@ -2181,7 +2244,14 @@ class ExportService {
 
   pw.Widget _buildTransactionAttachmentBlock(
     TransactionWithDetails details,
-    List<({TransactionDocument doc, Uint8List? imageBytes, bool isImage, bool isPdf})> attachments,
+    List<
+            ({
+              TransactionDocument doc,
+              Uint8List? imageBytes,
+              bool isImage,
+              bool isPdf
+            })>
+        attachments,
     AppLocalizations? l10n,
     String? currencySymbol,
     int decimalPlaces,
@@ -2189,7 +2259,7 @@ class ExportService {
   ) {
     final isIncome = details.transaction.type == 'INCOME';
     final amountColor = isIncome ? PdfColors.green700 : PdfColors.red700;
-    
+
     // Format amount
     final formattedAmount = AmountFormatter.formatWithCurrency(
       details.transaction.amount.toDouble(),
@@ -2218,12 +2288,14 @@ class ExportService {
                     children: [
                       _buildText(
                         _getLocalizedCategoryName(details.category?.name, l10n),
-                        style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+                        style: pw.TextStyle(
+                            fontSize: 14, fontWeight: pw.FontWeight.bold),
                       ),
                       pw.SizedBox(height: 4),
                       _buildText(
                         details.account?.name ?? 'Cashbook',
-                        style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                        style: const pw.TextStyle(
+                            fontSize: 10, color: PdfColors.grey600),
                       ),
                     ],
                   ),
@@ -2241,26 +2313,31 @@ class ExportService {
                       pw.SizedBox(height: 4),
                       _buildText(
                         AppDateFormatter.formatDate(details.transaction.date),
-                        style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600),
+                        style: const pw.TextStyle(
+                            fontSize: 10, color: PdfColors.grey600),
                       ),
                     ],
                   ),
                 ],
               ),
-              if (details.contact != null || details.transaction.description != null) ...[
+              if (details.contact != null ||
+                  details.transaction.description != null) ...[
                 pw.SizedBox(height: 12),
                 pw.Divider(color: PdfColors.grey300, thickness: 0.5),
                 pw.SizedBox(height: 8),
                 if (details.contact != null)
                   _buildText(
                     '${l10n?.contact ?? "Contact"}: ${details.contact!.name}',
-                    style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                    style: const pw.TextStyle(
+                        fontSize: 10, color: PdfColors.grey700),
                   ),
-                if (details.transaction.description != null && details.transaction.description!.isNotEmpty) ...[
+                if (details.transaction.description != null &&
+                    details.transaction.description!.isNotEmpty) ...[
                   pw.SizedBox(height: 4),
                   _buildText(
-                    '${l10n?.description ?? "Description"}: ${details.transaction.description!}',
-                    style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                    '${l10n?.description ?? "Description"}: ${TabularParser.isTabular(details.transaction.description) ? TabularParser.parse(details.transaction.description).$1 : details.transaction.description!}',
+                    style: const pw.TextStyle(
+                        fontSize: 10, color: PdfColors.grey700),
                   ),
                 ],
               ],
@@ -2268,17 +2345,20 @@ class ExportService {
           ),
         ),
         pw.SizedBox(height: 12),
-        
+
         // Attachments
         pw.Padding(
           padding: const pw.EdgeInsets.only(left: 8),
           child: _buildText(
             'Attachments (${attachments.length}):',
-            style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold, color: PdfColors.grey800),
+            style: pw.TextStyle(
+                fontSize: 11,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.grey800),
           ),
         ),
         pw.SizedBox(height: 8),
-        
+
         for (final att in attachments) ...[
           pw.Container(
             margin: const pw.EdgeInsets.only(bottom: 12),
@@ -2295,11 +2375,15 @@ class ExportService {
                   children: [
                     _buildText(
                       att.doc.originalName,
-                      style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.grey700),
+                      style: pw.TextStyle(
+                          fontSize: 10,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.grey700),
                     ),
                     _buildText(
                       _formatFileSize(att.doc.fileSize),
-                      style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
+                      style: const pw.TextStyle(
+                          fontSize: 9, color: PdfColors.grey500),
                     ),
                   ],
                 ),
@@ -2307,7 +2391,9 @@ class ExportService {
                 if (att.imageBytes != null)
                   pw.Center(
                     child: pw.Container(
-                      constraints: const pw.BoxConstraints(maxHeight: 250),
+                      constraints: const pw.BoxConstraints(
+                          maxHeight:
+                              400), // Increased height limit for portrait images and PDFs
                       child: pw.Image(
                         pw.MemoryImage(att.imageBytes!),
                         fit: pw.BoxFit.contain,
@@ -2326,10 +2412,11 @@ class ExportService {
                           ),
                           pw.SizedBox(height: 4),
                           _buildText(
-                            att.isPdf 
+                            att.isPdf
                                 ? 'PDF Document (Could not render preview)'
                                 : 'Attachment File',
-                            style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
+                            style: const pw.TextStyle(
+                                fontSize: 9, color: PdfColors.grey500),
                           ),
                         ],
                       ),
@@ -2577,7 +2664,8 @@ class ExportService {
   }) async {
     String? logoSvgString;
     try {
-      logoSvgString = await rootBundle.loadString('assets/images/logo_square.svg');
+      logoSvgString =
+          await rootBundle.loadString('assets/images/logo_square.svg');
     } catch (e) {
       if (kDebugMode) {
         print('ExportService: Failed to load logo SVG: $e');
@@ -2606,10 +2694,13 @@ class ExportService {
     final currency = currencySymbol ?? '₹';
     String fmt(num amount) {
       if (currencyObj != null) {
-        return AmountFormatter.formatWithCurrency(amount.toDouble(), currencyObj);
+        return AmountFormatter.formatWithCurrency(
+            amount.toDouble(), currencyObj);
       }
-      return AmountFormatter.formatWithCurrency(amount.toDouble(), currency, decimalPlaces);
+      return AmountFormatter.formatWithCurrency(
+          amount.toDouble(), currency, decimalPlaces);
     }
+
     final dateFormat = AppDateFormatter.getFormatter(_dateFormat);
     final dateTimeFormat = AppDateFormatter.getFormatter('dd MMM yyyy, HH:mm');
 
@@ -2674,7 +2765,8 @@ class ExportService {
                       height: 250,
                       child: pw.SvgImage(
                         svg: logoSvgString!,
-                        colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                        colorFilter: const PdfColor(0 / 255.0, 102 / 255.0,
+                            153 / 255.0), // #006699 (Deep Brand Blue)
                       ),
                     ),
                   ),
@@ -2729,7 +2821,10 @@ class ExportService {
                               height: 12,
                               child: pw.SvgImage(
                                 svg: logoSvgString,
-                                colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                                colorFilter: const PdfColor(
+                                    0 / 255.0,
+                                    102 / 255.0,
+                                    153 / 255.0), // #006699 (Deep Brand Blue)
                               ),
                             ),
                           ],
@@ -2745,7 +2840,10 @@ class ExportService {
                               height: 12,
                               child: pw.SvgImage(
                                 svg: logoSvgString,
-                                colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                                colorFilter: const PdfColor(
+                                    0 / 255.0,
+                                    102 / 255.0,
+                                    153 / 255.0), // #006699 (Deep Brand Blue)
                               ),
                             ),
                             pw.SizedBox(width: 4),
@@ -3077,8 +3175,7 @@ class ExportService {
                             alignment: isRtl
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
-                            child: _buildText(
-                                fmt(summary.totalPayable),
+                            child: _buildText(fmt(summary.totalPayable),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color: ExportService.getPayablePdfColor()),
@@ -3093,8 +3190,7 @@ class ExportService {
                             alignment: isRtl
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
-                            child: _buildText(
-                                fmt(summary.totalReceivable),
+                            child: _buildText(fmt(summary.totalReceivable),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color:
@@ -3110,8 +3206,7 @@ class ExportService {
                             alignment: isRtl
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
-                            child: _buildText(
-                                fmt(summary.balance.abs()),
+                            child: _buildText(fmt(summary.balance.abs()),
                                 style: pw.TextStyle(
                                     fontSize: 9, color: balanceColor),
                                 align: isRtl
@@ -3189,8 +3284,7 @@ class ExportService {
                   l10n: l10n),
               pw.SizedBox(height: 10),
               // Visual bar chart representation
-              self._buildVisualBarChart(
-                  monthlyTrends, currency, decimalPlaces,
+              self._buildVisualBarChart(monthlyTrends, currency, decimalPlaces,
                   self: self, l10n: l10n),
               pw.SizedBox(height: 10),
               pw.Table(
@@ -3236,8 +3330,7 @@ class ExportService {
                             alignment: isRtl
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
-                            child: _buildText(
-                                fmt(trend.income),
+                            child: _buildText(fmt(trend.income),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color: ExportService.getIncomePdfColor()),
@@ -3252,8 +3345,7 @@ class ExportService {
                             alignment: isRtl
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
-                            child: _buildText(
-                                fmt(trend.expense),
+                            child: _buildText(fmt(trend.expense),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color: ExportService.getExpensePdfColor()),
@@ -3327,8 +3419,7 @@ class ExportService {
                             alignment: isRtl
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
-                            child: _buildText(
-                                fmt(trend.totalPayable),
+                            child: _buildText(fmt(trend.totalPayable),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color: ExportService.getPayablePdfColor()),
@@ -3343,8 +3434,7 @@ class ExportService {
                             alignment: isRtl
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
-                            child: _buildText(
-                                fmt(trend.totalReceivable),
+                            child: _buildText(fmt(trend.totalReceivable),
                                 style: pw.TextStyle(
                                     fontSize: 9,
                                     color:
@@ -3474,8 +3564,7 @@ class ExportService {
                             alignment: isRtl
                                 ? pw.Alignment.centerRight
                                 : pw.Alignment.centerLeft,
-                            child: _buildText(
-                                fmt(contact.balance.abs()),
+                            child: _buildText(fmt(contact.balance.abs()),
                                 style: pw.TextStyle(
                                     fontSize: 9, color: balanceColor),
                                 align: isRtl
@@ -3589,7 +3678,8 @@ class ExportService {
     pw.SvgImage? logoSvg;
     String? logoSvgString;
     try {
-      logoSvgString = await rootBundle.loadString('assets/images/logo_square.svg');
+      logoSvgString =
+          await rootBundle.loadString('assets/images/logo_square.svg');
       logoSvg = pw.SvgImage(svg: logoSvgString);
     } catch (e) {
       if (kDebugMode) {
@@ -3627,7 +3717,8 @@ class ExportService {
                       height: 250,
                       child: pw.SvgImage(
                         svg: logoSvgString!,
-                        colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                        colorFilter: const PdfColor(0 / 255.0, 102 / 255.0,
+                            153 / 255.0), // #006699 (Deep Brand Blue)
                       ),
                     ),
                   ),
@@ -3659,7 +3750,8 @@ class ExportService {
 
       endingBalance = lastEntry.runningBalance;
       final firstIsExpense = firstEntry.entryType == StatementEntryType.debit;
-      startingBalance = firstEntry.runningBalance - (firstIsExpense ? -firstEntry.amount : firstEntry.amount);
+      startingBalance = firstEntry.runningBalance -
+          (firstIsExpense ? -firstEntry.amount : firstEntry.amount);
     }
 
     final dateFormat = AppDateFormatter.getFormatter(_dateFormat);
@@ -3714,7 +3806,10 @@ class ExportService {
                               height: 12,
                               child: pw.SvgImage(
                                 svg: logoSvgString,
-                                colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                                colorFilter: const PdfColor(
+                                    0 / 255.0,
+                                    102 / 255.0,
+                                    153 / 255.0), // #006699 (Deep Brand Blue)
                               ),
                             ),
                           ],
@@ -3730,7 +3825,10 @@ class ExportService {
                               height: 12,
                               child: pw.SvgImage(
                                 svg: logoSvgString,
-                                colorFilter: const PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0), // #006699 (Deep Brand Blue)
+                                colorFilter: const PdfColor(
+                                    0 / 255.0,
+                                    102 / 255.0,
+                                    153 / 255.0), // #006699 (Deep Brand Blue)
                               ),
                             ),
                             pw.SizedBox(width: 4),
@@ -3778,7 +3876,8 @@ class ExportService {
                       style: pw.TextStyle(
                         fontSize: 24,
                         fontWeight: pw.FontWeight.bold,
-                        color: const PdfColor(0 / 255.0, 100 / 255.0, 150 / 255.0),
+                        color:
+                            const PdfColor(0 / 255.0, 100 / 255.0, 150 / 255.0),
                       ),
                       align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
                     ),
@@ -3795,10 +3894,14 @@ class ExportService {
                         [
                           _buildText(
                             l10n?.account ?? 'Account',
-                            style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
-                            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                            style: pw.TextStyle(
+                                fontSize: 10, color: PdfColors.grey700),
+                            align:
+                                isRtl ? pw.TextAlign.right : pw.TextAlign.left,
                           ),
-                          _buildText(':', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                          _buildText(':',
+                              style: pw.TextStyle(
+                                  fontSize: 10, color: PdfColors.grey700)),
                           _buildText(
                             accountName,
                             style: pw.TextStyle(
@@ -3806,7 +3909,8 @@ class ExportService {
                               fontWeight: pw.FontWeight.bold,
                               color: PdfColors.black,
                             ),
-                            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                            align:
+                                isRtl ? pw.TextAlign.right : pw.TextAlign.left,
                           ),
                         ],
                         l10n: l10n,
@@ -3815,10 +3919,14 @@ class ExportService {
                         [
                           _buildText(
                             l10n?.dateRange ?? 'Date Range',
-                            style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
-                            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                            style: pw.TextStyle(
+                                fontSize: 10, color: PdfColors.grey700),
+                            align:
+                                isRtl ? pw.TextAlign.right : pw.TextAlign.left,
                           ),
-                          _buildText(':', style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+                          _buildText(':',
+                              style: pw.TextStyle(
+                                  fontSize: 10, color: PdfColors.grey700)),
                           _buildText(
                             '${dateFormat.format(startDate)} - ${dateFormat.format(endDate)}',
                             style: pw.TextStyle(
@@ -3826,7 +3934,8 @@ class ExportService {
                               fontWeight: pw.FontWeight.bold,
                               color: PdfColors.black,
                             ),
-                            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                            align:
+                                isRtl ? pw.TextAlign.right : pw.TextAlign.left,
                           ),
                         ],
                         l10n: l10n,
@@ -3839,7 +3948,8 @@ class ExportService {
             pw.SizedBox(height: 20),
 
             // Summary Section
-            _buildLocalizedHeader(l10n?.summary ?? 'Summary', level: 1, l10n: l10n),
+            _buildLocalizedHeader(l10n?.summary ?? 'Summary',
+                level: 1, l10n: l10n),
             pw.SizedBox(height: 10),
             pw.Table(
               border: pw.TableBorder.all(color: PdfColors.grey300),
@@ -3883,11 +3993,13 @@ class ExportService {
             pw.SizedBox(height: 30),
 
             // Entries Section
-            _buildLocalizedHeader(l10n?.transactions ?? 'Transactions', level: 1, l10n: l10n),
+            _buildLocalizedHeader(l10n?.transactions ?? 'Transactions',
+                level: 1, l10n: l10n),
             pw.SizedBox(height: 10),
             if (entries.isEmpty)
               _buildText(
-                l10n?.noStatementEntries ?? 'No statement entries in this date range.',
+                l10n?.noStatementEntries ??
+                    'No statement entries in this date range.',
                 style: pw.TextStyle(color: PdfColors.grey700),
                 align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
               )
@@ -3911,7 +4023,8 @@ class ExportService {
                       _buildTableHeaderCell(l10n?.runningBalance ?? 'Balance'),
                     ],
                     l10n: l10n,
-                    decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                    decoration:
+                        const pw.BoxDecoration(color: PdfColors.grey200),
                   ),
                   ...entries.reversed.map((entry) {
                     final isDebit = entry.entryType == StatementEntryType.debit;
@@ -3922,7 +4035,8 @@ class ExportService {
                     // Extract clean description if tabular
                     String cleanDescription = entry.description ?? '';
                     if (TabularParser.isTabular(cleanDescription)) {
-                      cleanDescription = TabularParser.parse(cleanDescription).$1;
+                      cleanDescription =
+                          TabularParser.parse(cleanDescription).$1;
                     }
                     if (cleanDescription.isEmpty) {
                       cleanDescription = entry.title;
@@ -3933,22 +4047,30 @@ class ExportService {
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
-                            alignment: isRtl ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
+                            alignment: isRtl
+                                ? pw.Alignment.centerRight
+                                : pw.Alignment.centerLeft,
                             child: _buildText(
                               dateFormat.format(entry.date),
                               style: const pw.TextStyle(fontSize: 9),
-                              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                              align: isRtl
+                                  ? pw.TextAlign.right
+                                  : pw.TextAlign.left,
                             ),
                           ),
                         ),
                         pw.Padding(
                           padding: const pw.EdgeInsets.all(4),
                           child: pw.Container(
-                            alignment: isRtl ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
+                            alignment: isRtl
+                                ? pw.Alignment.centerRight
+                                : pw.Alignment.centerLeft,
                             child: _buildText(
                               cleanDescription,
                               style: const pw.TextStyle(fontSize: 9),
-                              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                              align: isRtl
+                                  ? pw.TextAlign.right
+                                  : pw.TextAlign.left,
                             ),
                           ),
                         ),
@@ -4058,7 +4180,8 @@ class ExportService {
 
           final formattedAmount = currencyObj != null
               ? AmountFormatter.formatWithCurrency(amount, currencyObj)
-              : AmountFormatter.formatWithCurrency(amount, currency, decimalPlaces);
+              : AmountFormatter.formatWithCurrency(
+                  amount, currency, decimalPlaces);
 
           return service._buildLocalizedTableRow(
             [
@@ -4116,9 +4239,8 @@ class ExportService {
   }
 
   // Helper method to build status row
-  pw.TableRow _buildStatusRow(
-      String label, double amount, Color color, String currency,
-      int decimalPlaces,
+  pw.TableRow _buildStatusRow(String label, double amount, Color color,
+      String currency, int decimalPlaces,
       {AppLocalizations? l10n, AppCurrency? currencyObj}) {
     final pdfColor = PdfColor(color.r, color.g, color.b);
     final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
@@ -4142,8 +4264,7 @@ class ExportService {
           child: pw.Container(
             alignment:
                 isRtl ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
-            child: _buildText(
-                formattedAmount,
+            child: _buildText(formattedAmount,
                 style: pw.TextStyle(fontSize: 9, color: pdfColor),
                 align: isRtl ? pw.TextAlign.right : pw.TextAlign.left),
           ),
@@ -4576,7 +4697,8 @@ class ExportService {
                         ? [
                             _buildText(
                               AmountFormatter.formatWithCurrency(
-                                  trend.totalReceivable, currency,
+                                  trend.totalReceivable,
+                                  currency,
                                   decimalPlaces),
                               style: pw.TextStyle(
                                 fontSize: 7,
@@ -4619,7 +4741,8 @@ class ExportService {
                             pw.SizedBox(width: 4),
                             _buildText(
                               AmountFormatter.formatWithCurrency(
-                                  trend.totalReceivable, currency,
+                                  trend.totalReceivable,
+                                  currency,
                                   decimalPlaces),
                               style: pw.TextStyle(
                                 fontSize: 7,
