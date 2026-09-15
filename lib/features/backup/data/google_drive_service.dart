@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -26,6 +27,7 @@ class GoogleDriveService {
   GoogleSignInAccount? get currentUser => _currentUser;
   bool get isSignedIn => _currentUser != null;
   bool get isDriveApiInitialized => _driveApi != null;
+  drive.DriveApi? get driveApi => _driveApi;
 
   /// Initialize and try to sign in silently
   Future<GoogleSignInAccount?> init() async {
@@ -380,7 +382,12 @@ class GoogleDriveService {
   }
 
   /// Download a backup file
-  Future<void> downloadBackup(String fileId, File targetFile) async {
+  Future<void> downloadBackup(
+    String fileId,
+    File targetFile, {
+    int? fileSize,
+    void Function(double progress)? onProgress,
+  }) async {
     if (_driveApi == null) throw Exception('Drive API not initialized');
 
     try {
@@ -389,8 +396,13 @@ class GoogleDriveService {
         downloadOptions: drive.DownloadOptions.fullMedia,
       ) as drive.Media;
 
+      final totalBytes = media.length ?? fileSize ?? 0;
+      final stream = onProgress != null
+          ? ProgressStream(media.stream, totalBytes, onProgress)
+          : media.stream;
+
       final sink = targetFile.openWrite();
-      await media.stream.pipe(sink);
+      await stream.pipe(sink);
       await sink.close();
     } catch (e) {
       if (kDebugMode) {
@@ -490,6 +502,7 @@ class GoogleDriveService {
   Future<String> uploadBinaryFile(File file, {
     required String name,
     required String parentId,
+    void Function(double progress)? onProgress,
   }) async {
     if (_driveApi == null) throw Exception('Drive API not initialized');
 
@@ -498,7 +511,11 @@ class GoogleDriveService {
       ..parents = [parentId];
 
     final fileSize = await file.length();
-    final media = drive.Media(file.openRead(), fileSize);
+    final stream = file.openRead();
+    final progressStream = onProgress != null
+        ? ProgressStream(stream, fileSize, onProgress)
+        : stream;
+    final media = drive.Media(progressStream, fileSize);
 
     try {
       final result = await _driveApi!.files.create(
@@ -510,9 +527,13 @@ class GoogleDriveService {
       if (e.toString().contains('Access was denied') ||
           e.toString().contains('invalid_token')) {
         await reauthenticate();
+        final progressStreamRetry = onProgress != null
+            ? ProgressStream(file.openRead(), fileSize, onProgress)
+            : file.openRead();
+        final mediaRetry = drive.Media(progressStreamRetry, fileSize);
         final result = await _driveApi!.files.create(
           driveFile,
-          uploadMedia: media,
+          uploadMedia: mediaRetry,
         );
         return result.id!;
       }
@@ -694,4 +715,35 @@ class WindowsGoogleSignInAuthentication implements GoogleSignInAuthentication {
   final String? idToken = null;
   @override
   final String? serverAuthCode = null;
+}
+
+class ProgressStream extends Stream<List<int>> {
+  final Stream<List<int>> _source;
+  final int _totalBytes;
+  final void Function(double progress) _onProgress;
+  int _bytesSent = 0;
+
+  ProgressStream(this._source, this._totalBytes, this._onProgress);
+
+  @override
+  StreamSubscription<List<int>> listen(
+    void Function(List<int> event)? onData, {
+    Function? onError,
+    void Function()? onDone,
+    bool? cancelOnError,
+  }) {
+    return _source.listen(
+      (data) {
+        _bytesSent += data.length;
+        if (_totalBytes > 0) {
+          final progress = _bytesSent / _totalBytes;
+          _onProgress(progress.clamp(0.0, 1.0));
+        }
+        if (onData != null) onData(data);
+      },
+      onError: onError,
+      onDone: onDone,
+      cancelOnError: cancelOnError,
+    );
+  }
 }

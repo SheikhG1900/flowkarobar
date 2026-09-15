@@ -89,6 +89,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get import => 'امپورٹ';
 
   @override
+  String get export => 'ایکسپورٹ';
+
+  @override
   String get cashbooks => 'کیش بکس';
 
   @override
@@ -4574,16 +4577,85 @@ class AppLocalizationsUr extends AppLocalizations {
   String get documentBackup => 'دستاویزات کا بیک اپ';
 
   @override
-  String get exportBackup => 'بیک اپ ایکسپورٹ کریں';
+  String get exportBackup => 'ایکسپورٹ';
 
   @override
-  String get importBackup => 'بیک اپ امپورٹ کریں';
+  String get importBackup => 'امپورٹ';
 
   @override
   String get backupExported => 'بیک اپ کامیابی سے ایکسپورٹ ہو گیا';
 
   @override
   String get backupImported => 'بیک اپ کامیابی سے امپورٹ ہو گیا';
+
+  @override
+  String get uploadingToCloud => 'کلاؤڈ پر اپ لوڈ ہو رہا ہے...';
+
+  @override
+  String get downloadingFromCloud => 'کلاؤڈ سے ڈاؤن لوڈ ہو رہا ہے...';
+
+  @override
+  String get importingBackup => 'بیک اپ امپورٹ کیا جا رہا ہے...';
+
+  @override
+  String uploadingPercentage(String percentage) {
+    return 'اپ لوڈ ہو رہا ہے: $percentage%';
+  }
+
+  @override
+  String get exportOptions => 'ایکسپورٹ کے اختیارات';
+
+  @override
+  String get importOptions => 'امپورٹ کے اختیارات';
+
+  @override
+  String get localDevice => 'مقامی ڈیوائس';
+
+  @override
+  String get googleDriveCloud => 'گوگل ڈرائیو (کلاؤڈ)';
+
+  @override
+  String get selectExportDestination =>
+      'منتخب کریں کہ آپ اپنی دستاویزات کہاں ایکسپورٹ کرنا چاہتے ہیں';
+
+  @override
+  String get selectImportSource =>
+      'منتخب کریں کہ آپ اپنی دستاویزات کہاں سے امپورٹ کرنا چاہتے ہیں';
+
+  @override
+  String get noCloudBackupFound => 'کوئی کلاؤڈ بیک اپ نہیں ملا';
+
+  @override
+  String get checkingCloudBackup => 'کلاؤڈ بیک اپ کی جانچ کی جا رہی ہے...';
+
+  @override
+  String get createCloudBackup => 'کلاؤڈ بیک اپ بنائیں';
+
+  @override
+  String get updateCloudBackup => 'کلاؤڈ بیک اپ اپ ڈیٹ کریں';
+
+  @override
+  String lastBackedUp(String time) {
+    return 'آخری بیک اپ $time';
+  }
+
+  @override
+  String get relativeJustNow => 'ابھی ابھی';
+
+  @override
+  String relativeMinutesAgo(String minutes) {
+    return '$minutes منٹ پہلے';
+  }
+
+  @override
+  String relativeHoursAgo(String hours) {
+    return '$hours گھنٹے پہلے';
+  }
+
+  @override
+  String relativeDaysAgo(String days) {
+    return '$days دن پہلے';
+  }
 
   @override
   String get documentsAndStorage => 'دستاویزات اور اسٹوریج';

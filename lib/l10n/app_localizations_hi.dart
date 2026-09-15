@@ -86,7 +86,10 @@ class AppLocalizationsHi extends AppLocalizations {
   String get paste => 'पेस्ट करें';
 
   @override
-  String get import => 'इंपورت';
+  String get import => 'इंपोर्ट';
+
+  @override
+  String get export => 'निर्यात';
 
   @override
   String get cashbooks => 'कैशबुक';
@@ -4569,16 +4572,85 @@ class AppLocalizationsHi extends AppLocalizations {
   String get documentBackup => 'दस्तावेज़ बैकअप';
 
   @override
-  String get exportBackup => 'बैकअप निर्यात करें';
+  String get exportBackup => 'निर्यात';
 
   @override
-  String get importBackup => 'बैकअप आयात करें';
+  String get importBackup => 'इंपोर्ट';
 
   @override
   String get backupExported => 'बैकअप सफलतापूर्वक निर्यात किया गया';
 
   @override
   String get backupImported => 'बैकअप सफलतापूर्वक आयात किया गया';
+
+  @override
+  String get uploadingToCloud => 'क्लाउड पर अपलोड हो रहा है...';
+
+  @override
+  String get downloadingFromCloud => 'क्लाउड से डाउनलोड हो रहा है...';
+
+  @override
+  String get importingBackup => 'बैकअप आयात किया जा रहा है...';
+
+  @override
+  String uploadingPercentage(String percentage) {
+    return 'अपलोड हो रहा है: $percentage%';
+  }
+
+  @override
+  String get exportOptions => 'निर्यात विकल्प';
+
+  @override
+  String get importOptions => 'इंपोर्ट विकल्प';
+
+  @override
+  String get localDevice => 'स्थानीय डिवाइस';
+
+  @override
+  String get googleDriveCloud => 'गूगल ड्राइव (क्लाउड)';
+
+  @override
+  String get selectExportDestination =>
+      'चुनें कि आप अपने दस्तावेज़ कहाँ निर्यात करना चाहते हैं';
+
+  @override
+  String get selectImportSource =>
+      'चुनें कि आप अपने दस्तावेज़ कहाँ से आयात करना चाहते हैं';
+
+  @override
+  String get noCloudBackupFound => 'कोई क्लाउड बैकअप नहीं मिला';
+
+  @override
+  String get checkingCloudBackup => 'क्लाउड बैकअप की जाँच की जा रही है...';
+
+  @override
+  String get createCloudBackup => 'क्लाउड बैकअप बनाएं';
+
+  @override
+  String get updateCloudBackup => 'क्लाउड बैकअप अपडेट करें';
+
+  @override
+  String lastBackedUp(String time) {
+    return 'पिछला बैकअप $time';
+  }
+
+  @override
+  String get relativeJustNow => 'अभी-अभी';
+
+  @override
+  String relativeMinutesAgo(String minutes) {
+    return '$minutes मिनट पहले';
+  }
+
+  @override
+  String relativeHoursAgo(String hours) {
+    return '$hours घंटे पहले';
+  }
+
+  @override
+  String relativeDaysAgo(String days) {
+    return '$days दिन पहले';
+  }
 
   @override
   String get documentsAndStorage => 'दस्तावेज़ और स्टोरेज';

@@ -39,6 +39,7 @@
   },
   "paste": "Paste",
   "import": "Import",
+  "export": "Export",
   "cashbooks": "Cashbooks",
   "transactions": "Transactions",
   "settings": "Settings",
@@ -2317,10 +2318,64 @@
   "storage": "Storage",
   "storageUsed": "Storage Used",
   "documentBackup": "Document Backup",
-  "exportBackup": "Export Backup",
-  "importBackup": "Import Backup",
+  "exportBackup": "Export",
+  "importBackup": "Import",
   "backupExported": "Backup exported successfully",
   "backupImported": "Backup imported successfully",
+  "uploadingToCloud": "Uploading to Cloud...",
+  "downloadingFromCloud": "Downloading from Cloud...",
+  "importingBackup": "Importing Backup...",
+  "uploadingPercentage": "Uploading: {percentage}%",
+  "@uploadingPercentage": {
+    "placeholders": {
+      "percentage": {
+        "type": "String"
+      }
+    }
+  },
+  "exportOptions": "Export Options",
+  "importOptions": "Import Options",
+  "localDevice": "Local Device",
+  "googleDriveCloud": "Google Drive (Cloud)",
+  "selectExportDestination": "Select where to export your documents",
+  "selectImportSource": "Select where to import your documents",
+  "noCloudBackupFound": "No cloud backup found",
+  "checkingCloudBackup": "Checking cloud backup...",
+  "createCloudBackup": "Create Cloud Backup",
+  "updateCloudBackup": "Update Cloud Backup",
+  "lastBackedUp": "Last backed up {time}",
+  "@lastBackedUp": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "relativeJustNow": "Just now",
+  "relativeMinutesAgo": "{minutes}m ago",
+  "@relativeMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "String"
+      }
+    }
+  },
+  "relativeHoursAgo": "{hours}h ago",
+  "@relativeHoursAgo": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "relativeDaysAgo": "{days}d ago",
+  "@relativeDaysAgo": {
+    "placeholders": {
+      "days": {
+        "type": "String"
+      }
+    }
+  },
   "documentsAndStorage": "Documents & Storage",
   "viewAllDocuments": "View All Documents",
   "deleteAttachmentConfirm": "Are you sure you want to delete this attachment?",

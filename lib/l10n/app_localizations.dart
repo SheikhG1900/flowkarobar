@@ -250,6 +250,12 @@ abstract class AppLocalizations {
   /// **'Import'**
   String get import;
 
+  /// No description provided for @export.
+  ///
+  /// In en, this message translates to:
+  /// **'Export'**
+  String get export;
+
   /// No description provided for @cashbooks.
   ///
   /// In en, this message translates to:
@@ -8330,13 +8336,13 @@ abstract class AppLocalizations {
   /// No description provided for @exportBackup.
   ///
   /// In en, this message translates to:
-  /// **'Export Backup'**
+  /// **'Export'**
   String get exportBackup;
 
   /// No description provided for @importBackup.
   ///
   /// In en, this message translates to:
-  /// **'Import Backup'**
+  /// **'Import'**
   String get importBackup;
 
   /// No description provided for @backupExported.
@@ -8350,6 +8356,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Backup imported successfully'**
   String get backupImported;
+
+  /// No description provided for @uploadingToCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading to Cloud...'**
+  String get uploadingToCloud;
+
+  /// No description provided for @downloadingFromCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading from Cloud...'**
+  String get downloadingFromCloud;
+
+  /// No description provided for @importingBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Importing Backup...'**
+  String get importingBackup;
+
+  /// No description provided for @uploadingPercentage.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading: {percentage}%'**
+  String uploadingPercentage(String percentage);
+
+  /// No description provided for @exportOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Export Options'**
+  String get exportOptions;
+
+  /// No description provided for @importOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Import Options'**
+  String get importOptions;
+
+  /// No description provided for @localDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Local Device'**
+  String get localDevice;
+
+  /// No description provided for @googleDriveCloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Drive (Cloud)'**
+  String get googleDriveCloud;
+
+  /// No description provided for @selectExportDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Select where to export your documents'**
+  String get selectExportDestination;
+
+  /// No description provided for @selectImportSource.
+  ///
+  /// In en, this message translates to:
+  /// **'Select where to import your documents'**
+  String get selectImportSource;
+
+  /// No description provided for @noCloudBackupFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No cloud backup found'**
+  String get noCloudBackupFound;
+
+  /// No description provided for @checkingCloudBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking cloud backup...'**
+  String get checkingCloudBackup;
+
+  /// No description provided for @createCloudBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Cloud Backup'**
+  String get createCloudBackup;
+
+  /// No description provided for @updateCloudBackup.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Cloud Backup'**
+  String get updateCloudBackup;
+
+  /// No description provided for @lastBackedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Last backed up {time}'**
+  String lastBackedUp(String time);
+
+  /// No description provided for @relativeJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Just now'**
+  String get relativeJustNow;
+
+  /// No description provided for @relativeMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes}m ago'**
+  String relativeMinutesAgo(String minutes);
+
+  /// No description provided for @relativeHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h ago'**
+  String relativeHoursAgo(String hours);
+
+  /// No description provided for @relativeDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d ago'**
+  String relativeDaysAgo(String days);
 
   /// No description provided for @documentsAndStorage.
   ///

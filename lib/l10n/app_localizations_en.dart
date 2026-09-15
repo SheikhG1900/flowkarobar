@@ -88,6 +88,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get import => 'Import';
 
   @override
+  String get export => 'Export';
+
+  @override
   String get cashbooks => 'Cashbooks';
 
   @override
@@ -4556,16 +4559,83 @@ class AppLocalizationsEn extends AppLocalizations {
   String get documentBackup => 'Document Backup';
 
   @override
-  String get exportBackup => 'Export Backup';
+  String get exportBackup => 'Export';
 
   @override
-  String get importBackup => 'Import Backup';
+  String get importBackup => 'Import';
 
   @override
   String get backupExported => 'Backup exported successfully';
 
   @override
   String get backupImported => 'Backup imported successfully';
+
+  @override
+  String get uploadingToCloud => 'Uploading to Cloud...';
+
+  @override
+  String get downloadingFromCloud => 'Downloading from Cloud...';
+
+  @override
+  String get importingBackup => 'Importing Backup...';
+
+  @override
+  String uploadingPercentage(String percentage) {
+    return 'Uploading: $percentage%';
+  }
+
+  @override
+  String get exportOptions => 'Export Options';
+
+  @override
+  String get importOptions => 'Import Options';
+
+  @override
+  String get localDevice => 'Local Device';
+
+  @override
+  String get googleDriveCloud => 'Google Drive (Cloud)';
+
+  @override
+  String get selectExportDestination => 'Select where to export your documents';
+
+  @override
+  String get selectImportSource => 'Select where to import your documents';
+
+  @override
+  String get noCloudBackupFound => 'No cloud backup found';
+
+  @override
+  String get checkingCloudBackup => 'Checking cloud backup...';
+
+  @override
+  String get createCloudBackup => 'Create Cloud Backup';
+
+  @override
+  String get updateCloudBackup => 'Update Cloud Backup';
+
+  @override
+  String lastBackedUp(String time) {
+    return 'Last backed up $time';
+  }
+
+  @override
+  String get relativeJustNow => 'Just now';
+
+  @override
+  String relativeMinutesAgo(String minutes) {
+    return '${minutes}m ago';
+  }
+
+  @override
+  String relativeHoursAgo(String hours) {
+    return '${hours}h ago';
+  }
+
+  @override
+  String relativeDaysAgo(String days) {
+    return '${days}d ago';
+  }
 
   @override
   String get documentsAndStorage => 'Documents & Storage';

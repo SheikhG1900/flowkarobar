@@ -7,6 +7,7 @@ import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
 import 'package:flowpaisa/features/transactions/data/transaction_documents_repository.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
+import 'package:googleapis/drive/v3.dart' as drive;
 
 class DocumentBackupService {
   final TransactionDocumentsRepository _documentsRepository;
@@ -152,6 +153,7 @@ class DocumentBackupService {
     String? cashbookName,
     String? color,
     String? icon,
+    void Function(double progress)? onProgress,
   }) async {
     if (!_driveService.isSignedIn) {
       throw Exception('User not signed in');
@@ -177,6 +179,7 @@ class DocumentBackupService {
         zipFile,
         name: driveFileName,
         parentId: folderId,
+        onProgress: onProgress,
       );
 
       return fileId;
@@ -184,6 +187,53 @@ class DocumentBackupService {
       // Clean up local temporary ZIP file
       if (await zipFile.exists()) {
         await zipFile.delete();
+      }
+    }
+  }
+
+  /// Find the latest documents backup on Google Drive for a particular cashbook
+  Future<drive.File?> getLatestCloudBackup(String cashbookId) async {
+    if (!_driveService.isSignedIn || _driveService.driveApi == null) return null;
+
+    try {
+      final folderId = await _driveService.getOrCreateBackupFolder(cashbookId);
+      final query = "'$folderId' in parents and name contains 'flowpaisa_documents_backup_' and trashed = false";
+
+      final fileList = await _driveService.driveApi!.files.list(
+        q: query,
+        orderBy: 'createdTime desc',
+        spaces: 'appDataFolder',
+        $fields: 'files(id, name, createdTime, size)',
+      );
+
+      if (fileList.files?.isNotEmpty == true) {
+        return fileList.files!.first;
+      }
+    } catch (_) {
+      // Return null if failed or folder not found
+    }
+    return null;
+  }
+
+  /// Download the backup from Google Drive and restore it
+  Future<void> downloadAndImportFromDrive(
+    String fileId, {
+    int? fileSize,
+    void Function(double progress)? onProgress,
+  }) async {
+    final tempDir = await getTemporaryDirectory();
+    final tempFile = File(p.join(tempDir.path, 'temp_cloud_import_${DateTime.now().millisecondsSinceEpoch}.zip'));
+
+    try {
+      // 1. Download binary ZIP from Drive
+      await _driveService.downloadBackup(fileId, tempFile, fileSize: fileSize, onProgress: onProgress);
+
+      // 2. Import using the existing local ZIP import logic
+      await importFromZip(tempFile);
+    } finally {
+      // 3. Clean up local temp ZIP file
+      if (await tempFile.exists()) {
+        await tempFile.delete();
       }
     }
   }
