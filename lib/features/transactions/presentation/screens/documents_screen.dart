@@ -17,6 +17,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
+import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:flowpaisa/features/transactions/presentation/screens/export_screen.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
@@ -1197,7 +1199,17 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                             title: l10n.exportBackup,
                             icon: Icons.unarchive_rounded,
                             gradient: AppColors.primaryGradient,
-                            onTap: () => _showExportOptionsSheet(context),
+                            onTap: () {
+                              final isPremium = ref.read(premiumProvider).isPremium;
+                              if (isPremium) {
+                                _showExportOptionsSheet(context);
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const PremiumScreen()),
+                                );
+                              }
+                            },
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -1211,7 +1223,17 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
-                            onTap: () => _showImportOptionsSheet(context),
+                            onTap: () {
+                              final isPremium = ref.read(premiumProvider).isPremium;
+                              if (isPremium) {
+                                _showImportOptionsSheet(context);
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const PremiumScreen()),
+                                );
+                              }
+                            },
                           ),
                         ),
                       ],

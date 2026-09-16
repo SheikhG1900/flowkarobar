@@ -244,6 +244,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
           initialCategoryName: _selectedCategoryName,
           initialCategoryColor: _selectedCategoryColor,
           initialCategoryIcon: _selectedCategoryIcon,
+          initialImagePath: _image?.path,
         ),
       ),
     );

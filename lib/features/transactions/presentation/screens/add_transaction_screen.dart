@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:path/path.dart' as p;
 import 'package:flowpaisa/core/services/in_app_review_service.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
@@ -63,6 +65,7 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
   final String? initialExternalLinkId;
   final String? initialAccountUuid;
   final DateTime? initialDueDate;
+  final String? initialImagePath;
   final bool startTour;
 
   const AddTransactionScreen({
@@ -82,6 +85,7 @@ class AddTransactionScreen extends ConsumerStatefulWidget {
     this.initialExternalLinkId,
     this.initialAccountUuid,
     this.initialDueDate,
+    this.initialImagePath,
     this.startTour = false,
   });
 
@@ -166,7 +170,8 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       widget.initialContactPhone == null &&
       widget.initialContactUuid == null &&
       widget.initialExternalLinkId == null &&
-      widget.initialDueDate == null;
+      widget.initialDueDate == null &&
+      widget.initialImagePath == null;
 
   @override
   void initState() {
@@ -202,6 +207,29 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       _dueDate = widget.initialDueDate;
     } else if (widget.initialDueDate != null) {
       _dueDate = widget.initialDueDate;
+    }
+
+    if (widget.initialImagePath != null) {
+      final file = File(widget.initialImagePath!);
+      final name = p.basename(widget.initialImagePath!);
+      final ext = p.extension(widget.initialImagePath!).toLowerCase();
+      String mimeType = 'application/octet-stream';
+      if (ext == '.jpg' || ext == '.jpeg') {
+        mimeType = 'image/jpeg';
+      } else if (ext == '.png') {
+        mimeType = 'image/png';
+      } else if (ext == '.webp') {
+        mimeType = 'image/webp';
+      } else if (ext == '.pdf') {
+        mimeType = 'application/pdf';
+      }
+      _attachments.add(AttachmentItem(
+        uuid: '', // Temporary uuid, will be populated on save
+        file: file,
+        originalName: name,
+        mimeType: mimeType,
+        fileSize: file.lengthSync(),
+      ));
     }
 
     if (widget.initialAccountUuid != null) {
