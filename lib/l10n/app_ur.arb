@@ -1823,5 +1823,13 @@
   "exportAsPdf": "پی ڈی ایف کے طور पर برآمد کریں",
   "exportAsPdfSubtitle": "لین دین کی تفصیلات اور منسلکات کے ساتھ پی ڈی ایف بنائیں",
   "exportPdfWithAttachments": "منسلکات کے ساتھ پی ڈی ایف",
-  "exportPdfWithAttachmentsSubtitle": "پریمیم • منسلکہ تصاویر/پی ڈی ایف کے ساتھ خوبصورت رپورٹ"
+  "exportPdfWithAttachmentsSubtitle": "پریمیم • منسلکہ تصاویر/پی ڈی ایف کے ساتھ خوبصورت رپورٹ",
+  "generatingPdfReport": "پی ڈی ایف رپورٹ تیار کی جا رہی ہے...",
+  "generatingPdfReportSubtitle": "براہ کرم انتظار کریں جب تک ہم آپ کے لین دین اور منسلکات کو مرتب کرتے ہیں",
+  "transactionsAttachmentReport": "لین دین منسلکہ رپورٹ",
+  "generatedOn": "{date} کو تیار کیا گیا",
+  "pageOf": "صفحہ {current} کا {total}",
+  "pdfAppendedMessage": "پی ڈی ایف دستاویز (اس کارڈ کے بعد منسلک ہے)",
+  "attachmentFile": "منسلکہ فائل",
+  "noTransactionsWithAttachments": "منسلکات کے ساتھ کوئی لین دین نہیں ملا۔"
 }

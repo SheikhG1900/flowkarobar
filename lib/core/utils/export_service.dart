@@ -24,6 +24,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:syncfusion_flutter_pdf/pdf.dart' as sf;
 import 'package:intl/intl.dart';
 import 'package:arabic_reshaper/arabic_reshaper.dart';
 
@@ -33,6 +34,7 @@ class ExportService {
   final String _dateFormat;
   static pw.Font? _cachedFont;
   static pw.Font? _unicodeFont;
+  static pw.Font? _unicodeFontBold;
   final _reshaper = ArabicReshaper();
 
   ExportService(this._transactionsRepository, this._database,
@@ -163,6 +165,13 @@ class ExportService {
   Future<pw.Font?> loadUnicodeFont() async {
     try {
       _unicodeFont = await PdfGoogleFonts.amiriRegular();
+      try {
+        _unicodeFontBold = await PdfGoogleFonts.amiriBold();
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('Error loading Arabic bold font: $e');
+        }
+      }
       return _unicodeFont;
     } catch (e) {
       if (kDebugMode) {
@@ -1845,8 +1854,10 @@ class ExportService {
           // 1. Reshape to get the connected glyphs
           final reshaped = _reshaper.reshape(part);
           String fixedRtl = reshaped;
+          final isBold = style?.fontWeight == pw.FontWeight.bold;
+          final fontToUse = isBold ? (_unicodeFontBold ?? _unicodeFont) : _unicodeFont;
           widgets.add(pw.Text(fixedRtl,
-              style: style?.copyWith(font: _unicodeFont), textAlign: align));
+              style: style?.copyWith(font: fontToUse), textAlign: align));
         } else {
           widgets.add(pw.Text(part, style: style, textAlign: align));
         }
@@ -2012,7 +2023,7 @@ class ExportService {
       transactionsWithAttachments.sort((a, b) =>
           b.details.transaction.date.compareTo(a.details.transaction.date));
 
-      // 3. Pre-load attachment files and PDF pages asynchronously
+      // 3. Pre-load attachment files asynchronously
       final appDir = await getApplicationDocumentsDirectory();
       final docDir = Directory(p.join(appDir.path, 'documents'));
 
@@ -2025,6 +2036,7 @@ class ExportService {
                   List<Uint8List> pagesBytes,
                   bool isImage,
                   bool isPdf,
+                  Uint8List? originalPdfBytes, // Store original PDF bytes
                 })> attachments,
           })> preloadedData = [];
 
@@ -2034,11 +2046,13 @@ class ExportService {
               TransactionDocument doc,
               List<Uint8List> pagesBytes,
               bool isImage,
-              bool isPdf
+              bool isPdf,
+              Uint8List? originalPdfBytes,
             })> attachments = [];
         for (final doc in item.docs) {
           final file = File(p.join(docDir.path, doc.fileName));
           final List<Uint8List> pagesBytes = [];
+          Uint8List? originalPdfBytes;
           bool isImage = false;
           bool isPdf = false;
 
@@ -2063,26 +2077,17 @@ class ExportService {
             } else if (isPdfType) {
               isPdf = true;
               try {
-                final pdfBytes = await file.readAsBytes();
-                // Rasterize all pages of the PDF
-                await for (final page
-                    in Printing.raster(pdfBytes, dpi: 150)) {
-                  final pagePng = await page.toPng();
-                  pagesBytes.add(pagePng);
-                }
+                originalPdfBytes = await file.readAsBytes();
               } catch (e) {
-                if (kDebugMode) print('Error rasterizing PDF file: $e');
+                if (kDebugMode) print('Error reading PDF file: $e');
               }
             }
           }
           attachments.add(
-              (doc: doc, pagesBytes: pagesBytes, isImage: isImage, isPdf: isPdf));
+              (doc: doc, pagesBytes: pagesBytes, isImage: isImage, isPdf: isPdf, originalPdfBytes: originalPdfBytes));
         }
         preloadedData.add((details: item.details, attachments: attachments));
       }
-
-      // 4. Create PDF document
-      final pdf = pw.Document();
 
       // Set default theme with Unicode font and fallbacks
       final theme = pw.ThemeData.withFont(
@@ -2101,20 +2106,25 @@ class ExportService {
         theme: theme,
       );
 
+      final List<Uint8List> pdfParts = [];
+
       if (preloadedData.isEmpty) {
+        final pdf = pw.Document();
         pdf.addPage(
           pw.Page(
             pageTheme: pageTheme,
             build: (pw.Context context) {
               return pw.Center(
-                child: pw.Text(
-                  'No transactions with attachments found.',
+                child: _buildText(
+                  l10n?.noTransactionsWithAttachments ?? 'No transactions with attachments found.',
                   style: pw.TextStyle(fontSize: 14, color: PdfColors.grey600),
                 ),
               );
             },
           ),
         );
+        final bytes = await pdf.save();
+        pdfParts.add(bytes);
       } else {
         bool isFirstPage = true;
         for (final item in preloadedData) {
@@ -2128,21 +2138,30 @@ class ExportService {
           final currentIsFirstPage = isFirstPage;
           isFirstPage = false;
 
+          final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
+
+          // 1. Generate the transaction details part
+          final pdf = pw.Document();
           pdf.addPage(
             pw.MultiPage(
               pageTheme: pageTheme,
               header: (pw.Context context) {
+                final appTitle = l10n?.appTitle ?? 'Flowpaisa';
+                final reportTitle = l10n?.exportPdfWithAttachments ?? 'Transactions with Attachments';
                 return pw.Container(
-                  alignment: pw.Alignment.centerRight,
+                  alignment: isRtl ? pw.Alignment.centerLeft : pw.Alignment.centerRight,
                   margin: const pw.EdgeInsets.only(bottom: 20),
-                  child: pw.Text(
-                    'Flowpaisa - Transactions with Attachments',
+                  child: _buildText(
+                    '$appTitle - $reportTitle',
                     style: pw.TextStyle(color: PdfColors.grey500, fontSize: 9),
                   ),
                 );
               },
               footer: (pw.Context context) {
+                final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
                 final appTitle = l10n?.appTitle ?? 'Flowpaisa';
+                final pageText = 'Page ${context.pageNumber} / ${context.pagesCount}';
+
                 return pw.Container(
                   alignment: pw.Alignment.center,
                   margin: const pw.EdgeInsets.only(top: 20),
@@ -2154,50 +2173,91 @@ class ExportService {
                   padding: const pw.EdgeInsets.only(top: 10),
                   child: pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Left: Logo & App Title
-                      pw.Row(
-                        children: [
-                          if (logoSvgString != null) ...[
-                            pw.Container(
-                              width: 12,
-                              height: 12,
-                              child: pw.SvgImage(
-                                svg: logoSvgString,
-                                colorFilter: const PdfColor(
-                                    0 / 255.0,
-                                    102 / 255.0,
-                                    153 / 255.0), // #006699 (Deep Brand Blue)
+                    children: isRtl
+                        ? [
+                            _buildText(
+                              pageText,
+                              style: const pw.TextStyle(
+                                color: PdfColors.grey600,
+                                fontSize: 8,
                               ),
                             ),
-                            pw.SizedBox(width: 4),
-                          ],
-                          _buildText(
-                            appTitle,
-                            style: pw.TextStyle(
-                              color: PdfColors.grey600,
-                              fontSize: 8,
-                              fontWeight: pw.FontWeight.bold,
+                            _buildText(
+                              '$categoryName • $formattedAmount',
+                              style: pw.TextStyle(
+                                color: PdfColors.grey600,
+                                fontSize: 8,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      // Center: Category & Amount
-                      _buildText(
-                        '$categoryName • $formattedAmount',
-                        style: pw.TextStyle(
-                          color: PdfColors.grey600,
-                          fontSize: 8,
-                          fontWeight: pw.FontWeight.bold,
-                        ),
-                      ),
-                      // Right: Page number
-                      _buildText(
-                        'Page ${context.pageNumber} / ${context.pagesCount}',
-                        style: const pw.TextStyle(
-                            color: PdfColors.grey600, fontSize: 8),
-                      ),
-                    ],
+                            pw.Row(
+                              children: [
+                                _buildText(
+                                  appTitle,
+                                  style: pw.TextStyle(
+                                    color: PdfColors.grey600,
+                                    fontSize: 8,
+                                    fontWeight: pw.FontWeight.bold,
+                                  ),
+                                ),
+                                if (logoSvgString != null) ...[
+                                  pw.SizedBox(width: 4),
+                                  pw.Container(
+                                    width: 12,
+                                    height: 12,
+                                    child: pw.SvgImage(
+                                      svg: logoSvgString,
+                                      colorFilter: const PdfColor(
+                                          0 / 255.0,
+                                          102 / 255.0,
+                                          153 / 255.0), // #006699 (Deep Brand Blue)
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ]
+                        : [
+                            pw.Row(
+                              children: [
+                                if (logoSvgString != null) ...[
+                                  pw.Container(
+                                    width: 12,
+                                    height: 12,
+                                    child: pw.SvgImage(
+                                      svg: logoSvgString,
+                                      colorFilter: const PdfColor(
+                                          0 / 255.0,
+                                          102 / 255.0,
+                                          153 / 255.0), // #006699 (Deep Brand Blue)
+                                    ),
+                                  ),
+                                  pw.SizedBox(width: 4),
+                                ],
+                                _buildText(
+                                  appTitle,
+                                  style: pw.TextStyle(
+                                    color: PdfColors.grey600,
+                                    fontSize: 8,
+                                    fontWeight: pw.FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            _buildText(
+                              '$categoryName • $formattedAmount',
+                              style: pw.TextStyle(
+                                color: PdfColors.grey600,
+                                fontSize: 8,
+                                fontWeight: pw.FontWeight.bold,
+                              ),
+                            ),
+                            _buildText(
+                              pageText,
+                              style: const pw.TextStyle(
+                                  color: PdfColors.grey600, fontSize: 8),
+                            ),
+                          ],
                   ),
                 );
               },
@@ -2208,10 +2268,12 @@ class ExportService {
                     pw.Container(
                       margin: const pw.EdgeInsets.only(bottom: 24),
                       child: pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        crossAxisAlignment: isRtl
+                            ? pw.CrossAxisAlignment.end
+                            : pw.CrossAxisAlignment.start,
                         children: [
-                          pw.Text(
-                            'Transactions Attachment Report',
+                          _buildText(
+                            l10n?.transactionsAttachmentReport ?? 'Transactions Attachment Report',
                             style: pw.TextStyle(
                               fontSize: 24,
                               fontWeight: pw.FontWeight.bold,
@@ -2220,10 +2282,35 @@ class ExportService {
                             ),
                           ),
                           pw.SizedBox(height: 4),
-                          pw.Text(
-                            'Generated on ${AppDateFormatter.formatDate(DateTime.now())}',
-                            style: pw.TextStyle(
-                                fontSize: 10, color: PdfColors.grey600),
+                          pw.Row(
+                            mainAxisAlignment: isRtl ? pw.MainAxisAlignment.end : pw.MainAxisAlignment.start,
+                            children: isRtl
+                                ? [
+                                    _buildText(
+                                      AppDateFormatter.formatDate(DateTime.now()),
+                                      style: pw.TextStyle(
+                                          fontSize: 10, color: PdfColors.grey600),
+                                    ),
+                                    pw.SizedBox(width: 4),
+                                    _buildText(
+                                      l10n != null ? l10n.generatedOn('').trim() : 'Generated on',
+                                      style: pw.TextStyle(
+                                          fontSize: 10, color: PdfColors.grey600),
+                                    ),
+                                  ]
+                                : [
+                                    _buildText(
+                                      l10n != null ? l10n.generatedOn('').trim() : 'Generated on',
+                                      style: pw.TextStyle(
+                                          fontSize: 10, color: PdfColors.grey600),
+                                    ),
+                                    pw.SizedBox(width: 4),
+                                    _buildText(
+                                      AppDateFormatter.formatDate(DateTime.now()),
+                                      style: pw.TextStyle(
+                                          fontSize: 10, color: PdfColors.grey600),
+                                    ),
+                                  ],
                           ),
                         ],
                       ),
@@ -2243,10 +2330,58 @@ class ExportService {
               },
             ),
           );
+
+          final detailsBytes = await pdf.save();
+          pdfParts.add(detailsBytes);
+
+          // 2. Append PDF attachments immediately after this transaction details block
+          for (final att in item.attachments) {
+            if (att.isPdf && att.originalPdfBytes != null) {
+              pdfParts.add(att.originalPdfBytes!);
+            }
+          }
         }
       }
 
-      return pdf.save();
+      Uint8List finalPdfBytes;
+      if (pdfParts.length == 1) {
+        finalPdfBytes = pdfParts.first;
+      } else {
+        try {
+          final sf.PdfDocument destDocument = sf.PdfDocument();
+          // Disable default margins on the destination document to prevent template shrinking/clipping
+          destDocument.pageSettings.margins.all = 0;
+          
+          for (final pdfBytes in pdfParts) {
+            final sf.PdfDocument sourceDocument = sf.PdfDocument(inputBytes: pdfBytes);
+            for (int i = 0; i < sourceDocument.pages.count; i++) {
+              final sf.PdfPage page = sourceDocument.pages[i];
+              final sf.PdfTemplate template = page.createTemplate();
+              
+              // Add a page with matching size to prevent cutting off
+              final sf.PdfPage destPage = destDocument.pages.add();
+              destPage.graphics.drawPdfTemplate(
+                template, 
+                const Offset(0, 0), 
+                Size(destPage.size.width, destPage.size.height),
+              );
+            }
+            sourceDocument.dispose();
+          }
+          
+          final List<int> mergedBytes = await destDocument.save();
+          destDocument.dispose();
+          finalPdfBytes = Uint8List.fromList(mergedBytes);
+        } catch (e) {
+          if (kDebugMode) {
+            print('Error merging PDFs sequentially using Syncfusion: $e');
+          }
+          // Fallback to the first details part if merge fails
+          finalPdfBytes = pdfParts.first;
+        }
+      }
+
+      return finalPdfBytes;
     } catch (e) {
       throw Exception('Error generating attachments PDF: $e');
     }
@@ -2259,7 +2394,8 @@ class ExportService {
               TransactionDocument doc,
               List<Uint8List> pagesBytes,
               bool isImage,
-              bool isPdf
+              bool isPdf,
+              Uint8List? originalPdfBytes,
             })>
         attachments,
     AppLocalizations? l10n,
@@ -2336,18 +2472,48 @@ class ExportService {
               pw.Divider(color: PdfColors.grey300, thickness: 0.5),
               pw.SizedBox(height: 8),
               if (details.contact != null)
-                _buildText(
-                  '${l10n?.contact ?? "Contact"}: ${details.contact!.name}',
-                  style: const pw.TextStyle(
-                      fontSize: 10, color: PdfColors.grey700),
+                pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    _buildText(
+                      '${l10n?.contact ?? "Contact"}: ',
+                      style: pw.TextStyle(
+                          fontSize: 10,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.grey700),
+                    ),
+                    pw.Expanded(
+                      child: _buildText(
+                        details.contact!.name,
+                        style: const pw.TextStyle(
+                            fontSize: 10, color: PdfColors.grey700),
+                      ),
+                    ),
+                  ],
                 ),
               if (details.transaction.description != null &&
                   details.transaction.description!.isNotEmpty) ...[
                 pw.SizedBox(height: 4),
-                _buildText(
-                  '${l10n?.description ?? "Description"}: ${TabularParser.isTabular(details.transaction.description) ? TabularParser.parse(details.transaction.description).$1 : details.transaction.description!}',
-                  style: const pw.TextStyle(
-                      fontSize: 10, color: PdfColors.grey700),
+                pw.Row(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    _buildText(
+                      '${l10n?.description ?? "Description"}: ',
+                      style: pw.TextStyle(
+                          fontSize: 10,
+                          fontWeight: pw.FontWeight.bold,
+                          color: PdfColors.grey700),
+                    ),
+                    pw.Expanded(
+                      child: _buildText(
+                        TabularParser.isTabular(details.transaction.description)
+                            ? TabularParser.parse(details.transaction.description).$1
+                            : details.transaction.description!,
+                        style: const pw.TextStyle(
+                            fontSize: 10, color: PdfColors.grey700),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ],
@@ -2363,7 +2529,7 @@ class ExportService {
       pw.Padding(
         padding: const pw.EdgeInsets.only(left: 8),
         child: _buildText(
-          'Attachments (${attachments.length}):',
+          '${l10n?.attachments ?? "Attachments"} (${attachments.length}):',
           style: pw.TextStyle(
               fontSize: 11,
               fontWeight: pw.FontWeight.bold,
@@ -2375,105 +2541,105 @@ class ExportService {
 
     // 3. Render each attachment
     for (final att in attachments) {
-      // Render attachment metadata header
+      // Create a single, cohesive container for the attachment to keep the header and content together
       widgets.add(
-        pw.Container(
-          padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: const pw.BoxDecoration(
-            color: PdfColors.grey200,
-            borderRadius: pw.BorderRadius.vertical(top: pw.Radius.circular(8)),
-          ),
-          child: pw.Row(
-            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        pw.Inseparable(
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              pw.Expanded(
-                child: _buildText(
-                  att.doc.originalName,
-                  style: pw.TextStyle(
-                      fontSize: 10,
-                      fontWeight: pw.FontWeight.bold,
-                      color: PdfColors.grey800),
+              // Render attachment metadata header
+              pw.Container(
+                padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: const pw.BoxDecoration(
+                  color: PdfColors.grey200,
+                  borderRadius: pw.BorderRadius.vertical(top: pw.Radius.circular(8)),
+                ),
+                child: pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    pw.Expanded(
+                      child: _buildText(
+                        att.doc.originalName,
+                        style: pw.TextStyle(
+                            fontSize: 10,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.grey800),
+                      ),
+                    ),
+                    _buildText(
+                      _formatFileSize(att.doc.fileSize),
+                      style: const pw.TextStyle(
+                          fontSize: 9, color: PdfColors.grey600),
+                    ),
+                  ],
                 ),
               ),
-              _buildText(
-                _formatFileSize(att.doc.fileSize),
-                style: const pw.TextStyle(
-                    fontSize: 9, color: PdfColors.grey600),
-              ),
+              // Render the content (images or pages)
+              if (att.pagesBytes.isNotEmpty)
+                for (int i = 0; i < att.pagesBytes.length; i++)
+                  pw.Container(
+                    padding: const pw.EdgeInsets.all(12),
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(color: PdfColors.grey200, width: 1),
+                      borderRadius: i == att.pagesBytes.length - 1
+                          ? const pw.BorderRadius.vertical(bottom: pw.Radius.circular(8))
+                          : null,
+                    ),
+                    child: pw.Column(
+                      children: [
+                        pw.Center(
+                          child: pw.Container(
+                            constraints: const pw.BoxConstraints(maxHeight: 400),
+                            child: pw.Image(
+                              pw.MemoryImage(att.pagesBytes[i]),
+                              fit: pw.BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                        if (att.isPdf && att.pagesBytes.length > 1) ...[
+                          pw.SizedBox(height: 4),
+                          pw.Center(
+                            child: _buildText(
+                              'Page ${i + 1} of ${att.pagesBytes.length}',
+                              style: const pw.TextStyle(
+                                  fontSize: 8, color: PdfColors.grey500),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  )
+              else
+                pw.Container(
+                  padding: const pw.EdgeInsets.symmetric(vertical: 16),
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: PdfColors.grey200, width: 1),
+                    borderRadius: const pw.BorderRadius.vertical(bottom: pw.Radius.circular(8)),
+                  ),
+                  child: pw.Center(
+                    child: pw.Column(
+                      children: [
+                        pw.Text(
+                          att.isPdf ? '📄' : '📎',
+                          style: const pw.TextStyle(fontSize: 24),
+                        ),
+                        pw.SizedBox(height: 4),
+                        _buildText(
+                          att.isPdf
+                              ? (l10n?.pdfAppendedMessage ?? 'PDF Document (Appended natively after this card)')
+                              : (l10n?.attachmentFile ?? 'Attachment File'),
+                          style: const pw.TextStyle(
+                              fontSize: 9, color: PdfColors.grey500),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              pw.SizedBox(height: 12),
             ],
           ),
         ),
       );
-
-      // Render the content (images or pages)
-      if (att.pagesBytes.isNotEmpty) {
-        for (int i = 0; i < att.pagesBytes.length; i++) {
-          widgets.add(
-            pw.Container(
-              padding: const pw.EdgeInsets.all(12),
-              decoration: pw.BoxDecoration(
-                border: pw.Border.all(color: PdfColors.grey200, width: 1),
-                borderRadius: i == att.pagesBytes.length - 1
-                    ? const pw.BorderRadius.vertical(bottom: pw.Radius.circular(8))
-                    : null,
-              ),
-              child: pw.Column(
-                children: [
-                  pw.Center(
-                    child: pw.Container(
-                      constraints: const pw.BoxConstraints(maxHeight: 400),
-                      child: pw.Image(
-                        pw.MemoryImage(att.pagesBytes[i]),
-                        fit: pw.BoxFit.contain,
-                      ),
-                    ),
-                  ),
-                  if (att.isPdf && att.pagesBytes.length > 1) ...[
-                    pw.SizedBox(height: 4),
-                    pw.Center(
-                      child: _buildText(
-                        'Page ${i + 1} of ${att.pagesBytes.length}',
-                        style: const pw.TextStyle(
-                            fontSize: 8, color: PdfColors.grey500),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          );
-        }
-      } else {
-        widgets.add(
-          pw.Container(
-            padding: const pw.EdgeInsets.symmetric(vertical: 16),
-            decoration: pw.BoxDecoration(
-              border: pw.Border.all(color: PdfColors.grey200, width: 1),
-              borderRadius: const pw.BorderRadius.vertical(bottom: pw.Radius.circular(8)),
-            ),
-            child: pw.Center(
-              child: pw.Column(
-                children: [
-                  pw.Text(
-                    att.isPdf ? '📄' : '📎',
-                    style: const pw.TextStyle(fontSize: 24),
-                  ),
-                  pw.SizedBox(height: 4),
-                  _buildText(
-                    att.isPdf
-                        ? 'PDF Document (Could not render preview)'
-                        : 'Attachment File',
-                    style: const pw.TextStyle(
-                        fontSize: 9, color: PdfColors.grey500),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      }
-
-      widgets.add(pw.SizedBox(height: 12));
     }
 
     return widgets;

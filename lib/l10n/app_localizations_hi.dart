@@ -4728,4 +4728,35 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get exportPdfWithAttachmentsSubtitle =>
       'प्रीमियम • अटैचमेंट छवियों/पीडीएफ के साथ सुंदर रिपोर्ट';
+
+  @override
+  String get generatingPdfReport => 'पीडीएफ रिपोर्ट तैयार की जा रही है...';
+
+  @override
+  String get generatingPdfReportSubtitle =>
+      'कृपया प्रतीक्षा करें जब तक हम आपके लेनदेन और अनुलग्नकों को संकलित करते हैं';
+
+  @override
+  String get transactionsAttachmentReport => 'लेनदेन अटैचमेंट रिपोर्ट';
+
+  @override
+  String generatedOn(Object date) {
+    return '$date को जनरेट किया गया';
+  }
+
+  @override
+  String pageOf(Object current, Object total) {
+    return 'पृष्ठ $total का $current';
+  }
+
+  @override
+  String get pdfAppendedMessage =>
+      'पीडीएफ दस्तावेज़ (इस कार्ड के बाद मूल रूप से संलग्न)';
+
+  @override
+  String get attachmentFile => 'अटैचमेंट फ़ाइल';
+
+  @override
+  String get noTransactionsWithAttachments =>
+      'अटैचमेंट के साथ कोई लेनदेन नहीं मिला।';
 }

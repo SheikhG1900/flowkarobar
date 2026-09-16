@@ -337,7 +337,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
       if (mounted) {
         setState(() {
           _isLoading = true;
-          _loadingStatus = 'Generating PDF...';
+          _loadingStatus = l10n.generatingPdfReport;
           _progressValue = null;
         });
       }

@@ -2402,5 +2402,13 @@
   "exportAsPdf": "Export as PDF",
   "exportAsPdfSubtitle": "Generate a PDF with transaction details and attachments",
   "exportPdfWithAttachments": "PDF with Attachments",
-  "exportPdfWithAttachmentsSubtitle": "Premium • Beautiful report with attachment images/PDFs"
+  "exportPdfWithAttachmentsSubtitle": "Premium • Beautiful report with attachment images/PDFs",
+  "generatingPdfReport": "Generating PDF Report...",
+  "generatingPdfReportSubtitle": "Please wait while we compile your transactions and attachments",
+  "transactionsAttachmentReport": "Transactions Attachment Report",
+  "generatedOn": "Generated on {date}",
+  "pageOf": "Page {current} of {total}",
+  "pdfAppendedMessage": "PDF Document (Appended natively after this card)",
+  "attachmentFile": "Attachment File",
+  "noTransactionsWithAttachments": "No transactions with attachments found."
 }

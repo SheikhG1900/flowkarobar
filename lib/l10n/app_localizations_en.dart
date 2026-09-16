@@ -4713,4 +4713,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get exportPdfWithAttachmentsSubtitle =>
       'Premium • Beautiful report with attachment images/PDFs';
+
+  @override
+  String get generatingPdfReport => 'Generating PDF Report...';
+
+  @override
+  String get generatingPdfReportSubtitle =>
+      'Please wait while we compile your transactions and attachments';
+
+  @override
+  String get transactionsAttachmentReport => 'Transactions Attachment Report';
+
+  @override
+  String generatedOn(Object date) {
+    return 'Generated on $date';
+  }
+
+  @override
+  String pageOf(Object current, Object total) {
+    return 'Page $current of $total';
+  }
+
+  @override
+  String get pdfAppendedMessage =>
+      'PDF Document (Appended natively after this card)';
+
+  @override
+  String get attachmentFile => 'Attachment File';
+
+  @override
+  String get noTransactionsWithAttachments =>
+      'No transactions with attachments found.';
 }

@@ -4735,4 +4735,35 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get exportPdfWithAttachmentsSubtitle =>
       'پریمیم • منسلکہ تصاویر/پی ڈی ایف کے ساتھ خوبصورت رپورٹ';
+
+  @override
+  String get generatingPdfReport => 'پی ڈی ایف رپورٹ تیار کی جا رہی ہے...';
+
+  @override
+  String get generatingPdfReportSubtitle =>
+      'براہ کرم انتظار کریں جب تک ہم آپ کے لین دین اور منسلکات کو مرتب کرتے ہیں';
+
+  @override
+  String get transactionsAttachmentReport => 'لین دین منسلکہ رپورٹ';
+
+  @override
+  String generatedOn(Object date) {
+    return '$date کو تیار کیا گیا';
+  }
+
+  @override
+  String pageOf(Object current, Object total) {
+    return 'صفحہ $current کا $total';
+  }
+
+  @override
+  String get pdfAppendedMessage =>
+      'پی ڈی ایف دستاویز (اس کارڈ کے بعد منسلک ہے)';
+
+  @override
+  String get attachmentFile => 'منسلکہ فائل';
+
+  @override
+  String get noTransactionsWithAttachments =>
+      'منسلکات کے ساتھ کوئی لین دین نہیں ملا۔';
 }

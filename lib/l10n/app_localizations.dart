@@ -8614,6 +8614,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Premium • Beautiful report with attachment images/PDFs'**
   String get exportPdfWithAttachmentsSubtitle;
+
+  /// No description provided for @generatingPdfReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Generating PDF Report...'**
+  String get generatingPdfReport;
+
+  /// No description provided for @generatingPdfReportSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait while we compile your transactions and attachments'**
+  String get generatingPdfReportSubtitle;
+
+  /// No description provided for @transactionsAttachmentReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Transactions Attachment Report'**
+  String get transactionsAttachmentReport;
+
+  /// No description provided for @generatedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Generated on {date}'**
+  String generatedOn(Object date);
+
+  /// No description provided for @pageOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Page {current} of {total}'**
+  String pageOf(Object current, Object total);
+
+  /// No description provided for @pdfAppendedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF Document (Appended natively after this card)'**
+  String get pdfAppendedMessage;
+
+  /// No description provided for @attachmentFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment File'**
+  String get attachmentFile;
+
+  /// No description provided for @noTransactionsWithAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions with attachments found.'**
+  String get noTransactionsWithAttachments;
 }
 
 class _AppLocalizationsDelegate

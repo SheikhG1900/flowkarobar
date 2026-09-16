@@ -1823,5 +1823,13 @@
   "exportAsPdf": "पीडीएफ के रूप में निर्यात करें",
   "exportAsPdfSubtitle": "लेन-देन के विवरण और अनुलग्नकों के साथ एक पीडीएफ बनाएं",
   "exportPdfWithAttachments": "अटैचमेंट के साथ पीडीएफ",
-  "exportPdfWithAttachmentsSubtitle": "प्रीमियम • अटैचमेंट छवियों/पीडीएफ के साथ सुंदर रिपोर्ट"
+  "exportPdfWithAttachmentsSubtitle": "प्रीमियम • अटैचमेंट छवियों/पीडीएफ के साथ सुंदर रिपोर्ट",
+  "generatingPdfReport": "पीडीएफ रिपोर्ट तैयार की जा रही है...",
+  "generatingPdfReportSubtitle": "कृपया प्रतीक्षा करें जब तक हम आपके लेनदेन और अनुलग्नकों को संकलित करते हैं",
+  "transactionsAttachmentReport": "लेनदेन अटैचमेंट रिपोर्ट",
+  "generatedOn": "{date} को जनरेट किया गया",
+  "pageOf": "पृष्ठ {total} का {current}",
+  "pdfAppendedMessage": "पीडीएफ दस्तावेज़ (इस कार्ड के बाद मूल रूप से संलग्न)",
+  "attachmentFile": "अटैचमेंट फ़ाइल",
+  "noTransactionsWithAttachments": "अटैचमेंट के साथ कोई लेनदेन नहीं मिला।"
 }
