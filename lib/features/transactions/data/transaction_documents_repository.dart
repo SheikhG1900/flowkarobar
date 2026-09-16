@@ -154,4 +154,49 @@ class TransactionDocumentsRepository {
     final result = await query.getSingle();
     return result.read(_database.transactionDocuments.fileSize.sum()) ?? 0;
   }
+
+  /// Link an existing orphan document to a transaction
+  Future<void> linkExistingDocument({
+    required String documentUuid,
+    required String transactionUuid,
+    String? customName,
+  }) async {
+    // 1. Check if the document exists in the database
+    final existing = await (_database.select(_database.transactionDocuments)
+          ..where((d) => d.uuid.equals(documentUuid)))
+        .getSingleOrNull();
+
+    if (existing != null) {
+      // Update existing row
+      await (_database.update(_database.transactionDocuments)
+            ..where((d) => d.uuid.equals(documentUuid)))
+          .write(TransactionDocumentsCompanion(
+        transactionUuid: Value(transactionUuid),
+        originalName: customName != null ? Value(customName) : const Value.absent(),
+        isDeleted: const Value(false),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ));
+    } else {
+      // If it's a physical-only orphan (not in DB yet), insert it
+      final docDir = await getDocumentsDirectory();
+      final file = File(p.join(docDir.path, documentUuid)); // documentUuid is the fileName for physical-only orphans
+      if (await file.exists()) {
+        final extension = p.extension(documentUuid);
+        final companion = TransactionDocumentsCompanion(
+          uuid: Value(const Uuid().v4()),
+          transactionUuid: Value(transactionUuid),
+          fileName: Value(documentUuid),
+          originalName: Value(customName ?? documentUuid),
+          fileSize: Value(await file.length()),
+          mimeType: Value(extension.replaceAll('.', '')),
+          createdAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now()),
+          isDeleted: const Value(false),
+          isNotSynced: const Value(true),
+        );
+        await _database.into(_database.transactionDocuments).insert(companion);
+      }
+    }
+  }
 }

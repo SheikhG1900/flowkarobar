@@ -112,6 +112,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
         ['jpg', 'jpeg', 'png', 'webp', 'gif'].contains(
           p.extension(item.file.path).toLowerCase().replaceAll('.', ''),
         );
+    final isPdf = item.mimeType == 'application/pdf' ||
+        p.extension(item.file.path).toLowerCase() == '.pdf';
 
     if (isImage) {
       showDialog(
@@ -163,6 +165,27 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
           ),
         ),
       );
+    } else if (isPdf) {
+      if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+        try {
+          final fileUri = Uri.file(item.file.absolute.path);
+          if (await item.file.exists()) {
+            await launchUrl(fileUri);
+          }
+        } catch (_) {
+          _shareFile(item);
+        }
+      } else {
+        try {
+          final bytes = await item.file.readAsBytes();
+          await Printing.layoutPdf(
+            onLayout: (PdfPageFormat format) async => bytes,
+            name: item.originalName,
+          );
+        } catch (e) {
+          _shareFile(item);
+        }
+      }
     } else {
       if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
         try {
@@ -534,7 +557,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
         });
         ToastUtils.showSuccessToast(context, ref, l10n.backupImported);
         // Refresh documents list
-        ref.invalidate(allDocumentsProvider);
+        ref.invalidate(displayDocumentsProvider);
       }
     } catch (e) {
       if (kDebugMode) print('[DocumentsScreen] Error during Local Import: $e');
@@ -591,7 +614,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
         });
         ToastUtils.showSuccessToast(context, ref, l10n.backupImported);
         // Refresh documents list
-        ref.invalidate(allDocumentsProvider);
+        ref.invalidate(displayDocumentsProvider);
       }
     } catch (e) {
       if (kDebugMode) print('[DocumentsScreen] Error during Cloud Import: $e');
@@ -1062,12 +1085,90 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final documentsAsync = ref.watch(allDocumentsProvider);
+    final documentsAsync = ref.watch(displayDocumentsProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.documents),
         elevation: 0,
+        actions: [
+          documentsAsync.maybeWhen(
+            data: (docs) {
+              final hasOrphans = docs.any((doc) => doc.isOrphan);
+              if (!hasOrphans) return const SizedBox.shrink();
+              return IconButton(
+                icon: const Icon(Icons.delete_sweep_rounded),
+                tooltip: l10n.clearOrphans,
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      title: Text(l10n.clearOrphans),
+                      content: Text(l10n.clearOrphansConfirm),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: Text(l10n.cancel),
+                        ),
+                        TextButton(
+                          onPressed: () async {
+                            Navigator.pop(dialogContext);
+                            setState(() {
+                              _isLoading = true;
+                              _loadingStatus = l10n.clearOrphans;
+                            });
+                            try {
+                              for (final doc in docs) {
+                                if (doc.isOrphan) {
+                                  if (doc.dbDoc == null) {
+                                    if (await doc.file.exists()) {
+                                      await doc.file.delete();
+                                    }
+                                  } else {
+                                    await ref
+                                        .read(transactionDocumentsRepositoryProvider)
+                                        .deleteDocument(doc.uuid);
+                                  }
+                                }
+                              }
+                              ref.invalidate(displayDocumentsProvider);
+                              if (context.mounted) {
+                                ToastUtils.showSuccessToast(
+                                  context,
+                                  ref,
+                                  l10n.orphansCleared,
+                                );
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                ToastUtils.showErrorToast(
+                                  context,
+                                  ref,
+                                  l10n.errorOccurred(e.toString()),
+                                );
+                              }
+                            } finally {
+                              if (mounted) {
+                                setState(() {
+                                  _isLoading = false;
+                                });
+                              }
+                            }
+                          },
+                          child: Text(
+                            l10n.delete,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+            orElse: () => const SizedBox.shrink(),
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -1322,7 +1423,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                   color: theme.colorScheme.surface,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                                    color: doc.isOrphan
+                                        ? Colors.orange.withValues(alpha: 0.3)
+                                        : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
                                     width: 1,
                                   ),
                                   boxShadow: [
@@ -1348,51 +1451,89 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(11),
-                                      child: isImg
-                                          ? FutureBuilder<Directory>(
-                                              future: ref.read(transactionDocumentsRepositoryProvider).getDocumentsDirectory(),
-                                              builder: (context, snapshot) {
-                                                if (snapshot.hasData) {
-                                                  final file = File(p.join(snapshot.data!.path, doc.fileName));
-                                                  return Image.file(
-                                                    file,
-                                                    fit: BoxFit.cover,
-                                                  );
-                                                }
-                                                return const Center(
-                                                  child: SizedBox(
-                                                    width: 16,
-                                                    height: 16,
-                                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                                  ),
-                                                );
-                                              },
-                                            )
-                                          : Container(
-                                              color: Colors.red.withValues(alpha: 0.1),
+                                      child: doc.isMissingPhysicalFile
+                                          ? Container(
+                                              color: Colors.orange.withValues(alpha: 0.1),
                                               child: const Icon(
-                                                Icons.picture_as_pdf_rounded,
-                                                color: Colors.red,
+                                                Icons.warning_amber_rounded,
+                                                color: Colors.orange,
                                                 size: 26,
                                               ),
-                                            ),
+                                            )
+                                          : (isImg
+                                              ? FutureBuilder<Directory>(
+                                                  future: ref.read(transactionDocumentsRepositoryProvider).getDocumentsDirectory(),
+                                                  builder: (context, snapshot) {
+                                                    if (snapshot.hasData) {
+                                                      final file = File(p.join(snapshot.data!.path, doc.fileName));
+                                                      return Image.file(
+                                                        file,
+                                                        fit: BoxFit.cover,
+                                                      );
+                                                    }
+                                                    return const Center(
+                                                      child: SizedBox(
+                                                        width: 16,
+                                                        height: 16,
+                                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                                      ),
+                                                    );
+                                                  },
+                                                )
+                                              : Container(
+                                                  color: Colors.red.withValues(alpha: 0.1),
+                                                  child: const Icon(
+                                                    Icons.picture_as_pdf_rounded,
+                                                    color: Colors.red,
+                                                    size: 26,
+                                                  ),
+                                                )),
                                     ),
                                   ),
-                                  title: Text(
-                                    doc.originalName,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                    ),
+                                  title: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          doc.originalName,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: theme.textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                      if (doc.isOrphan) ...[
+                                        const SizedBox(width: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: Colors.orange.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(6),
+                                            border: Border.all(
+                                              color: Colors.orange.withValues(alpha: 0.5),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            l10n.orphan,
+                                            style: theme.textTheme.labelSmall?.copyWith(
+                                              color: Colors.orange.shade800,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                   subtitle: Padding(
                                     padding: const EdgeInsets.only(top: 4),
                                     child: Text(
-                                      '${_formatFileSize(doc.fileSize)} • ${AppDateFormatter.formatDate(doc.createdAt)}',
+                                      '${_formatFileSize(doc.fileSize)} • ${AppDateFormatter.formatDate(doc.createdAt)}${doc.isOrphan ? ' • ${l10n.orphanSubtitle}' : ''}',
                                       style: theme.textTheme.bodySmall?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                        color: doc.isOrphan
+                                            ? Colors.orange.shade800
+                                            : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -1400,27 +1541,28 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.share_rounded,
-                                          color: theme.colorScheme.primary,
-                                          size: 20,
+                                      if (!doc.isMissingPhysicalFile)
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.share_rounded,
+                                            color: theme.colorScheme.primary,
+                                            size: 20,
+                                          ),
+                                          onPressed: () async {
+                                            final docRepo = ref.read(transactionDocumentsRepositoryProvider);
+                                            final docDir = await docRepo.getDocumentsDirectory();
+                                            final file = File(p.join(docDir.path, doc.fileName));
+                                            final item = AttachmentItem(
+                                              uuid: doc.uuid,
+                                              file: file,
+                                              originalName: doc.originalName,
+                                              mimeType: doc.mimeType ?? 'application/octet-stream',
+                                              fileSize: doc.fileSize,
+                                            );
+                                            _shareFile(item);
+                                          },
+                                          tooltip: l10n.share,
                                         ),
-                                        onPressed: () async {
-                                          final docRepo = ref.read(transactionDocumentsRepositoryProvider);
-                                          final docDir = await docRepo.getDocumentsDirectory();
-                                          final file = File(p.join(docDir.path, doc.fileName));
-                                          final item = AttachmentItem(
-                                            uuid: doc.uuid,
-                                            file: file,
-                                            originalName: doc.originalName,
-                                            mimeType: doc.mimeType ?? 'application/octet-stream',
-                                            fileSize: doc.fileSize,
-                                          );
-                                          _shareFile(item);
-                                        },
-                                        tooltip: l10n.share,
-                                      ),
                                       IconButton(
                                         icon: const Icon(
                                           Icons.delete_outline_rounded,
@@ -1441,9 +1583,16 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                                 TextButton(
                                                   onPressed: () async {
                                                     Navigator.pop(context);
-                                                    await ref
-                                                        .read(transactionDocumentsRepositoryProvider)
-                                                        .deleteDocument(doc.uuid);
+                                                    if (doc.dbDoc == null) {
+                                                      if (await doc.file.exists()) {
+                                                        await doc.file.delete();
+                                                      }
+                                                    } else {
+                                                      await ref
+                                                          .read(transactionDocumentsRepositoryProvider)
+                                                          .deleteDocument(doc.uuid);
+                                                    }
+                                                    ref.invalidate(displayDocumentsProvider);
                                                     if (context.mounted) {
                                                       ToastUtils.showSuccessToast(
                                                         context,
@@ -1465,21 +1614,23 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                       ),
                                     ],
                                   ),
-                                  onTap: () async {
-                                    final docRepo = ref.read(transactionDocumentsRepositoryProvider);
-                                    final docDir = await docRepo.getDocumentsDirectory();
-                                    final file = File(p.join(docDir.path, doc.fileName));
-                                    final item = AttachmentItem(
-                                      uuid: doc.uuid,
-                                      file: file,
-                                      originalName: doc.originalName,
-                                      mimeType: doc.mimeType ?? 'application/octet-stream',
-                                      fileSize: doc.fileSize,
-                                    );
-                                    if (context.mounted) {
-                                      _previewAttachment(context, item);
-                                    }
-                                  },
+                                  onTap: doc.isMissingPhysicalFile
+                                      ? null
+                                      : () async {
+                                          final docRepo = ref.read(transactionDocumentsRepositoryProvider);
+                                          final docDir = await docRepo.getDocumentsDirectory();
+                                          final file = File(p.join(docDir.path, doc.fileName));
+                                          final item = AttachmentItem(
+                                            uuid: doc.uuid,
+                                            file: file,
+                                            originalName: doc.originalName,
+                                            mimeType: doc.mimeType ?? 'application/octet-stream',
+                                            fileSize: doc.fileSize,
+                                          );
+                                          if (context.mounted) {
+                                            _previewAttachment(context, item);
+                                          }
+                                        },
                                 ),
                               );
                             },

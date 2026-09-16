@@ -326,6 +326,120 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
     }
   }
 
+  Future<void> _exportPdfWithAttachments() async {
+    final theme = Theme.of(context);
+    if (!PremiumGate.isPremium(ref)) {
+      PremiumGate.showPremiumDialog(context);
+      return;
+    }
+
+    if (_startDate == null || _endDate == null) {
+      ToastUtils.showWarningToast(context, ref, l10n.selectDateRange);
+      return;
+    }
+
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final exportService = ref.read(exportServiceProvider);
+      final currency = ref.read(currentCurrencyProvider).value;
+
+      // Generate PDF bytes once, passing date filters
+      final pdfBytes = await exportService.exportTransactionsWithAttachmentsToPDF(
+        currencySymbol: currencySymbol,
+        decimalPlaces: decimalPlaces,
+        l10n: l10n,
+        currencyObj: currency,
+        startDate: _startDate,
+        endDate: _endDate,
+      );
+
+      // Save PDF to temporary file for save/share actions
+      final directory = await getTemporaryDirectory();
+      final fileName =
+          'flowpaisa_attachments_export_${AppDateFormatter.formatForFileName(DateTime.now())}.pdf';
+      final filePath = '${directory.path}/$fileName';
+      final file = File(filePath);
+      await file.writeAsBytes(pdfBytes);
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ref.read(inAppReviewServiceProvider).maybeRequestReview();
+
+        // Show action dialog with options
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(l10n.pdfReady),
+            content: Text(l10n.pdfReportReady),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    await exportService.saveToDownloads(filePath);
+                    if (context.mounted) {
+                      ToastUtils.showSuccessToast(
+                          context, ref, l10n.savedToDownloads);
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(
+                          context, ref, l10n.errorSaving(e.toString()));
+                    }
+                  }
+                },
+                child: Text(l10n.saveCopy),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    await exportService.sharePDFFile(filePath);
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(
+                          context, ref, l10n.errorSharing(e.toString()));
+                    }
+                  }
+                },
+                child: Text(l10n.share),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                    foregroundColor: theme.colorScheme.onPrimary),
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await Printing.layoutPdf(
+                    onLayout: (PdfPageFormat format) async => pdfBytes,
+                  );
+                },
+                child: Text(l10n.preview),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading if still open
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorExporting(e.toString()));
+      }
+    }
+  }
+
   Future<void> _selectStartDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -580,42 +694,43 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Export Buttons
-            Row(
-              children: [
-                Expanded(
-                  child: GradientButton(
-                    label: 'CSV',
-                    icon: Icons.table_chart,
-                    gradient: const LinearGradient(
-                      colors: [Colors.green, Colors.teal],
-                    ),
-                    onPressed: _exportToCSV,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Stack(
-                    alignment: Alignment.topRight,
-                    children: [
-                      GradientButton(
-                        label: 'PDF',
-                        icon: Icons.picture_as_pdf,
-                        gradient: const LinearGradient(
-                          colors: [Colors.red, Colors.orange],
-                        ),
-                        onPressed: _exportToPDF,
-                      ),
-                      if (!PremiumGate.isPremium(ref))
-                        const Padding(
-                          padding: EdgeInsets.only(top: 8, right: 8),
-                          child:
-                              Icon(Icons.lock, size: 16, color: Colors.white),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
+            // Export Options Header
+            Text(
+              l10n.exportData,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            _buildExportOptionCard(
+              title: l10n.exportAsCSV,
+              subtitle: l10n.exportAsCSVSubtitle,
+              icon: Icons.table_chart_rounded,
+              gradientColors: [Colors.green, Colors.teal],
+              onPressed: _exportToCSV,
+              isPremiumOption: false,
+              isPremiumUser: PremiumGate.isPremium(ref),
+            ),
+
+            _buildExportOptionCard(
+              title: l10n.exportAsPDF,
+              subtitle: l10n.exportAsPDFSubtitle,
+              icon: Icons.picture_as_pdf_rounded,
+              gradientColors: [Colors.red, Colors.orange],
+              onPressed: _exportToPDF,
+              isPremiumOption: true,
+              isPremiumUser: PremiumGate.isPremium(ref),
+            ),
+
+            _buildExportOptionCard(
+              title: l10n.exportPdfWithAttachments,
+              subtitle: l10n.exportPdfWithAttachmentsSubtitle,
+              icon: Icons.collections_rounded,
+              gradientColors: [Colors.deepPurple, Colors.purple],
+              onPressed: _exportPdfWithAttachments,
+              isPremiumOption: true,
+              isPremiumUser: PremiumGate.isPremium(ref),
             ),
 
             const SizedBox(height: 12),
@@ -801,6 +916,101 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildExportOptionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required List<Color> gradientColors,
+    required VoidCallback onPressed,
+    required bool isPremiumOption,
+    required bool isPremiumUser,
+  }) {
+    final theme = Theme.of(context);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: theme.dividerColor.withValues(alpha: 0.1),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Icon with gradient background
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: gradientColors,
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                // Title and Subtitle
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Trailing Lock/Arrow
+                if (isPremiumOption && !isPremiumUser)
+                  Icon(
+                    Icons.lock_rounded,
+                    color: Colors.orange.shade700,
+                    size: 20,
+                  )
+                else
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                    size: 16,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

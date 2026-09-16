@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:file_selector/file_selector.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -9,6 +11,8 @@ import 'package:flowpaisa/core/utils/native_share.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 
 class AttachmentItem {
   final String? uuid; // Null if pending
@@ -191,10 +195,263 @@ class TransactionAttachmentSection extends ConsumerWidget {
                 }
               },
             ),
+            ListTile(
+              leading: const Icon(Icons.link_rounded, color: Colors.amber),
+              title: Text(l10n.linkOrphan),
+              subtitle: Text(l10n.linkOrphanSubtitle),
+              onTap: () async {
+                Navigator.pop(sheetContext);
+                _showOrphanSelectionDialog(context, ref);
+              },
+            ),
             const SizedBox(height: 16),
           ],
         ),
       ),
+    );
+  }
+
+  void _showOrphanSelectionDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final displayDocsAsync = ref.read(displayDocumentsProvider);
+
+    displayDocsAsync.when(
+      data: (docs) {
+        final orphanDocs = docs.where((doc) => doc.isOrphan && !doc.isMissingPhysicalFile).toList();
+
+        if (orphanDocs.isEmpty) {
+          ToastUtils.showWarningToast(context, ref, l10n.noBackupsFound);
+          return;
+        }
+
+        showDialog(
+          context: context,
+          builder: (dialogContext) {
+            final selectedDocs = <DisplayDocument>{};
+            final renamedNames = <String, String>{}; // Map of doc.uuid/fileName to custom name
+
+            return StatefulBuilder(
+              builder: (builderContext, setState) {
+                return AlertDialog(
+                  title: Text(l10n.selectOrphans),
+                  content: SizedBox(
+                    width: double.maxFinite,
+                    height: 350,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: orphanDocs.length,
+                      itemBuilder: (context, index) {
+                        final doc = orphanDocs[index];
+                        final isSelected = selectedDocs.contains(doc);
+                        final isPdf = doc.mimeType == 'application/pdf' ||
+                            p.extension(doc.file.path).toLowerCase() == '.pdf';
+                        final isImg = (doc.mimeType ?? '').startsWith('image/') ||
+                            ['jpg', 'jpeg', 'png', 'webp', 'gif'].contains(
+                              p.extension(doc.file.path).toLowerCase().replaceAll('.', ''),
+                            );
+
+                        final displayName = renamedNames[doc.uuid] ?? doc.originalName;
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected
+                                  ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                                  : theme.colorScheme.outlineVariant.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            leading: GestureDetector(
+                              onTap: () {
+                                if (isPdf) {
+                                  // Show option dialog for PDF: Open or Select
+                                  showDialog(
+                                    context: context,
+                                    builder: (subContext) => AlertDialog(
+                                      title: Text(doc.originalName),
+                                      content: Text(l10n.chooseDocumentSubtitle),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(subContext);
+                                            // Open PDF
+                                            final item = AttachmentItem(
+                                              uuid: doc.uuid,
+                                              file: doc.file,
+                                              originalName: doc.originalName,
+                                              mimeType: doc.mimeType ?? 'application/pdf',
+                                              fileSize: doc.fileSize,
+                                            );
+                                            _previewAttachment(context, item);
+                                          },
+                                          child: Text(l10n.openFile),
+                                        ),
+                                        FilledButton(
+                                          onPressed: () {
+                                            Navigator.pop(subContext);
+                                            // Select PDF
+                                            setState(() {
+                                              if (isSelected) {
+                                                selectedDocs.remove(doc);
+                                              } else {
+                                                selectedDocs.add(doc);
+                                              }
+                                            });
+                                          },
+                                          child: Text(l10n.selected),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                } else {
+                                  // For images and others, just toggle selection
+                                  setState(() {
+                                    if (isSelected) {
+                                      selectedDocs.remove(doc);
+                                    } else {
+                                      selectedDocs.add(doc);
+                                    }
+                                  });
+                                }
+                              },
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surfaceContainerHigh,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(7),
+                                  child: isImg
+                                      ? Image.file(
+                                          doc.file,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Container(
+                                          color: Colors.red.withValues(alpha: 0.1),
+                                          child: const Icon(
+                                            Icons.picture_as_pdf_rounded,
+                                            color: Colors.red,
+                                            size: 22,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ),
+                            title: Text(
+                              displayName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              '${(doc.fileSize / 1024).toStringAsFixed(1)} KB',
+                              style: theme.textTheme.bodySmall,
+                            ),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit_note_rounded, size: 20),
+                                  onPressed: () {
+                                    final textController = TextEditingController(text: p.basenameWithoutExtension(displayName));
+                                    showDialog(
+                                      context: context,
+                                      builder: (renameContext) => AlertDialog(
+                                        title: Text(l10n.renameFile),
+                                        content: TextField(
+                                          controller: textController,
+                                          decoration: InputDecoration(
+                                            labelText: l10n.fileName,
+                                            hintText: l10n.enterFileName,
+                                          ),
+                                          autofocus: true,
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(renameContext),
+                                            child: Text(l10n.cancel),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              final newName = textController.text.trim();
+                                              if (newName.isNotEmpty) {
+                                                final ext = p.extension(doc.originalName);
+                                                setState(() {
+                                                  renamedNames[doc.uuid] = '$newName$ext';
+                                                });
+                                              }
+                                              Navigator.pop(renameContext);
+                                            },
+                                            child: Text(l10n.save),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                ),
+                                Checkbox(
+                                  value: isSelected,
+                                  onChanged: (val) {
+                                    setState(() {
+                                      if (val == true) {
+                                        selectedDocs.add(doc);
+                                      } else {
+                                        selectedDocs.remove(doc);
+                                      }
+                                    });
+                                  },
+                                  activeColor: theme.colorScheme.primary,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: Text(l10n.cancel),
+                    ),
+                    FilledButton(
+                      onPressed: selectedDocs.isEmpty
+                          ? null
+                          : () {
+                              Navigator.pop(dialogContext);
+                              final List<AttachmentItem> items = [];
+                              for (final doc in selectedDocs) {
+                                final customName = renamedNames[doc.uuid] ?? doc.originalName;
+                                items.add(AttachmentItem(
+                                  uuid: doc.uuid,
+                                  file: doc.file,
+                                  originalName: customName,
+                                  mimeType: doc.mimeType ?? 'application/octet-stream',
+                                  fileSize: doc.fileSize,
+                                ));
+                              }
+                              onAddMultiple(items);
+                            },
+                      child: Text('${l10n.linkSelected} (${selectedDocs.length})'),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+      loading: () {},
+      error: (_, __) {},
     );
   }
 
@@ -203,6 +460,8 @@ class TransactionAttachmentSection extends ConsumerWidget {
         ['jpg', 'jpeg', 'png', 'webp', 'gif'].contains(
           p.extension(item.file.path).toLowerCase().replaceAll('.', ''),
         );
+    final isPdf = item.mimeType == 'application/pdf' ||
+        p.extension(item.file.path).toLowerCase() == '.pdf';
 
     if (isImage) {
       showDialog(
@@ -254,6 +513,27 @@ class TransactionAttachmentSection extends ConsumerWidget {
           ),
         ),
       );
+    } else if (isPdf) {
+      if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+        try {
+          final fileUri = Uri.file(item.file.absolute.path);
+          if (await item.file.exists()) {
+            await launchUrl(fileUri);
+          }
+        } catch (_) {
+          _shareFile(item);
+        }
+      } else {
+        try {
+          final bytes = await item.file.readAsBytes();
+          await Printing.layoutPdf(
+            onLayout: (PdfPageFormat format) async => bytes,
+            name: item.originalName,
+          );
+        } catch (e) {
+          _shareFile(item);
+        }
+      }
     } else {
       if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
         try {

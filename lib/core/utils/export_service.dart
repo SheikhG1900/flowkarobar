@@ -1956,6 +1956,8 @@ class ExportService {
     int decimalPlaces = 2,
     AppLocalizations? l10n,
     AppCurrency? currencyObj,
+    DateTime? startDate,
+    DateTime? endDate,
   }) async {
     try {
       // 1. Load fonts and logo
@@ -1994,6 +1996,13 @@ class ExportService {
         final details = await _transactionsRepository
             .getTransactionWithDetailsByUuid(entry.key);
         if (details != null) {
+          // Apply date filters if provided
+          if (startDate != null && details.transaction.date.isBefore(startDate)) {
+            continue;
+          }
+          if (endDate != null && details.transaction.date.isAfter(endDate)) {
+            continue;
+          }
           transactionsWithAttachments
               .add((details: details, docs: entry.value));
         }
@@ -2013,7 +2022,7 @@ class ExportService {
             List<
                 ({
                   TransactionDocument doc,
-                  Uint8List? imageBytes,
+                  List<Uint8List> pagesBytes,
                   bool isImage,
                   bool isPdf,
                 })> attachments,
@@ -2023,13 +2032,13 @@ class ExportService {
         final List<
             ({
               TransactionDocument doc,
-              Uint8List? imageBytes,
+              List<Uint8List> pagesBytes,
               bool isImage,
               bool isPdf
             })> attachments = [];
         for (final doc in item.docs) {
           final file = File(p.join(docDir.path, doc.fileName));
-          Uint8List? bytes;
+          final List<Uint8List> pagesBytes = [];
           bool isImage = false;
           bool isPdf = false;
 
@@ -2046,7 +2055,8 @@ class ExportService {
             if (isImgType) {
               isImage = true;
               try {
-                bytes = await file.readAsBytes();
+                final imgBytes = await file.readAsBytes();
+                pagesBytes.add(imgBytes);
               } catch (e) {
                 if (kDebugMode) print('Error reading image file: $e');
               }
@@ -2054,11 +2064,11 @@ class ExportService {
               isPdf = true;
               try {
                 final pdfBytes = await file.readAsBytes();
-                // Rasterize the first page of the PDF
+                // Rasterize all pages of the PDF
                 await for (final page
-                    in Printing.raster(pdfBytes, pages: [0], dpi: 150)) {
-                  bytes = await page.toPng();
-                  break; // Only take the first page
+                    in Printing.raster(pdfBytes, dpi: 150)) {
+                  final pagePng = await page.toPng();
+                  pagesBytes.add(pagePng);
                 }
               } catch (e) {
                 if (kDebugMode) print('Error rasterizing PDF file: $e');
@@ -2066,7 +2076,7 @@ class ExportService {
             }
           }
           attachments.add(
-              (doc: doc, imageBytes: bytes, isImage: isImage, isPdf: isPdf));
+              (doc: doc, pagesBytes: pagesBytes, isImage: isImage, isPdf: isPdf));
         }
         preloadedData.add((details: item.details, attachments: attachments));
       }
@@ -2221,7 +2231,7 @@ class ExportService {
                     pw.Divider(color: PdfColors.grey300, thickness: 1),
                     pw.SizedBox(height: 16),
                   ],
-                  _buildTransactionAttachmentBlock(
+                  ..._buildTransactionAttachmentBlock(
                     item.details,
                     item.attachments,
                     l10n,
@@ -2242,12 +2252,12 @@ class ExportService {
     }
   }
 
-  pw.Widget _buildTransactionAttachmentBlock(
+  List<pw.Widget> _buildTransactionAttachmentBlock(
     TransactionWithDetails details,
     List<
             ({
               TransactionDocument doc,
-              Uint8List? imageBytes,
+              List<Uint8List> pagesBytes,
               bool isImage,
               bool isPdf
             })>
@@ -2266,168 +2276,207 @@ class ExportService {
       currencyObj,
     );
 
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        // Transaction Card
-        pw.Container(
-          decoration: pw.BoxDecoration(
-            color: PdfColors.grey100,
-            borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
-            border: pw.Border.all(color: PdfColors.grey300, width: 1),
-          ),
-          padding: const pw.EdgeInsets.all(16),
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      _buildText(
-                        _getLocalizedCategoryName(details.category?.name, l10n),
-                        style: pw.TextStyle(
-                            fontSize: 14, fontWeight: pw.FontWeight.bold),
-                      ),
-                      pw.SizedBox(height: 4),
-                      _buildText(
-                        details.account?.name ?? 'Cashbook',
-                        style: const pw.TextStyle(
-                            fontSize: 10, color: PdfColors.grey600),
-                      ),
-                    ],
-                  ),
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    children: [
-                      _buildText(
-                        formattedAmount,
-                        style: pw.TextStyle(
-                          fontSize: 16,
-                          fontWeight: pw.FontWeight.bold,
-                          color: amountColor,
-                        ),
-                      ),
-                      pw.SizedBox(height: 4),
-                      _buildText(
-                        AppDateFormatter.formatDate(details.transaction.date),
-                        style: const pw.TextStyle(
-                            fontSize: 10, color: PdfColors.grey600),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              if (details.contact != null ||
-                  details.transaction.description != null) ...[
-                pw.SizedBox(height: 12),
-                pw.Divider(color: PdfColors.grey300, thickness: 0.5),
-                pw.SizedBox(height: 8),
-                if (details.contact != null)
-                  _buildText(
-                    '${l10n?.contact ?? "Contact"}: ${details.contact!.name}',
-                    style: const pw.TextStyle(
-                        fontSize: 10, color: PdfColors.grey700),
-                  ),
-                if (details.transaction.description != null &&
-                    details.transaction.description!.isNotEmpty) ...[
-                  pw.SizedBox(height: 4),
-                  _buildText(
-                    '${l10n?.description ?? "Description"}: ${TabularParser.isTabular(details.transaction.description) ? TabularParser.parse(details.transaction.description).$1 : details.transaction.description!}',
-                    style: const pw.TextStyle(
-                        fontSize: 10, color: PdfColors.grey700),
-                  ),
-                ],
-              ],
-            ],
-          ),
-        ),
-        pw.SizedBox(height: 12),
+    final List<pw.Widget> widgets = [];
 
-        // Attachments
-        pw.Padding(
-          padding: const pw.EdgeInsets.only(left: 8),
-          child: _buildText(
-            'Attachments (${attachments.length}):',
-            style: pw.TextStyle(
-                fontSize: 11,
-                fontWeight: pw.FontWeight.bold,
-                color: PdfColors.grey800),
-          ),
+    // 1. Transaction Card
+    widgets.add(
+      pw.Container(
+        decoration: pw.BoxDecoration(
+          color: PdfColors.grey100,
+          borderRadius: const pw.BorderRadius.all(pw.Radius.circular(12)),
+          border: pw.Border.all(color: PdfColors.grey300, width: 1),
         ),
-        pw.SizedBox(height: 8),
-
-        for (final att in attachments) ...[
-          pw.Container(
-            margin: const pw.EdgeInsets.only(bottom: 12),
-            padding: const pw.EdgeInsets.all(12),
-            decoration: pw.BoxDecoration(
-              border: pw.Border.all(color: PdfColors.grey200, width: 1),
-              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
-            ),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
+        padding: const pw.EdgeInsets.all(16),
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
                   children: [
                     _buildText(
-                      att.doc.originalName,
+                      _getLocalizedCategoryName(details.category?.name, l10n),
                       style: pw.TextStyle(
-                          fontSize: 10,
-                          fontWeight: pw.FontWeight.bold,
-                          color: PdfColors.grey700),
+                          fontSize: 14, fontWeight: pw.FontWeight.bold),
                     ),
+                    pw.SizedBox(height: 4),
                     _buildText(
-                      _formatFileSize(att.doc.fileSize),
+                      details.account?.name ?? 'Cashbook',
                       style: const pw.TextStyle(
-                          fontSize: 9, color: PdfColors.grey500),
+                          fontSize: 10, color: PdfColors.grey600),
                     ),
                   ],
                 ),
-                pw.SizedBox(height: 8),
-                if (att.imageBytes != null)
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    _buildText(
+                      formattedAmount,
+                      style: pw.TextStyle(
+                        fontSize: 16,
+                        fontWeight: pw.FontWeight.bold,
+                        color: amountColor,
+                      ),
+                    ),
+                    pw.SizedBox(height: 4),
+                    _buildText(
+                      AppDateFormatter.formatDate(details.transaction.date),
+                      style: const pw.TextStyle(
+                          fontSize: 10, color: PdfColors.grey600),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            if (details.contact != null ||
+                details.transaction.description != null) ...[
+              pw.SizedBox(height: 12),
+              pw.Divider(color: PdfColors.grey300, thickness: 0.5),
+              pw.SizedBox(height: 8),
+              if (details.contact != null)
+                _buildText(
+                  '${l10n?.contact ?? "Contact"}: ${details.contact!.name}',
+                  style: const pw.TextStyle(
+                      fontSize: 10, color: PdfColors.grey700),
+                ),
+              if (details.transaction.description != null &&
+                  details.transaction.description!.isNotEmpty) ...[
+                pw.SizedBox(height: 4),
+                _buildText(
+                  '${l10n?.description ?? "Description"}: ${TabularParser.isTabular(details.transaction.description) ? TabularParser.parse(details.transaction.description).$1 : details.transaction.description!}',
+                  style: const pw.TextStyle(
+                      fontSize: 10, color: PdfColors.grey700),
+                ),
+              ],
+            ],
+          ],
+        ),
+      ),
+    );
+
+    widgets.add(pw.SizedBox(height: 12));
+
+    // 2. Attachments Header
+    widgets.add(
+      pw.Padding(
+        padding: const pw.EdgeInsets.only(left: 8),
+        child: _buildText(
+          'Attachments (${attachments.length}):',
+          style: pw.TextStyle(
+              fontSize: 11,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.grey800),
+        ),
+      ),
+    );
+    widgets.add(pw.SizedBox(height: 8));
+
+    // 3. Render each attachment
+    for (final att in attachments) {
+      // Render attachment metadata header
+      widgets.add(
+        pw.Container(
+          padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: const pw.BoxDecoration(
+            color: PdfColors.grey200,
+            borderRadius: pw.BorderRadius.vertical(top: pw.Radius.circular(8)),
+          ),
+          child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Expanded(
+                child: _buildText(
+                  att.doc.originalName,
+                  style: pw.TextStyle(
+                      fontSize: 10,
+                      fontWeight: pw.FontWeight.bold,
+                      color: PdfColors.grey800),
+                ),
+              ),
+              _buildText(
+                _formatFileSize(att.doc.fileSize),
+                style: const pw.TextStyle(
+                    fontSize: 9, color: PdfColors.grey600),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Render the content (images or pages)
+      if (att.pagesBytes.isNotEmpty) {
+        for (int i = 0; i < att.pagesBytes.length; i++) {
+          widgets.add(
+            pw.Container(
+              padding: const pw.EdgeInsets.all(12),
+              decoration: pw.BoxDecoration(
+                border: pw.Border.all(color: PdfColors.grey200, width: 1),
+                borderRadius: i == att.pagesBytes.length - 1
+                    ? const pw.BorderRadius.vertical(bottom: pw.Radius.circular(8))
+                    : null,
+              ),
+              child: pw.Column(
+                children: [
                   pw.Center(
                     child: pw.Container(
-                      constraints: const pw.BoxConstraints(
-                          maxHeight:
-                              400), // Increased height limit for portrait images and PDFs
+                      constraints: const pw.BoxConstraints(maxHeight: 400),
                       child: pw.Image(
-                        pw.MemoryImage(att.imageBytes!),
+                        pw.MemoryImage(att.pagesBytes[i]),
                         fit: pw.BoxFit.contain,
                       ),
                     ),
-                  )
-                else
-                  pw.Center(
-                    child: pw.Container(
-                      padding: const pw.EdgeInsets.symmetric(vertical: 16),
-                      child: pw.Column(
-                        children: [
-                          pw.Text(
-                            att.isPdf ? '📄' : '📎',
-                            style: const pw.TextStyle(fontSize: 24),
-                          ),
-                          pw.SizedBox(height: 4),
-                          _buildText(
-                            att.isPdf
-                                ? 'PDF Document (Could not render preview)'
-                                : 'Attachment File',
-                            style: const pw.TextStyle(
-                                fontSize: 9, color: PdfColors.grey500),
-                          ),
-                        ],
+                  ),
+                  if (att.isPdf && att.pagesBytes.length > 1) ...[
+                    pw.SizedBox(height: 4),
+                    pw.Center(
+                      child: _buildText(
+                        'Page ${i + 1} of ${att.pagesBytes.length}',
+                        style: const pw.TextStyle(
+                            fontSize: 8, color: PdfColors.grey500),
                       ),
                     ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }
+      } else {
+        widgets.add(
+          pw.Container(
+            padding: const pw.EdgeInsets.symmetric(vertical: 16),
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(color: PdfColors.grey200, width: 1),
+              borderRadius: const pw.BorderRadius.vertical(bottom: pw.Radius.circular(8)),
+            ),
+            child: pw.Center(
+              child: pw.Column(
+                children: [
+                  pw.Text(
+                    att.isPdf ? '📄' : '📎',
+                    style: const pw.TextStyle(fontSize: 24),
                   ),
-              ],
+                  pw.SizedBox(height: 4),
+                  _buildText(
+                    att.isPdf
+                        ? 'PDF Document (Could not render preview)'
+                        : 'Attachment File',
+                    style: const pw.TextStyle(
+                        fontSize: 9, color: PdfColors.grey500),
+                  ),
+                ],
+              ),
             ),
           ),
-        ],
-      ],
-    );
+        );
+      }
+
+      widgets.add(pw.SizedBox(height: 12));
+    }
+
+    return widgets;
   }
 
   String _formatFileSize(int bytes) {

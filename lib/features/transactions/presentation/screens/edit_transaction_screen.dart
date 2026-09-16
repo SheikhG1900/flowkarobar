@@ -349,12 +349,19 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
           await docRepo.deleteDocument(docUuid);
         }
         for (final att in _attachments) {
-          if (att.uuid == null) {
+          if (att.uuid == null || att.uuid!.isEmpty) {
             await docRepo.addDocument(
               transactionUuid: widget.transaction.uuid,
               file: att.file,
               originalName: att.originalName,
               mimeType: att.mimeType,
+            );
+          } else if (!_pendingDeletions.contains(att.uuid)) {
+            // It's an existing orphan document being linked
+            await docRepo.linkExistingDocument(
+              documentUuid: att.uuid!,
+              transactionUuid: widget.transaction.uuid,
+              customName: att.originalName,
             );
           }
         }

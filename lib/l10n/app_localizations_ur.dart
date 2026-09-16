@@ -3221,6 +3221,44 @@ class AppLocalizationsUr extends AppLocalizations {
   String get clearData => 'ڈیٹا صاف کریں';
 
   @override
+  String get orphan => 'غیر منسلک (Orphan)';
+
+  @override
+  String get orphanSubtitle => 'غیر منسلک یا غائب لین دین';
+
+  @override
+  String get clearOrphans => 'غیر منسلک فائلیں صاف کریں';
+
+  @override
+  String get clearOrphansConfirm =>
+      'یہ مستقل طور پر ان تمام جسمانی فائلوں کو حذف کر دے گا جو کسی بھی فعال لین دین سے منسلک نہیں ہیں۔ یہ عمل واپس نہیں لیا جا سکتا۔';
+
+  @override
+  String get orphansCleared => 'غیر منسلک فائلیں کامیابی سے صاف ہو گئیں';
+
+  @override
+  String get linkOrphan => 'موجودہ اٹیچمنٹ کو لنک کریں';
+
+  @override
+  String get linkOrphanSubtitle =>
+      'غیر منسلک یا یتیم دستاویزات میں سے انتخاب کریں';
+
+  @override
+  String get selectOrphans => 'یتیم دستاویزات منتخب کریں';
+
+  @override
+  String get linkSelected => 'منتخب شدہ لنک کریں';
+
+  @override
+  String get renameFile => 'فائل کا نام تبدیل کریں';
+
+  @override
+  String get fileName => 'فائل کا نام';
+
+  @override
+  String get enterFileName => 'براہ کرم فائل کا نام درج کریں';
+
+  @override
   String get addCashbook => 'کیش بک شامل کریں';
 
   @override
@@ -4685,9 +4723,16 @@ class AppLocalizationsUr extends AppLocalizations {
       'پی ڈی ایف یا دیگر دستاویزات کی فائلیں منتخب کریں';
 
   @override
-  String get exportAsPdf => 'پی ڈی ایف کے طور پر برآمد کریں';
+  String get exportAsPdf => 'پی ڈی ایف کے طور पर برآمد کریں';
 
   @override
   String get exportAsPdfSubtitle =>
       'لین دین کی تفصیلات اور منسلکات کے ساتھ پی ڈی ایف بنائیں';
+
+  @override
+  String get exportPdfWithAttachments => 'منسلکات کے ساتھ پی ڈی ایف';
+
+  @override
+  String get exportPdfWithAttachmentsSubtitle =>
+      'پریمیم • منسلکہ تصاویر/پی ڈی ایف کے ساتھ خوبصورت رپورٹ';
 }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:collection/collection.dart';
 
@@ -179,3 +180,30 @@ class TransactionFilters {
         listHash(statusCodes);
   }
 }
+
+class DisplayDocument {
+  final String uuid;
+  final String fileName;
+  final String originalName;
+  final int fileSize;
+  final String? mimeType;
+  final DateTime createdAt;
+  final bool isOrphan;
+  final File file;
+  final TransactionDocument? dbDoc;
+  final bool isMissingPhysicalFile;
+
+  DisplayDocument({
+    required this.uuid,
+    required this.fileName,
+    required this.originalName,
+    required this.fileSize,
+    this.mimeType,
+    required this.createdAt,
+    required this.isOrphan,
+    required this.file,
+    this.dbDoc,
+    required this.isMissingPhysicalFile,
+  });
+}
+

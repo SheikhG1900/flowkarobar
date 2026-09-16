@@ -283,6 +283,27 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   }
                 },
               ),
+              ListTile(
+                leading: const Icon(Icons.picture_as_pdf_rounded, color: Colors.deepPurple),
+                title: Text(l10n.exportPdfWithAttachments),
+                subtitle: Text(l10n.exportPdfWithAttachmentsSubtitle),
+                trailing: !isPremium
+                    ? const Icon(Icons.lock, color: Colors.orange)
+                    : const Icon(Icons.verified, color: Colors.blue),
+                onTap: () async {
+                  Navigator.pop(sheetContext);
+                  if (!isPremium) {
+                    Navigator.push(
+                      parentContext,
+                      MaterialPageRoute(
+                        builder: (context) => const PremiumScreen(),
+                      ),
+                    );
+                  } else {
+                    await _exportFilteredPdfWithAttachments();
+                  }
+                },
+              ),
               const SizedBox(height: 16),
             ],
           ),
@@ -568,6 +589,150 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         Navigator.pop(context); // Close loading if still open
         ToastUtils.showErrorToast(
             context, ref, l10n.errorExporting(e.toString()));
+      }
+    }
+  }
+
+  Future<void> _exportFilteredPdfWithAttachments() async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final currencySymbol = ref.read(currencySymbolProvider);
+    final decimalPlaces = ref.read(currencyDecimalPlacesProvider);
+
+    if (!PremiumGate.isPremium(ref)) {
+      PremiumGate.showPremiumDialog(context);
+      return;
+    }
+
+    final notifier = ref.read(transactionsPaginatedProvider.notifier);
+    final filters = notifier.currentFilters;
+
+    final now = DateTime.now();
+    final startDate = filters.startDate ?? DateTime(now.year, now.month, 1);
+    final endDate = filters.endDate ?? DateTime(now.year, now.month + 1, 0);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+
+    try {
+      final exportService = ref.read(exportServiceProvider);
+      final currency = ref.read(currentCurrencyProvider).value;
+
+      final pdfBytes = await exportService.exportTransactionsWithAttachmentsToPDF(
+        currencySymbol: currencySymbol,
+        decimalPlaces: decimalPlaces,
+        l10n: l10n,
+        currencyObj: currency,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      final directory = await getTemporaryDirectory();
+      final fileName =
+          'flowpaisa_attachments_export_${AppDateFormatter.formatForFileName(DateTime.now())}.pdf';
+      final filePath = '${directory.path}/$fileName';
+      final file = File(filePath);
+      await file.writeAsBytes(pdfBytes);
+
+      if (mounted) {
+        Navigator.pop(context); // Close loading
+        ref.read(inAppReviewServiceProvider).maybeRequestReview();
+
+        await showDialog<void>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(l10n.pdfReady),
+            content: Text(l10n.pdfReportReady),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(l10n.cancel),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                      final FileSaveLocation? result = await getSaveLocation(
+                        suggestedName: fileName,
+                        acceptedTypeGroups: [
+                          const XTypeGroup(
+                            label: 'PDF',
+                            extensions: ['pdf'],
+                          ),
+                        ],
+                      );
+                      if (result != null) {
+                        await file.copy(result.path);
+                        if (context.mounted) {
+                          ToastUtils.showSuccessToast(
+                              context, ref, l10n.exportSavedTo(result.path));
+                        }
+                      }
+                    } else {
+                      await exportService.saveToDownloads(filePath);
+                      if (context.mounted) {
+                        ToastUtils.showSuccessToast(
+                            context, ref, l10n.savedToDownloads);
+                      }
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(
+                          context, ref, l10n.errorSaving(e.toString()));
+                    }
+                  }
+                },
+                child: Text(l10n.saveCopy),
+              ),
+              TextButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  try {
+                    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+                      final fileUri = Uri.file(filePath);
+                      if (await canLaunchUrl(fileUri)) {
+                        await launchUrl(fileUri);
+                      } else {
+                        throw Exception('Could not open the PDF file.');
+                      }
+                    } else {
+                      await exportService.sharePDFFile(filePath);
+                    }
+                  } catch (e) {
+                    if (context.mounted) {
+                      ToastUtils.showErrorToast(
+                          context, ref, l10n.errorSharing(e.toString()));
+                    }
+                  }
+                },
+                child: Text(Platform.isWindows || Platform.isMacOS || Platform.isLinux ? l10n.openFile : l10n.share),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                    foregroundColor: theme.colorScheme.onPrimary),
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await Printing.layoutPdf(
+                    onLayout: (PdfPageFormat format) async => pdfBytes,
+                  );
+                },
+                child: Text(l10n.preview),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading if still open
+        ToastUtils.showErrorToast(
+            context, ref, l10n.errorOccurred(e.toString()));
       }
     }
   }

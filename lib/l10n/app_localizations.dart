@@ -5890,6 +5890,78 @@ abstract class AppLocalizations {
   /// **'Clear Data'**
   String get clearData;
 
+  /// No description provided for @orphan.
+  ///
+  /// In en, this message translates to:
+  /// **'Orphan'**
+  String get orphan;
+
+  /// No description provided for @orphanSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlinked or missing transaction'**
+  String get orphanSubtitle;
+
+  /// No description provided for @clearOrphans.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Orphan Files'**
+  String get clearOrphans;
+
+  /// No description provided for @clearOrphansConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This will permanently delete all physical files that are not linked to any active transactions. This action cannot be undone.'**
+  String get clearOrphansConfirm;
+
+  /// No description provided for @orphansCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Orphan files cleared successfully'**
+  String get orphansCleared;
+
+  /// No description provided for @linkOrphan.
+  ///
+  /// In en, this message translates to:
+  /// **'Link Existing Attachment'**
+  String get linkOrphan;
+
+  /// No description provided for @linkOrphanSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from unlinked or orphan documents'**
+  String get linkOrphanSubtitle;
+
+  /// No description provided for @selectOrphans.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Orphan Documents'**
+  String get selectOrphans;
+
+  /// No description provided for @linkSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Link Selected'**
+  String get linkSelected;
+
+  /// No description provided for @renameFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename File'**
+  String get renameFile;
+
+  /// No description provided for @fileName.
+  ///
+  /// In en, this message translates to:
+  /// **'File Name'**
+  String get fileName;
+
+  /// No description provided for @enterFileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a file name'**
+  String get enterFileName;
+
   /// No description provided for @addCashbook.
   ///
   /// In en, this message translates to:
@@ -8530,6 +8602,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Generate a PDF with transaction details and attachments'**
   String get exportAsPdfSubtitle;
+
+  /// No description provided for @exportPdfWithAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF with Attachments'**
+  String get exportPdfWithAttachments;
+
+  /// No description provided for @exportPdfWithAttachmentsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium • Beautiful report with attachment images/PDFs'**
+  String get exportPdfWithAttachmentsSubtitle;
 }
 
 class _AppLocalizationsDelegate

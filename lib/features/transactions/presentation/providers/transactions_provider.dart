@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:rxdart/rxdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,6 +55,85 @@ final transactionDocumentsProvider = StreamProvider.family<List<TransactionDocum
 final allDocumentsProvider = StreamProvider<List<TransactionDocument>>((ref) {
   final repository = ref.watch(transactionDocumentsRepositoryProvider);
   return repository.watchAllDocuments();
+});
+
+// Watch all display documents including orphans
+final displayDocumentsProvider = StreamProvider<List<DisplayDocument>>((ref) async* {
+  final docsAsync = ref.watch(allDocumentsProvider);
+  final txsAsync = ref.watch(allTransactionsProvider);
+  final docRepo = ref.watch(transactionDocumentsRepositoryProvider);
+
+  final docs = docsAsync.value ?? [];
+  final txs = txsAsync.value ?? [];
+
+  final docDir = await docRepo.getDocumentsDirectory();
+
+  List<File> physicalFiles = [];
+  if (await docDir.exists()) {
+    try {
+      physicalFiles = docDir
+          .listSync()
+          .whereType<File>()
+          .toList();
+    } catch (_) {}
+  }
+
+  final dbDocsMap = {for (final doc in docs) doc.fileName: doc};
+  final activeTxUuids = txs.map((t) => t.uuid).toSet();
+
+  final List<DisplayDocument> displayDocs = [];
+
+  // 1. Process DB documents
+  for (final doc in docs) {
+    final file = File(p.join(docDir.path, doc.fileName));
+    final fileExists = await file.exists();
+    final txExists = activeTxUuids.contains(doc.transactionUuid);
+    final isOrphan = !txExists || !fileExists;
+
+    displayDocs.add(DisplayDocument(
+      uuid: doc.uuid,
+      fileName: doc.fileName,
+      originalName: doc.originalName,
+      fileSize: doc.fileSize,
+      mimeType: doc.mimeType,
+      createdAt: doc.createdAt,
+      isOrphan: isOrphan,
+      file: file,
+      dbDoc: doc,
+      isMissingPhysicalFile: !fileExists,
+    ));
+  }
+
+  // 2. Process physical-only orphan files
+  for (final file in physicalFiles) {
+    final fileName = p.basename(file.path);
+    if (!dbDocsMap.containsKey(fileName)) {
+      final stat = file.statSync();
+      final ext = p.extension(file.path).toLowerCase().replaceAll('.', '');
+      String mimeType = 'application/octet-stream';
+      if (ext == 'pdf') {
+        mimeType = 'application/pdf';
+      } else if (['jpg', 'jpeg', 'png', 'webp', 'gif'].contains(ext)) {
+        mimeType = 'image/$ext';
+      }
+      displayDocs.add(DisplayDocument(
+        uuid: fileName,
+        fileName: fileName,
+        originalName: fileName,
+        fileSize: stat.size,
+        mimeType: mimeType,
+        createdAt: stat.changed,
+        isOrphan: true,
+        file: file,
+        dbDoc: null,
+        isMissingPhysicalFile: false,
+      ));
+    }
+  }
+
+  displayDocs.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+  yield displayDocs;
 });
 
 // Schedules repository provider

@@ -594,12 +594,22 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
         if (_attachments.isNotEmpty) {
           final docRepo = ref.read(transactionDocumentsRepositoryProvider);
           for (final att in _attachments) {
-            await docRepo.addDocument(
-              transactionUuid: transactionUuid,
-              file: att.file,
-              originalName: att.originalName,
-              mimeType: att.mimeType,
-            );
+            if (att.uuid != null && att.uuid!.isNotEmpty) {
+              // It's an existing orphan document, link it
+              await docRepo.linkExistingDocument(
+                documentUuid: att.uuid!,
+                transactionUuid: transactionUuid,
+                customName: att.originalName,
+              );
+            } else {
+              // It's a new document, add it
+              await docRepo.addDocument(
+                transactionUuid: transactionUuid,
+                file: att.file,
+                originalName: att.originalName,
+                mimeType: att.mimeType,
+              );
+            }
           }
         }
 

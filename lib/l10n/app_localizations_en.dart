@@ -3203,6 +3203,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get clearData => 'Clear Data';
 
   @override
+  String get orphan => 'Orphan';
+
+  @override
+  String get orphanSubtitle => 'Unlinked or missing transaction';
+
+  @override
+  String get clearOrphans => 'Clear Orphan Files';
+
+  @override
+  String get clearOrphansConfirm =>
+      'This will permanently delete all physical files that are not linked to any active transactions. This action cannot be undone.';
+
+  @override
+  String get orphansCleared => 'Orphan files cleared successfully';
+
+  @override
+  String get linkOrphan => 'Link Existing Attachment';
+
+  @override
+  String get linkOrphanSubtitle => 'Choose from unlinked or orphan documents';
+
+  @override
+  String get selectOrphans => 'Select Orphan Documents';
+
+  @override
+  String get linkSelected => 'Link Selected';
+
+  @override
+  String get renameFile => 'Rename File';
+
+  @override
+  String get fileName => 'File Name';
+
+  @override
+  String get enterFileName => 'Please enter a file name';
+
+  @override
   String get addCashbook => 'Add Cashbook';
 
   @override
@@ -4669,4 +4706,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get exportAsPdfSubtitle =>
       'Generate a PDF with transaction details and attachments';
+
+  @override
+  String get exportPdfWithAttachments => 'PDF with Attachments';
+
+  @override
+  String get exportPdfWithAttachmentsSubtitle =>
+      'Premium • Beautiful report with attachment images/PDFs';
 }

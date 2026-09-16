@@ -3212,6 +3212,43 @@ class AppLocalizationsHi extends AppLocalizations {
   String get clearData => 'डेटा साफ़ करें';
 
   @override
+  String get orphan => 'अलिंक (Orphan)';
+
+  @override
+  String get orphanSubtitle => 'अलिंक या गायब लेन-देन';
+
+  @override
+  String get clearOrphans => 'अलिंक की गई फ़ाइलें साफ़ करें';
+
+  @override
+  String get clearOrphansConfirm =>
+      'यह स्थायी रूप से उन सभी भौतिक फ़ाइलों को हटा देगा जो किसी भी सक्रिय लेन-देन से लिंक नहीं हैं। इस क्रिया को पूर्ववत नहीं किया जा सकता है।';
+
+  @override
+  String get orphansCleared => 'अलिंक की गई फ़ाइलें सफलतापूर्वक साफ़ की गईं';
+
+  @override
+  String get linkOrphan => 'मौजूदा अटैचमेंट लिंक करें';
+
+  @override
+  String get linkOrphanSubtitle => 'अलिंक या अनाथ दस्तावेजों में से चुनें';
+
+  @override
+  String get selectOrphans => 'अनाथ दस्तावेज़ चुनें';
+
+  @override
+  String get linkSelected => 'चयनित लिंक करें';
+
+  @override
+  String get renameFile => 'फ़ाइल का नाम बदलें';
+
+  @override
+  String get fileName => 'फ़ाइल का नाम';
+
+  @override
+  String get enterFileName => 'कृपया फ़ाइल का नाम दर्ज करें';
+
+  @override
   String get addCashbook => 'कैशबुक जोड़ें';
 
   @override
@@ -4684,4 +4721,11 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get exportAsPdfSubtitle =>
       'लेन-देन के विवरण और अनुलग्नकों के साथ एक पीडीएफ बनाएं';
+
+  @override
+  String get exportPdfWithAttachments => 'अटैचमेंट के साथ पीडीएफ';
+
+  @override
+  String get exportPdfWithAttachmentsSubtitle =>
+      'प्रीमियम • अटैचमेंट छवियों/पीडीएफ के साथ सुंदर रिपोर्ट';
 }
