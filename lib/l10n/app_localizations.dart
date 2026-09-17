@@ -8651,6 +8651,12 @@ abstract class AppLocalizations {
   /// **'PDF Document (Appended natively after this card)'**
   String get pdfAppendedMessage;
 
+  /// No description provided for @imageAppendedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Image Attachment (Appended on the next page)'**
+  String get imageAppendedMessage;
+
   /// No description provided for @attachmentFile.
   ///
   /// In en, this message translates to:

@@ -4761,6 +4761,9 @@ class AppLocalizationsUr extends AppLocalizations {
       'پی ڈی ایف دستاویز (اس کارڈ کے بعد منسلک ہے)';
 
   @override
+  String get imageAppendedMessage => 'تصویری منسلکہ (اگلے صفحے پر منسلک ہے)';
+
+  @override
   String get attachmentFile => 'منسلکہ فائل';
 
   @override

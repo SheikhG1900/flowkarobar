@@ -1830,6 +1830,7 @@
   "generatedOn": "{date} کو تیار کیا گیا",
   "pageOf": "صفحہ {current} کا {total}",
   "pdfAppendedMessage": "پی ڈی ایف دستاویز (اس کارڈ کے بعد منسلک ہے)",
+  "imageAppendedMessage": "تصویری منسلکہ (اگلے صفحے پر منسلک ہے)",
   "attachmentFile": "منسلکہ فائل",
   "noTransactionsWithAttachments": "منسلکات کے ساتھ کوئی لین دین نہیں ملا۔"
 }

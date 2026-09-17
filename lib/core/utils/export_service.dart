@@ -2268,9 +2268,11 @@ class ExportService {
                 );
               },
               build: (pw.Context context) {
-                return [
-                  // Title on the first page of the document
-                  if (currentIsFirstPage) ...[
+                final List<pw.Widget> pageWidgets = [];
+
+                // Title on the first page of the document
+                if (currentIsFirstPage) {
+                  pageWidgets.add(
                     pw.Container(
                       margin: const pw.EdgeInsets.only(bottom: 24),
                       child: pw.Column(
@@ -2321,10 +2323,13 @@ class ExportService {
                         ],
                       ),
                     ),
-                    pw.Divider(color: PdfColors.grey300, thickness: 1),
-                    pw.SizedBox(height: 16),
-                  ],
-                  ..._buildTransactionAttachmentBlock(
+                  );
+                  pageWidgets.add(pw.Divider(color: PdfColors.grey300, thickness: 1));
+                  pageWidgets.add(pw.SizedBox(height: 16));
+                }
+
+                pageWidgets.addAll(
+                  _buildTransactionAttachmentBlock(
                     item.details,
                     item.attachments,
                     l10n,
@@ -2332,7 +2337,103 @@ class ExportService {
                     decimalPlaces,
                     currencyObj,
                   ),
-                ];
+                );
+
+                // Now, check if there are any image attachments
+                final imageAttachments = item.attachments.where((att) => att.isImage).toList();
+                if (imageAttachments.isNotEmpty) {
+                  // Add a page break to start full images on the next page
+                  pageWidgets.add(pw.NewPage());
+
+                  // Add a section header on the new page
+                  pageWidgets.add(
+                    pw.Padding(
+                      padding: const pw.EdgeInsets.only(bottom: 16),
+                      child: _buildText(
+                        '${l10n?.attachments ?? "Attachments"}:',
+                        style: pw.TextStyle(
+                          fontSize: 14,
+                          fontWeight: pw.FontWeight.bold,
+                          color: const PdfColor(0 / 255.0, 100 / 255.0, 150 / 255.0),
+                        ),
+                      ),
+                    ),
+                  );
+
+                  // Set a safe maximum printable height for each image on A4 (841.89) minus margins (64) and header/footer (60) which is ~717.
+                  // Non-image elements (header, padding, borders, spacing) take ~67.
+                  // By setting maxHeight to 630, each image is allowed to expand to cover the page fully.
+                  // If there are multiple images, they will naturally print on separate pages unless they are naturally small enough to fit together without being scaled down.
+                  final double maxHeight = 630;
+
+                  for (final att in imageAttachments) {
+                    if (att.pagesBytes.isNotEmpty) {
+                      pageWidgets.add(
+                        pw.Inseparable(
+                          child: pw.Column(
+                            crossAxisAlignment: pw.CrossAxisAlignment.start,
+                            children: [
+                              // Attachment Header
+                              pw.Container(
+                                padding: const pw.EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                decoration: const pw.BoxDecoration(
+                                  color: PdfColors.grey200,
+                                  borderRadius: pw.BorderRadius.vertical(top: pw.Radius.circular(8)),
+                                ),
+                                child: pw.Row(
+                                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    pw.Expanded(
+                                      child: _buildText(
+                                        att.doc.originalName,
+                                        style: pw.TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: pw.FontWeight.bold,
+                                          color: PdfColors.grey800,
+                                        ),
+                                      ),
+                                    ),
+                                    _buildText(
+                                      _formatFileSize(att.doc.fileSize),
+                                      style: const pw.TextStyle(
+                                        fontSize: 9,
+                                        color: PdfColors.grey600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              // Full Image Content
+                              pw.Container(
+                                width: double.infinity,
+                                padding: const pw.EdgeInsets.all(12),
+                                decoration: const pw.BoxDecoration(
+                                  border: pw.Border(
+                                    left: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                                    right: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                                    bottom: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                                  ),
+                                ),
+                                child: pw.Center(
+                                  child: pw.Container(
+                                    constraints: pw.BoxConstraints(maxHeight: maxHeight),
+                                    child: pw.Image(
+                                      pw.MemoryImage(att.pagesBytes.first),
+                                      fit: pw.BoxFit.contain,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              pw.SizedBox(height: 16),
+                            ],
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                }
+
+                return pageWidgets;
               },
             ),
           );
@@ -2582,43 +2683,85 @@ class ExportService {
               ),
               // Render the content (images or pages)
               if (att.isImage)
-                if (att.pagesBytes.isNotEmpty)
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(12),
-                    decoration: const pw.BoxDecoration(
-                      border: pw.Border(
-                        left: pw.BorderSide(color: PdfColors.grey200, width: 1),
-                        right: pw.BorderSide(color: PdfColors.grey200, width: 1),
-                        bottom: pw.BorderSide(color: PdfColors.grey200, width: 1),
-                      ),
+                pw.Container(
+                  padding: const pw.EdgeInsets.all(12),
+                  decoration: const pw.BoxDecoration(
+                    border: pw.Border(
+                      left: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                      right: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                      bottom: pw.BorderSide(color: PdfColors.grey200, width: 1),
                     ),
-                    child: pw.Center(
-                      child: pw.Container(
-                        constraints: const pw.BoxConstraints(maxHeight: 400),
-                        child: pw.Image(
-                          pw.MemoryImage(att.pagesBytes.first),
-                          fit: pw.BoxFit.contain,
+                  ),
+                  child: pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      if (att.pagesBytes.isNotEmpty)
+                        pw.Container(
+                          width: 45,
+                          height: 60,
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(color: PdfColors.grey300, width: 0.5),
+                          ),
+                          child: pw.Image(
+                            pw.MemoryImage(att.pagesBytes.first),
+                            fit: pw.BoxFit.cover,
+                          ),
+                        )
+                      else
+                        pw.Container(
+                          width: 45,
+                          height: 60,
+                          decoration: pw.BoxDecoration(
+                            color: PdfColors.grey100,
+                            border: pw.Border.all(color: PdfColors.grey300, width: 0.5),
+                          ),
+                          child: pw.Center(
+                            child: pw.Container(
+                              width: 16,
+                              height: 20,
+                              decoration: const pw.BoxDecoration(
+                                color: PdfColors.grey300,
+                              ),
+                              child: pw.Center(
+                                child: pw.Text(
+                                  'IMG',
+                                  style: pw.TextStyle(
+                                    fontSize: 6,
+                                    fontWeight: pw.FontWeight.bold,
+                                    color: PdfColors.grey600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      pw.SizedBox(width: 12),
+                      pw.Expanded(
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            _buildText(
+                              l10n?.attachmentFile ?? 'Image Attachment',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                                fontWeight: pw.FontWeight.bold,
+                                color: PdfColors.grey800,
+                              ),
+                            ),
+                            pw.SizedBox(height: 4),
+                            _buildText(
+                              l10n?.imageAppendedMessage ?? 'Image Attachment (Appended on the next page)',
+                              style: const pw.TextStyle(
+                                fontSize: 9,
+                                color: PdfColors.grey500,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  )
-                else
-                  pw.Container(
-                    padding: const pw.EdgeInsets.symmetric(vertical: 16),
-                    decoration: const pw.BoxDecoration(
-                      border: pw.Border(
-                        left: pw.BorderSide(color: PdfColors.grey200, width: 1),
-                        right: pw.BorderSide(color: PdfColors.grey200, width: 1),
-                        bottom: pw.BorderSide(color: PdfColors.grey200, width: 1),
-                      ),
-                    ),
-                    child: pw.Center(
-                      child: _buildText(
-                        l10n?.attachmentFile ?? 'Attachment File',
-                        style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
-                      ),
-                    ),
-                  )
+                    ],
+                  ),
+                )
               else if (att.isPdf)
                 pw.Container(
                   padding: const pw.EdgeInsets.all(12),

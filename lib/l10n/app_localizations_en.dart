@@ -4739,6 +4739,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'PDF Document (Appended natively after this card)';
 
   @override
+  String get imageAppendedMessage =>
+      'Image Attachment (Appended on the next page)';
+
+  @override
   String get attachmentFile => 'Attachment File';
 
   @override

@@ -2409,6 +2409,7 @@
   "generatedOn": "Generated on {date}",
   "pageOf": "Page {current} of {total}",
   "pdfAppendedMessage": "PDF Document (Appended natively after this card)",
+  "imageAppendedMessage": "Image Attachment (Appended on the next page)",
   "attachmentFile": "Attachment File",
   "noTransactionsWithAttachments": "No transactions with attachments found."
 }

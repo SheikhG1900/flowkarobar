@@ -4754,6 +4754,9 @@ class AppLocalizationsHi extends AppLocalizations {
       'पीडीएफ दस्तावेज़ (इस कार्ड के बाद मूल रूप से संलग्न)';
 
   @override
+  String get imageAppendedMessage => 'छवि अटैचमेंट (अगले पृष्ठ पर संलग्न)';
+
+  @override
   String get attachmentFile => 'अटैचमेंट फ़ाइल';
 
   @override

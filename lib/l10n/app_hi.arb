@@ -1830,6 +1830,7 @@
   "generatedOn": "{date} को जनरेट किया गया",
   "pageOf": "पृष्ठ {total} का {current}",
   "pdfAppendedMessage": "पीडीएफ दस्तावेज़ (इस कार्ड के बाद मूल रूप से संलग्न)",
+  "imageAppendedMessage": "छवि अटैचमेंट (अगले पृष्ठ पर संलग्न)",
   "attachmentFile": "अटैचमेंट फ़ाइल",
   "noTransactionsWithAttachments": "अटैचमेंट के साथ कोई लेनदेन नहीं मिला।"
 }
