@@ -2342,29 +2342,11 @@ class ExportService {
                 // Now, check if there are any image attachments
                 final imageAttachments = item.attachments.where((att) => att.isImage).toList();
                 if (imageAttachments.isNotEmpty) {
-                  // Add a page break to start full images on the next page
-                  pageWidgets.add(pw.NewPage());
-
-                  // Add a section header on the new page
-                  pageWidgets.add(
-                    pw.Padding(
-                      padding: const pw.EdgeInsets.only(bottom: 16),
-                      child: _buildText(
-                        '${l10n?.attachments ?? "Attachments"}:',
-                        style: pw.TextStyle(
-                          fontSize: 14,
-                          fontWeight: pw.FontWeight.bold,
-                          color: const PdfColor(0 / 255.0, 100 / 255.0, 150 / 255.0),
-                        ),
-                      ),
-                    ),
-                  );
-
                   // Set a safe maximum printable height for each image on A4 (841.89) minus margins (64) and header/footer (60) which is ~717.
                   // Non-image elements (header, padding, borders, spacing) take ~67.
-                  // By setting maxHeight to 630, each image is allowed to expand to cover the page fully.
+                  // By setting maxHeight to 600, each image is allowed to expand to cover the page fully.
                   // If there are multiple images, they will naturally print on separate pages unless they are naturally small enough to fit together without being scaled down.
-                  final double maxHeight = 630;
+                  final double maxHeight = 600;
 
                   for (final att in imageAttachments) {
                     if (att.pagesBytes.isNotEmpty) {
@@ -2521,6 +2503,8 @@ class ExportService {
 
     final List<pw.Widget> widgets = [];
 
+    final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
+
     // 1. Transaction Card
     widgets.add(
       pw.Container(
@@ -2531,47 +2515,85 @@ class ExportService {
         ),
         padding: const pw.EdgeInsets.all(16),
         child: pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          crossAxisAlignment: isRtl ? pw.CrossAxisAlignment.end : pw.CrossAxisAlignment.start,
           children: [
             pw.Row(
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    _buildText(
-                      _getLocalizedCategoryName(details.category?.name, l10n),
-                      style: pw.TextStyle(
-                          fontSize: 14, fontWeight: pw.FontWeight.bold),
-                    ),
-                    pw.SizedBox(height: 4),
-                    _buildText(
-                      details.account?.name ?? 'Cashbook',
-                      style: const pw.TextStyle(
-                          fontSize: 10, color: PdfColors.grey600),
-                    ),
-                  ],
-                ),
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.end,
-                  children: [
-                    _buildText(
-                      formattedAmount,
-                      style: pw.TextStyle(
-                        fontSize: 16,
-                        fontWeight: pw.FontWeight.bold,
-                        color: amountColor,
+              children: isRtl
+                  ? [
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          _buildText(
+                            formattedAmount,
+                            style: pw.TextStyle(
+                              fontSize: 16,
+                              fontWeight: pw.FontWeight.bold,
+                              color: amountColor,
+                            ),
+                          ),
+                          pw.SizedBox(height: 4),
+                          _buildText(
+                            AppDateFormatter.formatDate(details.transaction.date),
+                            style: const pw.TextStyle(
+                                fontSize: 10, color: PdfColors.grey600),
+                          ),
+                        ],
                       ),
-                    ),
-                    pw.SizedBox(height: 4),
-                    _buildText(
-                      AppDateFormatter.formatDate(details.transaction.date),
-                      style: const pw.TextStyle(
-                          fontSize: 10, color: PdfColors.grey600),
-                    ),
-                  ],
-                ),
-              ],
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.end,
+                        children: [
+                          _buildText(
+                            _getLocalizedCategoryName(details.category?.name, l10n),
+                            style: pw.TextStyle(
+                                fontSize: 14, fontWeight: pw.FontWeight.bold),
+                          ),
+                          pw.SizedBox(height: 4),
+                          _buildText(
+                            details.account?.name ?? 'Cashbook',
+                            style: const pw.TextStyle(
+                                fontSize: 10, color: PdfColors.grey600),
+                          ),
+                        ],
+                      ),
+                    ]
+                  : [
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.start,
+                        children: [
+                          _buildText(
+                            _getLocalizedCategoryName(details.category?.name, l10n),
+                            style: pw.TextStyle(
+                                fontSize: 14, fontWeight: pw.FontWeight.bold),
+                          ),
+                          pw.SizedBox(height: 4),
+                          _buildText(
+                            details.account?.name ?? 'Cashbook',
+                            style: const pw.TextStyle(
+                                fontSize: 10, color: PdfColors.grey600),
+                          ),
+                        ],
+                      ),
+                      pw.Column(
+                        crossAxisAlignment: pw.CrossAxisAlignment.end,
+                        children: [
+                          _buildText(
+                            formattedAmount,
+                            style: pw.TextStyle(
+                              fontSize: 16,
+                              fontWeight: pw.FontWeight.bold,
+                              color: amountColor,
+                            ),
+                          ),
+                          pw.SizedBox(height: 4),
+                          _buildText(
+                            AppDateFormatter.formatDate(details.transaction.date),
+                            style: const pw.TextStyle(
+                                fontSize: 10, color: PdfColors.grey600),
+                          ),
+                        ],
+                      ),
+                    ],
             ),
             if (details.contact != null ||
                 details.transaction.description != null) ...[
@@ -2580,47 +2602,83 @@ class ExportService {
               pw.SizedBox(height: 8),
               if (details.contact != null)
                 pw.Row(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    _buildText(
-                      '${l10n?.contact ?? "Contact"}: ',
-                      style: pw.TextStyle(
-                          fontSize: 10,
-                          fontWeight: pw.FontWeight.bold,
-                          color: PdfColors.grey700),
-                    ),
-                    pw.Expanded(
-                      child: _buildText(
-                        details.contact!.name,
-                        style: const pw.TextStyle(
-                            fontSize: 10, color: PdfColors.grey700),
-                      ),
-                    ),
-                  ],
+                  mainAxisAlignment: isRtl ? pw.MainAxisAlignment.end : pw.MainAxisAlignment.start,
+                  children: isRtl
+                      ? [
+                          pw.Expanded(
+                            child: _buildText(
+                              details.contact!.name,
+                              style: const pw.TextStyle(
+                                  fontSize: 10, color: PdfColors.grey700),
+                            ),
+                          ),
+                          _buildText(
+                            '${l10n?.contact ?? "Contact"}: ',
+                            style: pw.TextStyle(
+                                fontSize: 10,
+                                fontWeight: pw.FontWeight.bold,
+                                color: PdfColors.grey700),
+                          ),
+                        ]
+                      : [
+                          _buildText(
+                            '${l10n?.contact ?? "Contact"}: ',
+                            style: pw.TextStyle(
+                                fontSize: 10,
+                                fontWeight: pw.FontWeight.bold,
+                                color: PdfColors.grey700),
+                          ),
+                          pw.Expanded(
+                            child: _buildText(
+                              details.contact!.name,
+                              style: const pw.TextStyle(
+                                  fontSize: 10, color: PdfColors.grey700),
+                            ),
+                          ),
+                        ],
                 ),
               if (details.transaction.description != null &&
                   details.transaction.description!.isNotEmpty) ...[
                 pw.SizedBox(height: 4),
                 pw.Row(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    _buildText(
-                      '${l10n?.description ?? "Description"}: ',
-                      style: pw.TextStyle(
-                          fontSize: 10,
-                          fontWeight: pw.FontWeight.bold,
-                          color: PdfColors.grey700),
-                    ),
-                    pw.Expanded(
-                      child: _buildText(
-                        TabularParser.isTabular(details.transaction.description)
-                            ? TabularParser.parse(details.transaction.description).$1
-                            : details.transaction.description!,
-                        style: const pw.TextStyle(
-                            fontSize: 10, color: PdfColors.grey700),
-                      ),
-                    ),
-                  ],
+                  mainAxisAlignment: isRtl ? pw.MainAxisAlignment.end : pw.MainAxisAlignment.start,
+                  children: isRtl
+                      ? [
+                          pw.Expanded(
+                            child: _buildText(
+                              TabularParser.isTabular(details.transaction.description)
+                                  ? TabularParser.parse(details.transaction.description).$1
+                                  : details.transaction.description!,
+                              style: const pw.TextStyle(
+                                  fontSize: 10, color: PdfColors.grey700),
+                            ),
+                          ),
+                          _buildText(
+                            '${l10n?.description ?? "Description"}: ',
+                            style: pw.TextStyle(
+                                fontSize: 10,
+                                fontWeight: pw.FontWeight.bold,
+                                color: PdfColors.grey700),
+                          ),
+                        ]
+                      : [
+                          _buildText(
+                            '${l10n?.description ?? "Description"}: ',
+                            style: pw.TextStyle(
+                                fontSize: 10,
+                                fontWeight: pw.FontWeight.bold,
+                                color: PdfColors.grey700),
+                          ),
+                          pw.Expanded(
+                            child: _buildText(
+                              TabularParser.isTabular(details.transaction.description)
+                                  ? TabularParser.parse(details.transaction.description).$1
+                                  : details.transaction.description!,
+                              style: const pw.TextStyle(
+                                  fontSize: 10, color: PdfColors.grey700),
+                            ),
+                          ),
+                        ],
                 ),
               ],
             ],

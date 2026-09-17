@@ -21,6 +21,8 @@ class AppTheme {
           return GoogleFonts.marhey(textStyle: baseStyle);
         case 'Noto Sans Devanagari':
           return GoogleFonts.notoSansDevanagari(textStyle: baseStyle);
+        case 'Inter':
+          return GoogleFonts.inter(textStyle: baseStyle);
         case 'Montserrat':
         default:
           return GoogleFonts.montserrat(textStyle: baseStyle);
@@ -103,6 +105,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
+      fontFamily: textTheme.bodyMedium?.fontFamily,
 
       // Color Scheme (GermGuard-inspired Cyan/Blue)
       colorScheme: ColorScheme.light(
@@ -312,6 +315,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
+      fontFamily: textTheme.bodyMedium?.fontFamily,
 
       // Color Scheme (GermGuard Dark - Professional Cyan)
       colorScheme: ColorScheme.dark(

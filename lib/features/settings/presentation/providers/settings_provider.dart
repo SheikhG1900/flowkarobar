@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
+import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 
@@ -438,5 +439,11 @@ final autoSyncOnStartupProvider =
 final currentFontProvider = Provider<String>((ref) {
   final fonts = ref.watch(fontProvider);
   final currentLocale = ref.watch(languageProvider);
-  return fonts[currentLocale.languageCode] ?? 'Inter';
+  final isPremium = ref.watch(premiumProvider).isPremiumActive;
+  
+  final font = fonts[currentLocale.languageCode];
+  if (currentLocale.languageCode == 'ur' && font == 'Marhey' && isPremium) {
+    return 'Kufam';
+  }
+  return font ?? 'Inter';
 });
