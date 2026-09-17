@@ -2078,8 +2078,14 @@ class ExportService {
               isPdf = true;
               try {
                 originalPdfBytes = await file.readAsBytes();
+                // Rasterize ONLY the first page of the PDF for a thumbnail preview
+                await for (final page in Printing.raster(originalPdfBytes, pages: [0], dpi: 100)) {
+                  final pagePng = await page.toPng();
+                  pagesBytes.add(pagePng);
+                  break; // Just in case, only take the first page
+                }
               } catch (e) {
-                if (kDebugMode) print('Error reading PDF file: $e');
+                if (kDebugMode) print('Error reading/rasterizing PDF file: $e');
               }
             }
           }
@@ -2575,63 +2581,138 @@ class ExportService {
                 ),
               ),
               // Render the content (images or pages)
-              if (att.pagesBytes.isNotEmpty)
-                for (int i = 0; i < att.pagesBytes.length; i++)
+              if (att.isImage)
+                if (att.pagesBytes.isNotEmpty)
                   pw.Container(
                     padding: const pw.EdgeInsets.all(12),
-                    decoration: pw.BoxDecoration(
-                      border: pw.Border.all(color: PdfColors.grey200, width: 1),
-                      borderRadius: i == att.pagesBytes.length - 1
-                          ? const pw.BorderRadius.vertical(bottom: pw.Radius.circular(8))
-                          : null,
+                    decoration: const pw.BoxDecoration(
+                      border: pw.Border(
+                        left: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                        right: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                        bottom: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                      ),
                     ),
-                    child: pw.Column(
-                      children: [
-                        pw.Center(
-                          child: pw.Container(
-                            constraints: const pw.BoxConstraints(maxHeight: 400),
-                            child: pw.Image(
-                              pw.MemoryImage(att.pagesBytes[i]),
-                              fit: pw.BoxFit.contain,
+                    child: pw.Center(
+                      child: pw.Container(
+                        constraints: const pw.BoxConstraints(maxHeight: 400),
+                        child: pw.Image(
+                          pw.MemoryImage(att.pagesBytes.first),
+                          fit: pw.BoxFit.contain,
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  pw.Container(
+                    padding: const pw.EdgeInsets.symmetric(vertical: 16),
+                    decoration: const pw.BoxDecoration(
+                      border: pw.Border(
+                        left: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                        right: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                        bottom: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                      ),
+                    ),
+                    child: pw.Center(
+                      child: _buildText(
+                        l10n?.attachmentFile ?? 'Attachment File',
+                        style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
+                      ),
+                    ),
+                  )
+              else if (att.isPdf)
+                pw.Container(
+                  padding: const pw.EdgeInsets.all(12),
+                  decoration: const pw.BoxDecoration(
+                    border: pw.Border(
+                      left: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                      right: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                      bottom: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                    ),
+                  ),
+                  child: pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.center,
+                    children: [
+                      if (att.pagesBytes.isNotEmpty)
+                        pw.Container(
+                          width: 45,
+                          height: 60,
+                          decoration: pw.BoxDecoration(
+                            border: pw.Border.all(color: PdfColors.grey300, width: 0.5),
+                          ),
+                          child: pw.Image(
+                            pw.MemoryImage(att.pagesBytes.first),
+                            fit: pw.BoxFit.cover,
+                          ),
+                        )
+                      else
+                        pw.Container(
+                          width: 45,
+                          height: 60,
+                          decoration: pw.BoxDecoration(
+                            color: PdfColors.grey100,
+                            border: pw.Border.all(color: PdfColors.grey300, width: 0.5),
+                          ),
+                          child: pw.Center(
+                            child: pw.Container(
+                              width: 16,
+                              height: 20,
+                              decoration: const pw.BoxDecoration(
+                                color: PdfColors.grey300,
+                              ),
+                              child: pw.Center(
+                                child: pw.Text(
+                                  'PDF',
+                                  style: pw.TextStyle(
+                                    fontSize: 6,
+                                    fontWeight: pw.FontWeight.bold,
+                                    color: PdfColors.grey600,
+                                  ),
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                        if (att.isPdf && att.pagesBytes.length > 1) ...[
-                          pw.SizedBox(height: 4),
-                          pw.Center(
-                            child: _buildText(
-                              'Page ${i + 1} of ${att.pagesBytes.length}',
-                              style: const pw.TextStyle(
-                                  fontSize: 8, color: PdfColors.grey500),
+                      pw.SizedBox(width: 12),
+                      pw.Expanded(
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            _buildText(
+                              l10n?.exportPdfWithAttachments ?? 'PDF Document',
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                                fontWeight: pw.FontWeight.bold,
+                                color: PdfColors.grey800,
+                              ),
                             ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  )
+                            pw.SizedBox(height: 4),
+                            _buildText(
+                              l10n?.pdfAppendedMessage ?? 'PDF Document (Appended natively after this card)',
+                              style: const pw.TextStyle(
+                                fontSize: 9,
+                                color: PdfColors.grey500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
               else
                 pw.Container(
                   padding: const pw.EdgeInsets.symmetric(vertical: 16),
-                  decoration: pw.BoxDecoration(
-                    border: pw.Border.all(color: PdfColors.grey200, width: 1),
-                    borderRadius: const pw.BorderRadius.vertical(bottom: pw.Radius.circular(8)),
+                  decoration: const pw.BoxDecoration(
+                    border: pw.Border(
+                      left: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                      right: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                      bottom: pw.BorderSide(color: PdfColors.grey200, width: 1),
+                    ),
                   ),
                   child: pw.Center(
-                    child: pw.Column(
-                      children: [
-                        pw.Text(
-                          att.isPdf ? '📄' : '📎',
-                          style: const pw.TextStyle(fontSize: 24),
-                        ),
-                        pw.SizedBox(height: 4),
-                        _buildText(
-                          att.isPdf
-                              ? (l10n?.pdfAppendedMessage ?? 'PDF Document (Appended natively after this card)')
-                              : (l10n?.attachmentFile ?? 'Attachment File'),
-                          style: const pw.TextStyle(
-                              fontSize: 9, color: PdfColors.grey500),
-                        ),
-                      ],
+                    child: _buildText(
+                      l10n?.attachmentFile ?? 'Attachment File',
+                      style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey500),
                     ),
                   ),
                 ),
