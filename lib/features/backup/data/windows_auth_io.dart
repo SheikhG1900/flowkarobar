@@ -91,7 +91,7 @@ class WindowsAuthHelper {
     }
   }
 
-  static Future<GoogleSignInAccount?> silentSignInWindows(String clientId, String? clientSecret, List<String> scopes) async {
+  static Future<GoogleSignInAccount?> silentSignInWindows(String clientId, String? clientSecret, List<String> scopes, {bool forceRefresh = false}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final email = prefs.getString(_winUserEmailKey);
@@ -121,8 +121,9 @@ class WindowsAuthHelper {
 
         final baseClient = http.Client();
         
-        // If expired (or expiring in less than 5 minutes), refresh it
-        if (credentials.accessToken.expiry.isBefore(DateTime.now()) || 
+        // If expired (or expiring in less than 5 minutes), or forceRefresh is requested, refresh it
+        if (forceRefresh || 
+            credentials.accessToken.expiry.isBefore(DateTime.now()) || 
             credentials.accessToken.expiry.difference(DateTime.now()).inMinutes < 5) {
           if (refreshToken != null) {
             final clientIdObj = ClientId(clientId, clientSecret);

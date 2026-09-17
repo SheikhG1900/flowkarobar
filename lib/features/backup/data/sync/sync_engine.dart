@@ -721,6 +721,7 @@ class SyncEngine {
         'payables',
         'reminders',
         'transaction_schedules',
+        'transaction_documents',
         'user_preferences',
       ];
 
@@ -808,6 +809,8 @@ class SyncEngine {
                 return _db.appCurrencies;
               case 'transaction_schedules':
                 return _db.transactionSchedules;
+              case 'transaction_documents':
+                return _db.transactionDocuments;
               case 'user_preferences':
                 return _db.userPreferences;
               default:
@@ -854,6 +857,7 @@ class SyncEngine {
       'payables',
       'reminders',
       'transaction_schedules',
+      'transaction_documents',
       'user_preferences',
     ];
 

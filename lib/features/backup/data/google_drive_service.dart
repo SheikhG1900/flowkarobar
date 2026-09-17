@@ -122,6 +122,25 @@ class GoogleDriveService {
   Future<void> _initializeDriveApi({bool forceRefresh = false}) async {
     if (!kIsWeb && Platform.isWindows) {
       if (forceRefresh) {
+        // Try silent sign-in first with forceRefresh: true to refresh the token silently
+        final account = await WindowsAuthHelper.silentSignInWindows(
+          PrivateKeys.googleClientId,
+          PrivateKeys.googleClientSecret,
+          [
+            drive.DriveApi.driveAppdataScope,
+            drive.DriveApi.driveFileScope,
+            'https://www.googleapis.com/auth/userinfo.profile',
+            'https://www.googleapis.com/auth/userinfo.email',
+          ],
+          forceRefresh: true,
+        );
+        if (account != null) {
+          _currentUser = account;
+          _driveApi = WindowsAuthHelper.getDriveApiWindows();
+          return;
+        }
+
+        // If silent refresh fails, then do a full sign-out and sign-in (which opens browser)
         await signOut();
         await signIn();
       }
@@ -177,117 +196,155 @@ class GoogleDriveService {
     await _initializeDriveApi(forceRefresh: true);
   }
 
+  /// Execute a Drive API operation with automatic token refresh and retry
+  Future<T> _executeWithRetry<T>(Future<T> Function() operation) async {
+    if (_driveApi == null) {
+      if (_currentUser != null) {
+        await _initializeDriveApi();
+      }
+      if (_driveApi == null) {
+        throw Exception('Drive API not initialized');
+      }
+    }
+
+    try {
+      return await operation();
+    } catch (e) {
+      final errorStr = e.toString();
+      if (errorStr.contains('Access was denied') ||
+          errorStr.contains('invalid_token') ||
+          errorStr.contains('401')) {
+        if (kDebugMode) {
+          print('GoogleDriveService: Access denied or invalid token. Attempting re-authentication...');
+        }
+        await reauthenticate();
+        if (_driveApi == null) {
+          throw Exception('Drive API not initialized after re-authentication');
+        }
+        if (kDebugMode) {
+          print('GoogleDriveService: Re-authenticated successfully. Retrying operation...');
+        }
+        return await operation();
+      }
+      rethrow;
+    }
+  }
+
   /// Get or Create a folder in appDataFolder
   Future<String> _getOrCreateFolder(String folderName,
       {String? parentId}) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
+    return _executeWithRetry(() async {
+      final parentQuery = parentId != null
+          ? "'$parentId' in parents"
+          : "'appDataFolder' in parents";
+      final query =
+          "mimeType = 'application/vnd.google-apps.folder' and name = '$folderName' and $parentQuery and trashed = false";
 
-    final parentQuery = parentId != null
-        ? "'$parentId' in parents"
-        : "'appDataFolder' in parents";
-    final query =
-        "mimeType = 'application/vnd.google-apps.folder' and name = '$folderName' and $parentQuery and trashed = false";
-
-    final list = await _driveApi!.files.list(
-      q: query,
-      spaces: 'appDataFolder',
-    );
-
-    if (list.files?.isNotEmpty == true) {
-      return list.files!.first.id!;
-    } else {
-      // Create folder
-      final folder = drive.File()
-        ..name = folderName
-        ..mimeType = 'application/vnd.google-apps.folder'
-        ..parents = [parentId ?? 'appDataFolder'];
-
-      final result = await _driveApi!.files.create(
-        folder,
-        uploadMedia: null,
+      final list = await _driveApi!.files.list(
+        q: query,
+        spaces: 'appDataFolder',
       );
-      return result.id!;
-    }
+
+      if (list.files?.isNotEmpty == true) {
+        return list.files!.first.id!;
+      } else {
+        // Create folder
+        final folder = drive.File()
+          ..name = folderName
+          ..mimeType = 'application/vnd.google-apps.folder'
+          ..parents = [parentId ?? 'appDataFolder'];
+
+        final result = await _driveApi!.files.create(
+          folder,
+          uploadMedia: null,
+        );
+        return result.id!;
+      }
+    });
   }
 
   /// Get or Create cashbook folder in appDataFolder for Sync
   Future<String> getOrCreateCashbookFolder(String cashbookId,
       {String? cashbookName, String? color, String? icon}) async {
-    final rootFolderId = await _getOrCreateFolder('Flowpaisa Backups');
+    return _executeWithRetry(() async {
+      final rootFolderId = await _getOrCreateFolder('Flowpaisa Backups');
 
-    // We search for the sync folder specifically
-    final syncFolderId =
-        await _getOrCreateFolder('Sync Data', parentId: rootFolderId);
+      // We search for the sync folder specifically
+      final syncFolderId =
+          await _getOrCreateFolder('Sync Data', parentId: rootFolderId);
 
-    if (cashbookId.isEmpty) return syncFolderId;
+      if (cashbookId.isEmpty) return syncFolderId;
 
-    // Format: id|name|color|icon
-    String folderName = cashbookId;
-    if (cashbookName != null) {
-      folderName += '|$cashbookName';
-      if (color != null && icon != null) {
-        folderName += '|$color|$icon';
+      // Format: id|name|color|icon
+      String folderName = cashbookId;
+      if (cashbookName != null) {
+        folderName += '|$cashbookName';
+        if (color != null && icon != null) {
+          folderName += '|$color|$icon';
+        }
       }
-    }
 
-    // Check if folder with this ID exists in Sync Data
-    final query =
-        "mimeType = 'application/vnd.google-apps.folder' and '$syncFolderId' in parents and name contains '$cashbookId' and trashed = false";
-    final list = await _driveApi!.files.list(q: query, spaces: 'appDataFolder');
+      // Check if folder with this ID exists in Sync Data
+      final query =
+          "mimeType = 'application/vnd.google-apps.folder' and '$syncFolderId' in parents and name contains '$cashbookId' and trashed = false";
+      final list = await _driveApi!.files.list(q: query, spaces: 'appDataFolder');
 
-    if (list.files?.isNotEmpty == true) {
-      final existingFolder = list.files!.first;
-      // Update folder name if metadata changed
-      if (cashbookName != null && existingFolder.name != folderName) {
-        await _driveApi!.files.update(
-          drive.File()..name = folderName,
-          existingFolder.id!,
-        );
+      if (list.files?.isNotEmpty == true) {
+        final existingFolder = list.files!.first;
+        // Update folder name if metadata changed
+        if (cashbookName != null && existingFolder.name != folderName) {
+          await _driveApi!.files.update(
+            drive.File()..name = folderName,
+            existingFolder.id!,
+          );
+        }
+        return existingFolder.id!;
       }
-      return existingFolder.id!;
-    }
 
-    return _getOrCreateFolder(folderName, parentId: syncFolderId);
+      return _getOrCreateFolder(folderName, parentId: syncFolderId);
+    });
   }
 
   /// Get or Create a separate backup folder for full DB snapshots
   Future<String> getOrCreateBackupFolder(String cashbookId,
       {String? cashbookName, String? color, String? icon}) async {
-    final rootFolderId = await _getOrCreateFolder('Flowpaisa Backups');
+    return _executeWithRetry(() async {
+      final rootFolderId = await _getOrCreateFolder('Flowpaisa Backups');
 
-    // We search for the backups folder specifically
-    final backupRootId =
-        await _getOrCreateFolder('Backups', parentId: rootFolderId);
+      // We search for the backups folder specifically
+      final backupRootId =
+          await _getOrCreateFolder('Backups', parentId: rootFolderId);
 
-    if (cashbookId.isEmpty) return backupRootId;
+      if (cashbookId.isEmpty) return backupRootId;
 
-    // Format: id|name|color|icon
-    String folderName = cashbookId;
-    if (cashbookName != null) {
-      folderName += '|$cashbookName';
-      if (color != null && icon != null) {
-        folderName += '|$color|$icon';
+      // Format: id|name|color|icon
+      String folderName = cashbookId;
+      if (cashbookName != null) {
+        folderName += '|$cashbookName';
+        if (color != null && icon != null) {
+          folderName += '|$color|$icon';
+        }
       }
-    }
 
-    // Check if folder with this ID exists in Backups
-    final query =
-        "mimeType = 'application/vnd.google-apps.folder' and '$backupRootId' in parents and name contains '$cashbookId' and trashed = false";
-    final list = await _driveApi!.files.list(q: query, spaces: 'appDataFolder');
+      // Check if folder with this ID exists in Backups
+      final query =
+          "mimeType = 'application/vnd.google-apps.folder' and '$backupRootId' in parents and name contains '$cashbookId' and trashed = false";
+      final list = await _driveApi!.files.list(q: query, spaces: 'appDataFolder');
 
-    if (list.files?.isNotEmpty == true) {
-      final existingFolder = list.files!.first;
-      // Update folder name if metadata changed
-      if (cashbookName != null && existingFolder.name != folderName) {
-        await _driveApi!.files.update(
-          drive.File()..name = folderName,
-          existingFolder.id!,
-        );
+      if (list.files?.isNotEmpty == true) {
+        final existingFolder = list.files!.first;
+        // Update folder name if metadata changed
+        if (cashbookName != null && existingFolder.name != folderName) {
+          await _driveApi!.files.update(
+            drive.File()..name = folderName,
+            existingFolder.id!,
+          );
+        }
+        return existingFolder.id!;
       }
-      return existingFolder.id!;
-    }
 
-    return _getOrCreateFolder(folderName, parentId: backupRootId);
+      return _getOrCreateFolder(folderName, parentId: backupRootId);
+    });
   }
 
   /// Upload database file
@@ -296,14 +353,7 @@ class GoogleDriveService {
       String? cashbookName,
       String? color,
       String? icon}) async {
-    if (_driveApi == null) {
-      if (kDebugMode) {
-        print('Drive API not initialized during upload attempt');
-      }
-      throw Exception('Drive API not initialized');
-    }
-
-    try {
+    return _executeWithRetry(() async {
       // 1. Check if backup folder exists (in the new 'Backups' subfolder)
       final folderId = await getOrCreateBackupFolder(
         cashbookId ?? '',
@@ -334,51 +384,50 @@ class GoogleDriveService {
         print('Uploading file: $fileName, size: $fileSize bytes');
       }
 
-      final media = drive.Media(file.openRead(), fileSize);
-      final result = await _driveApi!.files.create(
-        driveFile,
-        uploadMedia: media,
-      );
+      try {
+        final media = drive.Media(file.openRead(), fileSize);
+        final result = await _driveApi!.files.create(
+          driveFile,
+          uploadMedia: media,
+        );
 
-      if (kDebugMode) {
-        print('Upload complete. File ID: ${result.id}');
+        if (kDebugMode) {
+          print('Upload complete. File ID: ${result.id}');
+        }
+        return result.id;
+      } catch (e) {
+        if (e.toString().contains('storage quota has been exceeded') || e.toString().contains('quotaExceeded')) {
+          throw Exception('Google Drive storage is full. Please free up some space and try again.');
+        }
+        rethrow;
       }
-      return result.id;
-    } catch (e) {
-      if (kDebugMode) {
-        print('Upload failed in GoogleDriveService: $e');
-      }
-      if (e.toString().contains('storage quota has been exceeded') || e.toString().contains('quotaExceeded')) {
-        throw Exception('Google Drive storage is full. Please free up some space and try again.');
-      }
-      rethrow;
-    }
+    });
   }
 
   /// List available backups
   Future<List<drive.File>> listBackups({String? cashbookId}) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
+    return _executeWithRetry(() async {
+      try {
+        final folderId = await getOrCreateBackupFolder(cashbookId ?? '');
+        // Filter out manifest.json and delta files (v*.json) from the backup list
+        final query =
+            "'$folderId' in parents and trashed = false and name contains '.db'";
 
-    try {
-      final folderId = await getOrCreateBackupFolder(cashbookId ?? '');
-      // Filter out manifest.json and delta files (v*.json) from the backup list
-      final query =
-          "'$folderId' in parents and trashed = false and name contains '.db'";
+        final fileList = await _driveApi!.files.list(
+          q: query,
+          orderBy: 'createdTime desc',
+          spaces: 'appDataFolder',
+          $fields: 'files(id, name, createdTime, size)',
+        );
 
-      final fileList = await _driveApi!.files.list(
-        q: query,
-        orderBy: 'createdTime desc',
-        spaces: 'appDataFolder',
-        $fields: 'files(id, name, createdTime, size)',
-      );
-
-      return fileList.files ?? [];
-    } catch (e) {
-      if (kDebugMode) {
-        print('List backups failed: $e');
+        return fileList.files ?? [];
+      } catch (e) {
+        if (kDebugMode) {
+          print('List backups failed: $e');
+        }
+        return [];
       }
-      return [];
-    }
+    });
   }
 
   /// Download a backup file
@@ -388,9 +437,7 @@ class GoogleDriveService {
     int? fileSize,
     void Function(double progress)? onProgress,
   }) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
-
-    try {
+    return _executeWithRetry(() async {
       final media = await _driveApi!.files.get(
         fileId,
         downloadOptions: drive.DownloadOptions.fullMedia,
@@ -404,46 +451,41 @@ class GoogleDriveService {
       final sink = targetFile.openWrite();
       await stream.pipe(sink);
       await sink.close();
-    } catch (e) {
-      if (kDebugMode) {
-        print('Download failed: $e');
-      }
-      rethrow;
-    }
+    });
   }
 
   /// Download a file with its ETag
   Future<({String content, String etag})> downloadFileWithETag(
       String fileId) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
+    return _executeWithRetry(() async {
+      // 1. Get the file content
+      final response = await _driveApi!.files.get(
+        fileId,
+        downloadOptions: drive.DownloadOptions.fullMedia,
+      ) as drive.Media;
+      final content = await utf8.decodeStream(response.stream);
 
-    // 1. Get the file content
-    final response = await _driveApi!.files.get(
-      fileId,
-      downloadOptions: drive.DownloadOptions.fullMedia,
-    ) as drive.Media;
-    final content = await utf8.decodeStream(response.stream);
+      // 2. Get the file metadata (ETag)
+      final dynamic metadata = await _driveApi!.files.get(fileId, $fields: '*');
 
-    // 2. Get the file metadata (ETag)
-    final dynamic metadata = await _driveApi!.files.get(fileId, $fields: '*');
-
-    String etagValue = '';
-    try {
-      final Map<String, dynamic> jsonMap = metadata.toJson();
-      etagValue = jsonMap['etag']?.toString() ?? '';
-    } catch (e) {
+      String etagValue = '';
       try {
-        final String encoded = json.encode(metadata);
-        final Map<String, dynamic> decoded = json.decode(encoded);
-        etagValue = decoded['etag']?.toString() ?? '';
-      } catch (e2) {
-        if (kDebugMode) {
-          print('GoogleDriveService: All ETag extraction methods failed: $e2');
+        final Map<String, dynamic> jsonMap = metadata.toJson();
+        etagValue = jsonMap['etag']?.toString() ?? '';
+      } catch (e) {
+        try {
+          final String encoded = json.encode(metadata);
+          final Map<String, dynamic> decoded = json.decode(encoded);
+          etagValue = decoded['etag']?.toString() ?? '';
+        } catch (e2) {
+          if (kDebugMode) {
+            print('GoogleDriveService: All ETag extraction methods failed: $e2');
+          }
         }
       }
-    }
 
-    return (content: content, etag: etagValue);
+      return (content: content, etag: etagValue);
+    });
   }
 
   /// Upload or update a file
@@ -454,18 +496,16 @@ class GoogleDriveService {
     String? etag,
     String? fileId,
   }) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
-
     final driveFile = drive.File()
       ..name = name
       ..parents = fileId == null ? [parentId] : null;
 
-    final media = drive.Media(
-      Stream.value(utf8.encode(content)),
-      utf8.encode(content).length,
-    );
+    return _executeWithRetry(() async {
+      final media = drive.Media(
+        Stream.value(utf8.encode(content)),
+        utf8.encode(content).length,
+      );
 
-    try {
       if (fileId != null) {
         final result = await _driveApi!.files.update(
           driveFile,
@@ -480,22 +520,7 @@ class GoogleDriveService {
         );
         return result.id!;
       }
-    } catch (e) {
-      if (e.toString().contains('Access was denied') ||
-          e.toString().contains('invalid_token')) {
-        await reauthenticate();
-        if (fileId != null) {
-          final result = await _driveApi!.files
-              .update(driveFile, fileId, uploadMedia: media);
-          return result.id!;
-        } else {
-          final result =
-              await _driveApi!.files.create(driveFile, uploadMedia: media);
-          return result.id!;
-        }
-      }
-      rethrow;
-    }
+    });
   }
 
   /// Upload a binary file (like a ZIP backup)
@@ -504,176 +529,164 @@ class GoogleDriveService {
     required String parentId,
     void Function(double progress)? onProgress,
   }) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
-
     final driveFile = drive.File()
       ..name = name
       ..parents = [parentId];
 
     final fileSize = await file.length();
-    final stream = file.openRead();
-    final progressStream = onProgress != null
-        ? ProgressStream(stream, fileSize, onProgress)
-        : stream;
-    final media = drive.Media(progressStream, fileSize);
 
-    try {
+    return _executeWithRetry(() async {
+      final stream = file.openRead();
+      final progressStream = onProgress != null
+          ? ProgressStream(stream, fileSize, onProgress)
+          : stream;
+      final media = drive.Media(progressStream, fileSize);
+
       final result = await _driveApi!.files.create(
         driveFile,
         uploadMedia: media,
       );
       return result.id!;
-    } catch (e) {
-      if (e.toString().contains('Access was denied') ||
-          e.toString().contains('invalid_token')) {
-        await reauthenticate();
-        final progressStreamRetry = onProgress != null
-            ? ProgressStream(file.openRead(), fileSize, onProgress)
-            : file.openRead();
-        final mediaRetry = drive.Media(progressStreamRetry, fileSize);
-        final result = await _driveApi!.files.create(
-          driveFile,
-          uploadMedia: mediaRetry,
-        );
-        return result.id!;
-      }
-      rethrow;
-    }
+    });
   }
 
   /// Get file ID by name in a specific folder
   Future<String?> getFileIdByName(String name, String folderId) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
+    return _executeWithRetry(() async {
+      final query =
+          "name = '$name' and '$folderId' in parents and trashed = false";
+      final list = await _driveApi!.files.list(
+        q: query,
+        spaces: 'appDataFolder',
+        $fields: 'files(id)',
+      );
 
-    final query =
-        "name = '$name' and '$folderId' in parents and trashed = false";
-    final list = await _driveApi!.files.list(
-      q: query,
-      spaces: 'appDataFolder',
-      $fields: 'files(id)',
-    );
-
-    if (list.files?.isNotEmpty == true) {
-      return list.files!.first.id;
-    }
-    return null;
+      if (list.files?.isNotEmpty == true) {
+        return list.files!.first.id;
+      }
+      return null;
+    });
   }
 
   /// Delete a file by ID
   Future<void> deleteFile(String fileId) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
-    await _driveApi!.files.delete(fileId);
+    await _executeWithRetry(() async {
+      await _driveApi!.files.delete(fileId);
+    });
   }
 
   /// List sync files (v*.json) in a folder
   Future<List<drive.File>> listSyncFiles(String folderId) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
+    return _executeWithRetry(() async {
+      final query =
+          "'$folderId' in parents and name contains 'v' and name contains '.json' and trashed = false";
+      final list = await _driveApi!.files.list(
+        q: query,
+        spaces: 'appDataFolder',
+        $fields: 'files(id, name, size, createdTime)',
+      );
 
-    final query =
-        "'$folderId' in parents and name contains 'v' and name contains '.json' and trashed = false";
-    final list = await _driveApi!.files.list(
-      q: query,
-      spaces: 'appDataFolder',
-      $fields: 'files(id, name, size, createdTime)',
-    );
-
-    return list.files ?? [];
+      return list.files ?? [];
+    });
   }
 
   /// List all folders in appDataFolder to find other cashbooks
   Future<List<String>> listCashbookIds() async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
+    return _executeWithRetry(() async {
+      final rootFolderId = await _getOrCreateFolder('Flowpaisa Backups');
+      final syncFolderId =
+          await _getOrCreateFolder('Sync Data', parentId: rootFolderId);
+      final backupFolderId =
+          await _getOrCreateFolder('Backups', parentId: rootFolderId);
 
-    final rootFolderId = await _getOrCreateFolder('Flowpaisa Backups');
-    final syncFolderId =
-        await _getOrCreateFolder('Sync Data', parentId: rootFolderId);
-    final backupFolderId =
-        await _getOrCreateFolder('Backups', parentId: rootFolderId);
+      final List<String> allNames = [];
 
-    final List<String> allNames = [];
+      for (final parentId in [syncFolderId, backupFolderId]) {
+        final query =
+            "mimeType = 'application/vnd.google-apps.folder' and '$parentId' in parents and trashed = false";
+        final list = await _driveApi!.files.list(
+          q: query,
+          spaces: 'appDataFolder',
+          $fields: 'files(id, name)',
+        );
+        if (list.files != null) {
+          allNames.addAll(list.files!.map((f) => f.name!));
+        }
+      }
 
-    for (final parentId in [syncFolderId, backupFolderId]) {
-      final query =
-          "mimeType = 'application/vnd.google-apps.folder' and '$parentId' in parents and trashed = false";
+      return allNames.toSet().toList();
+    });
+  }
+
+  /// List folders with a custom query
+  Future<List<drive.File>> listFoldersWithQuery(String query) async {
+    return _executeWithRetry(() async {
       final list = await _driveApi!.files.list(
         q: query,
         spaces: 'appDataFolder',
         $fields: 'files(id, name)',
       );
-      if (list.files != null) {
-        allNames.addAll(list.files!.map((f) => f.name!));
-      }
-    }
-
-    return allNames.toSet().toList();
-  }
-
-  /// List folders with a custom query
-  Future<List<drive.File>> listFoldersWithQuery(String query) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
-    final list = await _driveApi!.files.list(
-      q: query,
-      spaces: 'appDataFolder',
-      $fields: 'files(id, name)',
-    );
-    return list.files ?? [];
+      return list.files ?? [];
+    });
   }
 
   /// List files with a custom query
   Future<List<drive.File>> listFilesWithQuery(String query) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
-    final list = await _driveApi!.files.list(
-      q: query,
-      spaces: 'appDataFolder',
-      $fields: 'files(id, name)',
-    );
-    return list.files ?? [];
+    return _executeWithRetry(() async {
+      final list = await _driveApi!.files.list(
+        q: query,
+        spaces: 'appDataFolder',
+        $fields: 'files(id, name)',
+      );
+      return list.files ?? [];
+    });
   }
 
   /// List all files in a folder
   Future<List<drive.File>> listAllFilesInFolder(String folderId) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
-    final query = "'$folderId' in parents and trashed = false";
-    final list = await _driveApi!.files.list(
-      q: query,
-      spaces: 'appDataFolder',
-      $fields: 'files(id, name)',
-    );
-    return list.files ?? [];
+    return _executeWithRetry(() async {
+      final query = "'$folderId' in parents and trashed = false";
+      final list = await _driveApi!.files.list(
+        q: query,
+        spaces: 'appDataFolder',
+        $fields: 'files(id, name)',
+      );
+      return list.files ?? [];
+    });
   }
 
   /// Delete all cloud data for a specific cashbook
   Future<void> deleteCashbookFromCloud(String cashbookId) async {
-    if (_driveApi == null) throw Exception('Drive API not initialized');
+    return _executeWithRetry(() async {
+      final rootFolderId = await _getOrCreateFolder('Flowpaisa Backups');
+      final syncFolderId =
+          await _getOrCreateFolder('Sync Data', parentId: rootFolderId);
+      final backupFolderId =
+          await _getOrCreateFolder('Backups', parentId: rootFolderId);
 
-    final rootFolderId = await _getOrCreateFolder('Flowpaisa Backups');
-    final syncFolderId =
-        await _getOrCreateFolder('Sync Data', parentId: rootFolderId);
-    final backupFolderId =
-        await _getOrCreateFolder('Backups', parentId: rootFolderId);
+      for (final parentId in [syncFolderId, backupFolderId]) {
+        final query =
+            "mimeType = 'application/vnd.google-apps.folder' and '$parentId' in parents and name contains '$cashbookId' and trashed = false";
+        final list =
+            await _driveApi!.files.list(q: query, spaces: 'appDataFolder');
 
-    for (final parentId in [syncFolderId, backupFolderId]) {
-      final query =
-          "mimeType = 'application/vnd.google-apps.folder' and '$parentId' in parents and name contains '$cashbookId' and trashed = false";
-      final list =
-          await _driveApi!.files.list(q: query, spaces: 'appDataFolder');
-
-      if (list.files != null) {
-        for (final folder in list.files!) {
-          if (folder.id != null) {
-            // Delete all files inside first (optional but safer)
-            final children = await listAllFilesInFolder(folder.id!);
-            for (final child in children) {
-              if (child.id != null) {
-                await deleteFile(child.id!);
+        if (list.files != null) {
+          for (final folder in list.files!) {
+            if (folder.id != null) {
+              // Delete all files inside first (optional but safer)
+              final children = await listAllFilesInFolder(folder.id!);
+              for (final child in children) {
+                if (child.id != null) {
+                  await deleteFile(child.id!);
+                }
               }
+              // Delete the folder itself
+              await deleteFile(folder.id!);
             }
-            // Delete the folder itself
-            await deleteFile(folder.id!);
           }
         }
       }
-    }
+    });
   }
 }
 

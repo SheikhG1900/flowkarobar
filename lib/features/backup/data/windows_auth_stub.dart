@@ -6,7 +6,7 @@ class WindowsAuthHelper {
     return null;
   }
 
-  static Future<GoogleSignInAccount?> silentSignInWindows(String clientId, String? clientSecret, List<String> scopes) async {
+  static Future<GoogleSignInAccount?> silentSignInWindows(String clientId, String? clientSecret, List<String> scopes, {bool forceRefresh = false}) async {
     return null;
   }
 

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/accounts/data/accounts_repository.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 
 final accountsRepositoryProvider = Provider<AccountsRepository>((ref) {
@@ -102,6 +103,8 @@ final accountStatementProvider = FutureProvider.family<List<StatementEntry>, Acc
   ref.watch(accountsStreamProvider);
   // Watch transfers stream to trigger refresh if transfers change
   ref.watch(allTransfersWithDetailsProvider);
+  // Watch transactions stream to trigger refresh if transactions change
+  ref.watch(allTransactionsProvider);
   
   return ref.read(accountsRepositoryProvider).getAccountStatement(
     accountUuid: params.accountUuid,

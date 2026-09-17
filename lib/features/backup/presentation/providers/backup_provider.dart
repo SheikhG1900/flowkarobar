@@ -1590,7 +1590,10 @@ class BackupNotifier extends Notifier<BackupState> {
         cloudVersion: 0,
       );
 
-      // 5. Reload available cashbooks
+      // 5. Reset local sync state so that all local data is marked as unsynced and ready to upload
+      await resetLocalSyncState();
+
+      // 6. Reload available cashbooks
       await _loadAvailableCashbooks();
       await _refreshVersions();
 
@@ -1665,7 +1668,9 @@ class BackupNotifier extends Notifier<BackupState> {
         'payables',
         'reminders',
         'app_currencies',
-        'transaction_schedules'
+        'transaction_schedules',
+        'transaction_documents',
+        'user_preferences'
       ];
 
       for (final table in tables) {
