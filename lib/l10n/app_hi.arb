@@ -358,6 +358,8 @@
   "clearAllItemsConfirmation": "क्या आप वाकई सभी आइटम साफ़ करना चाहते हैं?",
   "clearAllNotifications": "सभी सूचनाएं साफ़ करें?",
   "clearAllNotificationsMessage": "क्या आप वाकई सभी सूचनाएं हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",
+  "unsyncedChanges": "असिंक किए गए परिवर्तन",
+  "reminders": "रिमाइंडर",
   "notificationsCleared": "सभी सूचनाएं साफ़ कर दी गईं",
   "noNotifications": "कोई सूचना नहीं",
   "noNotificationsDescription": "आप पूरी तरह से अप-टू-डेट हैं! हम आपको सूचित करेंगे:\n\n• देय प्राप्य और भुगतान\n• महत्वपूर्ण लेन-देन मील के पत्थर\n• बैकअप रिमाइंडर\n• महत्वपूर्ण अपडेट",

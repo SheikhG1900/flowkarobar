@@ -1918,6 +1918,18 @@ abstract class AppLocalizations {
   /// **'Are you sure you want to delete all notifications? This action cannot be undone.'**
   String get clearAllNotificationsMessage;
 
+  /// No description provided for @unsyncedChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsynced Changes'**
+  String get unsyncedChanges;
+
+  /// No description provided for @reminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get reminders;
+
   /// No description provided for @notificationsCleared.
   ///
   /// In en, this message translates to:

@@ -1008,6 +1008,12 @@ class AppLocalizationsUr extends AppLocalizations {
       'کیا آپ واقعی تمام اطلاعات کو حذف کرنا چاہتے ہیں؟ یہ عمل واپس نہیں کیا جا سکتا۔';
 
   @override
+  String get unsyncedChanges => 'غیر مطابقت پذیر تبدیلیاں';
+
+  @override
+  String get reminders => 'یاد دہانیاں';
+
+  @override
   String get notificationsCleared => 'تمام اطلاعات صاف کر دی گئیں';
 
   @override

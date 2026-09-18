@@ -1002,6 +1002,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Are you sure you want to delete all notifications? This action cannot be undone.';
 
   @override
+  String get unsyncedChanges => 'Unsynced Changes';
+
+  @override
+  String get reminders => 'Reminders';
+
+  @override
   String get notificationsCleared => 'All notifications cleared';
 
   @override

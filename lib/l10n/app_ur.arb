@@ -358,6 +358,8 @@
   "clearAllItemsConfirmation": "کیا آپ واقعی تمام اشیاء کو صاف کرنا چاہتے ہیں؟",
   "clearAllNotifications": "تمام اطلاعات صاف کریں؟",
   "clearAllNotificationsMessage": "کیا آپ واقعی تمام اطلاعات کو حذف کرنا چاہتے ہیں؟ یہ عمل واپس نہیں کیا جا سکتا۔",
+  "unsyncedChanges": "غیر مطابقت پذیر تبدیلیاں",
+  "reminders": "یاد دہانیاں",
   "notificationsCleared": "تمام اطلاعات صاف کر دی گئیں",
   "noNotifications": "کوئی اطلاع نہیں",
   "noNotificationsDescription": "آپ سب اپ ٹو ڈیٹ ہیں! ہم آپ کو مطلع کریں گے:\n\n• واجب الادا وصولیاں اور ادائیگیاں\n• لین دین کے اہم سنگ میل\n• بیک اپ ریمائنڈرز\n• اہم اپ ڈیٹس",

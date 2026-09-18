@@ -598,6 +598,8 @@
   "clearAllItemsConfirmation": "Are you sure you want to clear all items?",
   "clearAllNotifications": "Clear all notifications?",
   "clearAllNotificationsMessage": "Are you sure you want to delete all notifications? This action cannot be undone.",
+  "unsyncedChanges": "Unsynced Changes",
+  "reminders": "Reminders",
   "notificationsCleared": "All notifications cleared",
   "noNotifications": "No Notifications",
   "noNotificationsDescription": "You're all caught up! We'll notify you about:\n\n• Due receivables and payables\n• Transaction milestones\n• Backup reminders\n• Important updates",

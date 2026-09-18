@@ -86,6 +86,193 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
     super.dispose();
   }
 
+  void _showUnsyncedBreakdownSheet(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final localeCode = Localizations.localeOf(context).languageCode;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      backgroundColor: theme.colorScheme.surface,
+      builder: (sheetContext) {
+        return FutureBuilder<Map<String, int>>(
+          future: ref.read(backupProvider.notifier).getUnsyncedBreakdown(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const SizedBox(
+                height: 200,
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final breakdown = snapshot.data ?? {};
+            if (breakdown.isEmpty) {
+              return SizedBox(
+                height: 150,
+                child: Center(
+                  child: Text(
+                    l10n.dataSynced,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
+              );
+            }
+
+            IconData getTableIcon(String table) {
+              switch (table) {
+                case 'categories':
+                  return Icons.category_rounded;
+                case 'contacts':
+                  return Icons.people_rounded;
+                case 'accounts':
+                  return Icons.account_balance_wallet_rounded;
+                case 'transactions':
+                  return Icons.receipt_long_rounded;
+                case 'account_transfers':
+                  return Icons.compare_arrows_rounded;
+                case 'receivables':
+                  return Icons.call_received_rounded;
+                case 'payables':
+                  return Icons.call_made_rounded;
+                case 'reminders':
+                  return Icons.notifications_active_rounded;
+                case 'app_currencies':
+                  return Icons.monetization_on_rounded;
+                case 'transaction_schedules':
+                  return Icons.schedule_rounded;
+                case 'user_preferences':
+                  return Icons.settings_rounded;
+                case 'transaction_documents':
+                  return Icons.insert_drive_file_rounded;
+                default:
+                  return Icons.info_outline_rounded;
+              }
+            }
+
+            String getTableNameLocalized(String table) {
+              switch (table) {
+                case 'categories':
+                  return l10n.categories;
+                case 'contacts':
+                  return l10n.contacts;
+                case 'accounts':
+                  return l10n.accounts;
+                case 'transactions':
+                  return l10n.transactions;
+                case 'account_transfers':
+                  return l10n.transfers;
+                case 'receivables':
+                  return l10n.receivables;
+                case 'payables':
+                  return l10n.payables;
+                case 'reminders':
+                  return l10n.reminders;
+                case 'app_currencies':
+                  return l10n.currencies;
+                case 'transaction_schedules':
+                  return l10n.schedules;
+                case 'user_preferences':
+                  return l10n.preferences;
+                case 'transaction_documents':
+                  return l10n.documents;
+                default:
+                  return table;
+              }
+            }
+
+            final sortedEntries = breakdown.entries.toList()
+              ..sort((a, b) => b.value.compareTo(a.value));
+
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.info_outline_rounded,
+                            color: Colors.orange,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          l10n.unsyncedChanges,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Flexible(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: sortedEntries.length,
+                        itemBuilder: (context, index) {
+                          final entry = sortedEntries[index];
+                          final label = getTableNameLocalized(entry.key);
+                          final count = entry.value;
+                          final icon = getTableIcon(entry.key);
+
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerLow,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                              ),
+                            ),
+                            child: ListTile(
+                              leading: Icon(icon, color: theme.colorScheme.primary),
+                              title: Text(
+                                label,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              trailing: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  '$count',
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: Colors.orange,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Keep sync status polling active while this section is visible (reactive approach).
@@ -255,65 +442,89 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          l10n.syncStatusTitle,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: statusColor.withValues(alpha: 0.8),
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          statusText,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: theme.colorScheme.onSurface,
-                            fontSize: 14,
-                          ),
-                        ),
-                        if (localVer > 0 || backupState.lastSyncTime != null) ...[
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              if (localVer > 0)
-                                Text(
-                                  'Version: $localVer',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              if (localVer > 0 && backupState.lastSyncTime != null)
-                                Text(
-                                  '  •  ',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              if (backupState.lastSyncTime != null)
-                                Expanded(
+                    child: InkWell(
+                      onTap: hasUnsynced ? () => _showUnsyncedBreakdownSheet(context) : null,
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              l10n.syncStatusTitle,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: statusColor.withValues(alpha: 0.8),
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
                                   child: Text(
-                                    'Synced: ${AppDateFormatter.formatRelativeTime(backupState.lastSyncTime!, context)}',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
+                                    statusText,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: theme.colorScheme.onSurface,
+                                      fontSize: 14,
+                                      decoration: hasUnsynced ? TextDecoration.underline : null,
+                                      decorationColor: statusColor.withValues(alpha: 0.5),
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
+                                if (hasUnsynced) ...[
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.info_outline_rounded,
+                                    size: 14,
+                                    color: statusColor.withValues(alpha: 0.7),
+                                  ),
+                                ],
+                              ],
+                            ),
+                            if (localVer > 0 || backupState.lastSyncTime != null) ...[
+                              const SizedBox(height: 2),
+                              Row(
+                                children: [
+                                  if (localVer > 0)
+                                    Text(
+                                      'Version: $localVer',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  if (localVer > 0 && backupState.lastSyncTime != null)
+                                    Text(
+                                      '  •  ',
+                                      style: theme.textTheme.bodySmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                                        fontSize: 11,
+                                      ),
+                                    ),
+                                  if (backupState.lastSyncTime != null)
+                                    Expanded(
+                                      child: Text(
+                                        'Synced: ${AppDateFormatter.formatRelativeTime(backupState.lastSyncTime!, context)}',
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ],
-                          ),
-                        ],
-                      ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),

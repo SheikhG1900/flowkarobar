@@ -1007,6 +1007,12 @@ class AppLocalizationsHi extends AppLocalizations {
       'क्या आप वाकई सभी सूचनाएं हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।';
 
   @override
+  String get unsyncedChanges => 'असिंक किए गए परिवर्तन';
+
+  @override
+  String get reminders => 'रिमाइंडर';
+
+  @override
   String get notificationsCleared => 'सभी सूचनाएं साफ़ कर दी गईं';
 
   @override

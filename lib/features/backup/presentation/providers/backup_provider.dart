@@ -821,6 +821,51 @@ class BackupNotifier extends Notifier<BackupState> {
     }
   }
 
+  /// Get a breakdown of unsynced rows by table name
+  Future<Map<String, int>> getUnsyncedBreakdown() async {
+    final db = ref.read(databaseProvider);
+    final breakdown = <String, int>{};
+    final tables = [
+      'categories',
+      'contacts',
+      'accounts',
+      'transactions',
+      'account_transfers',
+      'receivables',
+      'payables',
+      'reminders',
+      'app_currencies',
+      'transaction_schedules',
+      'user_preferences',
+      'transaction_documents',
+    ];
+    for (final table in tables) {
+      try {
+        final countResult = await db
+            .customSelect(
+                "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='$table'")
+            .getSingle();
+
+        final tableExists = (countResult.data['count'] as num).toInt() > 0;
+        if (!tableExists) continue;
+
+        final rowsResult = await db
+            .customSelect(
+                'SELECT COUNT(*) as count FROM $table WHERE is_not_synced = 1')
+            .getSingle();
+        final count = (rowsResult.data['count'] as num).toInt();
+        if (count > 0) {
+          breakdown[table] = count;
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          print('BackupNotifier: Error counting unsynced rows in $table: $e');
+        }
+      }
+    }
+    return breakdown;
+  }
+
   Future<String> _getDeviceId() async {
     final deviceInfo = import_device_info.DeviceInfoPlugin();
     if (Platform.isAndroid) {
