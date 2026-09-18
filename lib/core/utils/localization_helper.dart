@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
+import 'package:flowpaisa/core/utils/tabular_parser.dart';
 
 class LocalizationHelper {
   static String localizeCategory(BuildContext context, String categoryName) {
@@ -96,6 +97,34 @@ class LocalizationHelper {
       default:
         return currencyName;
     }
+  }
+
+  static String getSingleLineDisplayDescription({
+    required String? description,
+    required String? categoryName,
+    required bool isExpense,
+    required AppLocalizations l10n,
+    required BuildContext context,
+  }) {
+    String cleanDesc = '';
+    if (description != null && description.isNotEmpty) {
+      final index = description.indexOf('\n[');
+      if (index != -1) {
+        cleanDesc = description.substring(0, index).trim();
+      } else {
+        cleanDesc = description.trim();
+      }
+    }
+
+    if (cleanDesc.isNotEmpty) {
+      return cleanDesc;
+    }
+
+    if (categoryName != null && categoryName.trim().isNotEmpty) {
+      return getLocalizedCategoryName(context, categoryName);
+    }
+
+    return isExpense ? l10n.expense : l10n.income;
   }
 
   static String localizeRelationship(

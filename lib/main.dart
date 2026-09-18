@@ -10,6 +10,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flowpaisa/core/theme/app_theme.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/core/constants/app_constants.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
@@ -2557,7 +2558,13 @@ class _DashboardRecentTransactionTileState
                       category?.icon, categoryColor, isExpense),
                 ),
                 title: Text(
-                  transaction.description ?? (isExpense ? l10n.expense : l10n.income),
+                  LocalizationHelper.getSingleLineDisplayDescription(
+                    description: transaction.description,
+                    categoryName: category?.name,
+                    isExpense: isExpense,
+                    l10n: l10n,
+                    context: context,
+                  ),
                   style: const TextStyle(fontWeight: FontWeight.w600),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

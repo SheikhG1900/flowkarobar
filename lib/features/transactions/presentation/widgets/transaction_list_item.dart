@@ -195,8 +195,13 @@ class _TransactionListItemState extends ConsumerState<TransactionListItem> {
                     children: [
                       Text(
                         key: ValueKey('tx-card-desc-${transaction.uuid}'),
-                        transaction.description ??
-                            (isExpense ? l10n.expense : l10n.income),
+                        LocalizationHelper.getSingleLineDisplayDescription(
+                          description: transaction.description,
+                          categoryName: category?.name,
+                          isExpense: isExpense,
+                          l10n: l10n,
+                          context: context,
+                        ),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant
                               .withValues(alpha: isInactive ? 0.5 : 1.0),

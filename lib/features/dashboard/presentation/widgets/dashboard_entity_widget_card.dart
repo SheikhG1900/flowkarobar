@@ -107,9 +107,13 @@ class _DashboardEntityWidgetCardState
               entityUuid: uuid,
               key: ValueKey('entity-tx-$uuid'),
               leadingChild: leadingChild,
-              title: item.transaction.description?.isNotEmpty == true
-                  ? item.transaction.description!
-                  : (cat?.name ?? l10n.transactionDetails),
+              title: LocalizationHelper.getSingleLineDisplayDescription(
+                description: item.transaction.description,
+                categoryName: cat?.name,
+                isExpense: isExpense,
+                l10n: l10n,
+                context: context,
+              ),
               subtitle: AppDateFormatter.formatDate(item.transaction.date),
               amount: item.transaction.amount,
               isExpense: isExpense,

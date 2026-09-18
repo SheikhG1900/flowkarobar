@@ -166,6 +166,12 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final pr = transaction.paidRelationship as String?;
+    String displayDesc = '';
+    if (transaction.description != null && (transaction.description as String).isNotEmpty) {
+      final descStr = transaction.description as String;
+      final index = descStr.indexOf('\n[');
+      displayDesc = index != -1 ? descStr.substring(0, index).trim() : descStr.trim();
+    }
 
     return Scaffold(
       key: const ValueKey('tx-details-scaffold'),
@@ -754,16 +760,13 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     value: AppDateFormatter.formatDate(transaction.date,
                         pattern: ref.watch(userProfileProvider).dateFormat),
                   ),
-                  if (transaction.description != null &&
-                      transaction.description!.isNotEmpty) ...[
+                  if (displayDesc.trim().isNotEmpty) ...[
                     _buildDetailRow(
                       context,
                       key: const ValueKey('tx-details-desc-row'),
                       icon: Icons.notes_outlined,
                       label: l10n.description,
-                      value: TabularParser.isTabular(transaction.description)
-                          ? TabularParser.parse(transaction.description).$1
-                          : transaction.description!,
+                      value: displayDesc,
                     ),
                   ],
                   if (transaction.processedDate != null)

@@ -6,6 +6,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:collection/collection.dart';
+import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
@@ -558,6 +560,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     Key? reorderKey,
   }) {
     final transactionsAsync = ref.watch(recentTransactionsProvider);
+    final categoriesAsync = ref.watch(categoriesListProvider);
     final symbol = currency?.symbol ?? '';
     final decimals = currency?.decimalPlaces ?? 2;
 
@@ -565,6 +568,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
       skipLoadingOnRefresh: true,
       data: (transactions) {
         if (transactions.isEmpty) return const SizedBox.shrink();
+        final categories = categoriesAsync.value ?? [];
 
         return RepaintBoundary(
           child: Padding(
@@ -618,6 +622,14 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                       const SizedBox(height: 12),
                       ...transactions.take(5).map((tx) {
                         final isIncome = tx.type == 'INCOME';
+                        final category = categories.firstWhereOrNull((c) => c.uuid == tx.categoryUuid);
+                        final displayDesc = LocalizationHelper.getSingleLineDisplayDescription(
+                          description: tx.description,
+                          categoryName: category?.name,
+                          isExpense: !isIncome,
+                          l10n: l10n,
+                          context: context,
+                        );
                         return Padding(
                           key: ValueKey('recent-tx-row-${tx.uuid}'),
                           padding: const EdgeInsets.only(bottom: 8),
@@ -627,7 +639,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                               Expanded(
                                 child: Text(
                                   key: ValueKey('recent-tx-desc-${tx.uuid}'),
-                                  tx.description ?? l10n.uncategorized,
+                                  displayDesc,
                                   style: theme.textTheme.bodySmall,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
