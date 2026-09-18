@@ -10,6 +10,8 @@ import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/documents_screen.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 bool _isDatabaseLockedError(String status) {
@@ -120,6 +122,7 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
     final bool hasCloudUpdates = updatesCount > 0;
 
     final bool isSignedIn = backupState.currentUser != null;
+    final bool documentSyncRequired = ref.watch(documentSyncRequiredProvider);
 
     if (kDebugMode &&
         (isSyncing || isSuccess || hasUnsynced || hasCloudUpdates)) {
@@ -140,7 +143,8 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
         !hasUnsynced &&
         !hasCloudUpdates &&
         !isSyncAlreadyInProgress &&
-        !isLockError) {
+        !isLockError &&
+        !documentSyncRequired) {
       if (_animationController.value != 0) {
         _animationController.reset();
       }
@@ -363,6 +367,70 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                     ),
                 ],
               ),
+              if (documentSyncRequired) ...[
+                const SizedBox(height: 12),
+                InkWell(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DocumentsScreen(),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: Colors.orange.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.warning_amber_rounded,
+                          color: Colors.orange,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                l10n.documentSyncRequired,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: theme.colorScheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                l10n.documentSyncRequiredSubtitle,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  fontSize: 11,
+                                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                          size: 12,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 12),
               Divider(
                 height: 1,

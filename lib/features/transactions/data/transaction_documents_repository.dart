@@ -7,16 +7,37 @@ import 'package:uuid/uuid.dart';
 
 class TransactionDocumentsRepository {
   final AppDatabase _database;
+  final String cashbookId;
 
-  TransactionDocumentsRepository(this._database);
+  TransactionDocumentsRepository(this._database, [this.cashbookId = 'default']);
 
   /// Get the local documents directory path
   Future<Directory> getDocumentsDirectory() async {
     final appDir = await getApplicationDocumentsDirectory();
-    final docDir = Directory(p.join(appDir.path, 'documents'));
+    final docDir = Directory(p.join(appDir.path, 'documents', cashbookId));
     if (!await docDir.exists()) {
       await docDir.create(recursive: true);
     }
+
+    // Perform a one-time migration of existing files from 'documents' to 'documents/default'
+    // if the active cashbook is 'default' and there are files in the parent 'documents' directory.
+    if (cashbookId == 'default') {
+      final parentDir = Directory(p.join(appDir.path, 'documents'));
+      if (await parentDir.exists()) {
+        try {
+          final entities = parentDir.listSync();
+          for (final entity in entities) {
+            if (entity is File) {
+              final targetPath = p.join(docDir.path, p.basename(entity.path));
+              await entity.rename(targetPath);
+            }
+          }
+        } catch (_) {
+          // Ignore migration errors to avoid crashing
+        }
+      }
+    }
+
     return docDir;
   }
 

@@ -22,19 +22,22 @@ import 'package:flowpaisa/features/receivables/presentation/providers/receivable
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Repository provider
 final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
   final database = ref.watch(databaseProvider);
-  return TransactionsRepository(database);
+  final activeCashbook = ref.watch(activeCashbookProvider);
+  return TransactionsRepository(database, activeCashbook.id);
 });
 
 // Transaction Documents Repository provider
 final transactionDocumentsRepositoryProvider = Provider<TransactionDocumentsRepository>((ref) {
   final database = ref.watch(databaseProvider);
-  return TransactionDocumentsRepository(database);
+  final activeCashbook = ref.watch(activeCashbookProvider);
+  return TransactionDocumentsRepository(database, activeCashbook.id);
 });
 
 // Document Backup Service provider
@@ -44,6 +47,62 @@ final documentBackupServiceProvider = Provider<DocumentBackupService>((ref) {
   final driveService = ref.watch(googleDriveServiceProvider);
   return DocumentBackupService(docRepo, database, driveService);
 });
+
+// Provider to check if document backup/sync is required
+final documentSyncRequiredProvider = NotifierProvider<DocumentSyncRequiredNotifier, bool>(() {
+  return DocumentSyncRequiredNotifier();
+});
+
+class DocumentSyncRequiredNotifier extends Notifier<bool> {
+  late String _cashbookId;
+  late SharedPreferences _prefs;
+
+  @override
+  bool build() {
+    final activeCashbook = ref.watch(activeCashbookProvider);
+    _cashbookId = activeCashbook.id;
+    _prefs = ref.watch(sharedPreferencesProvider);
+
+    _init();
+
+    return _prefs.getBool(_prefKey) ?? false;
+  }
+
+  String get _prefKey => 'document_sync_required_$_cashbookId';
+
+  void _init() {
+    // Listen to changes in the transaction documents table
+    final db = ref.read(databaseProvider);
+    db.select(db.transactionDocuments).watch().listen((docs) {
+      if (!ref.mounted) return;
+      // If there are new active documents, and state is false, check if we need to mark as required
+      final activeDocs = docs.where((d) => !d.isDeleted).toList();
+      if (activeDocs.isNotEmpty && !state) {
+        // Only trigger if we have documents and we haven't already marked it or if a new document was added after the last export
+        final lastExportTimeStr = _prefs.getString('last_document_export_$_cashbookId');
+        if (lastExportTimeStr == null) {
+          setSyncRequired(true);
+        } else {
+          final lastExportTime = DateTime.parse(lastExportTimeStr);
+          final hasNewDocs = activeDocs.any((d) => d.createdAt.isAfter(lastExportTime));
+          if (hasNewDocs) {
+            setSyncRequired(true);
+          }
+        }
+      }
+    });
+  }
+
+  void setSyncRequired(bool required) {
+    _prefs.setBool(_prefKey, required);
+    state = required;
+  }
+
+  void markExportSuccessful() {
+    _prefs.setString('last_document_export_$_cashbookId', DateTime.now().toIso8601String());
+    setSyncRequired(false);
+  }
+}
 
 // Watch documents for a specific transaction
 final transactionDocumentsProvider = StreamProvider.family<List<TransactionDocument>, String>((ref, transactionUuid) {

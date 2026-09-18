@@ -4769,4 +4769,11 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get noTransactionsWithAttachments =>
       'منسلکات کے ساتھ کوئی لین دین نہیں ملا۔';
+
+  @override
+  String get documentSyncRequired => 'دستاویزات کا بیک اپ ضروری ہے';
+
+  @override
+  String get documentSyncRequiredSubtitle =>
+      'آپ کے پاس نئے منسلکات ہیں۔ بیک اپ کے لیے ٹیپ کریں۔';
 }

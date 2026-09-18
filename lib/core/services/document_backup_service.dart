@@ -71,7 +71,7 @@ class DocumentBackupService {
   }
 
   /// Import documents and metadata from a ZIP file
-  Future<void> importFromZip(File zipFile) async {
+  Future<void> importFromZip(File zipFile, {bool isFromCloud = false}) async {
     final tempDir = await getTemporaryDirectory();
     final extractDir = Directory(p.join(tempDir.path, 'extracted_docs_${DateTime.now().millisecondsSinceEpoch}'));
     if (!await extractDir.exists()) {
@@ -133,7 +133,7 @@ class DocumentBackupService {
               createdAt: Value(createdAt),
               updatedAt: Value(updatedAt),
               isDeleted: const Value(false),
-              isNotSynced: const Value(true),
+              isNotSynced: Value(!isFromCloud),
             );
 
             await _database.into(_database.transactionDocuments).insertOnConflictUpdate(companion);
@@ -229,7 +229,7 @@ class DocumentBackupService {
       await _driveService.downloadBackup(fileId, tempFile, fileSize: fileSize, onProgress: onProgress);
 
       // 2. Import using the existing local ZIP import logic
-      await importFromZip(tempFile);
+      await importFromZip(tempFile, isFromCloud: true);
     } finally {
       // 3. Clean up local temp ZIP file
       if (await tempFile.exists()) {

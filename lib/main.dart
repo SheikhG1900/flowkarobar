@@ -1093,6 +1093,7 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
                             builder: (context, ref, child) {
                               final showSync =
                                   ref.watch(showDashboardSyncStatusProvider);
+                              
                               if (!showSync) {
                                 return const SizedBox.shrink();
                               }

@@ -270,6 +270,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                       );
                       if (result != null) {
                         await zipFile.copy(result.path);
+                        ref.read(documentSyncRequiredProvider.notifier).markExportSuccessful();
                         if (context.mounted) {
                           ToastUtils.showSuccessToast(
                               context, ref, l10n.exportSavedTo(result.path));
@@ -277,6 +278,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                       }
                     } else {
                       await exportService.saveToDownloads(zipFile.path);
+                      ref.read(documentSyncRequiredProvider.notifier).markExportSuccessful();
                       if (context.mounted) {
                         ToastUtils.showSuccessToast(
                             context, ref, l10n.savedToDownloads);
@@ -299,11 +301,13 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                       final fileUri = Uri.file(zipFile.path);
                       if (await canLaunchUrl(fileUri)) {
                         await launchUrl(fileUri);
+                        ref.read(documentSyncRequiredProvider.notifier).markExportSuccessful();
                       } else {
                         throw Exception('Could not open the backup file.');
                       }
                     } else {
                       await NativeShare.shareFile(zipFile.path);
+                      ref.read(documentSyncRequiredProvider.notifier).markExportSuccessful();
                     }
                   } catch (e) {
                     if (context.mounted) {
@@ -392,6 +396,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                       );
                       if (result != null) {
                         await pdfFile.copy(result.path);
+                        ref.read(documentSyncRequiredProvider.notifier).markExportSuccessful();
                         if (context.mounted) {
                           ToastUtils.showSuccessToast(
                               context, ref, l10n.exportSavedTo(result.path));
@@ -399,6 +404,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                       }
                     } else {
                       await exportService.saveToDownloads(pdfFile.path);
+                      ref.read(documentSyncRequiredProvider.notifier).markExportSuccessful();
                       if (context.mounted) {
                         ToastUtils.showSuccessToast(
                             context, ref, l10n.savedToDownloads);
@@ -421,11 +427,13 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                       final fileUri = Uri.file(pdfFile.path);
                       if (await canLaunchUrl(fileUri)) {
                         await launchUrl(fileUri);
+                        ref.read(documentSyncRequiredProvider.notifier).markExportSuccessful();
                       } else {
                         throw Exception('Could not open the PDF file.');
                       }
                     } else {
                       await exportService.sharePDFFile(pdfFile.path);
+                      ref.read(documentSyncRequiredProvider.notifier).markExportSuccessful();
                     }
                   } catch (e) {
                     if (context.mounted) {
@@ -441,6 +449,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                     foregroundColor: theme.colorScheme.onPrimary),
                 onPressed: () async {
                   Navigator.pop(dialogContext);
+                  ref.read(documentSyncRequiredProvider.notifier).markExportSuccessful();
                   await Printing.layoutPdf(
                     onLayout: (PdfPageFormat format) async => pdfBytes,
                   );
@@ -495,6 +504,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
         },
       );
       if (kDebugMode) print('[DocumentsScreen] Cloud upload completed successfully.');
+
+      ref.read(documentSyncRequiredProvider.notifier).markExportSuccessful();
 
       if (mounted) {
         if (kDebugMode) print('[DocumentsScreen] Dismissing loading overlay...');
@@ -605,6 +616,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
         },
       );
       if (kDebugMode) print('[DocumentsScreen] Cloud Import completed successfully.');
+
+      ref.read(documentSyncRequiredProvider.notifier).markExportSuccessful();
 
       if (mounted) {
         if (kDebugMode) print('[DocumentsScreen] Dismissing loading overlay...');

@@ -4748,4 +4748,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noTransactionsWithAttachments =>
       'No transactions with attachments found.';
+
+  @override
+  String get documentSyncRequired => 'Document backup required';
+
+  @override
+  String get documentSyncRequiredSubtitle =>
+      'You have unsaved or new attachments. Tap to backup now.';
 }

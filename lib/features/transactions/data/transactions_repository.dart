@@ -9,8 +9,9 @@ import 'package:uuid/uuid.dart';
 
 class TransactionsRepository {
   final AppDatabase _database;
+  final String cashbookId;
 
-  TransactionsRepository(this._database);
+  TransactionsRepository(this._database, [this.cashbookId = 'default']);
 
   // Get total transaction count
   Future<int> getTotalTransactionCount() async {
@@ -409,7 +410,7 @@ class TransactionsRepository {
   Future<int> deleteTransaction(String uuid) async {
     return await _database.transaction(() async {
       // Delete associated physical documents and database rows
-      final docRepo = TransactionDocumentsRepository(_database);
+      final docRepo = TransactionDocumentsRepository(_database, cashbookId);
       await docRepo.deleteDocumentsForTransaction(uuid);
 
       return await (_database.update(_database.transactions)

@@ -468,6 +468,20 @@ class _AccountStatementScreenState extends ConsumerState<AccountStatementScreen>
                           ),
                         ],
                       ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _SummaryTile(
+                              label: l10n.netFlow,
+                              amount: totalCredits - totalDebits,
+                              color: (totalCredits - totalDebits) >= 0 ? AppColors.incomeColor : AppColors.expenseColor,
+                              currency: currency,
+                              showSign: true,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 );
@@ -725,17 +739,29 @@ class _SummaryTile extends StatelessWidget {
   final double amount;
   final Color color;
   final AppCurrency currency;
+  final bool showSign;
 
   const _SummaryTile({
     required this.label,
     required this.amount,
     required this.color,
     required this.currency,
+    this.showSign = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    
+    String formattedAmount = AmountFormatter.formatWithCurrency(amount.abs(), currency);
+    if (showSign) {
+      if (amount > 0) {
+        formattedAmount = '+$formattedAmount';
+      } else if (amount < 0) {
+        formattedAmount = '-$formattedAmount';
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
@@ -756,7 +782,7 @@ class _SummaryTile extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            AmountFormatter.formatWithCurrency(amount, currency),
+            formattedAmount,
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,

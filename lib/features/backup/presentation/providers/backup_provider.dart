@@ -649,6 +649,7 @@ class BackupNotifier extends Notifier<BackupState> {
         db.select(db.appCurrencies).watch(),
         db.select(db.transactionSchedules).watch(),
         db.select(db.userPreferences).watch(),
+        db.select(db.transactionDocuments).watch(),
       ];
 
       for (final stream in streams) {
@@ -790,6 +791,7 @@ class BackupNotifier extends Notifier<BackupState> {
       'app_currencies',
       'transaction_schedules',
       'user_preferences',
+      'transaction_documents',
     ];
     for (final table in tables) {
       try {

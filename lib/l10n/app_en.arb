@@ -2411,5 +2411,7 @@
   "pdfAppendedMessage": "PDF Document (Appended natively after this card)",
   "imageAppendedMessage": "Image Attachment (Appended on the next page)",
   "attachmentFile": "Attachment File",
-  "noTransactionsWithAttachments": "No transactions with attachments found."
+  "noTransactionsWithAttachments": "No transactions with attachments found.",
+  "documentSyncRequired": "Document backup required",
+  "documentSyncRequiredSubtitle": "You have unsaved or new attachments. Tap to backup now."
 }

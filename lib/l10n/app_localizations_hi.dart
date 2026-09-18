@@ -4761,5 +4761,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get noTransactionsWithAttachments =>
-      'अटैचमेंट के साथ कोई लेनदेन नहीं मिला।';
+      'अटैचमेंट के ساتھ کوئی लेनदेन नहीं मिला।';
+
+  @override
+  String get documentSyncRequired => 'दस्तावेज़ बैकअप आवश्यक है';
+
+  @override
+  String get documentSyncRequiredSubtitle =>
+      'आपके पास नए अटैचमेंट हैं। बैकअप के लिए टैप करें।';
 }

@@ -1832,5 +1832,7 @@
   "pdfAppendedMessage": "پی ڈی ایف دستاویز (اس کارڈ کے بعد منسلک ہے)",
   "imageAppendedMessage": "تصویری منسلکہ (اگلے صفحے پر منسلک ہے)",
   "attachmentFile": "منسلکہ فائل",
-  "noTransactionsWithAttachments": "منسلکات کے ساتھ کوئی لین دین نہیں ملا۔"
+  "noTransactionsWithAttachments": "منسلکات کے ساتھ کوئی لین دین نہیں ملا۔",
+  "documentSyncRequired": "دستاویزات کا بیک اپ ضروری ہے",
+  "documentSyncRequiredSubtitle": "آپ کے پاس نئے منسلکات ہیں۔ بیک اپ کے لیے ٹیپ کریں۔"
 }

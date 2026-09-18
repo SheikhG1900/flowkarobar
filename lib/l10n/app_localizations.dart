@@ -8668,6 +8668,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No transactions with attachments found.'**
   String get noTransactionsWithAttachments;
+
+  /// No description provided for @documentSyncRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Document backup required'**
+  String get documentSyncRequired;
+
+  /// No description provided for @documentSyncRequiredSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You have unsaved or new attachments. Tap to backup now.'**
+  String get documentSyncRequiredSubtitle;
 }
 
 class _AppLocalizationsDelegate
