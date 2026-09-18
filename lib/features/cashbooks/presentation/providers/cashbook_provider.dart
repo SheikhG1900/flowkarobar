@@ -205,6 +205,11 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
     await _saveCashbooks(newList);
     state = newList;
 
+    // Clean up preferences for deleted cashbook
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.remove('document_sync_required_$id');
+    await prefs.remove('last_document_export_$id');
+
     // Delete the database file and sync metadata
     try {
       if (kIsWeb) {
@@ -278,6 +283,10 @@ class CashbookNotifier extends Notifier<List<Cashbook>> {
       final jsonList = state.map((c) => c.toJson()).toList();
       final prefs = ref.read(sharedPreferencesProvider);
       await prefs.setStringList('cashbooks_list', jsonList);
+
+      // Reset the document backup required flag for this cashbook
+      await prefs.remove('document_sync_required_$id');
+      await prefs.remove('last_document_export_$id');
 
       // 4. If active, clear the database cache and restart
       if (isActive && context != null && context.mounted) {
