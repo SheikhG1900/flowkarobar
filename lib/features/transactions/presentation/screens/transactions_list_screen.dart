@@ -26,6 +26,7 @@ import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_list_item.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_list_item.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/schedule_service_provider.dart';
@@ -93,7 +94,9 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     _tabController.addListener(() {
       if (mounted) setState(() {});
     });
-    _searchController = TextEditingController();
+    final initialSearchQuery = ref.read(transactionsPaginatedProvider).searchQuery;
+    _searchController = TextEditingController(text: initialSearchQuery);
+    _isSearching = initialSearchQuery != null && initialSearchQuery.isNotEmpty;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAndShowGuide();
@@ -124,6 +127,14 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   ),
             );
       }
+
+      // Automatically save the incoming search/filter if it's not empty
+      final currentFilters = ref.read(transactionsPaginatedProvider.notifier).currentFilters;
+      final searchQuery = ref.read(transactionsPaginatedProvider).searchQuery ?? '';
+      ref.read(recentSearchesProvider.notifier).saveSearch(
+        searchQuery: searchQuery,
+        filters: currentFilters,
+      );
     });
   }
 
@@ -1192,6 +1203,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
     final categories = ref.watch(categoriesListProvider).value ?? [];
     final contacts = ref.watch(contactsListProvider).value ?? [];
+    final accounts = ref.watch(accountsStreamProvider).value ?? [];
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -1348,7 +1360,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  subtitle: _buildSearchTags(search, theme, categories, contacts),
+                  subtitle: _buildSearchTags(search, theme, categories, contacts, accounts),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -1392,7 +1404,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     );
   }
 
-  Widget _buildSearchTags(RecentSearch search, ThemeData theme, List<Category> categories, List<Contact> contacts) {
+  Widget _buildSearchTags(RecentSearch search, ThemeData theme, List<Category> categories, List<Contact> contacts, List<Account> accounts) {
     final tags = <Widget>[];
 
     // 1. Text query tag
@@ -1411,14 +1423,29 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       ));
     }
 
-    // 3. Category tags (Limit to 2)
+    // 3. Account tags (Limit to 1)
+    if (search.accountUuids != null && search.accountUuids!.isNotEmpty) {
+      final accountList = search.accountUuids!
+          .map((uuid) => accounts.firstWhereOrNull((a) => a.uuid == uuid))
+          .whereNotNull()
+          .toList();
+      
+      for (var i = 0; i < accountList.length && i < 1; i++) {
+        tags.add(_buildTagChip(accountList[i].name, Icons.account_balance_wallet_outlined, theme));
+      }
+      if (accountList.length > 1) {
+        tags.add(_buildTagChip('+${accountList.length - 1} more', Icons.add, theme));
+      }
+    }
+
+    // 4. Category tags (Limit to 1)
     if (search.categoryUuids != null && search.categoryUuids!.isNotEmpty) {
       final catList = search.categoryUuids!
           .map((uuid) => categories.firstWhereOrNull((c) => c.uuid == uuid))
           .whereNotNull()
           .toList();
       
-      for (var i = 0; i < catList.length && i < 2; i++) {
+      for (var i = 0; i < catList.length && i < 1; i++) {
         final cat = catList[i];
         Color categoryColor;
         if (cat.color != null) {
@@ -1437,12 +1464,12 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           color: categoryColor,
         ));
       }
-      if (catList.length > 2) {
-        tags.add(_buildTagChip('+${catList.length - 2} more', Icons.add, theme));
+      if (catList.length > 1) {
+        tags.add(_buildTagChip('+${catList.length - 1} more', Icons.add, theme));
       }
     }
 
-    // 4. Contact tags (Limit to 1)
+    // 5. Contact tags (Limit to 1)
     if (search.contactUuids != null && search.contactUuids!.isNotEmpty) {
       final contactList = search.contactUuids!
           .map((uuid) => contacts.firstWhereOrNull((c) => c.uuid == uuid))
@@ -1457,7 +1484,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       }
     }
 
-    // 5. Amount range tag
+    // 6. Amount range tag
     if (search.minAmount != null || search.maxAmount != null) {
       String amountLabel = '';
       if (search.minAmount != null && search.maxAmount != null) {
@@ -1470,7 +1497,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       tags.add(_buildTagChip(amountLabel, Icons.payments_outlined, theme));
     }
 
-    // 6. Status tags (Limit to 1)
+    // 7. Status tags (Limit to 1)
     if (search.statusCodes != null && search.statusCodes!.isNotEmpty) {
       final status = search.statusCodes!.first;
       String statusLabel = status;
