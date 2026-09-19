@@ -3649,6 +3649,13 @@ class AppLocalizationsHi extends AppLocalizations {
       'Google ड्राइव से पूर्ण डेटाबेस स्नैपशॉट हटाता है';
 
   @override
+  String get clearDocuments => 'दस्तावेज़ बैकअप साफ़ करें';
+
+  @override
+  String get clearDocumentsSubtitle =>
+      'Google ड्राइव से सभी दस्तावेज़ ज़िप बैकअप हटाता है';
+
+  @override
   String get clearSyncHistory => 'सिंक इतिहास साफ़ करें';
 
   @override

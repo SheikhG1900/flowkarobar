@@ -1933,6 +1933,8 @@
   "clearCloudMessage": "Choose which cloud data you want to clear for \"{name}\".",
   "clearBackups": "Clear all backups",
   "clearBackupsSubtitle": "Deletes full database snapshots from Google Drive",
+  "clearDocuments": "Clear documents backup",
+  "clearDocumentsSubtitle": "Deletes all document ZIP backups from Google Drive",
   "clearSyncHistory": "Clear sync history",
   "clearSyncHistorySubtitle": "Resets sync manifest and deletes delta files",
   "clearSelectedCloudData": "Clear Selected Data",

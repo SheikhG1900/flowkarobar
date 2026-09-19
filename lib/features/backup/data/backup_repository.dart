@@ -63,14 +63,17 @@ class BackupRepository {
   }
 
   /// Clear granular cloud data
-  Future<void> clearCloudData(String cashbookId,
-      {required bool clearBackups, required bool clearSync}) async {
+  Future<void> clearCloudData(String cashbookId, {
+    required bool clearBackups,
+    required bool clearSync,
+    required bool clearDocuments,
+  }) async {
     if (!_driveService.isSignedIn) {
       throw Exception('User not signed in');
     }
 
-    if (clearBackups && clearSync) {
-      // If both are selected, we can just delete the entire cashbook folder structure
+    if (clearBackups && clearSync && clearDocuments) {
+      // If all are selected, we can just delete the entire cashbook folder structure
       // This is more efficient.
       await _driveService.deleteCashbookFromCloud(cashbookId);
     } else {
@@ -78,6 +81,17 @@ class BackupRepository {
         final folderId = await _driveService.getOrCreateBackupFolder(cashbookId);
         final backups = await _driveService.listBackups(cashbookId: cashbookId);
         for (final file in backups) {
+          if (file.id != null) {
+            await _driveService.deleteFile(file.id!);
+          }
+        }
+      }
+
+      if (clearDocuments) {
+        final folderId = await _driveService.getOrCreateBackupFolder(cashbookId);
+        final query = "'$folderId' in parents and name contains 'flowpaisa_documents_backup_' and trashed = false";
+        final docs = await _driveService.listFilesWithQuery(query);
+        for (final file in docs) {
           if (file.id != null) {
             await _driveService.deleteFile(file.id!);
           }

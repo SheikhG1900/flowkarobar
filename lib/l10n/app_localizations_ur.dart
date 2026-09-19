@@ -3656,6 +3656,13 @@ class AppLocalizationsUr extends AppLocalizations {
       'گوگل ڈرائیو سے مکمل ڈیٹا بیس اسنیپ شاٹس حذف کرتا ہے';
 
   @override
+  String get clearDocuments => 'دستاویزات کا بیک اپ صاف کریں';
+
+  @override
+  String get clearDocumentsSubtitle =>
+      'گوگل ڈرائیو سے تمام دستاویزات کی زپ فائلیں حذف کرتا ہے';
+
+  @override
   String get clearSyncHistory => 'سنک ہسٹری صاف کریں';
 
   @override

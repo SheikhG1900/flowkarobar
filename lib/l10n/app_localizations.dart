@@ -6647,6 +6647,18 @@ abstract class AppLocalizations {
   /// **'Deletes full database snapshots from Google Drive'**
   String get clearBackupsSubtitle;
 
+  /// No description provided for @clearDocuments.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear documents backup'**
+  String get clearDocuments;
+
+  /// No description provided for @clearDocumentsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Deletes all document ZIP backups from Google Drive'**
+  String get clearDocumentsSubtitle;
+
   /// No description provided for @clearSyncHistory.
   ///
   /// In en, this message translates to:

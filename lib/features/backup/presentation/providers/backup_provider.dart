@@ -1737,12 +1737,17 @@ class BackupNotifier extends Notifier<BackupState> {
     }
   }
 
-  Future<void> clearGranularCloudData(String cashbookId,
-      {required bool clearBackups, required bool clearSync}) async {
+  Future<void> clearGranularCloudData(String cashbookId, {
+    required bool clearBackups,
+    required bool clearSync,
+    required bool clearDocuments,
+  }) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
       await _repository.clearCloudData(cashbookId,
-          clearBackups: clearBackups, clearSync: clearSync);
+          clearBackups: clearBackups,
+          clearSync: clearSync,
+          clearDocuments: clearDocuments);
 
       // If we cleared sync history, we should also reset local sync state for this cashbook
       // to avoid version mismatches next time we sync.

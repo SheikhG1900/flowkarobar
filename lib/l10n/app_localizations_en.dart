@@ -3634,6 +3634,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Deletes full database snapshots from Google Drive';
 
   @override
+  String get clearDocuments => 'Clear documents backup';
+
+  @override
+  String get clearDocumentsSubtitle =>
+      'Deletes all document ZIP backups from Google Drive';
+
+  @override
   String get clearSyncHistory => 'Clear sync history';
 
   @override

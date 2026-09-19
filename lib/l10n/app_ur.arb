@@ -1408,6 +1408,8 @@
   "clearCloudMessage": "منتخب کریں کہ آپ \"{name}\" کے لیے کون سا کلاؤڈ ڈیٹا صاف کرنا چاہتے ہیں۔",
   "clearBackups": "تمام بیک اپ صاف کریں",
   "clearBackupsSubtitle": "گوگل ڈرائیو سے مکمل ڈیٹا بیس اسنیپ شاٹس حذف کرتا ہے",
+  "clearDocuments": "دستاویزات کا بیک اپ صاف کریں",
+  "clearDocumentsSubtitle": "گوگل ڈرائیو سے تمام دستاویزات کی زپ فائلیں حذف کرتا ہے",
   "clearSyncHistory": "سنک ہسٹری صاف کریں",
   "clearSyncHistorySubtitle": "سنک مینی فیسٹ کو ری سیٹ کرتا ہے اور ڈیلٹا فائلیں حذف کرتا ہے",
   "clearSelectedCloudData": "منتخب ڈیٹا صاف کریں",

@@ -1408,6 +1408,8 @@
   "clearCloudMessage": "\"{name}\" के लिए कौन सा क्लाउड डेटा आप साफ़ करना चाहते हैं चुनें।",
   "clearBackups": "सभी बैकअप साफ़ करें",
   "clearBackupsSubtitle": "Google ड्राइव से पूर्ण डेटाबेस स्नैपशॉट हटाता है",
+  "clearDocuments": "दस्तावेज़ बैकअप साफ़ करें",
+  "clearDocumentsSubtitle": "Google ड्राइव से सभी दस्तावेज़ ज़िप बैकअप हटाता है",
   "clearSyncHistory": "सिंक इतिहास साफ़ करें",
   "clearSyncHistorySubtitle": "सिंक मेनिफेस्ट को रीसेट करता है और डेल्टा फ़ाइलें हटाता है",
   "clearSelectedCloudData": "चयनित डेटा साफ़ करें",

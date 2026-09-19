@@ -1207,6 +1207,7 @@ class CashbooksScreen extends ConsumerWidget {
       builder: (dialogContext) {
         bool clearBackups = false;
         bool clearSync = false;
+        bool clearDocuments = false;
 
         return StatefulBuilder(builder: (builderContext, setState) {
           return AlertDialog(
@@ -1233,6 +1234,15 @@ class CashbooksScreen extends ConsumerWidget {
                   contentPadding: EdgeInsets.zero,
                 ),
                 CheckboxListTile(
+                  title: Text(l10n.clearDocuments),
+                  subtitle: Text(l10n.clearDocumentsSubtitle),
+                  value: clearDocuments,
+                  onChanged: (val) =>
+                      setState(() => clearDocuments = val ?? false),
+                  activeColor: Colors.orange,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                CheckboxListTile(
                   title: Text(l10n.clearSyncHistory),
                   subtitle: Text(l10n.clearSyncHistorySubtitle),
                   value: clearSync,
@@ -1248,7 +1258,7 @@ class CashbooksScreen extends ConsumerWidget {
                 child: Text(l10n.cancel),
               ),
               FilledButton(
-                onPressed: (!clearBackups && !clearSync)
+                onPressed: (!clearBackups && !clearSync && !clearDocuments)
                     ? null
                     : () {
                         Navigator.pop(dialogContext);
@@ -1264,7 +1274,8 @@ class CashbooksScreen extends ConsumerWidget {
                                 .read(backupProvider.notifier)
                                 .clearGranularCloudData(cashbook.id,
                                     clearBackups: clearBackups,
-                                    clearSync: clearSync);
+                                    clearSync: clearSync,
+                                    clearDocuments: clearDocuments);
                           } catch (e) {
                             // Error is already handled in the provider state
                           }
