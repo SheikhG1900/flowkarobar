@@ -19,6 +19,7 @@
     }
   },
   "hosting": {
+    "site": "flow-paisa",
     "public": "website",
     "ignore": [
       "firebase.json",
