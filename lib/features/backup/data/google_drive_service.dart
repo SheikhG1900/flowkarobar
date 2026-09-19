@@ -140,9 +140,11 @@ class GoogleDriveService {
           return;
         }
 
-        // If silent refresh fails, then do a full sign-out and sign-in (which opens browser)
-        await signOut();
-        await signIn();
+        // If silent refresh fails, do NOT automatically sign out or sign in explicitly.
+        // Just print a warning and return.
+        if (kDebugMode) {
+          print('GoogleDriveService: Silent token refresh failed on Windows. Not forcing explicit sign-in.');
+        }
       }
       return;
     }
@@ -161,11 +163,16 @@ class GoogleDriveService {
     }
     try {
       if (forceRefresh) {
-        // Clear tokens to force a fresh authentication
-        await _googleSignIn.disconnect();
-        final account = await _googleSignIn.signIn();
-        if (account == null) return;
-        _currentUser = account;
+        // Try to sign in silently first to refresh the token silently without disconnecting or popping up a dialog
+        final account = await _googleSignIn.signInSilently();
+        if (account != null) {
+          _currentUser = account;
+        } else {
+          if (kDebugMode) {
+            print('GoogleDriveService: Silent token refresh failed on Android/iOS. Not forcing explicit sign-in.');
+          }
+          return;
+        }
       }
 
       // Use the extension method
