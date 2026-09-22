@@ -1,7 +1,6 @@
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/backup/data/sync/sync_engine.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
-import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -13,16 +12,12 @@ import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/features/backup/domain/models/sync_manifest.dart';
-import 'package:flowpaisa/features/backup/data/sync/sync_scheduler.dart';
 import 'package:flowpaisa/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'dart:async';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
-import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
-import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
-import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -1106,7 +1101,7 @@ class BackupNotifier extends Notifier<BackupState> {
           e.toString().contains('401')) {
         try {
           await _driveService.reauthenticate();
-          return getDeltaFileContent(fileId); // Retry once
+          return await getDeltaFileContent(fileId); // Retry once
         } catch (reauthError) {
           return 'Access denied. Please sign out and sign in again.';
         }
@@ -1144,7 +1139,7 @@ class BackupNotifier extends Notifier<BackupState> {
           e.toString().contains('401')) {
         try {
           await _driveService.reauthenticate();
-          return getManifestContent(); // Retry once
+          return await getManifestContent(); // Retry once
         } catch (reauthError) {
           return 'Access denied. Please sign out and sign in again.';
         }

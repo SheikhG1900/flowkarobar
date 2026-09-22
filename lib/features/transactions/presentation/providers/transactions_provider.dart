@@ -7,6 +7,8 @@ import 'package:rxdart/rxdart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
+import 'package:flowpaisa/core/utils/export_service.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/transactions/data/schedules_repository.dart';
 import 'package:flowpaisa/features/transactions/data/transaction_documents_repository.dart';
 import 'package:flowpaisa/core/services/document_backup_service.dart';
@@ -877,4 +879,13 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
 
 final recentSearchesProvider = NotifierProvider<RecentSearchesNotifier, List<RecentSearch>>(() {
   return RecentSearchesNotifier();
+});
+
+// Centralized Export Service provider
+final exportServiceProvider = Provider<ExportService>((ref) {
+  final db = ref.watch(databaseProvider);
+  final userProfile = ref.watch(userProfileProvider);
+  final transactionsRepository = ref.watch(transactionsRepositoryProvider);
+  return ExportService(transactionsRepository, db,
+      dateFormat: userProfile.dateFormat);
 });

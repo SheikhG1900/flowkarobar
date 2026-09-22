@@ -24,7 +24,6 @@ import 'package:flowpaisa/features/transactions/presentation/providers/transacti
 // import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/categories/domain/category_monthly_hint_key.dart';
-import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_progress_bar.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';

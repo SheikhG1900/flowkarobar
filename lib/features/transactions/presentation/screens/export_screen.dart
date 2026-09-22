@@ -8,9 +8,8 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/export_service.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
-import 'package:flowpaisa/features/transactions/data/transactions_repository.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
-import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/core/services/in_app_review_service.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
@@ -20,14 +19,6 @@ import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-final exportServiceProvider = Provider<ExportService>((ref) {
-  final db = ref.watch(databaseProvider);
-  final userProfile = ref.watch(userProfileProvider);
-  final transactionsRepository = TransactionsRepository(db);
-  return ExportService(transactionsRepository, db,
-      dateFormat: userProfile.dateFormat);
-});
 
 class ExportScreen extends ConsumerStatefulWidget {
   const ExportScreen({super.key});

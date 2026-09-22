@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
-import 'package:flowpaisa/core/utils/tabular_parser.dart';
 
 class LocalizationHelper {
   static String localizeCategory(BuildContext context, String categoryName) {

@@ -38,14 +38,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/features/analytics/presentation/widgets/account_analytics_widgets.dart';
 import 'package:file_selector/file_selector.dart';
 import 'package:url_launcher/url_launcher.dart';
-
-final exportServiceProvider = Provider<ExportService>((ref) {
-  final db = ref.watch(databaseProvider);
-  final userProfile = ref.watch(userProfileProvider);
-  final transactionsRepository = TransactionsRepository(db);
-  return ExportService(transactionsRepository, db,
-      dateFormat: userProfile.dateFormat);
-});
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 
 class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});

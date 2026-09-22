@@ -1915,7 +1915,7 @@ class ExportService {
         currencyObj: currency,
         includePayablesAndReceivables: includePayablesAndReceivables,
       );
-      return pdf.save();
+      return await pdf.save();
     } catch (e) {
       throw Exception('Error generating PDF: $e');
     }
@@ -1986,15 +1986,30 @@ class ExportService {
         }
       }
 
+      // Normalize dates to start of day and end of day
+      final normalizedStartDate = startDate != null
+          ? DateTime(startDate.year, startDate.month, startDate.day, 0, 0, 0)
+          : null;
+      final normalizedEndDate = endDate != null
+          ? DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59, 999)
+          : null;
+
       // 2. Fetch all active documents
       final documents = await (_database.select(_database.transactionDocuments)
             ..where((d) => d.isDeleted.equals(false)))
           .get();
 
+      final appDir = await getApplicationDocumentsDirectory();
+      final docDir = Directory(p.join(appDir.path, 'documents', _transactionsRepository.cashbookId));
+
       // Group by transactionUuid
       final Map<String, List<TransactionDocument>> groupedDocs = {};
       for (final doc in documents) {
         groupedDocs.putIfAbsent(doc.transactionUuid, () => []).add(doc);
+      }
+
+      if (kDebugMode) {
+        print('ExportService: Grouped documents by transactionUuid. Count: ${groupedDocs.length}');
       }
 
       // Fetch transaction details for each transactionUuid
@@ -2008,15 +2023,29 @@ class ExportService {
             .getTransactionWithDetailsByUuid(entry.key);
         if (details != null) {
           // Apply date filters if provided
-          if (startDate != null && details.transaction.date.isBefore(startDate)) {
+          if (normalizedStartDate != null && details.transaction.date.isBefore(normalizedStartDate)) {
+            if (kDebugMode) {
+              print('ExportService: Transaction ${details.transaction.uuid} date ${details.transaction.date} is before start date $normalizedStartDate');
+            }
             continue;
           }
-          if (endDate != null && details.transaction.date.isAfter(endDate)) {
+          if (normalizedEndDate != null && details.transaction.date.isAfter(normalizedEndDate)) {
+            if (kDebugMode) {
+              print('ExportService: Transaction ${details.transaction.uuid} date ${details.transaction.date} is after end date $normalizedEndDate');
+            }
             continue;
           }
           transactionsWithAttachments
               .add((details: details, docs: entry.value));
+        } else {
+          if (kDebugMode) {
+            print('ExportService: Could not find transaction details for UUID: ${entry.key}');
+          }
         }
+      }
+
+      if (kDebugMode) {
+        print('ExportService: Transactions with attachments after date filtering. Count: ${transactionsWithAttachments.length}');
       }
 
       // Sort by transaction date descending
@@ -2024,8 +2053,9 @@ class ExportService {
           b.details.transaction.date.compareTo(a.details.transaction.date));
 
       // 3. Pre-load attachment files asynchronously
-      final appDir = await getApplicationDocumentsDirectory();
-      final docDir = Directory(p.join(appDir.path, 'documents'));
+      if (kDebugMode) {
+        print('ExportService: Preloading attachments from directory: ${docDir.path}');
+      }
 
       final List<
           ({
@@ -2056,7 +2086,12 @@ class ExportService {
           bool isImage = false;
           bool isPdf = false;
 
-          if (await file.exists()) {
+          final fileExists = await file.exists();
+          if (kDebugMode) {
+            print('ExportService: Checking attachment file: ${file.path}. Exists: $fileExists');
+          }
+
+          if (fileExists) {
             final mime = (doc.mimeType ?? '').toLowerCase();
             final isImgType = mime.startsWith('image/') ||
                 ['jpg', 'jpeg', 'png', 'webp', 'gif'].contains(p
@@ -3072,7 +3107,7 @@ class ExportService {
         ),
       );
 
-      return pdf.save();
+      return await pdf.save();
     } catch (e) {
       throw Exception('Error generating test PDF: $e');
     }
@@ -3140,7 +3175,7 @@ class ExportService {
         l10n: l10n,
         currencyObj: currency,
       );
-      return pdf.save();
+      return await pdf.save();
     } catch (e) {
       throw Exception('Error generating analytics PDF: $e');
     }

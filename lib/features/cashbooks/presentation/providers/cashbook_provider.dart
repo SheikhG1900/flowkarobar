@@ -16,7 +16,6 @@ import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
-import 'package:flowpaisa/features/cashbooks/domain/models/cashbook_summary.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 

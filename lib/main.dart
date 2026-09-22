@@ -74,13 +74,11 @@ import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/shared/widgets/entrance_animation.dart';
-import 'package:flowpaisa/shared/widgets/animated_amount.dart';
 import 'package:flowpaisa/shared/widgets/rolling_amount.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flowpaisa/features/transactions/data/schedule_scheduler.dart';
-import 'package:flowpaisa/features/backup/data/sync/sync_scheduler.dart';
 
 import 'package:flowpaisa/core/services/update_service.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';

@@ -8,8 +8,6 @@ import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
-import 'package:flowpaisa/core/database/database.dart';
-import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_icon_badge.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/split_icon_badge.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_account_icon_badge.dart';

@@ -264,7 +264,7 @@ class SyncEngine {
             print(
                 'SyncEngine: Conflict detected (412) while acquiring lock, restarting sync');
           }
-          return sync(); // Restart
+          return await sync(); // Restart
         }
         if (kDebugMode) {
           print('SyncEngine: Error uploading manifest to acquire lock: $e');

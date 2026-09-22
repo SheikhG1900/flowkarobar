@@ -7,7 +7,6 @@ import 'package:flutter_undraw/flutter_undraw.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
@@ -17,7 +16,6 @@ import 'package:flowpaisa/features/settings/presentation/providers/settings_prov
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_transaction_screen.dart';
-import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
@@ -45,23 +43,18 @@ import 'package:flowpaisa/shared/widgets/filter_bottom_sheet.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/shared/widgets/collapsible_list_summary.dart';
 import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
-import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_speed_dial.dart';
 import 'package:flowpaisa/shared/widgets/faded_bottom_logo.dart';
 import 'package:flowpaisa/features/receipt_scan/presentation/screens/scan_receipt_screen.dart';
 import 'package:flowpaisa/features/voice_command/presentation/screens/voice_add_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
-import 'package:flowpaisa/shared/widgets/user_avatar.dart';
 import 'package:collection/collection.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
-import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_details_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:flowpaisa/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:flowpaisa/shared/widgets/contextual_guide.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 class TransactionsListScreen extends ConsumerStatefulWidget {
   final bool startTour;
@@ -330,9 +323,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final filters = notifier.currentFilters;
     final searchQuery = ref.read(transactionsPaginatedProvider).searchQuery;
 
-    final now = DateTime.now();
-    final startDate = filters.startDate ?? DateTime(now.year, now.month, 1);
-    final endDate = filters.endDate ?? DateTime(now.year, now.month + 1, 0);
+    final startDate = filters.startDate ?? DateTime(1970, 1, 1);
+    final endDate = filters.endDate ?? DateTime(2100, 12, 31);
 
     bool isLoadingDialogOpen = true;
 
@@ -470,9 +462,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final filters = notifier.currentFilters;
     final searchQuery = ref.read(transactionsPaginatedProvider).searchQuery;
 
-    final now = DateTime.now();
-    final startDate = filters.startDate ?? DateTime(now.year, now.month, 1);
-    final endDate = filters.endDate ?? DateTime(now.year, now.month + 1, 0);
+    final startDate = filters.startDate ?? DateTime(1970, 1, 1);
+    final endDate = filters.endDate ?? DateTime(2100, 12, 31);
 
     showDialog(
       context: context,
@@ -618,9 +609,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final notifier = ref.read(transactionsPaginatedProvider.notifier);
     final filters = notifier.currentFilters;
 
-    final now = DateTime.now();
-    final startDate = filters.startDate ?? DateTime(now.year, now.month, 1);
-    final endDate = filters.endDate ?? DateTime(now.year, now.month + 1, 0);
+    final startDate = filters.startDate;
+    final endDate = filters.endDate;
 
     showDialog(
       context: context,

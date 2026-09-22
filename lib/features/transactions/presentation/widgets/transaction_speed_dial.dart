@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 
 import 'package:flowpaisa/l10n/app_localizations.dart';
