@@ -19,6 +19,8 @@ class TransactionListItem extends ConsumerStatefulWidget {
   final VoidCallback? onTap;
   final bool isCompact;
   final bool isHighlighted;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const TransactionListItem({
     super.key,
@@ -28,6 +30,8 @@ class TransactionListItem extends ConsumerStatefulWidget {
     this.onTap,
     this.isCompact = false,
     this.isHighlighted = false,
+    this.onEdit,
+    this.onDelete,
   });
 
   @override
@@ -274,125 +278,180 @@ class _TransactionListItemState extends ConsumerState<TransactionListItem> {
                       ],
                     ],
                   ),
-                  trailing: Column(
-                    key: ValueKey('tx-card-trailing-${transaction.uuid}'),
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        key: ValueKey('tx-card-amount-${transaction.uuid}'),
-                        '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency!)}',
-                        style: theme.textTheme.titleLarge?.copyWith(
-                          color: isExpense
-                              ? (isInactive
-                                  ? AppColors.expenseColor
-                                      .withValues(alpha: 0.5)
-                                  : AppColors.expenseColor)
-                              : (isInactive
-                                  ? AppColors.incomeColor.withValues(alpha: 0.5)
-                                  : AppColors.incomeColor),
-                          fontWeight: FontWeight.bold,
-                          fontSize: amountFontSize,
-                        ),
-                      ),
-                      // Show status badge
-                      if (transaction.paidRelationship != null) ...[
-                        SizedBox(height: isCompact ? 2 : 4),
-                        Container(
-                          key: ValueKey('tx-card-status-${transaction.uuid}'),
-                          padding: EdgeInsets.symmetric(
-                              horizontal: isCompact ? 4 : 6,
-                              vertical: isCompact ? 1 : 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.getRelationshipColor(
-                                    transaction.paidRelationship!)
-                                .withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: AppColors.getRelationshipColor(
-                                      transaction.paidRelationship!)
-                                  .withValues(alpha: 0.3),
-                              width: 1,
+                      Column(
+                        key: ValueKey('tx-card-trailing-${transaction.uuid}'),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            key: ValueKey('tx-card-amount-${transaction.uuid}'),
+                            '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency!)}',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              color: isExpense
+                                  ? (isInactive
+                                      ? AppColors.expenseColor
+                                          .withValues(alpha: 0.5)
+                                      : AppColors.expenseColor)
+                                  : (isInactive
+                                      ? AppColors.incomeColor.withValues(alpha: 0.5)
+                                      : AppColors.incomeColor),
+                              fontWeight: FontWeight.bold,
+                              fontSize: amountFontSize,
                             ),
                           ),
-                          child: Row(
-                            key: ValueKey(
-                                'tx-card-status-row-${transaction.uuid}'),
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (item.isLinkedEntryMarked) ...[
-                                Icon(
-                                  key: ValueKey(
-                                      'tx-card-status-icon-${transaction.uuid}'),
-                                  Icons.check_circle,
-                                  size: isCompact ? 8 : 10,
+                          // Show status badge
+                          if (transaction.paidRelationship != null) ...[
+                            SizedBox(height: isCompact ? 2 : 4),
+                            Container(
+                              key: ValueKey('tx-card-status-${transaction.uuid}'),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: isCompact ? 4 : 6,
+                                  vertical: isCompact ? 1 : 2),
+                              decoration: BoxDecoration(
+                                color: AppColors.getRelationshipColor(
+                                        transaction.paidRelationship!)
+                                    .withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
                                   color: AppColors.getRelationshipColor(
-                                      transaction.paidRelationship!),
-                                ),
-                                SizedBox(width: isCompact ? 2 : 3),
-                              ],
-                              Text(
-                                key: ValueKey(
-                                    'tx-card-status-text-${transaction.uuid}'),
-                                _getStatusLabel(
-                                  l10n,
-                                  transaction.paidRelationship!,
-                                  item.isLinkedEntryMarked,
-                                  isExpense: transaction.type == 'EXPENSE',
-                                ),
-                                style: TextStyle(
-                                  fontSize: isCompact ? 8 : 10,
-                                  color: AppColors.getRelationshipColor(
-                                      transaction.paidRelationship!),
-                                  fontWeight: FontWeight.bold,
+                                          transaction.paidRelationship!)
+                                      .withValues(alpha: 0.3),
+                                  width: 1,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ],
-                      // Show "Auto" badge
-                      if (transaction.isAutoGenerated == true) ...[
-                        SizedBox(height: isCompact ? 2 : 4),
-                        Container(
-                          key: ValueKey('tx-card-auto-${transaction.uuid}'),
-                          padding: EdgeInsets.symmetric(
-                              horizontal: isCompact ? 4 : 6,
-                              vertical: isCompact ? 1 : 2),
-                          decoration: BoxDecoration(
-                            color: Colors.grey.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: Colors.grey.withValues(alpha: 0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            key: ValueKey(
-                                'tx-card-auto-row-${transaction.uuid}'),
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
+                              child: Row(
                                 key: ValueKey(
-                                    'tx-card-auto-icon-${transaction.uuid}'),
-                                Icons.auto_awesome,
-                                size: isCompact ? 8 : 10,
-                                color: Colors.grey[600],
-                              ),
-                              SizedBox(width: isCompact ? 2 : 3),
-                              Flexible(
-                                child: Text(
-                                  key: ValueKey(
-                                      'tx-card-auto-text-${transaction.uuid}'),
-                                  l10n.autoBadge,
-                                  style: TextStyle(
-                                    fontSize: isCompact ? 8 : 10,
-                                    color: Colors.grey[600],
-                                    fontWeight: FontWeight.bold,
+                                    'tx-card-status-row-${transaction.uuid}'),
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (item.isLinkedEntryMarked) ...[
+                                    Icon(
+                                      key: ValueKey(
+                                          'tx-card-status-icon-${transaction.uuid}'),
+                                      Icons.check_circle,
+                                      size: isCompact ? 8 : 10,
+                                      color: AppColors.getRelationshipColor(
+                                          transaction.paidRelationship!),
+                                    ),
+                                    SizedBox(width: isCompact ? 2 : 3),
+                                  ],
+                                  Text(
+                                    key: ValueKey(
+                                        'tx-card-status-text-${transaction.uuid}'),
+                                    _getStatusLabel(
+                                      l10n,
+                                      transaction.paidRelationship!,
+                                      item.isLinkedEntryMarked,
+                                      isExpense: transaction.type == 'EXPENSE',
+                                    ),
+                                    style: TextStyle(
+                                      fontSize: isCompact ? 8 : 10,
+                                      color: AppColors.getRelationshipColor(
+                                          transaction.paidRelationship!),
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                  overflow: TextOverflow.ellipsis,
+                                ],
+                              ),
+                            ),
+                          ],
+                          // Show "Auto" badge
+                          if (transaction.isAutoGenerated == true) ...[
+                            SizedBox(height: isCompact ? 2 : 4),
+                            Container(
+                              key: ValueKey('tx-card-auto-${transaction.uuid}'),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: isCompact ? 4 : 6,
+                                  vertical: isCompact ? 1 : 2),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(
+                                  color: Colors.grey.withValues(alpha: 0.3),
+                                  width: 1,
                                 ),
                               ),
+                              child: Row(
+                                key: ValueKey(
+                                    'tx-card-auto-row-${transaction.uuid}'),
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    key: ValueKey(
+                                        'tx-card-auto-icon-${transaction.uuid}'),
+                                    Icons.auto_awesome,
+                                    size: isCompact ? 8 : 10,
+                                    color: Colors.grey[600],
+                                  ),
+                                  SizedBox(width: isCompact ? 2 : 3),
+                                  Flexible(
+                                    child: Text(
+                                      key: ValueKey(
+                                          'tx-card-auto-text-${transaction.uuid}'),
+                                      l10n.autoBadge,
+                                      style: TextStyle(
+                                        fontSize: isCompact ? 8 : 10,
+                                        color: Colors.grey[600],
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      if (widget.onEdit != null || widget.onDelete != null) ...[
+                        const SizedBox(width: 12),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (widget.onEdit != null)
+                                IconButton(
+                                  key: ValueKey('tx-card-edit-btn-${transaction.uuid}'),
+                                  icon: const Icon(Icons.edit_rounded),
+                                  color: theme.colorScheme.primary,
+                                  iconSize: isCompact ? 16 : 18,
+                                  padding: const EdgeInsets.all(6),
+                                  constraints: const BoxConstraints(),
+                                  tooltip: l10n.edit,
+                                  onPressed: widget.onEdit,
+                                ),
+                              if (widget.onEdit != null && widget.onDelete != null)
+                                SizedBox(
+                                  height: isCompact ? 12 : 14,
+                                  child: VerticalDivider(
+                                    width: 12,
+                                    thickness: 1,
+                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+                                  ),
+                                ),
+                              if (widget.onDelete != null)
+                                IconButton(
+                                  key: ValueKey('tx-card-delete-btn-${transaction.uuid}'),
+                                  icon: const Icon(Icons.delete_outline_rounded),
+                                  color: AppColors.expenseColor,
+                                  iconSize: isCompact ? 16 : 18,
+                                  padding: const EdgeInsets.all(6),
+                                  constraints: const BoxConstraints(),
+                                  tooltip: l10n.delete,
+                                  onPressed: widget.onDelete,
+                                ),
                             ],
                           ),
                         ),
