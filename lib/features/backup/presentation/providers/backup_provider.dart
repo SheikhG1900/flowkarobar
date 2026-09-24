@@ -18,6 +18,7 @@ import 'package:googleapis/drive/v3.dart' as drive;
 import 'dart:async';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -1048,6 +1049,7 @@ class BackupNotifier extends Notifier<BackupState> {
     // FutureProviders that do not listen to table streams — must be refreshed.
     ref.invalidate(totalPendingPayablesProvider);
     ref.invalidate(totalPendingReceivablesProvider);
+    ref.invalidate(dashboardWidgetLayoutProvider);
 
     // Re-fetch currency so symbol/decimal places from synced DB are applied
     ref.invalidate(selectedCurrencyIdProvider);

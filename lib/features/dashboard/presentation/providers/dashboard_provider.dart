@@ -128,12 +128,6 @@ final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) {
 final recentTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
   final txRepo = ref.watch(transactionsRepositoryProvider);
 
-  // Also watch the sync status - if it goes from 'Pulling' to 'Idle' or 'Success', refresh
-  final syncStatus = ref.watch(backupProvider.select((s) => s.syncStatus));
-  if (syncStatus == 'Idle' || syncStatus == 'Success') {
-    // This ensures we re-fetch after sync completes
-  }
-
   return txRepo.watchRecentTransactions(limit: 10).distinct((prev, next) => const ListEquality().equals(prev, next)).debounceTime(const Duration(milliseconds: 100));
 });
 
