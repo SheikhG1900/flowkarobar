@@ -362,10 +362,10 @@ class TransactionsPaginatedNotifier
 
   @override
   PaginatedState<TransactionWithDetails> build() {
-    // Use [read], not [watch]: the repository provider creates a new instance on
-    // every re-run. Watching it would re-invoke [build], return a fresh empty
-    // [PaginatedState], and wipe the list (logo / loading flash) whenever the
-    // database or cashbook graph updates.
+    // Watch activeCashbookProvider so that when the cashbook changes,
+    // this notifier's build() is re-run, resetting the state and loading the new cashbook's transactions.
+    ref.watch(activeCashbookProvider);
+
     _acceptStreamUpdates = true;
     _repository = ref.read(transactionsRepositoryProvider);
 
