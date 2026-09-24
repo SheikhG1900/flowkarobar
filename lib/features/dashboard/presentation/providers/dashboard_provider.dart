@@ -6,6 +6,7 @@ import 'package:flowpaisa/features/payables/presentation/providers/payables_prov
 import 'package:flowpaisa/features/dashboard/domain/models.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:collection/collection.dart';
 
@@ -83,6 +84,10 @@ final lastDashboardStatsProvider =
 
 /// Provider for dashboard statistics
 final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) {
+  // Watch activeCashbookProvider so that when the cashbook changes, this provider
+  // is fully re-evaluated and emits fresh statistics immediately.
+  ref.watch(activeCashbookProvider);
+
   final txRepo = ref.watch(transactionsRepositoryProvider);
   final receivableRepo = ref.watch(receivablesRepositoryProvider);
   final payableRepo = ref.watch(payablesRepositoryProvider);

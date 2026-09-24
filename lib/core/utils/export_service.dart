@@ -2145,6 +2145,27 @@ class ExportService {
         pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
         theme: theme,
+        buildBackground: logoSvgString != null
+            ? (pw.Context context) {
+                return pw.FullPage(
+                  ignoreMargins: true,
+                  child: pw.Center(
+                    child: pw.Opacity(
+                      opacity: 0.03,
+                      child: pw.Container(
+                        width: 250,
+                        height: 250,
+                        child: pw.SvgImage(
+                          svg: logoSvgString!,
+                          colorFilter: const PdfColor(0 / 255.0, 102 / 255.0,
+                              153 / 255.0), // #006699 (Deep Brand Blue)
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }
+            : null,
       );
 
       final List<Uint8List> pdfParts = [];

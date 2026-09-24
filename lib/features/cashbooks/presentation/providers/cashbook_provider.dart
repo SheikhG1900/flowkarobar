@@ -17,6 +17,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
+import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class CashbookNotifier extends Notifier<List<Cashbook>> {
@@ -413,6 +414,8 @@ class ActiveCashbookIdNotifier extends Notifier<String> {
   Future<void> setActive(String id) async {
     await _prefs.setString(_activeIdKey, id);
     state = id;
+    // Clear last dashboard stats cache so dashboard widgets don't show old cashbook's stats while loading
+    ref.read(lastDashboardStatsProvider.notifier).setLast(null);
   }
 }
 
