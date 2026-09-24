@@ -73,6 +73,7 @@ import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_account_icon_badge.dart';
 import 'package:flowpaisa/shared/widgets/entrance_animation.dart';
 import 'package:flowpaisa/shared/widgets/rolling_amount.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
@@ -2503,7 +2504,7 @@ class _DashboardRecentTransactionTileState
         );
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: theme.cardColor,
           borderRadius: BorderRadius.circular(16),
@@ -2542,41 +2543,53 @@ class _DashboardRecentTransactionTileState
                 );
               },
               borderRadius: BorderRadius.circular(15),
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(12),
-                leading: Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: categoryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  ListTile(
+                    contentPadding: const EdgeInsets.all(12),
+                    leading: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: categoryColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      alignment: Alignment.center,
+                      child: CategoryHelper.buildCategoryIcon(
+                          category?.icon, categoryColor, isExpense),
+                    ),
+                    title: Text(
+                      LocalizationHelper.getSingleLineDisplayDescription(
+                        description: transaction.description,
+                        categoryName: category?.name,
+                        isExpense: isExpense,
+                        l10n: l10n,
+                        context: context,
+                      ),
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Text(AppDateFormatter.formatDate(transaction.date,
+                        pattern: dateFormat)),
+                    trailing: Text(
+                      '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency)}',
+                      style: TextStyle(
+                        color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                   ),
-                  alignment: Alignment.center,
-                  child: CategoryHelper.buildCategoryIcon(
-                      category?.icon, categoryColor, isExpense),
-                ),
-                title: Text(
-                  LocalizationHelper.getSingleLineDisplayDescription(
-                    description: transaction.description,
-                    categoryName: category?.name,
-                    isExpense: isExpense,
-                    l10n: l10n,
-                    context: context,
-                  ),
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                subtitle: Text(AppDateFormatter.formatDate(transaction.date,
-                    pattern: dateFormat)),
-                trailing: Text(
-                  '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency)}',
-                  style: TextStyle(
-                    color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
+                  if (item.account != null)
+                    TransactionAccountIconBadge(
+                      account: item.account!,
+                      theme: theme,
+                      bottomOffset: 3.0,
+                      horizontalOffset: -10.0,
+                    ),
+                ],
               ),
             ),
           ),

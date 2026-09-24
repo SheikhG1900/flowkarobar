@@ -27,6 +27,7 @@ import 'package:flowpaisa/features/accounts/presentation/providers/accounts_prov
 import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_account_icon_badge.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
@@ -77,11 +78,8 @@ class _DashboardEntityWidgetCardState
             final isExpense = item.transaction.type == 'EXPENSE';
             final cat = item.category;
             final txColor = cat != null && cat.color != null
-                ? Color(int.parse(
-                    cat.color!.replaceAll('#', '0xFF')))
-                : (isExpense
-                    ? AppColors.expenseColor
-                    : AppColors.incomeColor);
+                ? Color(int.parse(cat.color!.replaceAll('#', '0xFF')))
+                : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
             Widget? leadingChild;
             if (cat != null) {
               leadingChild = Container(
@@ -94,37 +92,51 @@ class _DashboardEntityWidgetCardState
                 ),
                 alignment: Alignment.center,
                 child: CategoryHelper.buildCategoryIcon(
-                    cat.icon, txColor, isExpense, size: 20),
+                    cat.icon, txColor, isExpense,
+                    size: 20),
               );
             }
-            return _buildCard(
-              context,
-              ref,
-              theme,
-              l10n,
-              currency,
-              kind: config.kind,
-              entityUuid: uuid,
-              key: ValueKey('entity-tx-$uuid'),
-              leadingChild: leadingChild,
-              title: LocalizationHelper.getSingleLineDisplayDescription(
-                description: item.transaction.description,
-                categoryName: cat?.name,
-                isExpense: isExpense,
-                l10n: l10n,
-                context: context,
-              ),
-              subtitle: AppDateFormatter.formatDate(item.transaction.date),
-              amount: item.transaction.amount,
-              isExpense: isExpense,
-              color: AppColors.transactionsSectionColor,
-              onTap: () => _openTransaction(context, uuid),
-              onRemove: () => _removeAt(ref, layoutIndex),
-              contentKey: ValueKey('entity-tx-content-col-$uuid'),
-              amountKey: ValueKey('entity-tx-amount-$uuid'),
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                _buildCard(
+                  context,
+                  ref,
+                  theme,
+                  l10n,
+                  currency,
+                  kind: config.kind,
+                  entityUuid: uuid,
+                  key: ValueKey('entity-tx-$uuid'),
+                  leadingChild: leadingChild,
+                  title: LocalizationHelper.getSingleLineDisplayDescription(
+                    description: item.transaction.description,
+                    categoryName: cat?.name,
+                    isExpense: isExpense,
+                    l10n: l10n,
+                    context: context,
+                  ),
+                  subtitle: AppDateFormatter.formatDate(item.transaction.date),
+                  amount: item.transaction.amount,
+                  isExpense: isExpense,
+                  color: AppColors.transactionsSectionColor,
+                  onTap: () => _openTransaction(context, uuid),
+                  onRemove: () => _removeAt(ref, layoutIndex),
+                  contentKey: ValueKey('entity-tx-content-col-$uuid'),
+                  amountKey: ValueKey('entity-tx-amount-$uuid'),
+                ),
+                if (item.account != null)
+                  TransactionAccountIconBadge(
+                    account: item.account!,
+                    theme: theme,
+                    bottomOffset: 10.0,
+                    horizontalOffset: 0,
+                  ),
+              ],
             );
           },
-          loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-tx-loading-$uuid')),
+          loading: () => _buildCardPlaceholder(theme,
+              key: ValueKey('entity-tx-loading-$uuid')),
           error: (_, __) => const SizedBox.shrink(),
         );
       case DashboardWidgetKind.category:
@@ -152,18 +164,16 @@ class _DashboardEntityWidgetCardState
                 padding: const EdgeInsets.only(top: 8),
                 child: DualAmountProgressBar(
                   key: ValueKey('entity-cat-budget-$uuid'),
-                  leftLabel: isExpense
-                      ? l10n.budgetBarUsed
-                      : l10n.budgetBarProgress,
+                  leftLabel:
+                      isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress,
                   leftAmount: snap.netAmount > 0 ? snap.netAmount : 0.0,
                   rightLabel: l10n.remaining,
                   rightAmount:
                       snap.remainingOrGap > 0 ? snap.remainingOrGap : 0.0,
                   symbol: symbol,
                   decimals: decimals,
-                  filledColor: snap.progressRatio > 1
-                      ? AppColors.expenseColor
-                      : color,
+                  filledColor:
+                      snap.progressRatio > 1 ? AppColors.expenseColor : color,
                   compact: true,
                 ),
               );
@@ -188,7 +198,8 @@ class _DashboardEntityWidgetCardState
                 ),
                 alignment: Alignment.center,
                 child: CategoryHelper.buildCategoryIcon(
-                    cat.icon, color, isExpense, size: 22),
+                    cat.icon, color, isExpense,
+                    size: 22),
               ),
               title: LocalizationHelper.getLocalizedCategoryName(
                   context, cat.name),
@@ -204,7 +215,8 @@ class _DashboardEntityWidgetCardState
               amountKey: ValueKey('entity-cat-amount-$uuid'),
             );
           },
-          loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-cat-loading-$uuid')),
+          loading: () => _buildCardPlaceholder(theme,
+              key: ValueKey('entity-cat-loading-$uuid')),
           error: (_, __) => const SizedBox.shrink(),
         );
       case DashboardWidgetKind.contact:
@@ -222,24 +234,24 @@ class _DashboardEntityWidgetCardState
               kind: config.kind,
               entityUuid: uuid,
               key: ValueKey('entity-contact-$uuid'),
-              leadingChild: _buildContactAvatar(stats.contact.name, key: ValueKey('entity-contact-icon-$uuid')),
+              leadingChild: _buildContactAvatar(stats.contact.name,
+                  key: ValueKey('entity-contact-icon-$uuid')),
               title: stats.contact.name,
               subtitle: net >= 0 ? l10n.receivableTag : l10n.payableTag,
               amount: net.abs(),
               isExpense: net < 0,
-              color: net >= 0
-                  ? AppColors.receivableColor
-                  : AppColors.payableColor,
-              amountColor: net >= 0
-                  ? AppColors.receivableColor
-                  : AppColors.payableColor,
+              color:
+                  net >= 0 ? AppColors.receivableColor : AppColors.payableColor,
+              amountColor:
+                  net >= 0 ? AppColors.receivableColor : AppColors.payableColor,
               onTap: () => _openContact(context, uuid),
               onRemove: () => _removeAt(ref, layoutIndex),
               contentKey: ValueKey('entity-contact-content-col-$uuid'),
               amountKey: ValueKey('entity-contact-amount-$uuid'),
             );
           },
-          loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-contact-loading-$uuid')),
+          loading: () => _buildCardPlaceholder(theme,
+              key: ValueKey('entity-contact-loading-$uuid')),
           error: (_, __) => const SizedBox.shrink(),
         );
       case DashboardWidgetKind.payable:
@@ -259,12 +271,12 @@ class _DashboardEntityWidgetCardState
               entityUuid: uuid,
               key: ValueKey('entity-payable-$uuid'),
               leadingChild: contactName.isNotEmpty
-                  ? _buildContactAvatar(contactName, key: ValueKey('entity-payable-icon-$uuid'))
+                  ? _buildContactAvatar(contactName,
+                      key: ValueKey('entity-payable-icon-$uuid'))
                   : null,
               title: item.contact?.name ?? l10n.payable,
               subtitle: item.payable.dueDate != null
-                  ? AppDateFormatter.formatDate(
-                      item.payable.dueDate!)
+                  ? AppDateFormatter.formatDate(item.payable.dueDate!)
                   : item.payable.status,
               amount: item.payable.amount,
               isExpense: true,
@@ -276,7 +288,8 @@ class _DashboardEntityWidgetCardState
               amountKey: ValueKey('entity-payable-amount-$uuid'),
             );
           },
-          loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-payable-loading-$uuid')),
+          loading: () => _buildCardPlaceholder(theme,
+              key: ValueKey('entity-payable-loading-$uuid')),
           error: (_, __) => const SizedBox.shrink(),
         );
       case DashboardWidgetKind.receivable:
@@ -296,12 +309,12 @@ class _DashboardEntityWidgetCardState
               entityUuid: uuid,
               key: ValueKey('entity-receivable-$uuid'),
               leadingChild: contactName.isNotEmpty
-                  ? _buildContactAvatar(contactName, key: ValueKey('entity-receivable-icon-$uuid'))
+                  ? _buildContactAvatar(contactName,
+                      key: ValueKey('entity-receivable-icon-$uuid'))
                   : null,
               title: item.contact?.name ?? l10n.receivableTag,
               subtitle: item.receivable.dueDate != null
-                  ? AppDateFormatter.formatDate(
-                      item.receivable.dueDate!)
+                  ? AppDateFormatter.formatDate(item.receivable.dueDate!)
                   : item.receivable.status,
               amount: item.receivable.amount,
               isExpense: false,
@@ -313,7 +326,8 @@ class _DashboardEntityWidgetCardState
               amountKey: ValueKey('entity-receivable-amount-$uuid'),
             );
           },
-          loading: () => _buildCardPlaceholder(theme, key: ValueKey('entity-receivable-loading-$uuid')),
+          loading: () => _buildCardPlaceholder(theme,
+              key: ValueKey('entity-receivable-loading-$uuid')),
           error: (_, __) => const SizedBox.shrink(),
         );
       case DashboardWidgetKind.account:
@@ -337,7 +351,8 @@ class _DashboardEntityWidgetCardState
           );
         }
         if (listAsync.isLoading || detailAsync.isLoading) {
-          return _buildCardPlaceholder(theme, key: ValueKey('entity-account-loading-$uuid'));
+          return _buildCardPlaceholder(theme,
+              key: ValueKey('entity-account-loading-$uuid'));
         }
         return const SizedBox.shrink();
       default:
@@ -397,7 +412,7 @@ class _DashboardEntityWidgetCardState
     return RepaintBoundary(
       key: key,
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.only(bottom: 14),
         child: Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
@@ -423,7 +438,7 @@ class _DashboardEntityWidgetCardState
                     ? () => PremiumGate.showPremiumDialog(context)
                     : onTap,
                 onLongPress: () => _showEntityActionsSheet(
-                      context, ref, onRemove, l10n, kind, entityUuid),
+                    context, ref, onRemove, l10n, kind, entityUuid),
                 child: Stack(
                   children: [
                     Opacity(
@@ -453,13 +468,15 @@ class _DashboardEntityWidgetCardState
                                     ),
                                 const SizedBox(width: 12),
                                 Expanded(
-                                    child: Column(
-                                      key: contentKey,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
+                                  child: Column(
+                                    key: contentKey,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
                                       Text(
                                         title,
-                                        style: theme.textTheme.titleSmall?.copyWith(
+                                        style: theme.textTheme.titleSmall
+                                            ?.copyWith(
                                           fontWeight: FontWeight.w600,
                                         ),
                                         maxLines: 1,
@@ -468,8 +485,10 @@ class _DashboardEntityWidgetCardState
                                       const SizedBox(height: 2),
                                       Text(
                                         subtitle,
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: theme.colorScheme.onSurfaceVariant,
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          color: theme
+                                              .colorScheme.onSurfaceVariant,
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -483,7 +502,8 @@ class _DashboardEntityWidgetCardState
                                     child: Text(
                                       key: amountKey,
                                       '${isExpense ? '\u200E−' : '\u200E+'} ${AmountFormatter.formatWithCurrency(amount, currency)}',
-                                      style: theme.textTheme.titleSmall?.copyWith(
+                                      style:
+                                          theme.textTheme.titleSmall?.copyWith(
                                         fontWeight: FontWeight.bold,
                                         color: effectiveAmountColor,
                                       ),
@@ -585,8 +605,8 @@ class _DashboardEntityWidgetCardState
                 leading: const Icon(Icons.link),
                 title: Text(l10n.copyLink),
                 onTap: () {
-                  final link =
-                      DeepLinkService().generateEntityOpenLinkHttps(linkType, uuid);
+                  final link = DeepLinkService()
+                      .generateEntityOpenLinkHttps(linkType, uuid);
                   Clipboard.setData(ClipboardData(text: link));
                   Navigator.pop(ctx);
                   ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
@@ -697,8 +717,8 @@ class _DashboardEntityWidgetCardState
     final acc = awb.account;
     final type = awb.type;
     final isPremium = ref.watch(premiumProvider).isPremium;
-    final isAccountLocked = !isPremium &&
-        (acc.addSeq ?? 0) > PremiumGate.accountTotalLimit;
+    final isAccountLocked =
+        !isPremium && (acc.addSeq ?? 0) > PremiumGate.accountTotalLimit;
     final accountColor = acc.color != null
         ? Color(int.parse(acc.color!.replaceAll('#', '0xFF')))
         : theme.colorScheme.primary;
@@ -770,13 +790,12 @@ class _DashboardEntityWidgetCardState
           ? (awb.creditBalance > 0
               ? AppColors.incomeColor
               : AppColors.expenseColor)
-          : (awb.balance < 0
-              ? AppColors.expenseColor
-              : AppColors.incomeColor),
+          : (awb.balance < 0 ? AppColors.expenseColor : AppColors.incomeColor),
       onTap: () => _openAccount(context, uuid),
       onRemove: () => _removeAt(ref, layoutIndex),
       titleColumnExtra: progressChild ??
-          _accountDashboardTitleExtra(theme, l10n, currency, awb, key: ValueKey('entity-account-extra-$uuid')),
+          _accountDashboardTitleExtra(theme, l10n, currency, awb,
+              key: ValueKey('entity-account-extra-$uuid')),
       isLocked: isAccountLocked,
       contentKey: ValueKey('entity-account-content-col-$uuid'),
       amountKey: ValueKey('entity-account-amount-$uuid'),

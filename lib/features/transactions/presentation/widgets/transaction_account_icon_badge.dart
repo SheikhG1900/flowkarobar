@@ -7,12 +7,16 @@ class TransactionAccountIconBadge extends StatelessWidget {
   final Account account;
   final ThemeData theme;
   final bool isInactive;
+  final double bottomOffset;
+  final double horizontalOffset;
 
   const TransactionAccountIconBadge({
     super.key,
     required this.account,
     required this.theme,
     this.isInactive = false,
+    this.bottomOffset = 0.0,
+    this.horizontalOffset = 0.0,
   });
 
   @override
@@ -22,17 +26,22 @@ class TransactionAccountIconBadge extends StatelessWidget {
 
     return Positioned(
       key: key,
-      bottom: -4,
-      right: isRtl ? -4 : null,
-      left: isRtl ? null : -4,
+      bottom: bottomOffset - 6,
+      right: isRtl ? horizontalOffset - 8 : null,
+      left: isRtl ? null : horizontalOffset - 8,
       child: Opacity(
-        key: key != null ? ValueKey('${(key as ValueKey).value}-opacity') : null,
+        key:
+            key != null ? ValueKey('${(key as ValueKey).value}-opacity') : null,
         opacity: isInactive ? 0.6 : 1.0,
         child: Tooltip(
-          key: key != null ? ValueKey('${(key as ValueKey).value}-tooltip') : null,
+          key: key != null
+              ? ValueKey('${(key as ValueKey).value}-tooltip')
+              : null,
           message: account.name,
           child: Container(
-            key: key != null ? ValueKey('${(key as ValueKey).value}-container') : null,
+            key: key != null
+                ? ValueKey('${(key as ValueKey).value}-container')
+                : null,
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
               color: theme.cardColor,
@@ -50,7 +59,9 @@ class TransactionAccountIconBadge extends StatelessWidget {
               ),
             ),
             child: Icon(
-              key: key != null ? ValueKey('${(key as ValueKey).value}-icon') : null,
+              key: key != null
+                  ? ValueKey('${(key as ValueKey).value}-icon')
+                  : null,
               TransferAccountBox.iconForAccount(account),
               size: 14,
               color: accent,
