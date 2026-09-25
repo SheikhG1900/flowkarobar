@@ -1035,7 +1035,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                           constraints: BoxConstraints(
                             maxHeight: MediaQuery.of(context).size.height * 0.6,
                           ),
-                          child: _buildRecentSearchesList(recentSearches, theme),
+                          child: _buildRecentSearchesList(ref, recentSearches, theme),
                         );
                       },
                     );
@@ -1159,7 +1159,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         );
   }
 
-  Widget _buildRecentSearchesList(List<RecentSearch> recentSearches, ThemeData theme) {
+  Widget _buildRecentSearchesList(WidgetRef ref, List<RecentSearch> recentSearches, ThemeData theme) {
     final l10n = AppLocalizations.of(context)!;
     if (recentSearches.isEmpty) {
       return Center(
@@ -1195,201 +1195,202 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final contacts = ref.watch(contactsListProvider).value ?? [];
     final accounts = ref.watch(accountsStreamProvider).value ?? [];
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
+    // Ensure we trigger a loading watch of the stream providers if they are not yet resolved
+    final categoriesAsync = ref.watch(categoriesListProvider);
+    final contactsAsync = ref.watch(contactsListProvider);
+    final accountsAsync = ref.watch(accountsStreamProvider);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              l10n.recentSearches,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
+        Padding(
+          padding: const EdgeInsets.only(left: 16, right: 16, top: 16, bottom: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l10n.recentSearches,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            TextButton(
-              onPressed: () {
-                ref.read(recentSearchesProvider.notifier).clearHistory();
-                Navigator.pop(context);
-              },
-              child: Text(
-                l10n.clearAll,
-                style: TextStyle(color: theme.colorScheme.primary),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        ...recentSearches.map((search) {
-          Widget leadingWidget = const Icon(Icons.history);
-
-          // 1. If category filter is active, show category icon
-          if (search.categoryUuids != null && search.categoryUuids!.isNotEmpty) {
-            final firstCatUuid = search.categoryUuids!.first;
-            final category = categories.firstWhereOrNull((c) => c.uuid == firstCatUuid);
-            if (category != null) {
-              Color categoryColor;
-              try {
-                categoryColor = Color(int.parse(category.color!.replaceAll('#', '0xFF')));
-              } catch (_) {
-                categoryColor = theme.colorScheme.primary;
-              }
-              leadingWidget = Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: categoryColor.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: CategoryHelper.buildCategoryIcon(
-                  category.icon,
-                  categoryColor,
-                  category.type == 'EXPENSE',
-                  size: 20,
-                ),
-              );
-            }
-          }
-          // 2. Else if contact filter is active, show contact initials avatar
-          else if (search.contactUuids != null && search.contactUuids!.isNotEmpty) {
-            final firstContactUuid = search.contactUuids!.first;
-            final contact = contacts.firstWhereOrNull((c) => c.uuid == firstContactUuid);
-            if (contact != null) {
-              leadingWidget = Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  gradient: AppColors.getContactGradient(contact.name),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
+              TextButton(
+                onPressed: () {
+                  ref.read(recentSearchesProvider.notifier).clearHistory();
+                  Navigator.pop(context);
+                },
                 child: Text(
-                  contact.name.trim().isNotEmpty ? contact.name.trim().substring(0, 1).toUpperCase() : '?',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                  l10n.clearAll,
+                  style: TextStyle(color: theme.colorScheme.primary),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+            itemCount: recentSearches.length,
+            itemBuilder: (context, index) {
+              final search = recentSearches[index];
+              Widget leadingWidget = const Icon(Icons.history);
+
+              // 1. If category filter is active, show category icon
+              if (search.categoryUuids != null && search.categoryUuids!.isNotEmpty) {
+                final firstCatUuid = search.categoryUuids!.first;
+                final category = categories.firstWhereOrNull((c) => c.uuid == firstCatUuid);
+                if (category != null) {
+                  Color categoryColor;
+                  try {
+                    categoryColor = Color(int.parse(category.color!.replaceAll('#', '0xFF')));
+                  } catch (_) {
+                    categoryColor = theme.colorScheme.primary;
+                  }
+                  leadingWidget = Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: categoryColor.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: CategoryHelper.buildCategoryIcon(
+                      category.icon,
+                      categoryColor,
+                      category.type == 'EXPENSE',
+                      size: 20,
+                    ),
+                  );
+                }
+              }
+              // 2. Else if contact filter is active, show contact initials avatar
+              else if (search.contactUuids != null && search.contactUuids!.isNotEmpty) {
+                final firstContactUuid = search.contactUuids!.first;
+                final contact = contacts.firstWhereOrNull((c) => c.uuid == firstContactUuid);
+                if (contact != null) {
+                  leadingWidget = Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.getContactGradient(contact.name),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      contact.name.trim().isNotEmpty ? contact.name.trim().substring(0, 1).toUpperCase() : '?',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  );
+                }
+              }
+              // 3. Else if status code is active, show status-specific icon
+              else if (search.statusCodes != null && search.statusCodes!.isNotEmpty) {
+                final firstStatus = search.statusCodes!.first;
+                IconData statusIcon = Icons.info_outline;
+                Color statusColor = theme.colorScheme.primary;
+
+                if (firstStatus == 'PAID' || firstStatus == 'RECEIVED' || firstStatus == 'PROCESSED') {
+                  statusIcon = Icons.check_circle_outline;
+                  statusColor = Colors.green;
+                } else if (firstStatus == 'PAYABLE') {
+                  statusIcon = Icons.payment_outlined;
+                  statusColor = AppColors.payableColor;
+                } else if (firstStatus == 'RECEIVABLE') {
+                  statusIcon = Icons.account_balance_wallet_outlined;
+                  statusColor = AppColors.receivableColor;
+                } else if (firstStatus == 'SCHEDULED') {
+                  statusIcon = Icons.schedule_outlined;
+                  statusColor = Colors.orange;
+                }
+
+                leadingWidget = Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
                   ),
-                ),
-              );
-            }
-          }
-          // 3. Else if status code is active, show status-specific icon
-          else if (search.statusCodes != null && search.statusCodes!.isNotEmpty) {
-            final firstStatus = search.statusCodes!.first;
-            IconData statusIcon = Icons.info_outline;
-            Color statusColor = theme.colorScheme.primary;
+                  child: Icon(
+                    statusIcon,
+                    color: statusColor,
+                    size: 20,
+                  ),
+                );
+              }
+              // 4. Else if type filter is active, show transaction type icon
+              else if (search.type != null) {
+                final isExpense = search.type == 'EXPENSE';
+                final typeColor = isExpense ? AppColors.expenseColor : AppColors.incomeColor;
+                leadingWidget = Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: typeColor.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                    ),
+                  child: Icon(
+                    isExpense ? Icons.arrow_downward : Icons.arrow_upward,
+                    color: typeColor,
+                    size: 20,
+                  ),
+                );
+              }
 
-            if (firstStatus == 'PAID' || firstStatus == 'RECEIVED' || firstStatus == 'PROCESSED') {
-              statusIcon = Icons.check_circle_outline;
-              statusColor = Colors.green;
-            } else if (firstStatus == 'PAYABLE') {
-              statusIcon = Icons.payment_outlined;
-              statusColor = AppColors.payableColor;
-            } else if (firstStatus == 'RECEIVABLE') {
-              statusIcon = Icons.account_balance_wallet_outlined;
-              statusColor = AppColors.receivableColor;
-            } else if (firstStatus == 'SCHEDULED') {
-              statusIcon = Icons.schedule_outlined;
-              statusColor = Colors.orange;
-            }
-
-            leadingWidget = Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                statusIcon,
-                color: statusColor,
-                size: 20,
-              ),
-            );
-          }
-          // 4. Else if type filter is active, show transaction type icon
-          else if (search.type != null) {
-            final isExpense = search.type == 'EXPENSE';
-            final typeColor = isExpense ? AppColors.expenseColor : AppColors.incomeColor;
-            leadingWidget = Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: typeColor.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                isExpense ? Icons.arrow_downward : Icons.arrow_upward,
-                color: typeColor,
-                size: 20,
-              ),
-            );
-          }
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: SwipeableListItem(
-              key: ValueKey('search-swipe-${search.id}'),
-              enableEdit: true,
-              enableDelete: true,
-              borderRadius: 12,
-              onEdit: () => _showRenameDialog(search),
-              onDelete: () {
-                ref.read(recentSearchesProvider.notifier).deleteSearch(search.id);
-              },
-              child: Card(
-                margin: EdgeInsets.zero,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.5)),
-                ),
-                child: ListTile(
-                  leading: leadingWidget,
-                  title: Text(
-                    search.name,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: SwipeableListItem(
+                  key: ValueKey('search-swipe-${search.id}'),
+                  enableEdit: true,
+                  enableDelete: true,
+                  borderRadius: 12,
+                  onEdit: () => _showRenameDialog(search),
+                  onDelete: () {
+                    ref.read(recentSearchesProvider.notifier).deleteSearch(search.id);
+                  },
+                  child: Card(
+                    margin: EdgeInsets.zero,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.5)),
+                    ),
+                    child: ListTile(
+                      leading: leadingWidget,
+                      title: Text(
+                        search.name,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      subtitle: _buildSearchTags(search, theme, categories, contacts, accounts),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(
+                              search.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                              size: 20,
+                              color: search.isPinned ? theme.colorScheme.primary : null,
+                            ),
+                            onPressed: () {
+                              ref.read(recentSearchesProvider.notifier).togglePinSearch(search.id);
+                            },
+                            tooltip: search.isPinned ? 'Unpin search' : 'Pin search',
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        _applyRecentSearch(search);
+                        Navigator.pop(context);
+                      },
                     ),
                   ),
-                  subtitle: _buildSearchTags(search, theme, categories, contacts, accounts),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          search.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                          size: 20,
-                          color: search.isPinned ? theme.colorScheme.primary : null,
-                        ),
-                        onPressed: () {
-                          ref.read(recentSearchesProvider.notifier).togglePinSearch(search.id);
-                        },
-                        tooltip: search.isPinned ? 'Unpin search' : 'Pin search',
-                      ),
-                      if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) ...[
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, size: 20),
-                          onPressed: () => _showRenameDialog(search),
-                          tooltip: l10n.renameSearch,
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline, size: 20),
-                          onPressed: () {
-                            ref.read(recentSearchesProvider.notifier).deleteSearch(search.id);
-                          },
-                          tooltip: l10n.delete,
-                        ),
-                      ],
-                    ],
-                  ),
-                  onTap: () {
-                    _applyRecentSearch(search);
-                    Navigator.pop(context);
-                  },
                 ),
-              ),
-            ),
-          );
-        }),
+              );
+            },
+          ),
+        ),
       ],
     );
   }
