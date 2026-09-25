@@ -1451,57 +1451,90 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
                                 ),
                                 child: ListTile(
                                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  leading: Container(
-                                    width: 52,
-                                    height: 52,
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.surfaceContainerHigh,
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(11),
-                                      child: doc.isMissingPhysicalFile
-                                          ? Container(
-                                              color: Colors.orange.withValues(alpha: 0.1),
-                                              child: const Icon(
-                                                Icons.warning_amber_rounded,
-                                                color: Colors.orange,
-                                                size: 26,
-                                              ),
-                                            )
-                                          : (isImg
-                                              ? FutureBuilder<Directory>(
-                                                  future: ref.read(transactionDocumentsRepositoryProvider).getDocumentsDirectory(),
-                                                  builder: (context, snapshot) {
-                                                    if (snapshot.hasData) {
-                                                      final file = File(p.join(snapshot.data!.path, doc.fileName));
-                                                      return Image.file(
-                                                        file,
-                                                        fit: BoxFit.cover,
-                                                      );
-                                                    }
-                                                    return const Center(
-                                                      child: SizedBox(
-                                                        width: 16,
-                                                        height: 16,
-                                                        child: CircularProgressIndicator(strokeWidth: 2),
-                                                      ),
-                                                    );
-                                                  },
-                                                )
-                                              : Container(
-                                                  color: Colors.red.withValues(alpha: 0.1),
+                                  leading: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      Container(
+                                        width: 52,
+                                        height: 52,
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.surfaceContainerHigh,
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(11),
+                                          child: doc.isMissingPhysicalFile
+                                              ? Container(
+                                                  color: Colors.orange.withValues(alpha: 0.1),
                                                   child: const Icon(
-                                                    Icons.picture_as_pdf_rounded,
-                                                    color: Colors.red,
+                                                    Icons.warning_amber_rounded,
+                                                    color: Colors.orange,
                                                     size: 26,
                                                   ),
-                                                )),
-                                    ),
+                                                )
+                                              : (isImg
+                                                  ? FutureBuilder<Directory>(
+                                                      future: ref.read(transactionDocumentsRepositoryProvider).getDocumentsDirectory(),
+                                                      builder: (context, snapshot) {
+                                                        if (snapshot.hasData) {
+                                                          final file = File(p.join(snapshot.data!.path, doc.fileName));
+                                                          return Image.file(
+                                                            file,
+                                                            fit: BoxFit.cover,
+                                                          );
+                                                        }
+                                                        return const Center(
+                                                          child: SizedBox(
+                                                            width: 16,
+                                                            height: 16,
+                                                            child: CircularProgressIndicator(strokeWidth: 2),
+                                                          ),
+                                                        );
+                                                      },
+                                                    )
+                                                  : Container(
+                                                      color: Colors.red.withValues(alpha: 0.1),
+                                                      child: const Icon(
+                                                        Icons.picture_as_pdf_rounded,
+                                                        color: Colors.red,
+                                                        size: 26,
+                                                      ),
+                                                    )),
+                                        ),
+                                      ),
+                                      if (doc.dbDoc?.isNotSynced == true)
+                                        Positioned(
+                                          right: -3,
+                                          bottom: -3,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(3),
+                                            decoration: BoxDecoration(
+                                              color: theme.cardColor,
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(alpha: 0.15),
+                                                  blurRadius: 4,
+                                                  offset: const Offset(0, 1),
+                                                ),
+                                              ],
+                                              border: Border.all(
+                                                color: Colors.orange.withValues(alpha: 0.3),
+                                                width: 1,
+                                              ),
+                                            ),
+                                            child: const Icon(
+                                              Icons.cloud_upload_outlined,
+                                              size: 11,
+                                              color: Colors.orange,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
                                   ),
                                   title: Row(
                                     children: [

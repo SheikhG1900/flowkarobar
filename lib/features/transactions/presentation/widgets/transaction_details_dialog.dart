@@ -239,278 +239,339 @@ class TransactionDetailsDialog extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
             // Amount Card
-            Container(
-              key: const ValueKey('tx-details-amount-card'),
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: isExpense
-                      ? [
-                          AppColors.expenseColor,
-                          AppColors.expenseColor.withValues(alpha: 0.7)
-                        ]
-                      : [
-                          AppColors.incomeColor,
-                          AppColors.incomeColor.withValues(alpha: 0.7)
-                        ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: (isExpense
-                            ? AppColors.expenseColor
-                            : AppColors.incomeColor)
-                        .withValues(alpha: 0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                key: const ValueKey('tx-details-amount-column'),
-                children: [
-                  Text(
-                    key: const ValueKey('tx-details-type-label'),
-                    isExpense ? l10n.expense : l10n.income,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  key: const ValueKey('tx-details-amount-card'),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: isExpense
+                          ? [
+                              AppColors.expenseColor,
+                              AppColors.expenseColor.withValues(alpha: 0.7)
+                            ]
+                          : [
+                              AppColors.incomeColor,
+                              AppColors.incomeColor.withValues(alpha: 0.7)
+                            ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    key: const ValueKey('tx-details-amount-text'),
-                    '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency)}',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize:
-                          AmountFormatter.getFontSize(transaction.amount) + 6,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (transaction.paidRelationship != null) ...[
-                    const SizedBox(height: 12),
-                    Container(
-                      key: const ValueKey('tx-details-status-badge'),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isExpense
+                                ? AppColors.expenseColor
+                                : AppColors.incomeColor)
+                            .withValues(alpha: 0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
                       ),
-                      child: Row(
-                        key: const ValueKey('tx-details-status-row'),
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (item.isLinkedEntryMarked)
-                            const Icon(
-                              key: ValueKey('tx-details-status-icon'),
-                              Icons.check_circle,
-                              size: 16,
-                              color: Colors.white,
-                            ),
-                          if (item.isLinkedEntryMarked)
-                            const SizedBox(width: 6),
-                          Text(
-                            key: const ValueKey('tx-details-status-text'),
-                            _getStatusLabel(
-                                context,
-                                transaction.paidRelationship!,
-                                item.isLinkedEntryMarked,
-                                isExpense: isExpense,
-                            ),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  if (transaction.isAutoGenerated) ...[
-                    const SizedBox(height: 8),
-                    Container(
-                      key: const ValueKey('tx-details-auto-badge'),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        key: const ValueKey('tx-details-auto-row'),
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            key: ValueKey('tx-details-auto-icon'),
-                            Icons.auto_awesome,
-                            size: 14,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            key: const ValueKey('tx-details-auto-text'),
-                            l10n.autoGenerated,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  if (transaction.isScheduled == true) ...[
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        key: const ValueKey('tx-details-reviewed-btn'),
-                        onPressed: () =>
-                            _markAsReviewed(context, ref, transaction.uuid),
-                        icon: const Icon(Icons.check_circle_outline, size: 18),
-                        label: Text(l10n.markAsReviewed),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withValues(alpha: 0.2),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: const BorderSide(
-                                color: Colors.white30, width: 1),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  Row(
-                    key: const ValueKey('tx-details-actions-row'),
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      IconButton(
-                        key: const ValueKey('tx-details-link-btn'),
-                        icon: const Icon(Icons.link, color: Colors.white, size: 22),
-                        tooltip: l10n.copyLink,
-                        onPressed: () {
-                          final link = DeepLinkService().generateEntityOpenLinkHttps(
-                              'transaction', transaction.uuid);
-                          Clipboard.setData(ClipboardData(text: link));
-                          ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
-                        },
-                      ),
-                      if (transaction.isAutoGenerated != true)
-                        IconButton(
-                          key: const ValueKey('tx-details-share-btn'),
-                          icon: const Icon(Icons.share, color: Colors.white, size: 22),
-                          tooltip: l10n.share,
-                          onPressed: () {
-                            final capturedCurrency = currency;
-                            final capturedUserProfile = ref.read(userProfileProvider);
-                            final capturedTransactionService =
-                                ref.read(transactionServiceProvider);
-                            final capturedWhatsAppService =
-                                ref.read(whatsAppServiceProvider);
-                            final capturedTemplateService =
-                                ref.read(messageTemplateServiceProvider);
-                            final capturedLanguage = getCurrentLanguageCode(ref);
-                            ShareHelper.shareTransaction(
-                              context,
-                              ref,
-                              transaction,
-                              contact,
-                              category,
-                              item.isLinkedEntryMarked,
-                              currencyOverride: capturedCurrency,
-                              userProfileOverride: capturedUserProfile,
-                              transactionServiceOverride: capturedTransactionService,
-                              whatsAppServiceOverride: capturedWhatsAppService,
-                              templateServiceOverride: capturedTemplateService,
-                              languageOverride: capturedLanguage,
-                              forceSystemShare: true,
-                            );
-                          },
-                        ),
-                      if (transaction.isAutoGenerated != true)
-                        IconButton(
-                          key: const ValueKey('tx-details-duplicate-btn'),
-                          icon: const Icon(Icons.copy, color: Colors.white, size: 22),
-                          tooltip: l10n.duplicate,
-                          onPressed: () {
-                            int dueDateOffset = 0;
-                            if (linkedPayable?.dueDate != null) {
-                              dueDateOffset = linkedPayable!.dueDate!
-                                  .difference(transaction.date)
-                                  .inDays;
-                            } else if (linkedReceivable?.dueDate != null) {
-                              dueDateOffset = linkedReceivable!.dueDate!
-                                  .difference(transaction.date)
-                                  .inDays;
-                            }
-                            final now = DateTime.now();
-                            final initialDueDate = dueDateOffset != 0
-                                ? now.add(Duration(days: dueDateOffset))
-                                : null;
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AddTransactionScreen(
-                                  initialAmount: transaction.amount,
-                                  initialDate: now,
-                                  initialDescription: transaction.description,
-                                  initialType: transaction.type,
-                                  initialRelationship: transaction.paidRelationship,
-                                  initialCategoryName: category?.name,
-                                  initialCategoryColor: category?.color,
-                                  initialCategoryIcon: category?.icon,
-                                  initialContactName: contact?.name,
-                                  initialContactPhone: contact?.phone,
-                                  initialAccountUuid: item.account?.uuid,
-                                  initialDueDate: initialDueDate,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      if (!item.isLinkedEntryMarked && transaction.isAutoGenerated != true)
-                        IconButton(
-                          key: const ValueKey('tx-details-edit-btn'),
-                          icon: const Icon(Icons.edit, color: Colors.white, size: 22),
-                          tooltip: l10n.editTransaction,
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => EditTransactionScreen(
-                                  transaction: transaction,
-                                  category: category,
-                                  contact: contact,
-                                  account: item.account,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      if (!item.isLinkedEntryMarked && transaction.isAutoGenerated != true)
-                        IconButton(
-                          key: const ValueKey('tx-details-delete-btn'),
-                          icon: const Icon(Icons.delete, color: Colors.white, size: 22),
-                          tooltip: l10n.delete,
-                          onPressed: () =>
-                              _deleteTransaction(context, ref, transaction.uuid),
-                        ),
                     ],
                   ),
-                ],
-              ),
+                  child: Column(
+                    key: const ValueKey('tx-details-amount-column'),
+                    children: [
+                      Text(
+                        key: const ValueKey('tx-details-type-label'),
+                        isExpense ? l10n.expense : l10n.income,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        key: const ValueKey('tx-details-amount-text'),
+                        '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency)}',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize:
+                              AmountFormatter.getFontSize(transaction.amount) + 6,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (transaction.paidRelationship != null) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          key: const ValueKey('tx-details-status-badge'),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            key: const ValueKey('tx-details-status-row'),
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (item.isLinkedEntryMarked)
+                                const Icon(
+                                  key: ValueKey('tx-details-status-icon'),
+                                  Icons.check_circle,
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                              if (item.isLinkedEntryMarked)
+                                const SizedBox(width: 6),
+                              Text(
+                                key: const ValueKey('tx-details-status-text'),
+                                _getStatusLabel(
+                                    context,
+                                    transaction.paidRelationship!,
+                                    item.isLinkedEntryMarked,
+                                    isExpense: isExpense,
+                                ),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (transaction.isNotSynced == true) ...[
+                        const SizedBox(height: 12),
+                        Container(
+                          key: const ValueKey('tx-details-pending-sync-badge'),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            key: const ValueKey('tx-details-pending-sync-row'),
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.cloud_upload_outlined,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                l10n.changesToPush(1).replaceAll('1 ', ''),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (transaction.isAutoGenerated) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          key: const ValueKey('tx-details-auto-badge'),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            key: const ValueKey('tx-details-auto-row'),
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                key: ValueKey('tx-details-auto-icon'),
+                                Icons.auto_awesome,
+                                size: 14,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                key: const ValueKey('tx-details-auto-text'),
+                                l10n.autoGenerated,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      if (transaction.isScheduled == true) ...[
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            key: const ValueKey('tx-details-reviewed-btn'),
+                            onPressed: () =>
+                                _markAsReviewed(context, ref, transaction.uuid),
+                            icon: const Icon(Icons.check_circle_outline, size: 18),
+                            label: Text(l10n.markAsReviewed),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white.withValues(alpha: 0.2),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: const BorderSide(
+                                    color: Colors.white30, width: 1),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      Row(
+                        key: const ValueKey('tx-details-actions-row'),
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          IconButton(
+                            key: const ValueKey('tx-details-link-btn'),
+                            icon: const Icon(Icons.link, color: Colors.white, size: 22),
+                            tooltip: l10n.copyLink,
+                            onPressed: () {
+                              final link = DeepLinkService().generateEntityOpenLinkHttps(
+                                  'transaction', transaction.uuid);
+                              Clipboard.setData(ClipboardData(text: link));
+                              ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
+                            },
+                          ),
+                          if (transaction.isAutoGenerated != true)
+                            IconButton(
+                              key: const ValueKey('tx-details-share-btn'),
+                              icon: const Icon(Icons.share, color: Colors.white, size: 22),
+                              tooltip: l10n.share,
+                              onPressed: () {
+                                final capturedCurrency = currency;
+                                final capturedUserProfile = ref.read(userProfileProvider);
+                                final capturedTransactionService =
+                                    ref.read(transactionServiceProvider);
+                                final capturedWhatsAppService =
+                                    ref.read(whatsAppServiceProvider);
+                                final capturedTemplateService =
+                                    ref.read(messageTemplateServiceProvider);
+                                final capturedLanguage = getCurrentLanguageCode(ref);
+                                ShareHelper.shareTransaction(
+                                  context,
+                                  ref,
+                                  transaction,
+                                  contact,
+                                  category,
+                                  item.isLinkedEntryMarked,
+                                  currencyOverride: capturedCurrency,
+                                  userProfileOverride: capturedUserProfile,
+                                  transactionServiceOverride: capturedTransactionService,
+                                  whatsAppServiceOverride: capturedWhatsAppService,
+                                  templateServiceOverride: capturedTemplateService,
+                                  languageOverride: capturedLanguage,
+                                  forceSystemShare: true,
+                                );
+                              },
+                            ),
+                          if (transaction.isAutoGenerated != true)
+                            IconButton(
+                              key: const ValueKey('tx-details-duplicate-btn'),
+                              icon: const Icon(Icons.copy, color: Colors.white, size: 22),
+                              tooltip: l10n.duplicate,
+                              onPressed: () {
+                                int dueDateOffset = 0;
+                                if (linkedPayable?.dueDate != null) {
+                                  dueDateOffset = linkedPayable!.dueDate!
+                                      .difference(transaction.date)
+                                      .inDays;
+                                } else if (linkedReceivable?.dueDate != null) {
+                                  dueDateOffset = linkedReceivable!.dueDate!
+                                      .difference(transaction.date)
+                                      .inDays;
+                                }
+                                final now = DateTime.now();
+                                final initialDueDate = dueDateOffset != 0
+                                    ? now.add(Duration(days: dueDateOffset))
+                                    : null;
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AddTransactionScreen(
+                                      initialAmount: transaction.amount,
+                                      initialDate: now,
+                                      initialDescription: transaction.description,
+                                      initialType: transaction.type,
+                                      initialRelationship: transaction.paidRelationship,
+                                      initialCategoryName: category?.name,
+                                      initialCategoryColor: category?.color,
+                                      initialCategoryIcon: category?.icon,
+                                      initialContactName: contact?.name,
+                                      initialContactPhone: contact?.phone,
+                                      initialAccountUuid: item.account?.uuid,
+                                      initialDueDate: initialDueDate,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          if (!item.isLinkedEntryMarked && transaction.isAutoGenerated != true)
+                            IconButton(
+                              key: const ValueKey('tx-details-edit-btn'),
+                              icon: const Icon(Icons.edit, color: Colors.white, size: 22),
+                              tooltip: l10n.editTransaction,
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => EditTransactionScreen(
+                                      transaction: transaction,
+                                      category: category,
+                                      contact: contact,
+                                      account: item.account,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          if (!item.isLinkedEntryMarked && transaction.isAutoGenerated != true)
+                            IconButton(
+                              key: const ValueKey('tx-details-delete-btn'),
+                              icon: const Icon(Icons.delete, color: Colors.white, size: 22),
+                              tooltip: l10n.delete,
+                              onPressed: () =>
+                                  _deleteTransaction(context, ref, transaction.uuid),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                if (transaction.isNotSynced == true)
+                  Positioned(
+                    top: -6,
+                    right: -6,
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: const BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.cloud_upload_outlined,
+                        size: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+              ],
             ),
 
             const SizedBox(height: 16),

@@ -959,23 +959,56 @@ class _TransferTileState extends ConsumerState<_TransferTile> {
                       Expanded(
                         child: Row(
                           children: [
-                            TransferAccountBox(
-                              account: details.fromAccount,
-                              theme: theme,
-                              arrowBesideIcon: true,
-                              showBorder: false,
-                              hideName: details.fromAccount?.uuid == currentAccountUuid,
-                              onAccountTap: details.fromAccount != null &&
-                                      details.fromAccount!.uuid != currentAccountUuid
-                                  ? () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => AccountDetailScreen(
-                                            accountUuid: details.fromAccount!.uuid,
+                            Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                TransferAccountBox(
+                                  account: details.fromAccount,
+                                  theme: theme,
+                                  arrowBesideIcon: true,
+                                  showBorder: false,
+                                  hideName: details.fromAccount?.uuid == currentAccountUuid,
+                                  onAccountTap: details.fromAccount != null &&
+                                          details.fromAccount!.uuid != currentAccountUuid
+                                      ? () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => AccountDetailScreen(
+                                                accountUuid: details.fromAccount!.uuid,
+                                              ),
+                                            ),
+                                          )
+                                      : null,
+                                ),
+                                if (t.isNotSynced == true)
+                                  Positioned(
+                                    right: -3,
+                                    bottom: -3,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: BoxDecoration(
+                                        color: theme.cardColor,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.15),
+                                            blurRadius: 4,
+                                            offset: const Offset(0, 1),
                                           ),
+                                        ],
+                                        border: Border.all(
+                                          color: Colors.orange.withValues(alpha: 0.3),
+                                          width: 1,
                                         ),
-                                      )
-                                  : null,
+                                      ),
+                                      child: const Icon(
+                                        Icons.cloud_upload_outlined,
+                                        size: 10,
+                                        color: Colors.orange,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                             const SizedBox(width: 8),
                             TransferAccountBox(

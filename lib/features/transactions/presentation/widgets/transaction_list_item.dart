@@ -156,24 +156,57 @@ class _TransactionListItemState extends ConsumerState<TransactionListItem> {
                 child: ListTile(
                   key: ValueKey('tx-card-listtile-${transaction.uuid}'),
                   contentPadding: EdgeInsets.all(isCompact ? 12 : 16),
-                  leading: leadingOverride ??
-                      Container(
-                        key: ValueKey('tx-card-icon-${transaction.uuid}'),
-                        width: isCompact ? 40 : 50,
-                        height: isCompact ? 40 : 50,
-                        decoration: BoxDecoration(
-                          color: displayColor.withValues(alpha: 0.1),
-                          borderRadius:
-                              BorderRadius.circular(isCompact ? 10 : 14),
-                          border: Border.all(
-                            color: displayColor.withValues(alpha: 0.3),
-                            width: 1,
+                  leading: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      leadingOverride ??
+                          Container(
+                            key: ValueKey('tx-card-icon-${transaction.uuid}'),
+                            width: isCompact ? 40 : 50,
+                            height: isCompact ? 40 : 50,
+                            decoration: BoxDecoration(
+                              color: displayColor.withValues(alpha: 0.1),
+                              borderRadius:
+                                  BorderRadius.circular(isCompact ? 10 : 14),
+                              border: Border.all(
+                                color: displayColor.withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: CategoryHelper.buildCategoryIcon(
+                                category?.icon, displayColor, isExpense),
+                          ),
+                      if (transaction.isNotSynced == true)
+                        Positioned(
+                          right: -3,
+                          bottom: -3,
+                          child: Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              color: theme.cardColor,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                              border: Border.all(
+                                color: Colors.orange.withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.cloud_upload_outlined,
+                              size: isCompact ? 10 : 12,
+                              color: Colors.orange,
+                            ),
                           ),
                         ),
-                        alignment: Alignment.center,
-                        child: CategoryHelper.buildCategoryIcon(
-                            category?.icon, displayColor, isExpense),
-                      ),
+                    ],
+                  ),
                   title: Text(
                     key: ValueKey('tx-card-title-${transaction.uuid}'),
                     titleOverride ??

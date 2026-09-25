@@ -12,6 +12,12 @@ import 'package:flowpaisa/features/settings/presentation/providers/settings_prov
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/documents_screen.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
+import 'package:flowpaisa/features/accounts/presentation/screens/accounts_screen.dart';
+import 'package:flowpaisa/features/payables/presentation/screens/payables_list_screen.dart';
+import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
+import 'package:flowpaisa/features/categories/presentation/screens/categories_list_screen.dart';
+import 'package:flowpaisa/features/contacts/presentation/screens/contacts_list_screen.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 bool _isDatabaseLockedError(String status) {
@@ -227,6 +233,51 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                           final count = entry.value;
                           final icon = getTableIcon(entry.key);
 
+                          VoidCallback? getNavigationAction(String table) {
+                            switch (table) {
+                              case 'categories':
+                                return () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const CategoriesListScreen()),
+                                    );
+                              case 'contacts':
+                                return () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const ContactsListScreen()),
+                                    );
+                              case 'accounts':
+                              case 'account_transfers':
+                                return () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const AccountsScreen()),
+                                    );
+                              case 'transactions':
+                                return () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const TransactionsListScreen()),
+                                    );
+                              case 'receivables':
+                                return () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const ReceivablesListScreen()),
+                                    );
+                              case 'payables':
+                                return () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const PayablesListScreen()),
+                                    );
+                              case 'transaction_documents':
+                                return () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => const DocumentsScreen()),
+                                    );
+                              default:
+                                return null;
+                            }
+                          }
+
+                          final navigationAction = getNavigationAction(entry.key);
+
                           return Container(
                             margin: const EdgeInsets.only(bottom: 8),
                             decoration: BoxDecoration(
@@ -244,20 +295,38 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              trailing: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.orange.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Text(
-                                  '$count',
-                                  style: theme.textTheme.labelMedium?.copyWith(
-                                    color: Colors.orange,
-                                    fontWeight: FontWeight.bold,
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      '$count',
+                                      style: theme.textTheme.labelMedium?.copyWith(
+                                        color: Colors.orange,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
-                                ),
+                                  if (navigationAction != null) ...[
+                                    const SizedBox(width: 8),
+                                    Icon(
+                                      Icons.chevron_right_rounded,
+                                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                                    ),
+                                  ],
+                                ],
                               ),
+                              onTap: navigationAction != null
+                                  ? () {
+                                      Navigator.pop(sheetContext); // Dismiss modal sheet first
+                                      navigationAction();
+                                    }
+                                  : null,
                             ),
                           );
                         },
