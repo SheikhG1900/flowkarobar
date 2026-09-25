@@ -128,7 +128,7 @@ final dashboardStatsProvider = StreamProvider<DashboardStats>((ref) {
 final recentTransactionsProvider = StreamProvider<List<Transaction>>((ref) {
   final txRepo = ref.watch(transactionsRepositoryProvider);
 
-  return txRepo.watchRecentTransactions(limit: 10).distinct((prev, next) => const ListEquality().equals(prev, next)).debounceTime(const Duration(milliseconds: 100));
+  return txRepo.watchRecentTransactions(limit: 10);
 });
 
 /// Provider for total balance

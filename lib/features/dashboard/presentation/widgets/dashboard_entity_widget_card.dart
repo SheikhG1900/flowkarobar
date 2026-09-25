@@ -82,18 +82,51 @@ class _DashboardEntityWidgetCardState
                 : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
             Widget? leadingChild;
             if (cat != null) {
-              leadingChild = Container(
-                key: ValueKey('entity-tx-icon-$uuid'),
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: txColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: CategoryHelper.buildCategoryIcon(
-                    cat.icon, txColor, isExpense,
-                    size: 20),
+              leadingChild = Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    key: ValueKey('entity-tx-icon-$uuid'),
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: txColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    alignment: Alignment.center,
+                    child: CategoryHelper.buildCategoryIcon(
+                        cat.icon, txColor, isExpense,
+                        size: 20),
+                  ),
+                  if (item.transaction.isNotSynced == true)
+                    Positioned(
+                      right: -3,
+                      bottom: -3,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: theme.cardColor,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 4,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: Colors.orange.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.cloud_upload_outlined,
+                          size: 10,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ),
+                ],
               );
             }
             return Stack(

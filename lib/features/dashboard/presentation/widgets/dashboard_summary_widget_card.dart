@@ -636,6 +636,14 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                           child: Row(
                             key: ValueKey('recent-tx-row-content-${tx.uuid}'),
                             children: [
+                              if (tx.isNotSynced == true) ...[
+                                Icon(
+                                  Icons.cloud_upload_outlined,
+                                  size: 14,
+                                  color: Colors.orange.withValues(alpha: 0.7),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
                               Expanded(
                                 child: Text(
                                   key: ValueKey('recent-tx-desc-${tx.uuid}'),

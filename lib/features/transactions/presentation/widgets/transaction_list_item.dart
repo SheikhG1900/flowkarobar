@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
@@ -439,7 +441,7 @@ class _TransactionListItemState extends ConsumerState<TransactionListItem> {
                           ],
                         ],
                       ),
-                      if (widget.onEdit != null || widget.onDelete != null) ...[
+                      if ((kIsWeb || Platform.isWindows || Platform.isMacOS || Platform.isLinux) && (widget.onEdit != null || widget.onDelete != null)) ...[
                         const SizedBox(width: 12),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
