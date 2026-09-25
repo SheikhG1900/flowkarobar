@@ -163,7 +163,9 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
       if (defaultTargetPlatform == TargetPlatform.android) {
         ref.read(updateServiceProvider).checkForUpdate();
       } else if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) {
-        ref.read(updateServiceProvider).checkForWindowsUpdate(context, ref, showDialogIfAvailable: false);
+        ref
+            .read(updateServiceProvider)
+            .checkForWindowsUpdate(context, ref, showDialogIfAvailable: false);
       }
     });
   }
@@ -207,11 +209,11 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
       ),
       builder: (context, child) {
         if (kIsWeb || !Platform.isWindows) return child!;
-        
+
         // Always use a dark ambient background to create a theater-like cinematic experience
         // matching the gorgeous dark theme, even when the app itself is in light mode.
         final ambientColor = activeColor.withValues(alpha: 0.05);
-        
+
         return Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -1093,7 +1095,7 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
                             builder: (context, ref, child) {
                               final showSync =
                                   ref.watch(showDashboardSyncStatusProvider);
-                              
+
                               if (!showSync) {
                                 return const SizedBox.shrink();
                               }
@@ -2503,50 +2505,50 @@ class _DashboardRecentTransactionTileState
           ),
         );
       },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: _isHovered
-                ? categoryColor
-                : categoryColor.withValues(alpha: isDark ? 0.2 : 0.1),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: categoryColor.withValues(alpha: isDark ? 0.05 : 0.08),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: _isHovered
+                    ? categoryColor
+                    : categoryColor.withValues(alpha: isDark ? 0.2 : 0.1),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: categoryColor.withValues(alpha: isDark ? 0.05 : 0.08),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(15),
-          child: Material(
-            type: MaterialType.transparency,
-            child: InkWell(
-              onHover: (hovering) {
-                setState(() {
-                  _isHovered = hovering;
-                });
-              },
-              hoverColor: Colors.transparent,
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        TransactionDetailsDialog(transactionUuid: transaction.uuid),
-                  ),
-                );
-              },
+            child: ClipRRect(
               borderRadius: BorderRadius.circular(15),
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  ListTile(
+              child: Material(
+                type: MaterialType.transparency,
+                child: InkWell(
+                  onHover: (hovering) {
+                    setState(() {
+                      _isHovered = hovering;
+                    });
+                  },
+                  hoverColor: Colors.transparent,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TransactionDetailsDialog(
+                            transactionUuid: transaction.uuid),
+                      ),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(15),
+                  child: ListTile(
                     contentPadding: const EdgeInsets.all(12),
                     leading: Container(
                       width: 48,
@@ -2576,29 +2578,30 @@ class _DashboardRecentTransactionTileState
                     trailing: Text(
                       '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency)}',
                       style: TextStyle(
-                        color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+                        color: isExpense
+                            ? AppColors.expenseColor
+                            : AppColors.incomeColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
                     ),
                   ),
-                  if (item.account != null)
-                    TransactionAccountIconBadge(
-                      account: item.account!,
-                      theme: theme,
-                      bottomOffset: 3.0,
-                      horizontalOffset: -10.0,
-                    ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+          if (item.account != null)
+            TransactionAccountIconBadge(
+              account: item.account!,
+              theme: theme,
+              bottomOffset: 8,
+              horizontalOffset: 15, // adjusted offset for outer stack
+            ),
+        ],
       ),
     );
   }
 }
-
 
 class _DashboardHeader extends ConsumerWidget {
   const _DashboardHeader({super.key, required this.logoRevealPull});
@@ -3784,7 +3787,8 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
                 bottomEnd: Radius.circular(19),
               ).resolve(Directionality.of(context)),
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 0),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -3795,9 +3799,11 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
                             border: Border.all(
-                                color: gradient.colors.first.withValues(alpha: 0.8),
+                                color: gradient.colors.first
+                                    .withValues(alpha: 0.8),
                                 width: 1),
-                            color: gradient.colors.first.withValues(alpha: 0.2 / 1.0),
+                            color: gradient.colors.first
+                                .withValues(alpha: 0.2 / 1.0),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(icon, size: 24),
@@ -3806,7 +3812,8 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
                           const Positioned(
                             top: 0,
                             right: 0,
-                            child: Icon(Icons.lock, size: 12, color: Colors.white),
+                            child:
+                                Icon(Icons.lock, size: 12, color: Colors.white),
                           ),
                       ],
                     ),
@@ -3839,7 +3846,6 @@ class _QuickActionButtonState extends State<_QuickActionButton> {
     );
   }
 }
-
 
 /// Helper widget for press & scale micro-animation
 class _AnimatedPressScale extends StatefulWidget {
@@ -4059,7 +4065,8 @@ class _SettingsTab extends ConsumerWidget {
             child: Material(
               type: MaterialType.transparency,
               child: ListTile(
-                leading: const Icon(Icons.workspace_premium, color: Colors.white),
+                leading:
+                    const Icon(Icons.workspace_premium, color: Colors.white),
                 title: Text(
                   l10n.premium,
                   style: const TextStyle(
