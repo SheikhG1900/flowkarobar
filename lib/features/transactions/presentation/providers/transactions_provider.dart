@@ -58,6 +58,7 @@ final documentSyncRequiredProvider = NotifierProvider<DocumentSyncRequiredNotifi
 class DocumentSyncRequiredNotifier extends Notifier<bool> {
   late String _cashbookId;
   late SharedPreferences _prefs;
+  StreamSubscription? _subscription;
 
   @override
   bool build() {
@@ -67,27 +68,38 @@ class DocumentSyncRequiredNotifier extends Notifier<bool> {
 
     _init();
 
+    ref.onDispose(() {
+      _subscription?.cancel();
+    });
+
     return _prefs.getBool(_prefKey) ?? false;
   }
 
   String get _prefKey => 'document_sync_required_$_cashbookId';
 
   void _init() {
+    _subscription?.cancel();
+
     // Listen to changes in the transaction documents table
     final db = ref.read(databaseProvider);
-    db.select(db.transactionDocuments).watch().listen((docs) {
+    _subscription = db.select(db.transactionDocuments).watch().listen((docs) {
       if (!ref.mounted) return;
-      // If there are new active documents, and state is false, check if we need to mark as required
-      final activeDocs = docs.where((d) => !d.isDeleted).toList();
-      if (activeDocs.isNotEmpty && !state) {
-        // Only trigger if we have documents and we haven't already marked it or if a new document was added after the last export
+
+      final txs = ref.read(allTransactionsProvider).value ?? [];
+      final activeTxUuids = txs.map((t) => t.uuid).toSet();
+
+      // Only evaluate documents belonging to the transactions of the current Cashbook
+      final cashbookDocs = docs.where((d) => activeTxUuids.contains(d.transactionUuid)).toList();
+
+      if (cashbookDocs.isNotEmpty && !state) {
         final lastExportTimeStr = _prefs.getString('last_document_export_$_cashbookId');
         if (lastExportTimeStr == null) {
           setSyncRequired(true);
         } else {
           final lastExportTime = DateTime.parse(lastExportTimeStr);
-          final hasNewDocs = activeDocs.any((d) => d.createdAt.isAfter(lastExportTime));
-          if (hasNewDocs) {
+          // Check 'updatedAt' instead of 'createdAt' to capture both updates and soft deletions!
+          final hasChanges = cashbookDocs.any((d) => d.updatedAt.isAfter(lastExportTime));
+          if (hasChanges) {
             setSyncRequired(true);
           }
         }
