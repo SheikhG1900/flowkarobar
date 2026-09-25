@@ -578,22 +578,84 @@ class ExportService {
       receivablesWithContacts = [];
     }
 
-    if (filters != null &&
-        filters.contactUuids != null &&
-        filters.contactUuids!.isNotEmpty) {
-      payablesWithContacts = payablesWithContacts
-          .where((p) => filters.contactUuids!.contains(p.contact?.uuid))
-          .toList();
-      receivablesWithContacts = receivablesWithContacts
-          .where((r) => filters.contactUuids!.contains(r.contact?.uuid))
-          .toList();
-    }
+    // Apply filters to payables and receivables to match screen/UI behavior
+    if (filters != null) {
+      // 1. If category filter is applied, filter payables/receivables that are linked to transactions of those categories
+      if (filters.categoryUuids != null && filters.categoryUuids!.isNotEmpty) {
+        payablesWithContacts = payablesWithContacts.where((p) {
+          final isLinkedExpenseMatch = p.payable.linkedExpenseUuid != null && 
+              transactionsWithDetails.any((t) => t.transaction.uuid == p.payable.linkedExpenseUuid);
+          final isLinkedIncomeMatch = p.payable.linkedIncomeUuid != null && 
+              transactionsWithDetails.any((t) => t.transaction.uuid == p.payable.linkedIncomeUuid);
+          return isLinkedExpenseMatch || isLinkedIncomeMatch;
+        }).toList();
 
-    if (filters != null &&
-        filters.accountUuids != null &&
-        filters.accountUuids!.isNotEmpty) {
-      payablesWithContacts = [];
-      receivablesWithContacts = [];
+        receivablesWithContacts = receivablesWithContacts.where((r) {
+          final isLinkedExpenseMatch = r.receivable.linkedExpenseUuid != null && 
+              transactionsWithDetails.any((t) => t.transaction.uuid == r.receivable.linkedExpenseUuid);
+          final isLinkedIncomeMatch = r.receivable.linkedIncomeUuid != null && 
+              transactionsWithDetails.any((t) => t.transaction.uuid == r.receivable.linkedIncomeUuid);
+          return isLinkedExpenseMatch || isLinkedIncomeMatch;
+        }).toList();
+      }
+
+      // 2. If contact filter is applied
+      if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
+        payablesWithContacts = payablesWithContacts
+            .where((p) => filters.contactUuids!.contains(p.contact?.uuid))
+            .toList();
+        receivablesWithContacts = receivablesWithContacts
+            .where((r) => filters.contactUuids!.contains(r.contact?.uuid))
+            .toList();
+      }
+
+      // 3. If account filter is applied, payables/receivables are zero/empty on UI
+      if (filters.accountUuids != null && filters.accountUuids!.isNotEmpty) {
+        payablesWithContacts = [];
+        receivablesWithContacts = [];
+      }
+
+      // 4. If transaction type filter is active, filter out based on type
+      if (filters.type != null && filters.type!.isNotEmpty) {
+        if (filters.type == 'INCOME') {
+          // If filtering by Income, payables are zero
+          payablesWithContacts = [];
+        } else if (filters.type == 'EXPENSE') {
+          // If filtering by Expense, receivables are zero
+          receivablesWithContacts = [];
+        }
+      }
+
+      // 5. If amount filter is active (minAmount or maxAmount), match the due/pending amounts of payables/receivables
+      if (filters.minAmount != null) {
+        payablesWithContacts = payablesWithContacts
+            .where((p) => p.payable.amount >= filters.minAmount!)
+            .toList();
+        receivablesWithContacts = receivablesWithContacts
+            .where((r) => r.receivable.amount >= filters.minAmount!)
+            .toList();
+      }
+      if (filters.maxAmount != null) {
+        payablesWithContacts = payablesWithContacts
+            .where((p) => p.payable.amount <= filters.maxAmount!)
+            .toList();
+        receivablesWithContacts = receivablesWithContacts
+            .where((r) => r.receivable.amount <= filters.maxAmount!)
+            .toList();
+      }
+
+      // 6. If status/relationships filters are active
+      if (filters.statusCodes != null && filters.statusCodes!.isNotEmpty) {
+        final hasPayableStatus = filters.statusCodes!.contains('PAYABLE');
+        final hasReceivableStatus = filters.statusCodes!.contains('RECEIVABLE');
+        
+        if (!hasPayableStatus) {
+          payablesWithContacts = [];
+        }
+        if (!hasReceivableStatus) {
+          receivablesWithContacts = [];
+        }
+      }
     }
 
     String? accountNames;
