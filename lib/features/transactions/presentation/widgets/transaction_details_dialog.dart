@@ -1304,196 +1304,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
     dynamic currency, {
     VoidCallback? onEdit,
   }) {
-    final (_, rows) = TabularParser.parse(description);
-    if (rows.isEmpty) return const SizedBox.shrink();
-
-    final total = rows.fold(0.0, (sum, row) => sum + row.totalAmount);
-    final totalQuantity = rows.fold(0.0, (sum, row) => sum + row.quantity);
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
-    final amountLine = AmountFormatter.formatWithCurrency(
-      total,
-      currency,
-      isRtl,
-    );
-    final quantityLine = AmountFormatter.formatQuantity(totalQuantity);
-    final quantitySubtitle = l10n.itemizedHeaderQuantityLabel(quantityLine);
-
-    final isDarkMode = theme.brightness == Brightness.dark;
-
-    return Container(
-      key: const ValueKey('tx-details-tabular-section'),
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: isDarkMode
-            ? theme.colorScheme.surfaceContainerLow
-            : theme.colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
-      ),
-      child: Theme(
-        data: theme.copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          key: const ValueKey('tx-details-tabular-tile'),
-          initiallyExpanded: true,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(16)),
-          ),
-          collapsedShape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(16)),
-          ),
-          title: Column(
-            key: const ValueKey('tx-details-tabular-title-row'),
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.table_chart_outlined,
-                    size: 22,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    l10n.itemizedDetails,
-                    key: const ValueKey('tx-details-tabular-label'),
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: -0.1,
-                      height: 1.25,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    Icons.keyboard_arrow_down,
-                    size: 20,
-                    color: theme.colorScheme.primary.withValues(alpha: 0.7),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Wrap(
-                key: const ValueKey('tx-details-tabular-total'),
-                spacing: 8,
-                runSpacing: 6,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  _tabularMetricBadge(
-                    theme,
-                    icon: Symbols.payments,
-                    text: amountLine,
-                    forAmount: true,
-                    textDirection: TextDirection.ltr,
-                  ),
-                  _tabularMetricBadge(
-                    theme,
-                    icon: Symbols.inventory_2,
-                    text: quantitySubtitle,
-                    forAmount: false,
-                  ),
-                ],
-              ),
-            ],
-          ),
-          trailing: onEdit != null
-              ? IconButton(
-                  key: const ValueKey('tx-details-tabular-edit-btn'),
-                  onPressed: onEdit,
-                  icon: Icon(Icons.edit_outlined,
-                      size: 20, color: theme.colorScheme.onSurfaceVariant),
-                  tooltip: l10n.edit,
-                )
-              : const SizedBox.shrink(),
-          children: [
-            const Divider(height: 1),
-            ListView.separated(
-              key: const ValueKey('tx-details-tabular-list'),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: rows.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final row = rows[index];
-                final unitPriceStr = AmountFormatter.formatWithCurrency(
-                  row.unitAmount,
-                  currency,
-                );
-                final showQtyBreakdown =
-                    (row.quantity - 1.0).abs() > 1e-9;
-                final qtyDisplay =
-                    AmountFormatter.formatQuantity(row.quantity);
-
-                return Padding(
-                  key: ValueKey('tx-details-tabular-row-$index'),
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    key: ValueKey('tx-details-tabular-col-$index'),
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          key: ValueKey('tx-details-tabular-header-$index'),
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              key: ValueKey('tx-details-tabular-date-$index'),
-                              AppDateFormatter.formatDate(row.date,
-                                  pattern: 'dd MMM, yyyy'),
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              key: ValueKey('tx-details-tabular-desc-$index'),
-                              row.description,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            key: ValueKey('tx-details-tabular-amount-$index'),
-                            AmountFormatter.formatWithCurrency(
-                              row.totalAmount,
-                              currency,
-                            ),
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
-                            ),
-                            textAlign: TextAlign.end,
-                            textDirection: TextDirection.ltr,
-                          ),
-                          if (showQtyBreakdown) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              key: ValueKey('tx-details-tabular-qty-$index'),
-                              isRtl
-                                  ? '$unitPriceStr x $qtyDisplay'
-                                  : '$qtyDisplay x $unitPriceStr',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                              textAlign: TextAlign.end,
-                              textDirection: TextDirection.ltr,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ],
-        ),
-      ),
+    return TabularDataSectionWidget(
+      description: description,
+      currency: currency,
+      onEdit: onEdit,
     );
   }
 
@@ -3466,5 +3280,468 @@ class TransactionDetailsDialog extends ConsumerWidget {
             context, ref, l10n.errorOccurred(e.toString()));
       }
     }
+  }
+}
+
+class TabularDataSectionWidget extends StatefulWidget {
+  final String description;
+  final dynamic currency;
+  final VoidCallback? onEdit;
+
+  const TabularDataSectionWidget({
+    super.key,
+    required this.description,
+    required this.currency,
+    this.onEdit,
+  });
+
+  @override
+  State<TabularDataSectionWidget> createState() => _TabularDataSectionWidgetState();
+}
+
+class _TabularDataSectionWidgetState extends State<TabularDataSectionWidget> {
+  String _sortBy = 'date'; // 'date', 'desc', 'price'
+  bool _isAscending = false; // default to latest first (descending)
+  bool _isExpanded = true; // tracking expansion state for animated arrow rotation
+
+  Widget _buildSortChip({
+    required String label,
+    required String field,
+    required ThemeData theme,
+  }) {
+    final isSelected = _sortBy == field;
+    final colorScheme = theme.colorScheme;
+
+    Widget? directionIcon;
+    if (isSelected) {
+      directionIcon = Padding(
+        padding: const EdgeInsets.only(left: 4, right: 4),
+        child: Icon(
+          _isAscending ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+          size: 14,
+          color: colorScheme.primary,
+        ),
+      );
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            if (_sortBy == field) {
+              _isAscending = !_isAscending;
+            } else {
+              _sortBy = field;
+              // default to descending for date, and ascending for others
+              _isAscending = field == 'date' ? false : true;
+            }
+          });
+        },
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? colorScheme.primary.withValues(alpha: 0.08)
+                : Colors.transparent,
+            border: Border.all(
+              color: isSelected
+                  ? colorScheme.primary.withValues(alpha: 0.3)
+                  : theme.dividerColor.withValues(alpha: 0.15),
+              width: 1,
+            ),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  color: isSelected ? colorScheme.primary : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              if (directionIcon != null) directionIcon,
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final (_, rows) = TabularParser.parse(widget.description);
+    if (rows.isEmpty) return const SizedBox.shrink();
+
+    final l10n = AppLocalizations.of(context)!;
+    final total = rows.fold(0.0, (sum, row) => sum + row.totalAmount);
+    final totalQuantity = rows.fold(0.0, (sum, row) => sum + row.quantity);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final amountLine = AmountFormatter.formatWithCurrency(
+      total,
+      widget.currency,
+      isRtl,
+    );
+    final quantityLine = AmountFormatter.formatQuantity(totalQuantity);
+    final quantitySubtitle = l10n.itemizedHeaderQuantityLabel(quantityLine);
+
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    // Sorting
+    final sortedRows = List<TabularRow>.from(rows);
+    if (_sortBy == 'date') {
+      sortedRows.sort((a, b) {
+        final cmp = a.date.compareTo(b.date);
+        return _isAscending ? cmp : -cmp;
+      });
+    } else if (_sortBy == 'desc') {
+      sortedRows.sort((a, b) {
+        final cmp = a.description.toLowerCase().compareTo(b.description.toLowerCase());
+        return _isAscending ? cmp : -cmp;
+      });
+    } else if (_sortBy == 'price') {
+      sortedRows.sort((a, b) {
+        final cmp = a.totalAmount.compareTo(b.totalAmount);
+        return _isAscending ? cmp : -cmp;
+      });
+    }
+
+    return Container(
+      key: const ValueKey('tx-details-tabular-section'),
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: isDarkMode
+            ? theme.colorScheme.surfaceContainerLow
+            : theme.colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.dividerColor.withValues(alpha: 0.5)),
+      ),
+      child: Theme(
+        data: theme.copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          key: const ValueKey('tx-details-tabular-tile'),
+          initiallyExpanded: true,
+          onExpansionChanged: (expanded) {
+            setState(() {
+              _isExpanded = expanded;
+            });
+          },
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
+          ),
+          collapsedShape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
+          ),
+          leading: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                width: 1,
+              ),
+            ),
+            child: Icon(
+              Icons.receipt_long_rounded,
+              color: theme.colorScheme.primary,
+              size: 20,
+            ),
+          ),
+          title: Text(
+            l10n.itemizedDetails,
+            key: const ValueKey('tx-details-tabular-label'),
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.1,
+              color: theme.colorScheme.onSurface,
+            ),
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Row(
+              key: const ValueKey('tx-details-tabular-total'),
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(
+                  Symbols.payments,
+                  size: 16,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  amountLine,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                    letterSpacing: -0.2,
+                  ),
+                  textDirection: TextDirection.ltr,
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  width: 1,
+                  height: 12,
+                  color: theme.dividerColor.withValues(alpha: 0.3),
+                ),
+                const SizedBox(width: 12),
+                Icon(
+                  Symbols.inventory_2,
+                  size: 14,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  quantitySubtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.onEdit != null)
+                IconButton(
+                  key: const ValueKey('tx-details-tabular-edit-btn'),
+                  onPressed: widget.onEdit,
+                  icon: Icon(Icons.edit_outlined,
+                      size: 20, color: theme.colorScheme.onSurfaceVariant),
+                  tooltip: l10n.edit,
+                ),
+              const SizedBox(width: 4),
+              AnimatedRotation(
+                turns: _isExpanded ? 0.5 : 0.0,
+                duration: const Duration(milliseconds: 200),
+                child: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 22,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          children: [
+            const Divider(height: 1),
+            // Sort Bar
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              color: isDarkMode
+                  ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.5)
+                  : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.sort_outlined,
+                    size: 16,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Sort:',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _buildSortChip(
+                            label: l10n.date,
+                            field: 'date',
+                            theme: theme,
+                          ),
+                          const SizedBox(width: 8),
+                          _buildSortChip(
+                            label: l10n.description,
+                            field: 'desc',
+                            theme: theme,
+                          ),
+                          const SizedBox(width: 8),
+                          _buildSortChip(
+                            label: l10n.amount,
+                            field: 'price',
+                            theme: theme,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+            ListView.builder(
+              key: const ValueKey('tx-details-tabular-list'),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              padding: const EdgeInsets.only(bottom: 12),
+              itemCount: sortedRows.length,
+              itemBuilder: (context, index) {
+                final row = sortedRows[index];
+                final unitPriceStr = AmountFormatter.formatWithCurrency(
+                  row.unitAmount,
+                  widget.currency,
+                );
+                final showQtyBreakdown = (row.quantity - 1.0).abs() > 1e-9;
+                final qtyDisplay = AmountFormatter.formatQuantity(row.quantity);
+
+                return Container(
+                  key: ValueKey('tx-details-tabular-row-$index'),
+                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: isDarkMode
+                        ? theme.colorScheme.surfaceContainerHigh
+                        : theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: theme.colorScheme.outlineVariant.withValues(alpha: 0.15),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDarkMode ? 0.05 : 0.02),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (!isRtl)
+                          Container(
+                            width: 4,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.7),
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(12),
+                                bottomLeft: Radius.circular(12),
+                              ),
+                            ),
+                          ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.calendar_today_outlined,
+                                            size: 11,
+                                            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            AppDateFormatter.formatDate(row.date, pattern: 'dd MMM, yyyy'),
+                                            style: theme.textTheme.bodySmall?.copyWith(
+                                              color: theme.colorScheme.onSurfaceVariant,
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        row.description,
+                                        style: theme.textTheme.bodyMedium?.copyWith(
+                                          fontWeight: FontWeight.w600,
+                                          height: 1.3,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      AmountFormatter.formatWithCurrency(
+                                        row.totalAmount,
+                                        widget.currency,
+                                      ),
+                                      style: theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: theme.colorScheme.primary,
+                                        fontSize: 14,
+                                      ),
+                                      textAlign: TextAlign.end,
+                                      textDirection: TextDirection.ltr,
+                                    ),
+                                    if (showQtyBreakdown) ...[
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          isRtl
+                                              ? '$unitPriceStr x $qtyDisplay'
+                                              : '$qtyDisplay x $unitPriceStr',
+                                          style: theme.textTheme.labelSmall?.copyWith(
+                                            color: theme.colorScheme.onSurfaceVariant,
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                          textAlign: TextAlign.end,
+                                          textDirection: TextDirection.ltr,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        if (isRtl)
+                          Container(
+                            width: 4,
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.7),
+                              borderRadius: const BorderRadius.only(
+                                topRight: Radius.circular(12),
+                                bottomRight: Radius.circular(12),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
