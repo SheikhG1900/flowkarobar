@@ -1055,7 +1055,6 @@ class TransferFlowChart extends ConsumerWidget {
                                     ? (e.value / cardMax).clamp(0.0, 1.0)
                                     : 0,
                                 icon: srcIcon,
-                                reversed: true,
                               ),
                             ),
                           );
