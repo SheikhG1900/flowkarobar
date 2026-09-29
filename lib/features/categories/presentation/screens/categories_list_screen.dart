@@ -933,179 +933,215 @@ class _CategoryCardState extends ConsumerState<_CategoryCard> {
                       width: 1,
                     ),
                   ),
-                  child: Column(
-                    key: ValueKey('category-column-${category.uuid}'),
-                    mainAxisSize: MainAxisSize.min,
+                  child: Stack(
+                    key: ValueKey('category-stack-layers-${category.uuid}'),
                     children: [
-                      Padding(
-                        key: ValueKey('category-inner-padding-${category.uuid}'),
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          key: ValueKey('category-row-${category.uuid}'),
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Hero(
-                              tag: 'category_icon_${category.uuid}',
+                      if (hasBudget)
+                        Positioned.fill(
+                          key: ValueKey('category-progress-bg-${category.uuid}'),
+                          child: Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: FractionallySizedBox(
+                              widthFactor: pr.isFinite ? pr.clamp(0.0, 1.0) : 0.0,
                               child: Container(
-                                key: ValueKey('category-icon-container-${category.uuid}'),
-                                width: 48,
-                                height: 48,
                                 decoration: BoxDecoration(
-                                  color: color.withValues(
-                                      alpha: theme.brightness == Brightness.dark
-                                          ? 0.1
-                                          : 0.15),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: color.withValues(alpha: 0.3),
-                                    width: 1,
+                                  color: fillColor.withValues(
+                                    alpha: theme.brightness == Brightness.dark ? 0.12 : 0.08,
                                   ),
                                 ),
-                                alignment: Alignment.center,
-                                child: CategoryHelper.buildCategoryIcon(
-                                    category.icon, color, isExpense),
                               ),
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Text(
-                                key: ValueKey('category-name-${category.uuid}'),
-                                LocalizationHelper.getLocalizedCategoryName(
-                                    context, category.name),
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            Column(
-                              key: ValueKey('category-amount-col-${category.uuid}'),
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  children: [
-                                    Text(
-                                      AmountFormatter.formatWithCurrency(
-                                        netAmount,
-                                        currency,
-                                      ),
-                                      style: theme.textTheme.titleSmall?.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        color: theme.colorScheme.onSurface,
-                                      ),
-                                    ),
-                                    if (hasBudget) ...[
-                                      Text(
-                                        ' / ',
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                                          fontWeight: FontWeight.w300,
-                                        ),
-                                      ),
-                                      Text(
-                                        AmountFormatter.formatWithCurrency(
-                                          budget,
-                                          currency,
-                                        ),
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: theme.colorScheme.onSurfaceVariant,
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                                  textBaseline: TextBaseline.alphabetic,
-                                  children: [
-                                    Text(
-                                      '${l10n.overall}: ',
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                                        fontWeight: FontWeight.w500,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                    Text(
-                                      AmountFormatter.formatWithCurrency(
-                                        overallNetAmount,
-                                        currency,
-                                      ),
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                                        fontSize: 11,
-                                      ),
-                                    ),
-                                    if (hasOverallBudget) ...[
-                                      Text(
-                                        ' / ',
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                                          fontWeight: FontWeight.w300,
-                                          fontSize: 10,
-                                        ),
-                                      ),
-                                      Text(
-                                        AmountFormatter.formatWithCurrency(
-                                          overallBudget,
-                                          currency,
-                                        ),
-                                        style: theme.textTheme.labelSmall?.copyWith(
-                                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 10,
-                                        ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ],
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              key: ValueKey('category-arrow-${category.uuid}'),
-                              Icons.arrow_forward_ios,
-                              size: 14,
-                              color: theme.colorScheme.onSurfaceVariant
-                                  .withValues(alpha: 0.5),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (hasBudget || hasOverallBudget) ...[
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (hasBudget) ...[
-                                CategoryBudgetProgressBar(
-                                  key: ValueKey('category-budget-bar-${category.uuid}'),
-                                  progress: pr,
-                                  fillColor: fillColor,
-                                ),
-                                if (hasOverallBudget) const SizedBox(height: 4),
-                              ],
-                              if (hasOverallBudget)
-                                CategoryBudgetProgressBar(
-                                  key: ValueKey('category-overall-budget-bar-${category.uuid}'),
-                                  progress: overallPr,
-                                  fillColor: overallFillColor,
-                                  height: 3,
-                                ),
-                            ],
                           ),
                         ),
-                      ],
+                      Column(
+                        key: ValueKey('category-column-${category.uuid}'),
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            key: ValueKey('category-inner-padding-${category.uuid}'),
+                            padding: const EdgeInsets.all(16),
+                            child: Row(
+                              key: ValueKey('category-row-${category.uuid}'),
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Hero(
+                                  tag: 'category_icon_${category.uuid}',
+                                  child: Container(
+                                    key: ValueKey('category-icon-container-${category.uuid}'),
+                                    width: 48,
+                                    height: 48,
+                                    decoration: BoxDecoration(
+                                      color: color.withValues(
+                                          alpha: theme.brightness == Brightness.dark
+                                              ? 0.1
+                                              : 0.15),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: color.withValues(alpha: 0.3),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: CategoryHelper.buildCategoryIcon(
+                                        category.icon, color, isExpense),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Text(
+                                    key: ValueKey('category-name-${category.uuid}'),
+                                    LocalizationHelper.getLocalizedCategoryName(
+                                        context, category.name),
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                Column(
+                                  key: ValueKey('category-amount-col-${category.uuid}'),
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          AmountFormatter.formatWithCurrency(
+                                            netAmount,
+                                            currency,
+                                          ),
+                                          style: theme.textTheme.titleSmall?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                        ),
+                                        if (hasBudget) ...[
+                                          Text(
+                                            ' / ',
+                                            style: theme.textTheme.labelSmall?.copyWith(
+                                              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                                              fontWeight: FontWeight.w300,
+                                            ),
+                                          ),
+                                          Text(
+                                            AmountFormatter.formatWithCurrency(
+                                              budget,
+                                              currency,
+                                            ),
+                                            style: theme.textTheme.labelSmall?.copyWith(
+                                              color: theme.colorScheme.onSurfaceVariant,
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 11,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: fillColor.withValues(alpha: 0.1),
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(
+                                                color: fillColor.withValues(alpha: 0.2),
+                                                width: 0.5,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              '${(pr * 100).round()}%',
+                                              style: theme.textTheme.labelSmall?.copyWith(
+                                                color: fillColor,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 9,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                                      textBaseline: TextBaseline.alphabetic,
+                                      children: [
+                                        Text(
+                                          '${l10n.overall}: ',
+                                          style: theme.textTheme.labelSmall?.copyWith(
+                                            color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 10,
+                                          ),
+                                        ),
+                                        Text(
+                                          AmountFormatter.formatWithCurrency(
+                                            overallNetAmount,
+                                            currency,
+                                          ),
+                                          style: theme.textTheme.labelSmall?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                        if (hasOverallBudget) ...[
+                                          Text(
+                                            ' / ',
+                                            style: theme.textTheme.labelSmall?.copyWith(
+                                              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+                                              fontWeight: FontWeight.w300,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                          Text(
+                                            AmountFormatter.formatWithCurrency(
+                                              overallBudget,
+                                              currency,
+                                            ),
+                                            style: theme.textTheme.labelSmall?.copyWith(
+                                              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                              fontWeight: FontWeight.w400,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  key: ValueKey('category-arrow-${category.uuid}'),
+                                  Icons.arrow_forward_ios,
+                                  size: 14,
+                                  color: theme.colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.5),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (hasOverallBudget)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: FractionallySizedBox(
+                            alignment: AlignmentDirectional.centerStart,
+                            widthFactor: overallPr.isFinite ? overallPr.clamp(0.0, 1.0) : 0.0,
+                            child: Container(
+                              height: 3,
+                              decoration: BoxDecoration(
+                                color: overallFillColor,
+                                borderRadius: const BorderRadius.only(
+                                  bottomLeft: Radius.circular(16),
+                                  bottomRight: Radius.circular(16),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
