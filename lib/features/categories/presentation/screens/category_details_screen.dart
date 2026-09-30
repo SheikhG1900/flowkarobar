@@ -493,23 +493,45 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
 
     final hasBudget = !isBudgetLocked && snapshot.hasBudget;
     final pr = hasBudget ? snapshot.progressRatio : 0.0;
-    final over = hasBudget && pr > 1.0;
+    final over = hasBudget && isExpense && pr > 1.0;
     final barFillColor = over ? AppColors.expenseColor : color;
 
     final net = snapshot.netAmount;
-    final barRightAmount = hasBudget && snapshot.remainingOrGap > 0
-        ? snapshot.remainingOrGap
-        : 0.0;
+    final String rightLabel;
+    final double barRightAmount;
+    if (isExpense) {
+      rightLabel = l10n.remaining;
+      barRightAmount = snapshot.remainingOrGap > 0 ? snapshot.remainingOrGap : 0.0;
+    } else {
+      if (snapshot.remainingOrGap > 0) {
+        rightLabel = l10n.needed;
+        barRightAmount = snapshot.remainingOrGap;
+      } else {
+        rightLabel = l10n.surplus;
+        barRightAmount = snapshot.budgetAmount != null ? (net - snapshot.budgetAmount!) : 0.0;
+      }
+    }
 
     final hasOverallBudget = !isBudgetLocked && snapshot.hasOverallBudget;
     final overallPr = hasOverallBudget ? snapshot.overallProgressRatio : 0.0;
-    final overallOver = hasOverallBudget && overallPr > 1.0;
+    final overallOver = hasOverallBudget && isExpense && overallPr > 1.0;
     final overallBarFillColor = overallOver ? AppColors.expenseColor : color;
 
     final overallNet = snapshot.overallNetAmount;
-    final overallBarRightAmount = hasOverallBudget && snapshot.overallRemainingOrGap > 0
-        ? snapshot.overallRemainingOrGap
-        : 0.0;
+    final String overallRightLabel;
+    final double overallBarRightAmount;
+    if (isExpense) {
+      overallRightLabel = l10n.remaining;
+      overallBarRightAmount = snapshot.overallRemainingOrGap > 0 ? snapshot.overallRemainingOrGap : 0.0;
+    } else {
+      if (snapshot.overallRemainingOrGap > 0) {
+        overallRightLabel = l10n.needed;
+        overallBarRightAmount = snapshot.overallRemainingOrGap;
+      } else {
+        overallRightLabel = l10n.surplus;
+        overallBarRightAmount = snapshot.overallBudgetAmount != null ? (overallNet - snapshot.overallBudgetAmount!) : 0.0;
+      }
+    }
 
     final hasAnyBudget = hasBudget || hasOverallBudget;
 
@@ -678,7 +700,9 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
                       size: 20,
                     ),
                     label: Text(
-                      hasAnyBudget ? l10n.editBudget : l10n.setBudget,
+                      hasAnyBudget
+                          ? (isExpense ? l10n.editBudget : l10n.editTarget)
+                          : (isExpense ? l10n.setBudget : l10n.setTarget),
                     ),
                   ),
                 ),
@@ -694,7 +718,7 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(left: 4, bottom: 6),
                 child: Text(
-                  '${_getPeriodText(context)} ${l10n.budget}',
+                  '${_getPeriodText(context)} ${isExpense ? l10n.budget : l10n.targetLabel}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -704,7 +728,7 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
               DualAmountProgressBar(
                 leftLabel: isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress,
                 leftAmount: net > 0 ? net : 0.0,
-                rightLabel: l10n.remaining,
+                rightLabel: rightLabel,
                 rightAmount: barRightAmount,
                 currency: currency,
                 filledColor: barFillColor,
@@ -720,7 +744,7 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(left: 4, bottom: 6),
                 child: Text(
-                  l10n.overallBudgetProgress,
+                  isExpense ? l10n.overallBudgetProgress : l10n.overallTargetProgress,
                   style: theme.textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.onSurfaceVariant,
@@ -730,7 +754,7 @@ class _CategoryBudgetSummarySection extends StatelessWidget {
               DualAmountProgressBar(
                 leftLabel: isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress,
                 leftAmount: overallNet > 0 ? overallNet : 0.0,
-                rightLabel: l10n.remaining,
+                rightLabel: overallRightLabel,
                 rightAmount: overallBarRightAmount,
                 currency: currency,
                 filledColor: overallBarFillColor,

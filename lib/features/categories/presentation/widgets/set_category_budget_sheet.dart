@@ -127,7 +127,12 @@ class _SetCategoryBudgetSheetContentState
         ref.invalidate(categoriesByTypeProvider);
         ref.invalidate(categoryDetailBudgetProvider(widget.category.uuid));
         invalidateCategoryPeriodNets(ref, widget.category.type);
-        ToastUtils.showSuccessToast(outer, ref, l10n.budgetSaved);
+        final isExpense = widget.category.type == 'EXPENSE';
+        ToastUtils.showSuccessToast(
+          outer,
+          ref,
+          isExpense ? l10n.budgetSaved : l10n.targetSaved,
+        );
       });
     } catch (e) {
       if (outer.mounted) {
@@ -144,6 +149,7 @@ class _SetCategoryBudgetSheetContentState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final c = widget.category;
+    final isExpense = c.type == 'EXPENSE';
 
     return Padding(
       padding: EdgeInsets.only(
@@ -165,7 +171,7 @@ class _SetCategoryBudgetSheetContentState
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: Icon(
-                    c.type == 'EXPENSE'
+                    isExpense
                         ? Icons.account_balance_wallet_outlined
                         : Icons.savings_outlined,
                     size: 28,
@@ -175,7 +181,7 @@ class _SetCategoryBudgetSheetContentState
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    l10n.setBudget,
+                    isExpense ? l10n.setBudget : l10n.setTarget,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -185,7 +191,7 @@ class _SetCategoryBudgetSheetContentState
             ),
             const SizedBox(height: 8),
             Text(
-              c.type == 'EXPENSE'
+              isExpense
                   ? l10n.spendingBudgetDescription
                   : l10n.savingsTargetDescription,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -196,7 +202,7 @@ class _SetCategoryBudgetSheetContentState
             TextField(
               controller: _monthlyController,
               decoration: InputDecoration(
-                labelText: l10n.monthlyBudget,
+                labelText: isExpense ? l10n.monthlyBudget : l10n.monthlyTarget,
                 border: const OutlineInputBorder(),
               ),
               keyboardType:
@@ -213,7 +219,7 @@ class _SetCategoryBudgetSheetContentState
             TextField(
               controller: _quarterlyController,
               decoration: InputDecoration(
-                labelText: l10n.quarterlyBudget,
+                labelText: isExpense ? l10n.quarterlyBudget : l10n.quarterlyTarget,
                 border: const OutlineInputBorder(),
               ),
               keyboardType:
@@ -230,7 +236,7 @@ class _SetCategoryBudgetSheetContentState
             TextField(
               controller: _yearlyController,
               decoration: InputDecoration(
-                labelText: l10n.yearlyBudget,
+                labelText: isExpense ? l10n.yearlyBudget : l10n.yearlyTarget,
                 border: const OutlineInputBorder(),
               ),
               keyboardType:
@@ -247,7 +253,7 @@ class _SetCategoryBudgetSheetContentState
             TextField(
               controller: _overallController,
               decoration: InputDecoration(
-                labelText: l10n.overallBudget,
+                labelText: isExpense ? l10n.overallBudget : l10n.overallTarget,
                 border: const OutlineInputBorder(),
               ),
               keyboardType:

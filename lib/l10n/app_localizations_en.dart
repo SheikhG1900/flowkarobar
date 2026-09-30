@@ -27,6 +27,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get targetLabel => 'Target';
 
   @override
+  String get limitLabel => 'Limit';
+
+  @override
+  String get leftLabel => 'Left';
+
+  @override
+  String get needed => 'Needed';
+
+  @override
+  String get surplus => 'Surplus';
+
+  @override
   String cloudBackupsFor(String name) {
     return 'Backups for $name';
   }
@@ -4182,6 +4194,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get editBudget => 'Edit budget';
 
   @override
+  String get setTarget => 'Set target';
+
+  @override
+  String get editTarget => 'Edit target';
+
+  @override
   String get monthlyBudget => 'Monthly budget';
 
   @override
@@ -4195,6 +4213,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get overallBudgetProgress => 'Overall budget progress';
+
+  @override
+  String get overallTargetProgress => 'Overall target progress';
+
+  @override
+  String get monthlyTarget => 'Monthly target';
+
+  @override
+  String get quarterlyTarget => 'Quarterly target';
+
+  @override
+  String get yearlyTarget => 'Yearly target';
+
+  @override
+  String get overallTarget => 'Overall target';
 
   @override
   String get overallNetAmount => 'Overall Net Amount';
@@ -4215,6 +4248,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get budgetSaved => 'Budget saved';
+
+  @override
+  String get targetSaved => 'Target saved';
 
   @override
   String budgetRemainingOf(String remaining, String total) {

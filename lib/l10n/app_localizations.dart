@@ -136,6 +136,30 @@ abstract class AppLocalizations {
   /// **'Target'**
   String get targetLabel;
 
+  /// No description provided for @limitLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Limit'**
+  String get limitLabel;
+
+  /// No description provided for @leftLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Left'**
+  String get leftLabel;
+
+  /// No description provided for @needed.
+  ///
+  /// In en, this message translates to:
+  /// **'Needed'**
+  String get needed;
+
+  /// No description provided for @surplus.
+  ///
+  /// In en, this message translates to:
+  /// **'Surplus'**
+  String get surplus;
+
   /// No description provided for @cloudBackupsFor.
   ///
   /// In en, this message translates to:
@@ -7661,6 +7685,18 @@ abstract class AppLocalizations {
   /// **'Edit budget'**
   String get editBudget;
 
+  /// No description provided for @setTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Set target'**
+  String get setTarget;
+
+  /// No description provided for @editTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit target'**
+  String get editTarget;
+
   /// No description provided for @monthlyBudget.
   ///
   /// In en, this message translates to:
@@ -7690,6 +7726,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Overall budget progress'**
   String get overallBudgetProgress;
+
+  /// No description provided for @overallTargetProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall target progress'**
+  String get overallTargetProgress;
+
+  /// No description provided for @monthlyTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly target'**
+  String get monthlyTarget;
+
+  /// No description provided for @quarterlyTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Quarterly target'**
+  String get quarterlyTarget;
+
+  /// No description provided for @yearlyTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Yearly target'**
+  String get yearlyTarget;
+
+  /// No description provided for @overallTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Overall target'**
+  String get overallTarget;
 
   /// No description provided for @overallNetAmount.
   ///
@@ -7726,6 +7792,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Budget saved'**
   String get budgetSaved;
+
+  /// No description provided for @targetSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Target saved'**
+  String get targetSaved;
 
   /// No description provided for @budgetRemainingOf.
   ///

@@ -415,13 +415,13 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
 
     final hasBudget = totalBudgetCap > 0;
     final pr = hasBudget ? totalNet / totalBudgetCap : 0.0;
-    final over = hasBudget && pr > 1.0;
+    final over = hasBudget && isExpense && pr > 1.0;
     final barFillColor = over ? AppColors.expenseColor : color;
     final remaining = hasBudget ? totalBudgetCap - totalNet : 0.0;
 
     final hasOverallBudget = overallTotalBudgetCap > 0;
     final overallPr = hasOverallBudget ? overallTotalNet / overallTotalBudgetCap : 0.0;
-    final overallOver = hasOverallBudget && overallPr > 1.0;
+    final overallOver = hasOverallBudget && isExpense && overallPr > 1.0;
     final overallBarFillColor = overallOver ? AppColors.expenseColor : color;
     final overallRemaining = hasOverallBudget ? overallTotalBudgetCap - overallTotalNet : 0.0;
 
@@ -450,29 +450,99 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
       currency,
     );
 
-    final gradientCardDecoration = BoxDecoration(
-      gradient: LinearGradient(
-        colors: [color, color.withValues(alpha: 0.82)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
+    final leftStr = AmountFormatter.formatWithCurrency(
+      remaining > 0 ? remaining : 0.0,
+      currency,
+    );
+    final overallLeftStr = AmountFormatter.formatWithCurrency(
+      overallRemaining > 0 ? overallRemaining : 0.0,
+      currency,
+    );
+
+    final leftPr = hasBudget ? (remaining > 0 ? remaining : 0.0) / totalBudgetCap : 1.0;
+    final overallLeftPr = hasOverallBudget ? (overallRemaining > 0 ? overallRemaining : 0.0) / overallTotalBudgetCap : 1.0;
+
+    // Labels and metrics based on category type (Expense vs Income Target)
+    final targetLabel = isExpense ? '${l10n.limitLabel}: ' : '${l10n.targetLabel}: ';
+
+    // Period Budget Label & Value
+    final String leftLabel;
+    final String leftAmountStr;
+    final Color leftColor;
+    final double leftPercentage;
+
+    if (isExpense) {
+      leftLabel = '${l10n.leftLabel}: ';
+      final amt = remaining > 0 ? remaining : 0.0;
+      leftAmountStr = AmountFormatter.formatWithCurrency(amt, currency);
+      leftColor = remaining > 0 ? AppColors.incomeColor : AppColors.expenseColor;
+      leftPercentage = leftPr;
+    } else {
+      // For Income
+      if (remaining > 0) {
+        // Under target (Shortfall)
+        leftLabel = '${l10n.needed}: ';
+        leftAmountStr = AmountFormatter.formatWithCurrency(remaining, currency);
+        leftColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8);
+        leftPercentage = leftPr;
+      } else {
+        // Achieved / Surplus
+        leftLabel = '${l10n.surplus}: ';
+        final surplusAmt = totalNet - totalBudgetCap;
+        leftAmountStr = AmountFormatter.formatWithCurrency(surplusAmt, currency);
+        leftColor = AppColors.incomeColor;
+        leftPercentage = totalBudgetCap > 0 ? surplusAmt / totalBudgetCap : 0.0;
+      }
+    }
+
+    // Overall Budget Label & Value
+    final String overallLeftLabel;
+    final String overallLeftAmountStr;
+    final Color overallLeftColor;
+    final double overallLeftPercentage;
+
+    if (isExpense) {
+      overallLeftLabel = '${l10n.leftLabel}: ';
+      final amt = overallRemaining > 0 ? overallRemaining : 0.0;
+      overallLeftAmountStr = AmountFormatter.formatWithCurrency(amt, currency);
+      overallLeftColor = overallRemaining > 0 ? AppColors.incomeColor : AppColors.expenseColor;
+      overallLeftPercentage = overallLeftPr;
+    } else {
+      // For Income
+      if (overallRemaining > 0) {
+        // Under target (Shortfall)
+        overallLeftLabel = '${l10n.needed}: ';
+        overallLeftAmountStr = AmountFormatter.formatWithCurrency(overallRemaining, currency);
+        overallLeftColor = theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8);
+        overallLeftPercentage = overallLeftPr;
+      } else {
+        // Achieved / Surplus
+        overallLeftLabel = '${l10n.surplus}: ';
+        final surplusAmt = overallTotalNet - overallTotalBudgetCap;
+        overallLeftAmountStr = AmountFormatter.formatWithCurrency(surplusAmt, currency);
+        overallLeftColor = AppColors.incomeColor;
+        overallLeftPercentage = overallTotalBudgetCap > 0 ? surplusAmt / overallTotalBudgetCap : 0.0;
+      }
+    }
+
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final cardDecoration = BoxDecoration(
+      color: theme.cardColor,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: theme.dividerColor.withValues(alpha: 0.5),
+        width: 1,
       ),
-      borderRadius: BorderRadius.circular(12),
       boxShadow: [
         BoxShadow(
-          color: color.withValues(alpha: 0.28),
+          color: Colors.black.withValues(alpha: isDarkMode ? 0.08 : 0.03),
           blurRadius: 8,
           offset: const Offset(0, 3),
         ),
       ],
     );
 
-    final barRightAmount =
-        hasBudget && remaining > 0 ? remaining : 0.0;
-    final overallBarRightAmount =
-        hasOverallBudget && overallRemaining > 0 ? overallRemaining : 0.0;
     final prefsReady = includeAsync.hasValue;
-    final isDarkForChip = theme.brightness == Brightness.dark;
-    const chipLabelLight = Color(0xFF0F172A);
 
     final hasAnyBudget = hasBudget || hasOverallBudget;
 
@@ -483,295 +553,474 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
         Container(
           key: ValueKey('categories-aggregate-container-$type'),
           clipBehavior: Clip.antiAlias,
-          decoration: gradientCardDecoration,
-          child: Column(
-            key: ValueKey('categories-aggregate-content-$type'),
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: MainAxisSize.min,
+          decoration: cardDecoration,
+          child: Stack(
             children: [
-              InkWell(
-                key: ValueKey('categories-aggregate-inkwell-$type'),
-                onTap: () async {
-                  ref.read(transactionsPaginatedProvider.notifier).applyFilters(
-                        TransactionFilters(
-                          startDate: range.startDate,
-                          endDate: range.endDate,
-                          type: type,
+              if (hasBudget)
+                Positioned.fill(
+                  key: ValueKey('categories-aggregate-progress-bg-$type'),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: FractionallySizedBox(
+                      widthFactor: pr.isFinite ? pr.clamp(0.0, 1.0) : 0.0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: barFillColor.withValues(
+                            alpha: isDarkMode ? 0.12 : 0.08,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              Column(
+                key: ValueKey('categories-aggregate-content-$type'),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  InkWell(
+                    key: ValueKey('categories-aggregate-inkwell-$type'),
+                    onTap: () async {
+                      ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                            TransactionFilters(
+                              startDate: range.startDate,
+                              endDate: range.endDate,
+                              type: type,
+                            ),
+                          );
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TransactionsListScreen(),
                         ),
                       );
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const TransactionsListScreen(),
-                    ),
-                  );
-                },
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: Stack(
-                      clipBehavior: Clip.none,
-                      children: [
-                        Row(
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: Stack(
+                          clipBehavior: Clip.none,
                           children: [
-                            Expanded(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    _getPeriodText(context),
-                                    textAlign: TextAlign.center,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: Colors.white.withValues(alpha: 0.88),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    netStr,
-                                    textAlign: TextAlign.center,
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  if (hasBudget) ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      budgetStr,
-                                      textAlign: TextAlign.center,
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 10,
-                                        color: Colors.white.withValues(alpha: 0.8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        _getPeriodText(context),
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.textTheme.labelMedium?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                            Container(
-                              width: 1,
-                              height: hasAnyBudget ? 64 : 44,
-                              color: Colors.white.withValues(alpha: 0.25),
-                            ),
-                            Expanded(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    l10n.overall,
-                                    textAlign: TextAlign.center,
-                                    style: theme.textTheme.labelMedium?.copyWith(
-                                      color: Colors.white.withValues(alpha: 0.88),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
+                                      if (hasBudget) ...[
+                                        const SizedBox(height: 6),
+                                        // Total Limit / Target
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              targetLabel,
+                                              style: theme.textTheme.labelSmall?.copyWith(
+                                                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            Text(
+                                              budgetStr,
+                                              style: theme.textTheme.labelSmall?.copyWith(
+                                                color: theme.colorScheme.onSurface,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+                                        // Large consumed number
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              netStr,
+                                              style: theme.textTheme.titleLarge?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18,
+                                                color: color,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: barFillColor.withValues(alpha: 0.1),
+                                                borderRadius: BorderRadius.circular(6),
+                                                border: Border.all(
+                                                  color: barFillColor.withValues(alpha: 0.2),
+                                                  width: 0.5,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                '${(pr * 100).round()}%',
+                                                style: theme.textTheme.labelSmall?.copyWith(
+                                                  color: barFillColor,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 9,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        // Left/Needed/Surplus beside %
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              leftLabel,
+                                              style: theme.textTheme.labelSmall?.copyWith(
+                                                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            Text(
+                                              leftAmountStr,
+                                              style: theme.textTheme.labelSmall?.copyWith(
+                                                color: leftColor,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                              decoration: BoxDecoration(
+                                                color: leftColor.withValues(alpha: 0.08),
+                                                borderRadius: BorderRadius.circular(5),
+                                                border: Border.all(
+                                                  color: leftColor.withValues(alpha: 0.15),
+                                                  width: 0.5,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                '${(leftPercentage * 100).round()}%',
+                                                style: theme.textTheme.labelSmall?.copyWith(
+                                                  color: leftColor,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 8,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ] else ...[
+                                        // Standard simple number representation when no budget set
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          netStr,
+                                          textAlign: TextAlign.center,
+                                          style: theme.textTheme.titleLarge?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                            color: color,
+                                          ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    overallNetStr,
-                                    textAlign: TextAlign.center,
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                  if (hasOverallBudget) ...[
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      overallBudgetStr,
-                                      textAlign: TextAlign.center,
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 10,
-                                        color: Colors.white.withValues(alpha: 0.8),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: hasAnyBudget ? 74 : 36,
+                                  color: theme.dividerColor.withValues(alpha: 0.3),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        l10n.overall,
+                                        textAlign: TextAlign.center,
+                                        style: theme.textTheme.labelMedium?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ],
+                                      if (hasOverallBudget) ...[
+                                        const SizedBox(height: 6),
+                                        // Overall Total Limit / Target
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              targetLabel,
+                                              style: theme.textTheme.labelSmall?.copyWith(
+                                                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            Text(
+                                              overallBudgetStr,
+                                              style: theme.textTheme.labelSmall?.copyWith(
+                                                color: theme.colorScheme.onSurface,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 6),
+                                        // Large overall consumed number
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment: CrossAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              overallNetStr,
+                                              style: theme.textTheme.titleLarge?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18,
+                                                color: color.withValues(alpha: 0.85),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                              decoration: BoxDecoration(
+                                                color: overallBarFillColor.withValues(alpha: 0.1),
+                                                borderRadius: BorderRadius.circular(6),
+                                                border: Border.all(
+                                                  color: overallBarFillColor.withValues(alpha: 0.2),
+                                                  width: 0.5,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                '${(overallPr * 100).round()}%',
+                                                style: theme.textTheme.labelSmall?.copyWith(
+                                                  color: overallBarFillColor,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 9,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        // Overall Left/Needed/Surplus beside %
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Text(
+                                              overallLeftLabel,
+                                              style: theme.textTheme.labelSmall?.copyWith(
+                                                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            Text(
+                                              overallLeftAmountStr,
+                                              style: theme.textTheme.labelSmall?.copyWith(
+                                                color: overallLeftColor,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                              decoration: BoxDecoration(
+                                                color: overallLeftColor.withValues(alpha: 0.08),
+                                                borderRadius: BorderRadius.circular(5),
+                                                border: Border.all(
+                                                  color: overallLeftColor.withValues(alpha: 0.15),
+                                                  width: 0.5,
+                                                ),
+                                              ),
+                                              child: Text(
+                                                '${(overallLeftPercentage * 100).round()}%',
+                                                style: theme.textTheme.labelSmall?.copyWith(
+                                                  color: overallLeftColor,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 8,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ] else ...[
+                                        // Standard simple number representation when no overall budget set
+                                        const SizedBox(height: 6),
+                                        Text(
+                                          overallNetStr,
+                                          textAlign: TextAlign.center,
+                                          style: theme.textTheme.titleLarge?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                            color: color.withValues(alpha: 0.85),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            PositionedDirectional(
+                              end: -2,
+                              top: -2,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.06),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 10,
+                                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                ),
                               ),
                             ),
                           ],
                         ),
-                        PositionedDirectional(
-                          end: -2,
-                          top: -2,
-                          child: Container(
-                            padding: const EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.arrow_forward_ios,
-                              size: 10,
-                              color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  Divider(
+                    key: ValueKey('categories-aggregate-divider-$type'),
+                    height: 1,
+                    thickness: 1,
+                    color: theme.dividerColor.withValues(alpha: 0.3),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+                    child: Row(
+                      key: ValueKey('categories-aggregate-uncategorized-row-$type'),
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            key: ValueKey('categories-aggregate-uncategorized-col-$type'),
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                key: ValueKey('categories-aggregate-uncategorized-label-$type'),
+                                l10n.uncategorized,
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.78),
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 10,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Text(
+                                    uncategorizedStr,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: theme.colorScheme.onSurface,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    '|',
+                                    style: TextStyle(
+                                      color: theme.dividerColor.withValues(alpha: 0.5),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    overallUncategorizedStr,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.75),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        FilterChip(
+                          key: ValueKey('categories-aggregate-uncategorized-chip-$type'),
+                          showCheckmark: true,
+                          selected: includeUncategorized,
+                          label: Text(
+                            l10n.categoriesSummaryIncludeInTotal,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: includeUncategorized
+                                  ? color
+                                  : theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
+                          selectedColor: color.withValues(alpha: 0.12),
+                          backgroundColor: Colors.transparent,
+                          checkmarkColor: color,
+                          side: BorderSide(
+                            color: includeUncategorized
+                                ? color.withValues(alpha: 0.3)
+                                : theme.dividerColor.withValues(alpha: 0.3),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 0,
+                          ),
+                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          visualDensity: VisualDensity.compact,
+                          onSelected: prefsReady
+                              ? (selected) {
+                                  ref
+                                      .read(
+                                        includeUncategorizedInCategorySummaryProvider
+                                            .notifier,
+                                      )
+                                      .setInclude(selected);
+                                }
+                              : null,
                         ),
                       ],
                     ),
                   ),
-                ),
+                ],
               ),
-              Divider(
-                key: ValueKey('categories-aggregate-divider-$type'),
-                height: 1,
-                thickness: 1,
-                color: Colors.white.withValues(alpha: 0.22),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-                child: Row(
-                  key: ValueKey('categories-aggregate-uncategorized-row-$type'),
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        key: ValueKey('categories-aggregate-uncategorized-col-$type'),
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            key: ValueKey('categories-aggregate-uncategorized-label-$type'),
-                            l10n.uncategorized,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.78),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 10,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Text(
-                                uncategorizedStr,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                '|',
-                                style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.3),
-                                  fontSize: 12,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                overallUncategorizedStr,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white.withValues(alpha: 0.8),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    FilterChip(
-                      key: ValueKey('categories-aggregate-uncategorized-chip-$type'),
-                      showCheckmark: true,
-                      selected: includeUncategorized,
-                      label: Text(
-                        l10n.categoriesSummaryIncludeInTotal,
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: isDarkForChip
-                              ? Colors.white.withValues(
-                                  alpha: includeUncategorized ? 1.0 : 0.92,
-                                )
-                              : (includeUncategorized
-                                  ? color
-                                  : chipLabelLight),
+              if (hasOverallBudget)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: FractionallySizedBox(
+                    alignment: AlignmentDirectional.centerStart,
+                    widthFactor: overallPr.isFinite ? overallPr.clamp(0.0, 1.0) : 0.0,
+                    child: Container(
+                      height: 3.5,
+                      decoration: BoxDecoration(
+                        color: overallBarFillColor,
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
                         ),
                       ),
-                      selectedColor: isDarkForChip
-                          ? Colors.white.withValues(alpha: 0.28)
-                          : Colors.white.withValues(alpha: 0.92),
-                      backgroundColor: isDarkForChip
-                          ? Colors.white.withValues(alpha: 0.12)
-                          : Colors.white.withValues(alpha: 0.55),
-                      disabledColor: isDarkForChip
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : Colors.white.withValues(alpha: 0.35),
-                      checkmarkColor: isDarkForChip ? Colors.white : color,
-                      side: BorderSide(
-                        color: isDarkForChip
-                            ? Colors.white.withValues(
-                                alpha: includeUncategorized ? 0.5 : 0.32,
-                              )
-                            : Colors.white.withValues(
-                                alpha: includeUncategorized ? 0.75 : 0.5,
-                              ),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 0,
-                      ),
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      visualDensity: VisualDensity.compact,
-                      onSelected: prefsReady
-                          ? (selected) {
-                              ref
-                                  .read(
-                                    includeUncategorizedInCategorySummaryProvider
-                                        .notifier,
-                                  )
-                                  .setInclude(selected);
-                            }
-                          : null,
                     ),
-                  ],
+                  ),
                 ),
-              ),
             ],
           ),
         ),
-        if (hasBudget) ...[
-          const SizedBox(height: 8),
-          DualAmountProgressBar(
-            key: ValueKey('categories-aggregate-budget-bar-$type'),
-            leftLabel: '${_getPeriodText(context)} ${isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress}',
-            leftAmount: totalNet > 0 ? totalNet : 0.0,
-            rightLabel: l10n.remaining,
-            rightAmount: barRightAmount,
-            currency: currency,
-            filledColor: barFillColor,
-            compact: true,
-          ),
-        ],
-        if (hasOverallBudget) ...[
-          const SizedBox(height: 8),
-          DualAmountProgressBar(
-            key: ValueKey('categories-aggregate-overall-budget-bar-$type'),
-            leftLabel: '${l10n.overall} ${isExpense ? l10n.budgetBarUsed : l10n.budgetBarProgress}',
-            leftAmount: overallTotalNet > 0 ? overallTotalNet : 0.0,
-            rightLabel: l10n.remaining,
-            rightAmount: overallBarRightAmount,
-            currency: currency,
-            filledColor: overallBarFillColor,
-            compact: true,
-          ),
-        ],
+        const SizedBox(height: 12),
       ],
     );
   }

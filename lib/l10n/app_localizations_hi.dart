@@ -28,6 +28,18 @@ class AppLocalizationsHi extends AppLocalizations {
   String get targetLabel => 'लक्ष्य';
 
   @override
+  String get limitLabel => 'सीमा';
+
+  @override
+  String get leftLabel => 'बचे';
+
+  @override
+  String get needed => 'आवश्यक';
+
+  @override
+  String get surplus => 'अतिरिक्त';
+
+  @override
   String cloudBackupsFor(String name) {
     return '$name के लिए बैकअप';
   }
@@ -4193,6 +4205,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get editBudget => 'बजट संपादित करें';
 
   @override
+  String get setTarget => 'लक्ष्य सेट करें';
+
+  @override
+  String get editTarget => 'लक्ष्य संपादित करें';
+
+  @override
   String get monthlyBudget => 'मासिक बजट';
 
   @override
@@ -4206,6 +4224,21 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get overallBudgetProgress => 'कुल बजट प्रगति';
+
+  @override
+  String get overallTargetProgress => 'कुल लक्ष्य प्रगति';
+
+  @override
+  String get monthlyTarget => 'मासिक लक्ष्य';
+
+  @override
+  String get quarterlyTarget => 'त्रैमासिक लक्ष्य';
+
+  @override
+  String get yearlyTarget => 'वार्षिक लक्ष्य';
+
+  @override
+  String get overallTarget => 'कुल लक्ष्य';
 
   @override
   String get overallNetAmount => 'कुल शुद्ध राशि';
@@ -4226,6 +4259,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get budgetSaved => 'बजट सहेजा गया';
+
+  @override
+  String get targetSaved => 'लक्ष्य सहेजा गया';
 
   @override
   String budgetRemainingOf(String remaining, String total) {
