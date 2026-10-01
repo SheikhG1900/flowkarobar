@@ -1137,8 +1137,8 @@ class _CategoryCardState extends ConsumerState<_CategoryCard> {
     // For Income categories, progress is (Income - Expense) / Budget
     // For Expense categories, progress is (Expense - Income) / Budget
     // netAmount is already calculated relative to category type in repository
-    final pr = hasBudget ? netAmount / budget : 0.0;
-    final overallPr = hasOverallBudget ? overallNetAmount / overallBudget : 0.0;
+    final pr = hasBudget ? netAmount / budget! : 0.0;
+    final overallPr = hasOverallBudget ? overallNetAmount / overallBudget! : 0.0;
     
     // For income, we don't usually show "over budget" in red unless it's an expense-like behavior.
     // But keeping it consistent with the repository's netAmount logic.
@@ -1286,6 +1286,28 @@ class _CategoryCardState extends ConsumerState<_CategoryCard> {
                                       mainAxisSize: MainAxisSize.min,
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
+                                        if (hasBudget) ...[
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: fillColor.withValues(alpha: 0.1),
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(
+                                                color: fillColor.withValues(alpha: 0.2),
+                                                width: 0.5,
+                                              ),
+                                            ),
+                                            child: Text(
+                                              '${(pr * 100).round()}%',
+                                              style: theme.textTheme.labelSmall?.copyWith(
+                                                color: fillColor,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 9,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 6),
+                                        ],
                                         if (isExpense && pr > 1.0) ...[
                                           Icon(
                                             Icons.warning_amber_rounded,
@@ -1311,46 +1333,6 @@ class _CategoryCardState extends ConsumerState<_CategoryCard> {
                                             color: theme.colorScheme.onSurface,
                                           ),
                                         ),
-                                        if (hasBudget) ...[
-                                          Text(
-                                            ' / ',
-                                            style: theme.textTheme.labelSmall?.copyWith(
-                                              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                                              fontWeight: FontWeight.w300,
-                                            ),
-                                          ),
-                                          Text(
-                                            AmountFormatter.formatWithCurrency(
-                                              budget,
-                                              currency,
-                                            ),
-                                            style: theme.textTheme.labelSmall?.copyWith(
-                                              color: theme.colorScheme.onSurfaceVariant,
-                                              fontWeight: FontWeight.w400,
-                                              fontSize: 11,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 6),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-                                            decoration: BoxDecoration(
-                                              color: fillColor.withValues(alpha: 0.1),
-                                              borderRadius: BorderRadius.circular(6),
-                                              border: Border.all(
-                                                color: fillColor.withValues(alpha: 0.2),
-                                                width: 0.5,
-                                              ),
-                                            ),
-                                            child: Text(
-                                              '${(pr * 100).round()}%',
-                                              style: theme.textTheme.labelSmall?.copyWith(
-                                                color: fillColor,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 9,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
                                       ],
                                     ),
                                     const SizedBox(height: 4),
@@ -1379,25 +1361,7 @@ class _CategoryCardState extends ConsumerState<_CategoryCard> {
                                           ),
                                         ),
                                         if (hasOverallBudget) ...[
-                                          Text(
-                                            ' / ',
-                                            style: theme.textTheme.labelSmall?.copyWith(
-                                              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-                                              fontWeight: FontWeight.w300,
-                                              fontSize: 10,
-                                            ),
-                                          ),
-                                          Text(
-                                            AmountFormatter.formatWithCurrency(
-                                              overallBudget,
-                                              currency,
-                                            ),
-                                            style: theme.textTheme.labelSmall?.copyWith(
-                                              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                                              fontWeight: FontWeight.w400,
-                                              fontSize: 10,
-                                            ),
-                                          ),
+                                          // Overall budget exists but limit figure text is hidden per request
                                         ],
                                       ],
                                     ),
