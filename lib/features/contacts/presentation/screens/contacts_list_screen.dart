@@ -222,6 +222,7 @@ class _ContactCardState extends ConsumerState<_ContactCard> {
       key: ValueKey('contact-card-padding-${contact.uuid}'),
       padding: const EdgeInsets.only(bottom: 12),
       child: SwipeableListItem(
+        key: ValueKey('contact-swipeable-${contact.uuid}'),
         enableEdit: !isLocked,
         enableDelete: !isLocked,
         editBackgroundColor: contactColor,
@@ -246,7 +247,6 @@ class _ContactCardState extends ConsumerState<_ContactCard> {
               },
         child: Container(
           decoration: BoxDecoration(
-            color: theme.cardColor,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -255,27 +255,25 @@ class _ContactCardState extends ConsumerState<_ContactCard> {
                 offset: const Offset(0, 4),
               ),
             ],
-            border: Border.all(
-              color: _isHovered
-                  ? contactColor
-                  : theme.dividerColor.withValues(alpha: 0.1),
-              width: 1,
-            ),
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(15),
             child: Material(
-              color: Colors.transparent,
+              color: theme.cardColor,
               child: InkWell(
                 onHover: (hovering) {
+                  print("ContactCard: Hover changed to $hovering for contact: ${contact.name}");
                   setState(() {
                     _isHovered = hovering;
                   });
                 },
-                hoverColor: Colors.transparent,
                 onTap: isLocked
-                    ? () => PremiumGate.showPremiumDialog(context)
+                    ? () {
+                        print("ContactCard: Card is locked, showing premium dialog.");
+                        PremiumGate.showPremiumDialog(context);
+                      }
                     : () {
+                        print("ContactCard: Clicked on card for contact: ${contact.name}");
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -285,13 +283,24 @@ class _ContactCardState extends ConsumerState<_ContactCard> {
                         );
                       },
                 borderRadius: BorderRadius.circular(15),
-                child: Stack(
-                  children: [
-                    Opacity(
-                      opacity: isLocked ? 0.5 : 1.0,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.transparent,
+                    border: Border.all(
+                      color: _isHovered
+                          ? contactColor
+                          : theme.dividerColor.withValues(alpha: 0.1),
+                      width: 1,
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Stack(
+                    children: [
+                      Opacity(
+                        opacity: isLocked ? 0.5 : 1.0,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
                           children: [
                             // Avatar
                             Container(
@@ -428,6 +437,7 @@ class _ContactCardState extends ConsumerState<_ContactCard> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }

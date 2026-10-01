@@ -49,6 +49,21 @@ class SwipeableListItem extends StatefulWidget {
 
 class _SwipeableListItemState extends State<SwipeableListItem> {
   bool _isHovered = false;
+  late Key _dismissibleKey;
+
+  @override
+  void initState() {
+    super.initState();
+    _dismissibleKey = widget.key ?? (widget.child.key ?? UniqueKey());
+  }
+
+  @override
+  void didUpdateWidget(SwipeableListItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.key != oldWidget.key || widget.child.key != oldWidget.child.key) {
+      _dismissibleKey = widget.key ?? (widget.child.key ?? _dismissibleKey);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +76,7 @@ class _SwipeableListItemState extends State<SwipeableListItem> {
     }
 
     Widget swipeable = Dismissible(
-      key: widget.key ?? (widget.child.key ?? UniqueKey()),
+      key: _dismissibleKey,
       confirmDismiss: (direction) async {
         // Add haptic feedback
         HapticFeedback.mediumImpact();
@@ -176,8 +191,14 @@ class _SwipeableListItemState extends State<SwipeableListItem> {
 
     // Wrap in MouseRegion and Stack to show desktop hover actions
     return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
+      onEnter: (_) {
+        print("SwipeableListItem: Mouse ENTER");
+        setState(() => _isHovered = true);
+      },
+      onExit: (_) {
+        print("SwipeableListItem: Mouse EXIT");
+        setState(() => _isHovered = false);
+      },
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -188,6 +209,7 @@ class _SwipeableListItemState extends State<SwipeableListItem> {
               top: 0,
               bottom: 0,
               child: Center(
+                widthFactor: 1.0,
                 child: AnimatedOpacity(
                   opacity: _isHovered ? 1.0 : 0.0,
                   duration: const Duration(milliseconds: 150),
