@@ -649,6 +649,21 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           crossAxisAlignment: CrossAxisAlignment.center,
                                           children: [
+                                            if (isExpense && pr > 1.0) ...[
+                                              Icon(
+                                                Icons.warning_amber_rounded,
+                                                size: 18,
+                                                color: barFillColor,
+                                              ),
+                                              const SizedBox(width: 6),
+                                            ] else if (!isExpense && pr >= 1.0) ...[
+                                              Icon(
+                                                Icons.check_circle_rounded,
+                                                size: 18,
+                                                color: barFillColor,
+                                              ),
+                                              const SizedBox(width: 6),
+                                            ],
                                             Text(
                                               netStr,
                                               style: theme.textTheme.titleLarge?.copyWith(
@@ -783,6 +798,21 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
                                           mainAxisAlignment: MainAxisAlignment.center,
                                           crossAxisAlignment: CrossAxisAlignment.center,
                                           children: [
+                                            if (isExpense && overallPr > 1.0) ...[
+                                              Icon(
+                                                Icons.warning_amber_rounded,
+                                                size: 18,
+                                                color: overallBarFillColor,
+                                              ),
+                                              const SizedBox(width: 6),
+                                            ] else if (!isExpense && overallPr >= 1.0) ...[
+                                              Icon(
+                                                Icons.check_circle_rounded,
+                                                size: 18,
+                                                color: overallBarFillColor,
+                                              ),
+                                              const SizedBox(width: 6),
+                                            ],
                                             Text(
                                               overallNetStr,
                                               style: theme.textTheme.titleLarge?.copyWith(
@@ -1256,6 +1286,21 @@ class _CategoryCardState extends ConsumerState<_CategoryCard> {
                                       mainAxisSize: MainAxisSize.min,
                                       crossAxisAlignment: CrossAxisAlignment.center,
                                       children: [
+                                        if (isExpense && pr > 1.0) ...[
+                                          Icon(
+                                            Icons.warning_amber_rounded,
+                                            size: 14,
+                                            color: fillColor,
+                                          ),
+                                          const SizedBox(width: 4),
+                                        ] else if (!isExpense && pr >= 1.0) ...[
+                                          Icon(
+                                            Icons.check_circle_rounded,
+                                            size: 14,
+                                            color: fillColor,
+                                          ),
+                                          const SizedBox(width: 4),
+                                        ],
                                         Text(
                                           AmountFormatter.formatWithCurrency(
                                             netAmount,
