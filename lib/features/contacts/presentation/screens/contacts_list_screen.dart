@@ -262,18 +262,15 @@ class _ContactCardState extends ConsumerState<_ContactCard> {
               color: theme.cardColor,
               child: InkWell(
                 onHover: (hovering) {
-                  print("ContactCard: Hover changed to $hovering for contact: ${contact.name}");
                   setState(() {
                     _isHovered = hovering;
                   });
                 },
                 onTap: isLocked
                     ? () {
-                        print("ContactCard: Card is locked, showing premium dialog.");
                         PremiumGate.showPremiumDialog(context);
                       }
                     : () {
-                        print("ContactCard: Clicked on card for contact: ${contact.name}");
                         Navigator.push(
                           context,
                           MaterialPageRoute(

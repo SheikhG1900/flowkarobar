@@ -192,11 +192,9 @@ class _SwipeableListItemState extends State<SwipeableListItem> {
     // Wrap in MouseRegion and Stack to show desktop hover actions
     return MouseRegion(
       onEnter: (_) {
-        print("SwipeableListItem: Mouse ENTER");
         setState(() => _isHovered = true);
       },
       onExit: (_) {
-        print("SwipeableListItem: Mouse EXIT");
         setState(() => _isHovered = false);
       },
       child: Stack(
