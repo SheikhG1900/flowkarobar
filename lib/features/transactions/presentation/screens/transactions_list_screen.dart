@@ -651,8 +651,8 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         decimalPlaces: decimalPlaces,
         l10n: l10n,
         currencyObj: currency,
-        startDate: startDate,
-        endDate: endDate,
+        filters: filters,
+        searchQuery: notifier.state.searchQuery,
       );
 
       final directory = await getTemporaryDirectory();

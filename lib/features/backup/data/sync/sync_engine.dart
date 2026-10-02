@@ -973,6 +973,8 @@ class SyncEngine {
                 return _db.appCurrencies;
               case 'transaction_schedules':
                 return _db.transactionSchedules;
+              case 'transaction_documents':
+                return _db.transactionDocuments;
               case 'user_preferences':
                 return _db.userPreferences;
               default:

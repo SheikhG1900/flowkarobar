@@ -9,6 +9,7 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/export_service.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/core/services/in_app_review_service.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
@@ -399,8 +400,10 @@ class _ExportScreenState extends ConsumerState<ExportScreen> {
         decimalPlaces: decimalPlaces,
         l10n: l10n,
         currencyObj: currency,
-        startDate: _startDate,
-        endDate: _endDate,
+        filters: TransactionFilters(
+          startDate: _startDate,
+          endDate: _endDate,
+        ),
       );
 
       // Save PDF to temporary file for save/share actions

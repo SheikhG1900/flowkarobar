@@ -634,10 +634,27 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                       ),
                     ),
                   if (isSuccess && !hasUnsynced && !hasCloudUpdates)
-                    Icon(
-                      Platform.isWindows ? Icons.check_circle : Symbols.check_circle,
-                      color: statusColor.withValues(alpha: 0.7),
-                      size: 28,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        onPressed: () async {
+                          // Manually check for any new cloud updates or local changes
+                          try {
+                            // Show standard checking feedback
+                            ref.read(backupProvider.notifier).refreshVersions();
+                          } catch (_) {}
+                        },
+                        icon: Icon(
+                          Platform.isWindows ? Icons.sync : Symbols.sync,
+                          color: statusColor,
+                          size: 24,
+                        ),
+                        tooltip: 'Check for updates',
+                        padding: const EdgeInsets.all(12),
+                      ),
                     ),
                   if (isSyncing)
                     Icon(

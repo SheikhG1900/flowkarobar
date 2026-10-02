@@ -515,6 +515,8 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
         });
         ToastUtils.showSuccessToast(context, ref, l10n.backupExported);
         _checkCloudBackup(); // Refresh cloud backup info
+        // Refresh documents list to immediately update the synched flags
+        ref.invalidate(displayDocumentsProvider);
       }
     } catch (e) {
       if (kDebugMode) print('[DocumentsScreen] Error during Cloud Export: $e');

@@ -2031,6 +2031,8 @@ class ExportService {
     AppCurrency? currencyObj,
     DateTime? startDate,
     DateTime? endDate,
+    TransactionFilters? filters,
+    String? searchQuery,
   }) async {
     try {
       // 1. Load fonts and logo
@@ -2048,13 +2050,30 @@ class ExportService {
         }
       }
 
-      // Normalize dates to start of day and end of day
-      final normalizedStartDate = startDate != null
-          ? DateTime(startDate.year, startDate.month, startDate.day, 0, 0, 0)
-          : null;
-      final normalizedEndDate = endDate != null
-          ? DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59, 999)
-          : null;
+      // Query the matching transactions using the centralized repository query
+      final List<TransactionWithDetails> filteredTransactions;
+      if (filters != null) {
+        filteredTransactions = await _transactionsRepository
+            .getTransactionsWithDetailsFilteredPaginated(
+          filters: filters,
+          searchQuery: searchQuery,
+          limit: 1000000,
+        );
+      } else {
+        final actualFilters = TransactionFilters(
+          startDate: startDate,
+          endDate: endDate,
+        );
+        filteredTransactions = await _transactionsRepository
+            .getTransactionsWithDetailsFilteredPaginated(
+          filters: actualFilters,
+          searchQuery: searchQuery,
+          limit: 1000000,
+        );
+      }
+
+      final matchingTxUuids = filteredTransactions.map((tx) => tx.transaction.uuid).toSet();
+      final txMap = {for (final tx in filteredTransactions) tx.transaction.uuid: tx};
 
       // 2. Fetch all active documents
       final documents = await (_database.select(_database.transactionDocuments)
@@ -2064,50 +2083,33 @@ class ExportService {
       final appDir = await getApplicationDocumentsDirectory();
       final docDir = Directory(p.join(appDir.path, 'documents', _transactionsRepository.cashbookId));
 
-      // Group by transactionUuid
+      // Group by transactionUuid, only for matching transactions
       final Map<String, List<TransactionDocument>> groupedDocs = {};
       for (final doc in documents) {
-        groupedDocs.putIfAbsent(doc.transactionUuid, () => []).add(doc);
+        if (matchingTxUuids.contains(doc.transactionUuid)) {
+          groupedDocs.putIfAbsent(doc.transactionUuid, () => []).add(doc);
+        }
       }
 
       if (kDebugMode) {
         print('ExportService: Grouped documents by transactionUuid. Count: ${groupedDocs.length}');
       }
 
-      // Fetch transaction details for each transactionUuid
+      // Construct transaction list with attachments cleanly and efficiently
       final List<
           ({
             TransactionWithDetails details,
             List<TransactionDocument> docs
           })> transactionsWithAttachments = [];
       for (final entry in groupedDocs.entries) {
-        final details = await _transactionsRepository
-            .getTransactionWithDetailsByUuid(entry.key);
+        final details = txMap[entry.key];
         if (details != null) {
-          // Apply date filters if provided
-          if (normalizedStartDate != null && details.transaction.date.isBefore(normalizedStartDate)) {
-            if (kDebugMode) {
-              print('ExportService: Transaction ${details.transaction.uuid} date ${details.transaction.date} is before start date $normalizedStartDate');
-            }
-            continue;
-          }
-          if (normalizedEndDate != null && details.transaction.date.isAfter(normalizedEndDate)) {
-            if (kDebugMode) {
-              print('ExportService: Transaction ${details.transaction.uuid} date ${details.transaction.date} is after end date $normalizedEndDate');
-            }
-            continue;
-          }
-          transactionsWithAttachments
-              .add((details: details, docs: entry.value));
-        } else {
-          if (kDebugMode) {
-            print('ExportService: Could not find transaction details for UUID: ${entry.key}');
-          }
+          transactionsWithAttachments.add((details: details, docs: entry.value));
         }
       }
 
       if (kDebugMode) {
-        print('ExportService: Transactions with attachments after date filtering. Count: ${transactionsWithAttachments.length}');
+        print('ExportService: Transactions with attachments after filtering. Count: ${transactionsWithAttachments.length}');
       }
 
       // Sort by transaction date descending
