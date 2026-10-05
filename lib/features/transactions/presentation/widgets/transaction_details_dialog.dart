@@ -844,15 +844,22 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     value: AppDateFormatter.formatDate(transaction.date,
                         pattern: ref.watch(userProfileProvider).dateFormat),
                   ),
-                  if (displayDesc.trim().isNotEmpty) ...[
-                    _buildDetailRow(
-                      context,
-                      key: const ValueKey('tx-details-desc-row'),
-                      icon: Icons.notes_outlined,
-                      label: l10n.description,
-                      value: displayDesc,
+                  _buildDetailRow(
+                    context,
+                    key: const ValueKey('tx-details-desc-row'),
+                    icon: Icons.notes_outlined,
+                    label: l10n.description,
+                    value: displayDesc.trim().isNotEmpty ? displayDesc : l10n.none,
+                    trailing: IconButton(
+                      icon: const Icon(Icons.edit_outlined, size: 20),
+                      onPressed: () => _editDescriptionDialog(
+                        context,
+                        ref,
+                        transaction.uuid,
+                        transaction.description as String? ?? '',
+                      ),
                     ),
-                  ],
+                  ),
                   if (transaction.processedDate != null)
                     _buildDetailRow(
                       context,
@@ -3115,6 +3122,67 @@ class TransactionDetailsDialog extends ConsumerWidget {
             .updateTransactionAccount(item.transaction.uuid, choice.accountUuid);
         if (context.mounted) {
           ToastUtils.showSuccessToast(context, ref, l10n.accountUpdated);
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ToastUtils.showErrorToast(
+              context, ref, l10n.errorOccurred(e.toString()));
+        }
+      }
+    }
+  }
+
+  static Future<void> _editDescriptionDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String transactionUuid,
+    String fullDescription,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final index = fullDescription.indexOf('\n[');
+    final currentDisplayDesc = index != -1 ? fullDescription.substring(0, index).trim() : fullDescription.trim();
+    final tabularPart = index != -1 ? fullDescription.substring(index) : '';
+
+    final controller = TextEditingController(text: currentDisplayDesc);
+
+    final newDisplayDesc = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.editDescription),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: InputDecoration(
+            labelText: l10n.description,
+            hintText: l10n.descriptionHint,
+            border: const OutlineInputBorder(),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text),
+            child: Text(l10n.save),
+          ),
+        ],
+      ),
+    );
+
+    if (newDisplayDesc != null && context.mounted) {
+      final updatedDescription = tabularPart.isNotEmpty
+          ? '$newDisplayDesc\n$tabularPart'.trim()
+          : newDisplayDesc.trim();
+
+      try {
+        await ref
+            .read(transactionServiceProvider)
+            .updateTransactionDescription(transactionUuid, updatedDescription);
+        if (context.mounted) {
+          ToastUtils.showSuccessToast(context, ref, l10n.transactionUpdated);
         }
       } catch (e) {
         if (context.mounted) {

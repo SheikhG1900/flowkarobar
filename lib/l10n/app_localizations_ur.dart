@@ -634,6 +634,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get edit => 'ترمیم کریں';
 
   @override
+  String get editDescription => 'تفصیل میں ترمیم کریں';
+
+  @override
   String get receivablePending => 'وصولی (زیر التواء)';
 
   @override

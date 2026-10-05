@@ -1216,6 +1216,12 @@ abstract class AppLocalizations {
   /// **'Edit'**
   String get edit;
 
+  /// No description provided for @editDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Description'**
+  String get editDescription;
+
   /// No description provided for @receivablePending.
   ///
   /// In en, this message translates to:

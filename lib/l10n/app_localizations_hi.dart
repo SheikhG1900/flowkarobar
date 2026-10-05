@@ -635,6 +635,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get edit => 'संपादित करें';
 
   @override
+  String get editDescription => 'विवरण संपादित करें';
+
+  @override
   String get receivablePending => 'प्राप्य (लंबित)';
 
   @override

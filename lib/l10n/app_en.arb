@@ -407,6 +407,7 @@
   "editReceivable": "Edit Receivable",
   "receivableDetails": "Receivable Details",
   "edit": "Edit",
+  "editDescription": "Edit Description",
   "receivablePending": "Receivable (Pending)",
   "dueDate": "Due Date",
   "linkedTransaction": "Linked Transaction",

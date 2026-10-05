@@ -632,6 +632,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get edit => 'Edit';
 
   @override
+  String get editDescription => 'Edit Description';
+
+  @override
   String get receivablePending => 'Receivable (Pending)';
 
   @override

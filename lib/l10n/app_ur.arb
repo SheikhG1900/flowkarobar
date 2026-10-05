@@ -226,6 +226,7 @@
   "editReceivable": "وصولی میں ترمیم کریں",
   "receivableDetails": "وصولی کی تفصیلات",
   "edit": "ترمیم کریں",
+  "editDescription": "تفصیل میں ترمیم کریں",
   "receivablePending": "وصولی (زیر التواء)",
   "dueDate": "واجب الادا تاریخ",
   "linkedTransaction": "منسلک لین دین",

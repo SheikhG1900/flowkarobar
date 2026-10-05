@@ -226,6 +226,7 @@
   "editReceivable": "प्राप्य संपादित करें",
   "receivableDetails": "प्राप्य विवरण",
   "edit": "संपादित करें",
+  "editDescription": "विवरण संपादित करें",
   "receivablePending": "प्राप्य (लंबित)",
   "dueDate": "देय तिथि",
   "linkedTransaction": "लिंक्ड लेन-देन",
