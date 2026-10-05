@@ -727,10 +727,33 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       child: FilledButton.icon(
                         key: const ValueKey('tx-details-mark-processed-btn'),
                         onPressed: () async {
-                          await ref
-                              .read(transactionServiceProvider)
-                              .markAsProcessed(transaction.uuid);
-                          if (context.mounted) Navigator.pop(context);
+                          final choice = await resolveSettlementAccountChoice(
+                            context,
+                            ref,
+                            isPayable: isExpense,
+                            initialAccount: item.account,
+                            transactionForAccountDefault: transaction,
+                          );
+                          if (choice == null) return;
+
+                          try {
+                            if (choice.accountUuid != null) {
+                              await ref
+                                  .read(transactionServiceProvider)
+                                  .updateTransactionAccount(transaction.uuid, choice.accountUuid);
+                            }
+                            await ref
+                                .read(transactionServiceProvider)
+                                .markAsProcessed(transaction.uuid);
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ToastUtils.showErrorToast(
+                                  context, ref, l10n.errorOccurred(e.toString()));
+                            }
+                          }
                         },
                         icon: const Icon(Icons.check_circle),
                         label: Text(
@@ -850,10 +873,33 @@ class TransactionDetailsDialog extends ConsumerWidget {
                     OutlinedButton.icon(
                       key: const ValueKey('tx-details-mark-processed-outlined-btn'),
                       onPressed: () async {
-                        await ref
-                            .read(transactionServiceProvider)
-                            .markAsProcessed(transaction.uuid);
-                        if (context.mounted) Navigator.pop(context);
+                        final choice = await resolveSettlementAccountChoice(
+                          context,
+                          ref,
+                          isPayable: isExpense,
+                          initialAccount: item.account,
+                          transactionForAccountDefault: transaction,
+                        );
+                        if (choice == null) return;
+
+                        try {
+                          if (choice.accountUuid != null) {
+                            await ref
+                                .read(transactionServiceProvider)
+                                .updateTransactionAccount(transaction.uuid, choice.accountUuid);
+                          }
+                          await ref
+                              .read(transactionServiceProvider)
+                              .markAsProcessed(transaction.uuid);
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ToastUtils.showErrorToast(
+                                context, ref, l10n.errorOccurred(e.toString()));
+                          }
+                        }
                       },
                       icon: const Icon(Icons.check_circle_outline),
                       label: Text(
