@@ -1316,6 +1316,9 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     final isSplitted = widget.transaction.linkedGroupId != null &&
         widget.transaction.linkedGroupId!.isNotEmpty;
 
+    final isPremium = ref.watch(premiumProvider).isPremium;
+    final isAmountDisabled = isPremium && _isTabularMode;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.editTransaction),
@@ -1445,12 +1448,15 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                         const SizedBox(height: 16),
                         TextFormField(
                           controller: _amountController,
+                          enabled: !isAmountDisabled,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.displayLarge?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: isExpense
-                                ? AppColors.expenseColor
-                                : AppColors.incomeColor,
+                            color: isAmountDisabled
+                                ? theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5)
+                                : isExpense
+                                    ? AppColors.expenseColor
+                                    : AppColors.incomeColor,
                           ),
                           decoration: InputDecoration(
                             prefixText:
@@ -1494,13 +1500,14 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                             return null;
                           },
                         ),
-                        AmountSnapBar(
-                          controller: _amountController,
-                          currencySymbol: currencySymbol,
-                        ),
+                        if (!isAmountDisabled)
+                          AmountSnapBar(
+                            controller: _amountController,
+                            currencySymbol: currencySymbol,
+                          ),
                       ],
                     ),
-                    if ((double.tryParse(_amountController.text) ?? 0) > 0)
+                    if (!isAmountDisabled && (double.tryParse(_amountController.text) ?? 0) > 0)
                       Positioned(
                         top: -8,
                         right: 0,

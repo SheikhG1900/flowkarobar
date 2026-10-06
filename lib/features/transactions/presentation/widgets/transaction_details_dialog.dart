@@ -26,6 +26,7 @@ import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_pro
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/splitted_transactions_screen.dart';
+import 'package:flowpaisa/features/transactions/presentation/utils/split_share_settled_label.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/linked_settlement_account_sheet.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
@@ -576,55 +577,6 @@ class TransactionDetailsDialog extends ConsumerWidget {
 
             const SizedBox(height: 16),
 
-            if (isSplitGroup) ...[
-              Material(
-                key: const ValueKey('tx-details-split-material'),
-                color: Colors.transparent,
-                child: InkWell(
-                  key: const ValueKey('tx-details-split-inkwell'),
-                  borderRadius: BorderRadius.circular(20),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SplittedTransactionsScreen(
-                          transactionUuid: transaction.uuid,
-                        ),
-                      ),
-                    );
-                  },
-                  child: _buildSectionCard(
-                    context,
-                    key: const ValueKey('tx-details-split-section'),
-                    title: l10n.splittedBill,
-                    titleIcon: Icons.people_outline,
-                    useScheduleDateRangeStyle: true,
-                    titleTrailing: IconButton(
-                      key: const ValueKey('tx-details-split-edit-btn'),
-                      icon: const Icon(Icons.edit_outlined, size: 20),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditSplitTransactionScreen(
-                              transactionUuid: transaction.uuid,
-                            ),
-                          ),
-                        );
-                      },
-                      tooltip: l10n.editTransaction,
-                    ),
-                    body: _buildSplitSummaryCard(
-                      context,
-                      group,
-                      currency,
-                      embedded: true,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
 
             if (linkedPayable != null) ...[
               Material(
@@ -1286,6 +1238,362 @@ class TransactionDetailsDialog extends ConsumerWidget {
               loading: () => const SizedBox.shrink(),
               error: (_, __) => const SizedBox.shrink(),
             ),
+
+          if (isSplitGroup) ...[
+            Builder(
+              builder: (context) {
+                // Sort with user's share first (where contactUuid is null), and then alphabetically by contact name
+                final sortedGroup = [...group]..sort((a, b) {
+                    if (a.transaction.contactUuid == null && b.transaction.contactUuid != null) return -1;
+                    if (a.transaction.contactUuid != null && b.transaction.contactUuid == null) return 1;
+                    final nameA = a.contact?.name ?? '';
+                    final nameB = b.contact?.name ?? '';
+                    return nameA.compareTo(nameB);
+                  });
+
+                // Calculate split group metrics
+                double totalAmount = 0;
+                double settledAmount = 0;
+                double pendingAmount = 0;
+
+                for (final sibling in group) {
+                  final amt = sibling.transaction.amount;
+                  totalAmount += amt;
+                  final linkedPayable = sibling.linkedPayable;
+                  final linkedReceivable = sibling.linkedReceivable;
+                  final isSettled = linkedPayable != null
+                      ? (linkedPayable.status == 'PAID')
+                      : linkedReceivable != null
+                          ? (linkedReceivable.status == 'RECEIVED')
+                          : (sibling.transaction.processedDate != null);
+                  if (isSettled) {
+                    settledAmount += amt;
+                  } else {
+                    pendingAmount += amt;
+                  }
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+                    // Splitted Bill section header with edit button right above the summary row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.people_outline, color: theme.colorScheme.primary),
+                            const SizedBox(width: 8),
+                            Text(
+                              l10n.splittedBill,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          key: const ValueKey('tx-details-split-edit-btn'),
+                          icon: const Icon(Icons.edit_outlined, size: 20),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => EditSplitTransactionScreen(
+                                  transactionUuid: transaction.uuid,
+                                ),
+                              ),
+                            );
+                          },
+                          tooltip: l10n.editTransaction,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Summary Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildSummaryTile(
+                            context,
+                            label: l10n.totalAmount,
+                            amount: totalAmount,
+                            color: isExpense
+                                ? AppColors.expenseColor
+                                : AppColors.incomeColor,
+                            currency: currency,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildSummaryTile(
+                            context,
+                            label: l10n.statusCompleted,
+                            amount: settledAmount,
+                            color: AppColors.success,
+                            currency: currency,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildSummaryTile(
+                            context,
+                            label: l10n.statusPending,
+                            amount: pendingAmount,
+                            color: Colors.orange,
+                            currency: currency,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    ...sortedGroup.map((sibling) {
+                      final isCurrent = sibling.transaction.uuid == transaction.uuid;
+                      final isUserShare = sibling.transaction.contactUuid == null;
+                      final label = isUserShare ? l10n.me : (sibling.contact?.name ?? '');
+                      final linkedPayable = sibling.linkedPayable;
+                      final linkedReceivable = sibling.linkedReceivable;
+                      final isSettled = linkedPayable != null
+                          ? (linkedPayable.status == 'PAID')
+                          : linkedReceivable != null
+                              ? (linkedReceivable.status == 'RECEIVED')
+                              : (sibling.transaction.processedDate != null);
+                      final settledLineLabel = splitShareSettledStatusLabel(l10n, linkedPayable, linkedReceivable);
+                      final canMarkPaid = linkedPayable != null && linkedPayable.status == 'PENDING';
+                      final canMarkReceived = linkedReceivable != null && linkedReceivable.status == 'PENDING';
+
+                      // Determine status chip text and color
+                      final String? chipText;
+                      final Color? chipColor;
+                      if (isSettled) {
+                        if (linkedPayable != null) {
+                          chipText = l10n.paid;
+                          chipColor = AppColors.success;
+                        } else if (linkedReceivable != null) {
+                          chipText = l10n.receivedLabel;
+                          chipColor = AppColors.success;
+                        } else {
+                          chipText = l10n.statusCompleted;
+                          chipColor = AppColors.success;
+                        }
+                      } else if (sibling.transaction.paidRelationship != null) {
+                        chipText = LocalizationHelper.localizeRelationshipShort(
+                          l10n,
+                          sibling.transaction.paidRelationship!,
+                          isExpense: sibling.transaction.type == 'EXPENSE',
+                        );
+                        chipColor = AppColors.getRelationshipColor(sibling.transaction.paidRelationship!);
+                      } else {
+                        chipText = null;
+                        chipColor = null;
+                      }
+
+                      // Determine contact/label color for avatar background
+                      final avatarColor = AppColors.getContactColor(label);
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Material(
+                          color: isCurrent
+                              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.15)
+                              : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(16),
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            onTap: isCurrent
+                                ? null
+                                : () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => TransactionDetailsDialog(
+                                        transactionUuid: sibling.transaction.uuid,
+                                      ),
+                                    );
+                                  },
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isCurrent
+                                      ? theme.colorScheme.primary.withValues(alpha: 0.4)
+                                      : isSettled
+                                          ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                                          : theme.dividerColor.withValues(alpha: 0.1),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Stack(
+                                        clipBehavior: Clip.none,
+                                        children: [
+                                          Container(
+                                            width: 40,
+                                            height: 40,
+                                            decoration: BoxDecoration(
+                                              color: avatarColor.withValues(alpha: 0.1),
+                                              borderRadius: BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: avatarColor.withValues(alpha: 0.3),
+                                                width: 1,
+                                              ),
+                                            ),
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                              label.isNotEmpty ? label[0].toUpperCase() : '?',
+                                              style: TextStyle(
+                                                color: avatarColor,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ),
+                                          if (sibling.transaction.isNotSynced == true)
+                                            Positioned(
+                                              right: -3,
+                                              bottom: -3,
+                                              child: Container(
+                                                padding: const EdgeInsets.all(3),
+                                                decoration: BoxDecoration(
+                                                  color: theme.cardColor,
+                                                  shape: BoxShape.circle,
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black.withValues(alpha: 0.15),
+                                                      blurRadius: 4,
+                                                      offset: const Offset(0, 1),
+                                                    ),
+                                                  ],
+                                                  border: Border.all(
+                                                    color: Colors.orange.withValues(alpha: 0.3),
+                                                    width: 1,
+                                                  ),
+                                                ),
+                                                child: const Icon(
+                                                  Icons.cloud_upload_outlined,
+                                                  size: 10,
+                                                  color: Colors.orange,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  label,
+                                                  style: theme.textTheme.bodyLarge?.copyWith(
+                                                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.w600,
+                                                  ),
+                                                ),
+                                                if (chipText != null && chipColor != null) ...[
+                                                  const SizedBox(width: 8),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: chipColor.withValues(alpha: 0.1),
+                                                      borderRadius: BorderRadius.circular(4),
+                                                      border: Border.all(
+                                                        color: chipColor.withValues(alpha: 0.3),
+                                                        width: 1,
+                                                      ),
+                                                    ),
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
+                                                      children: [
+                                                        if (isSettled) ...[
+                                                          Icon(
+                                                            Icons.check,
+                                                            size: 10,
+                                                            color: chipColor,
+                                                          ),
+                                                          const SizedBox(width: 4),
+                                                        ],
+                                                        Text(
+                                                          chipText,
+                                                          style: theme.textTheme.labelSmall?.copyWith(
+                                                            color: chipColor,
+                                                            fontWeight: FontWeight.w600,
+                                                            fontSize: 8,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ],
+                                            ),
+                                            // Don't show settled text explicitly anymore as requested; the status is updated in the chip
+                                            if (settledLineLabel != null && !isSettled) ...[
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                settledLineLabel,
+                                                style: theme.textTheme.bodySmall?.copyWith(
+                                                  color: theme.colorScheme.primary,
+                                                ),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        AmountFormatter.formatWithCurrency(
+                                          sibling.transaction.amount,
+                                          currency,
+                                        ),
+                                        style: theme.textTheme.bodyLarge?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: isCurrent ? theme.colorScheme.primary : null,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (canMarkPaid || canMarkReceived) ...[
+                                    const SizedBox(height: 12),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 38,
+                                      child: FilledButton.icon(
+                                        onPressed: () async {
+                                          if (canMarkPaid) {
+                                            await markAsPaid(context, ref, linkedPayable.uuid, sibling);
+                                          } else if (canMarkReceived) {
+                                            await markAsReceived(context, ref, linkedReceivable.uuid, sibling);
+                                          }
+                                        },
+                                        icon: const Icon(Icons.check_circle, size: 16),
+                                        label: Text(
+                                          canMarkPaid ? l10n.markAsPaid : l10n.markAsReceived,
+                                          style: const TextStyle(fontSize: 12),
+                                        ),
+                                        style: canMarkPaid
+                                            ? AppColors.transactionMarkAsPaidFilledStyle()
+                                            : AppColors.transactionMarkAsReceivedFilledStyle(),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 16),
+                  ],
+                );
+              },
+            ),
+          ],
           ],
         ),
       ),
@@ -3568,59 +3876,49 @@ class _TabularDataSectionWidgetState extends State<TabularDataSectionWidget> {
               size: 20,
             ),
           ),
-          title: Text(
-            l10n.itemizedDetails,
-            key: const ValueKey('tx-details-tabular-label'),
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: -0.1,
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Row(
-              key: const ValueKey('tx-details-tabular-total'),
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Icon(
-                  Symbols.payments,
-                  size: 16,
-                  color: theme.colorScheme.primary,
+          title: Row(
+            children: [
+              Text(
+                l10n.itemizedDetails,
+                key: const ValueKey('tx-details-tabular-label'),
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.1,
+                  color: theme.colorScheme.onSurface,
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  amountLine,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                    letterSpacing: -0.2,
-                  ),
-                  textDirection: TextDirection.ltr,
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  width: 1,
-                  height: 12,
-                  color: theme.dividerColor.withValues(alpha: 0.3),
-                ),
-                const SizedBox(width: 12),
-                Icon(
-                  Symbols.inventory_2,
-                  size: 14,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  quantitySubtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    width: 1,
                   ),
                 ),
-              ],
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Symbols.inventory_2,
+                      size: 12,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      quantityLine,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                        fontSize: 9,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -3647,58 +3945,60 @@ class _TabularDataSectionWidgetState extends State<TabularDataSectionWidget> {
           ),
           children: [
             const Divider(height: 1),
-            // Sort Bar
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              color: isDarkMode
-                  ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.5)
-                  : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.sort_outlined,
-                    size: 16,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Sort:',
-                    style: theme.textTheme.labelMedium?.copyWith(
+            // Sort Bar (only shown when there are more than 2 records)
+            if (rows.length > 2) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                color: isDarkMode
+                    ? theme.colorScheme.surfaceContainerHigh.withValues(alpha: 0.5)
+                    : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.sort_outlined,
+                      size: 16,
                       color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.bold,
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          _buildSortChip(
-                            label: l10n.date,
-                            field: 'date',
-                            theme: theme,
-                          ),
-                          const SizedBox(width: 8),
-                          _buildSortChip(
-                            label: l10n.description,
-                            field: 'desc',
-                            theme: theme,
-                          ),
-                          const SizedBox(width: 8),
-                          _buildSortChip(
-                            label: l10n.amount,
-                            field: 'price',
-                            theme: theme,
-                          ),
-                        ],
+                    const SizedBox(width: 6),
+                    Text(
+                      'Sort:',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _buildSortChip(
+                              label: l10n.date,
+                              field: 'date',
+                              theme: theme,
+                            ),
+                            const SizedBox(width: 8),
+                            _buildSortChip(
+                              label: l10n.description,
+                              field: 'desc',
+                              theme: theme,
+                            ),
+                            const SizedBox(width: 8),
+                            _buildSortChip(
+                              label: l10n.amount,
+                              field: 'price',
+                              theme: theme,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
+              const SizedBox(height: 4),
+            ],
             ListView.builder(
               key: const ValueKey('tx-details-tabular-list'),
               shrinkWrap: true,
