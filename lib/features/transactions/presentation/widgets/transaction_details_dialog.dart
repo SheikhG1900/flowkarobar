@@ -1828,25 +1828,19 @@ class TransactionDetailsDialog extends ConsumerWidget {
         : AppColors.payableColor;
     final label = isReceivable ? l10n.receivable : l10n.payable;
     final keyPrefix = isReceivable ? 'receivable' : 'payable';
+    final isPending = !(item.isLinkedEntryMarked ?? false);
 
     return Container(
       key: ValueKey('tx-details-$keyPrefix-card'),
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            color.withValues(alpha: isDarkMode ? 0.15 : 0.08),
-            color.withValues(alpha: isDarkMode ? 0.06 : 0.03),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+        color: isDarkMode ? theme.cardColor : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: isDarkMode ? 0.12 : 0.05),
+            color: color.withValues(alpha: isDarkMode ? 0.12 : 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -1861,164 +1855,195 @@ class TransactionDetailsDialog extends ConsumerWidget {
             children: [
               Container(
                 key: ValueKey('tx-details-$keyPrefix-icon-container'),
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(12),
+                  color: color.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
                 ),
                 child: Icon(
                   isReceivable ? Icons.call_received : Icons.call_made,
-                  size: 24,
+                  size: 20,
                   color: color,
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                key: ValueKey('tx-details-$keyPrefix-label'),
-                label,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      key: ValueKey('tx-details-$keyPrefix-label'),
+                      label,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isPending
+                      ? Colors.amber.withValues(alpha: 0.12)
+                      : AppColors.successGreen.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isPending
+                        ? Colors.amber.withValues(alpha: 0.3)
+                        : AppColors.successGreen.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isPending ? Icons.schedule_rounded : Icons.check_circle_rounded,
+                      color: isPending ? (Colors.amber[800] ?? Colors.amber) : AppColors.successGreen,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      isPending ? l10n.pending : (isReceivable ? l10n.received : l10n.paid),
+                      style: TextStyle(
+                        color: isPending ? (Colors.amber[800] ?? Colors.amber) : AppColors.successGreen,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
           if (contact != null) ...[
             const SizedBox(height: 16),
-            Material(
-              key: ValueKey('tx-details-$keyPrefix-contact-material'),
-              color: Colors.transparent,
-              child: InkWell(
-                key: ValueKey('tx-details-$keyPrefix-contact-inkwell'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ContactDetailsScreen(
-                        contactUuid: contact.uuid,
-                      ),
-                    ),
-                  );
-                },
+            Divider(color: theme.dividerColor.withValues(alpha: 0.4), height: 1),
+            const SizedBox(height: 14),
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  key: ValueKey('tx-details-$keyPrefix-contact-padding'),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Row(
-                    key: ValueKey('tx-details-$keyPrefix-contact-row'),
-                    children: [
-                      Container(
-                        key: ValueKey('tx-details-$keyPrefix-contact-avatar'),
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.getContactGradient(contact.name),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.getContactColor(contact.name)
-                                  .withValues(alpha: 0.3),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          contact.name.isNotEmpty
-                              ? contact.name[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                border: Border.all(
+                  color: AppColors.getContactColor(contact.name).withValues(alpha: 0.35),
+                  width: 1,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ContactDetailsScreen(
+                            contactUuid: contact.uuid,
                           ),
                         ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      key: ValueKey('tx-details-$keyPrefix-contact-avatar'),
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.getContactGradient(contact.name),
+                        shape: BoxShape.circle,
                       ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          key: ValueKey('tx-details-$keyPrefix-contact-info'),
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              key: ValueKey('tx-details-$keyPrefix-contact-name'),
-                              contact.name,
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            if (contact.phone != null) ...[
-                              const SizedBox(height: 2),
-                              Row(
-                                key: ValueKey('tx-details-$keyPrefix-contact-phone-row'),
-                                children: [
-                                  Icon(
-                                    Icons.phone,
-                                    size: 14,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    key: ValueKey('tx-details-$keyPrefix-contact-phone-text'),
-                                    contact.phone!,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ],
+                      alignment: Alignment.center,
+                      child: Text(
+                        contact.name.isNotEmpty
+                            ? contact.name[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Icon(
-                        Icons.chevron_right,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            if (contact.phone != null && transaction.isAutoGenerated != true) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  key: ValueKey('tx-details-$keyPrefix-message-btn'),
-                  onPressed: () {
-                    ShareHelper.shareTransaction(
-                      context,
-                      ref,
-                      transaction,
-                      contact,
-                      item.category,
-                      item.isLinkedEntryMarked,
-                      currencyOverride: currency,
-                      userProfileOverride: ref.read(userProfileProvider),
-                      transactionServiceOverride:
-                          ref.read(transactionServiceProvider),
-                      whatsAppServiceOverride:
-                          ref.read(whatsAppServiceProvider),
-                      templateServiceOverride:
-                          ref.read(messageTemplateServiceProvider),
-                      languageOverride: getCurrentLanguageCode(ref),
-                    );
-                  },
-                  icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
-                  label: Text(l10n.sendMessage),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF25D366),
-                    side: const BorderSide(color: Color(0xFF25D366)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ContactDetailsScreen(
+                              contactUuid: contact.uuid,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            key: ValueKey('tx-details-$keyPrefix-contact-name'),
+                            contact.name,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (contact.phone != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              key: ValueKey('tx-details-$keyPrefix-contact-phone-text'),
+                              contact.phone!,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (contact.phone != null && transaction.isAutoGenerated != true)
+                    IconButton(
+                      key: ValueKey('tx-details-$keyPrefix-message-btn'),
+                      onPressed: () {
+                        ShareHelper.shareTransaction(
+                          context,
+                          ref,
+                          transaction,
+                          contact,
+                          item.category,
+                          item.isLinkedEntryMarked,
+                          currencyOverride: currency,
+                          userProfileOverride: ref.read(userProfileProvider),
+                          transactionServiceOverride:
+                              ref.read(transactionServiceProvider),
+                          whatsAppServiceOverride:
+                              ref.read(whatsAppServiceProvider),
+                          templateServiceOverride:
+                              ref.read(messageTemplateServiceProvider),
+                          languageOverride: getCurrentLanguageCode(ref),
+                        );
+                      },
+                      icon: const Icon(Icons.chat, color: Color(0xFF25D366), size: 20),
+                      tooltip: l10n.sendMessage,
+                      style: IconButton.styleFrom(
+                        backgroundColor: const Color(0xFF25D366).withValues(alpha: 0.12),
+                        padding: const EdgeInsets.all(8),
+                        minimumSize: const Size(36, 36),
+                      ),
+                    ),
+                ],
               ),
-            ],
+            ),
           ],
         ],
       ),
@@ -2784,26 +2809,20 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
     final isPending = payable.status == 'PENDING';
+    final isOverdue = isPending && payable.dueDate != null && payable.dueDate!.isBefore(DateTime.now());
     const color = AppColors.payableColor;
 
     return Container(
       key: const ValueKey('tx-details-linked-payable-card'),
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            color.withValues(alpha: isDarkMode ? 0.15 : 0.08),
-            color.withValues(alpha: isDarkMode ? 0.06 : 0.03),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+        color: isDarkMode ? theme.cardColor : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: isDarkMode ? 0.12 : 0.05),
+            color: color.withValues(alpha: isDarkMode ? 0.12 : 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -2815,195 +2834,224 @@ class TransactionDetailsDialog extends ConsumerWidget {
         children: [
           Row(
             key: const ValueKey('tx-details-linked-payable-header'),
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 key: const ValueKey('tx-details-linked-payable-icon-container'),
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(12),
+                  color: color.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.call_made, size: 24, color: color),
+                child: const Icon(Icons.call_made, size: 20, color: color),
               ),
               const SizedBox(width: 12),
-              Text(
-                key: const ValueKey('tx-details-linked-payable-label'),
-                l10n.payable,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      key: const ValueKey('tx-details-linked-payable-label'),
+                      l10n.payable,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    if (payable.dueDate != null || payable.paidDate != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        payable.paidDate != null
+                            ? l10n.paidOn(AppDateFormatter.formatDate(payable.paidDate!,
+                                pattern: ref.watch(userProfileProvider).dateFormat))
+                            : l10n.dueAt(AppDateFormatter.formatDate(payable.dueDate!,
+                                pattern: ref.watch(userProfileProvider).dateFormat)),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: payable.paidDate != null
+                              ? AppColors.successGreen
+                              : (isOverdue
+                                  ? Colors.red
+                                  : theme.colorScheme.onSurfaceVariant),
+                          fontSize: 11,
+                          fontWeight: isPending ? FontWeight.w500 : null,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            key: const ValueKey('tx-details-linked-payable-status-row'),
-            children: [
-              Icon(
-                isPending ? Icons.schedule : Icons.check_circle,
-                color: color,
-                size: 18,
-              ),
               const SizedBox(width: 8),
-              Text(
-                key: const ValueKey('tx-details-linked-payable-status-text'),
-                isPending ? l10n.payablePending : l10n.paidTag,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: !isPending
+                      ? AppColors.successGreen.withValues(alpha: 0.12)
+                      : (isOverdue
+                          ? Colors.red.withValues(alpha: 0.12)
+                          : Colors.amber.withValues(alpha: 0.12)),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: !isPending
+                        ? AppColors.successGreen.withValues(alpha: 0.3)
+                        : (isOverdue
+                            ? Colors.red.withValues(alpha: 0.3)
+                            : Colors.amber.withValues(alpha: 0.3)),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      !isPending
+                          ? Icons.check_circle_rounded
+                          : (isOverdue ? Icons.error_outline_rounded : Icons.schedule_rounded),
+                      color: !isPending
+                          ? AppColors.successGreen
+                          : (isOverdue ? Colors.red : (Colors.amber[800] ?? Colors.amber)),
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      !isPending
+                          ? l10n.paid
+                          : (isOverdue ? l10n.overdue : l10n.pending),
+                      style: TextStyle(
+                        color: !isPending
+                            ? AppColors.successGreen
+                            : (isOverdue ? Colors.red : (Colors.amber[800] ?? Colors.amber)),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
           if (contact != null) ...[
+            const SizedBox(height: 16),
+            Divider(color: theme.dividerColor.withValues(alpha: 0.4), height: 1),
             const SizedBox(height: 14),
-            Material(
-              key: const ValueKey('tx-details-linked-payable-contact-material'),
-              color: Colors.transparent,
-              child: InkWell(
-                key: const ValueKey('tx-details-linked-payable-contact-inkwell'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ContactDetailsScreen(
-                        contactUuid: contact.uuid,
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.getContactColor(contact.name).withValues(alpha: 0.35),
+                  width: 1,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ContactDetailsScreen(
+                            contactUuid: contact.uuid,
+                          ),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      key: const ValueKey('tx-details-linked-payable-contact-avatar'),
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.getContactGradient(contact.name),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        contact.name.isNotEmpty
+                            ? contact.name[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  key: const ValueKey('tx-details-linked-payable-contact-padding'),
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(
-                    key: const ValueKey('tx-details-linked-payable-contact-row'),
-                    children: [
-                      Container(
-                        key: const ValueKey('tx-details-linked-payable-contact-avatar'),
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.getContactGradient(contact.name),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.getContactColor(contact.name)
-                                  .withValues(alpha: 0.28),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ContactDetailsScreen(
+                              contactUuid: contact.uuid,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            key: const ValueKey('tx-details-linked-payable-contact-name'),
+                            contact.name,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (contact.phone != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              contact.phone!,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          contact.name.isNotEmpty
-                              ? contact.name[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          key: const ValueKey('tx-details-linked-payable-contact-name'),
-                          contact.name,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      Icon(
-                        Icons.chevron_right,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            if (contact.phone != null && transaction.isAutoGenerated != true) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  key: const ValueKey('tx-details-linked-payable-message-btn'),
-                  onPressed: () {
-                    ShareHelper.shareTransaction(
-                      context,
-                      ref,
-                      transaction,
-                      contact,
-                      item.category,
-                      item.isLinkedEntryMarked,
-                      currencyOverride: currency,
-                      userProfileOverride: ref.read(userProfileProvider),
-                      transactionServiceOverride:
-                          ref.read(transactionServiceProvider),
-                      whatsAppServiceOverride:
-                          ref.read(whatsAppServiceProvider),
-                      templateServiceOverride:
-                          ref.read(messageTemplateServiceProvider),
-                      languageOverride: getCurrentLanguageCode(ref),
-                    );
-                  },
-                  icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
-                  label: Text(l10n.sendMessage),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF25D366),
-                    side: const BorderSide(color: Color(0xFF25D366)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                ),
+                  if (contact.phone != null && transaction.isAutoGenerated != true)
+                    IconButton(
+                      key: const ValueKey('tx-details-linked-payable-message-btn'),
+                      onPressed: () {
+                        ShareHelper.shareTransaction(
+                          context,
+                          ref,
+                          transaction,
+                          contact,
+                          item.category,
+                          item.isLinkedEntryMarked,
+                          currencyOverride: currency,
+                          userProfileOverride: ref.read(userProfileProvider),
+                          transactionServiceOverride:
+                              ref.read(transactionServiceProvider),
+                          whatsAppServiceOverride:
+                              ref.read(whatsAppServiceProvider),
+                          templateServiceOverride:
+                              ref.read(messageTemplateServiceProvider),
+                          languageOverride: getCurrentLanguageCode(ref),
+                        );
+                      },
+                      icon: const Icon(Icons.chat, color: Color(0xFF25D366), size: 20),
+                      tooltip: l10n.sendMessage,
+                      style: IconButton.styleFrom(
+                        backgroundColor: const Color(0xFF25D366).withValues(alpha: 0.12),
+                        padding: const EdgeInsets.all(8),
+                        minimumSize: const Size(36, 36),
+                      ),
+                    ),
+                ],
               ),
-            ],
-          ],
-          if (payable.dueDate != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              key: const ValueKey('tx-details-linked-payable-due-date'),
-              l10n.dueAt(AppDateFormatter.formatDate(payable.dueDate,
-                  pattern: ref.watch(userProfileProvider).dateFormat)),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: isPending
-                    ? (payable.dueDate!.isBefore(DateTime.now())
-                        ? Colors.red
-                        : Colors.orange)
-                    : null,
-                fontWeight: isPending ? FontWeight.bold : null,
-              ),
-            ),
-          ],
-          if (payable.paidDate != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              key: const ValueKey('tx-details-linked-payable-paid-row'),
-              children: [
-                const Icon(
-                  Icons.check_circle,
-                  size: 14,
-                  color: AppColors.payableColor,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  key: const ValueKey('tx-details-linked-payable-paid-text'),
-                  l10n.paidOn(AppDateFormatter.formatDate(payable.paidDate!,
-                      pattern: ref.watch(userProfileProvider).dateFormat)),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.payableColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
             ),
           ],
           if (isPending) ...[
@@ -3037,26 +3085,20 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
     final isPending = receivable.status == 'PENDING';
+    final isOverdue = isPending && receivable.dueDate != null && receivable.dueDate!.isBefore(DateTime.now());
     const color = AppColors.receivableColor;
 
     return Container(
       key: const ValueKey('tx-details-linked-receivable-card'),
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            color.withValues(alpha: isDarkMode ? 0.15 : 0.08),
-            color.withValues(alpha: isDarkMode ? 0.06 : 0.03),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+        color: isDarkMode ? theme.cardColor : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: isDarkMode ? 0.12 : 0.05),
+            color: color.withValues(alpha: isDarkMode ? 0.12 : 0.04),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -3068,196 +3110,224 @@ class TransactionDetailsDialog extends ConsumerWidget {
         children: [
           Row(
             key: const ValueKey('tx-details-linked-receivable-header'),
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Container(
                 key: const ValueKey('tx-details-linked-receivable-icon-container'),
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(12),
+                  color: color.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.call_received, size: 24, color: color),
+                child: const Icon(Icons.call_received, size: 20, color: color),
               ),
               const SizedBox(width: 12),
-              Text(
-                key: const ValueKey('tx-details-linked-receivable-label'),
-                l10n.receivable,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: color,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      key: const ValueKey('tx-details-linked-receivable-label'),
+                      l10n.receivable,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.onSurface,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    if (receivable.dueDate != null || receivable.receivedDate != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        receivable.receivedDate != null
+                            ? l10n.receivedOn(AppDateFormatter.formatDate(receivable.receivedDate!,
+                                pattern: ref.watch(userProfileProvider).dateFormat))
+                            : l10n.dueAt(AppDateFormatter.formatDate(receivable.dueDate!,
+                                pattern: ref.watch(userProfileProvider).dateFormat)),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: receivable.receivedDate != null
+                              ? AppColors.successGreen
+                              : (isOverdue
+                                  ? Colors.red
+                                  : theme.colorScheme.onSurfaceVariant),
+                          fontSize: 11,
+                          fontWeight: isPending ? FontWeight.w500 : null,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            key: const ValueKey('tx-details-linked-receivable-status-row'),
-            children: [
-              Icon(
-                isPending ? Icons.schedule : Icons.check_circle,
-                color: color,
-                size: 18,
-              ),
               const SizedBox(width: 8),
-              Text(
-                key: const ValueKey('tx-details-linked-receivable-status-text'),
-                isPending ? l10n.receivablePending : l10n.receivedTag,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: !isPending
+                      ? AppColors.successGreen.withValues(alpha: 0.12)
+                      : (isOverdue
+                          ? Colors.red.withValues(alpha: 0.12)
+                          : Colors.amber.withValues(alpha: 0.12)),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: !isPending
+                        ? AppColors.successGreen.withValues(alpha: 0.3)
+                        : (isOverdue
+                            ? Colors.red.withValues(alpha: 0.3)
+                            : Colors.amber.withValues(alpha: 0.3)),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      !isPending
+                          ? Icons.check_circle_rounded
+                          : (isOverdue ? Icons.error_outline_rounded : Icons.schedule_rounded),
+                      color: !isPending
+                          ? AppColors.successGreen
+                          : (isOverdue ? Colors.red : (Colors.amber[800] ?? Colors.amber)),
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      !isPending
+                          ? l10n.received
+                          : (isOverdue ? l10n.overdue : l10n.pending),
+                      style: TextStyle(
+                        color: !isPending
+                            ? AppColors.successGreen
+                            : (isOverdue ? Colors.red : (Colors.amber[800] ?? Colors.amber)),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
           if (contact != null) ...[
+            const SizedBox(height: 16),
+            Divider(color: theme.dividerColor.withValues(alpha: 0.4), height: 1),
             const SizedBox(height: 14),
-            Material(
-              key: const ValueKey('tx-details-linked-receivable-contact-material'),
-              color: Colors.transparent,
-              child: InkWell(
-                key: const ValueKey('tx-details-linked-receivable-contact-inkwell'),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ContactDetailsScreen(
-                        contactUuid: contact.uuid,
+            Container(
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppColors.getContactColor(contact.name).withValues(alpha: 0.35),
+                  width: 1,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ContactDetailsScreen(
+                            contactUuid: contact.uuid,
+                          ),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      key: const ValueKey('tx-details-linked-receivable-contact-avatar'),
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: AppColors.getContactGradient(contact.name),
+                        shape: BoxShape.circle,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        contact.name.isNotEmpty
+                            ? contact.name[0].toUpperCase()
+                            : '?',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(12),
-                child: Padding(
-                  key: const ValueKey('tx-details-linked-receivable-contact-padding'),
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: Row(
-                    key: const ValueKey('tx-details-linked-receivable-contact-row'),
-                    children: [
-                      Container(
-                        key: const ValueKey('tx-details-linked-receivable-contact-avatar'),
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          gradient: AppColors.getContactGradient(contact.name),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.getContactColor(contact.name)
-                                  .withValues(alpha: 0.28),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ContactDetailsScreen(
+                              contactUuid: contact.uuid,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            key: const ValueKey('tx-details-linked-receivable-contact-name'),
+                            contact.name,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.onSurface,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (contact.phone != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              contact.phone!,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          contact.name.isNotEmpty
-                              ? contact.name[0].toUpperCase()
-                              : '?',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          key: const ValueKey('tx-details-linked-receivable-contact-name'),
-                          contact.name,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      Icon(
-                        Icons.chevron_right,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            if (contact.phone != null && transaction.isAutoGenerated != true) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  key: const ValueKey('tx-details-linked-receivable-message-btn'),
-                  onPressed: () {
-                    ShareHelper.shareTransaction(
-                      context,
-                      ref,
-                      transaction,
-                      contact,
-                      item.category,
-                      item.isLinkedEntryMarked,
-                      currencyOverride: currency,
-                      userProfileOverride: ref.read(userProfileProvider),
-                      transactionServiceOverride:
-                          ref.read(transactionServiceProvider),
-                      whatsAppServiceOverride:
-                          ref.read(whatsAppServiceProvider),
-                      templateServiceOverride:
-                          ref.read(messageTemplateServiceProvider),
-                      languageOverride: getCurrentLanguageCode(ref),
-                    );
-                  },
-                  icon: const Icon(Icons.chat, color: Color(0xFF25D366)),
-                  label: Text(l10n.sendMessage),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF25D366),
-                    side: const BorderSide(color: Color(0xFF25D366)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                ),
+                  if (contact.phone != null && transaction.isAutoGenerated != true)
+                    IconButton(
+                      key: const ValueKey('tx-details-linked-receivable-message-btn'),
+                      onPressed: () {
+                        ShareHelper.shareTransaction(
+                          context,
+                          ref,
+                          transaction,
+                          contact,
+                          item.category,
+                          item.isLinkedEntryMarked,
+                          currencyOverride: currency,
+                          userProfileOverride: ref.read(userProfileProvider),
+                          transactionServiceOverride:
+                              ref.read(transactionServiceProvider),
+                          whatsAppServiceOverride:
+                              ref.read(whatsAppServiceProvider),
+                          templateServiceOverride:
+                              ref.read(messageTemplateServiceProvider),
+                          languageOverride: getCurrentLanguageCode(ref),
+                        );
+                      },
+                      icon: const Icon(Icons.chat, color: Color(0xFF25D366), size: 20),
+                      tooltip: l10n.sendMessage,
+                      style: IconButton.styleFrom(
+                        backgroundColor: const Color(0xFF25D366).withValues(alpha: 0.12),
+                        padding: const EdgeInsets.all(8),
+                        minimumSize: const Size(36, 36),
+                      ),
+                    ),
+                ],
               ),
-            ],
-          ],
-          if (receivable.dueDate != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              key: const ValueKey('tx-details-linked-receivable-due-date'),
-              l10n.dueAt(AppDateFormatter.formatDate(receivable.dueDate,
-                  pattern: ref.watch(userProfileProvider).dateFormat)),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: isPending
-                    ? (receivable.dueDate!.isBefore(DateTime.now())
-                        ? Colors.red
-                        : Colors.orange)
-                    : null,
-                fontWeight: isPending ? FontWeight.bold : null,
-              ),
-            ),
-          ],
-          if (receivable.receivedDate != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              key: const ValueKey('tx-details-linked-receivable-received-row'),
-              children: [
-                const Icon(
-                  Icons.check_circle,
-                  size: 14,
-                  color: AppColors.receivableColor,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  key: const ValueKey('tx-details-linked-receivable-received-text'),
-                  l10n.receivedOn(AppDateFormatter.formatDate(
-                      receivable.receivedDate!,
-                      pattern: ref.watch(userProfileProvider).dateFormat)),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.receivableColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
             ),
           ],
           if (isPending) ...[
