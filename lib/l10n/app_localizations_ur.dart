@@ -9,6 +9,9 @@ class AppLocalizationsUr extends AppLocalizations {
   AppLocalizationsUr([String locale = 'ur']) : super(locale);
 
   @override
+  String get refresh => 'تازہ کریں';
+
+  @override
   String get appTitle => 'فلوپیسہ';
 
   @override

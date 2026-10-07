@@ -2901,6 +2901,17 @@ class _DashboardHeader extends ConsumerWidget {
         ),
       ),
       actions: [
+        if (defaultTargetPlatform == TargetPlatform.windows)
+          IconButton(
+            icon: Icon(
+              Icons.refresh,
+              color: theme.colorScheme.onSurface,
+            ),
+            tooltip: l10n.refresh,
+            onPressed: () {
+              Phoenix.rebirth(context);
+            },
+          ),
         if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows)
           const WindowsUpdateStatusIcon(),
         Consumer(

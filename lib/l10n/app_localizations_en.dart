@@ -9,6 +9,9 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get refresh => 'Refresh';
+
+  @override
   String get appTitle => 'Flowpaisa';
 
   @override

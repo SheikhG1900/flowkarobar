@@ -1,5 +1,6 @@
 {
   "@@locale": "en",
+  "refresh": "Refresh",
   "appTitle": "Flowpaisa",
   "backgroundActivityStarted": "Activity started in background",
   "backgroundBackupStarted": "Backup started in background",

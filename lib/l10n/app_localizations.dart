@@ -100,6 +100,12 @@ abstract class AppLocalizations {
     Locale('ur')
   ];
 
+  /// No description provided for @refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get refresh;
+
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
