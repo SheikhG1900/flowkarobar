@@ -752,7 +752,7 @@
   "negativeAmount": "منفی: {amount}",
   "saveCurrency": "کرنسی محفوظ کریں",
   "currencyAdded": "کرنسی کامیابی سے شامل کر دی گئی",
-  "editCurrency": "کرنسی में ترمیم کریں",
+  "editCurrency": "کرنسی میں ترمیم کریں",
   "updateCurrency": "کرنسی اپ ڈیٹ کریں",
   "currencyUpdated": "کرنسی کامیابی سے اپ ڈیٹ کر دی گئی",
   "selectDateRange": "تاریخ کی حد منتخب کریں",
@@ -1000,7 +1000,7 @@
   "deletePermanently": "مستقل طور پر حذف کریں",
   "pleaseEnterValidAmount": "براہ کرم درست رقم درج کریں",
   "currencyUSD": "امریکی ڈالر ($)",
-  "currencyINR": "भारतीय रुपया (₹)",
+  "currencyINR": "ہندوستانی روپیہ (₹)",
   "currencyPKR": "پاکستانی روپیہ (Rs)",
   "inactive": "غیر فعال",
   "sundayShort": "اتوار",
@@ -1278,7 +1278,7 @@
     }
   },
   "receivableOverdue": "وصولی کی میعاد ختم",
-  "receivableOverdueMessage": "{description} کی ادائیگی {date} को واجب الادا تھی",
+  "receivableOverdueMessage": "{description} کی ادائیگی {date} کو واجب الادا تھی",
   "@receivableOverdueMessage": {
     "placeholders": {
       "description": {
@@ -1680,7 +1680,7 @@
   "onboardingScanTitle": "اسکین کریں یا بولیں",
   "onboardingScanBody": "اسمارٹ اسکیننگ اور وائس کمانڈز کے ساتھ وقت بچائیں۔ بس اپنی رسید کی تصویر لیں یا ایپ کو بتائیں کہ آپ نے کیا خرچ کیا—یہ آپ کے لیے تفصیلات سنبھال لے گی۔",
   "onboardingTransactionsTitle": "اسمارٹ لنکڈ ٹرانزیکشنز",
-  "onboardingTransactionsBody": "ایک حقیقی مربوط نظام کا تجربہ کریں۔ جب آپ کسی قرض کو 'وصول شدہ' کے طور پر نشان زد کرتے ہیں، تو ایپ خود بخود اسے آمدنی کے طور پر ریکارڈ کر لیتی ہے۔ جب آپ بل ادا کرتے ہیں، تو یہ فوری طور پر خرچ کے طور पर درج ہو جاتا ہے۔",
+  "onboardingTransactionsBody": "ایک حقیقی مربوط نظام کا تجربہ کریں۔ جب آپ کسی قرض کو 'وصول شدہ' کے طور پر نشان زد کرتے ہیں، تو ایپ خود بخود اسے آمدنی کے طور پر ریکارڈ کر لیتی ہے۔ جب آپ بل ادا کرتے ہیں، تو یہ فوری طور پر خرچ کے طور پر درج ہو جاتا ہے۔",
   "onboardingCollaborationTitle": "ریئل ٹائم تعاون",
   "onboardingCollaborationBody": "رابطے کے لحاظ سے وصولی اور واجب الادا رقوم کو ٹریک کریں۔ پیشہ ورانہ واٹس ایپ ریمائنڈرز بھیجیں تاکہ یہ یقینی بنایا جا سکے کہ آپ کو ہمیشہ وقت پر ادائیگی ملے۔",
   "onboardingSyncTitle": "منظم اور ذاتی نوعیت کا",
@@ -1780,7 +1780,7 @@
     }
   },
   "close": "بند کریں",
-  "accountStatement": "खाता विवरण / اکاؤنٹ اسٹیٹمنٹ",
+  "accountStatement": "اکاؤنٹ اسٹیٹمنٹ",
   "startingBalance": "ابتدائی بیلنس",
   "endingBalance": "آخری بیلنس",
   "totalCredits": "کل کریڈٹ",
@@ -1837,7 +1837,7 @@
   "cameraSubtitle": "اپنی رسید یا دستاویز کی تصویر لیں",
   "gallerySubtitle": "اپنی گیلری سے تصاویر منتخب کریں",
   "chooseDocumentSubtitle": "پی ڈی ایف یا دیگر دستاویزات کی فائلیں منتخب کریں",
-  "exportAsPdf": "پی ڈی ایف کے طور पर برآمد کریں",
+  "exportAsPdf": "پی ڈی ایف کے طور پر برآمد کریں",
   "exportAsPdfSubtitle": "لین دین کی تفصیلات اور منسلکات کے ساتھ پی ڈی ایف بنائیں",
   "exportPdfWithAttachments": "منسلکات کے ساتھ پی ڈی ایف",
   "exportPdfWithAttachmentsSubtitle": "پریمیم • منسلکہ تصاویر/پی ڈی ایف کے ساتھ خوبصورت رپورٹ",

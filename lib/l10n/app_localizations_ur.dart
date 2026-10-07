@@ -2171,7 +2171,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get currencyAdded => 'کرنسی کامیابی سے شامل کر دی گئی';
 
   @override
-  String get editCurrency => 'کرنسی में ترمیم کریں';
+  String get editCurrency => 'کرنسی میں ترمیم کریں';
 
   @override
   String get updateCurrency => 'کرنسی اپ ڈیٹ کریں';
@@ -2870,7 +2870,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get currencyUSD => 'امریکی ڈالر (\$)';
 
   @override
-  String get currencyINR => 'भारतीय रुपया (₹)';
+  String get currencyINR => 'ہندوستانی روپیہ (₹)';
 
   @override
   String get currencyPKR => 'پاکستانی روپیہ (Rs)';
@@ -3468,7 +3468,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String receivableOverdueMessage(String description, String date) {
-    return '$description کی ادائیگی $date को واجب الادا تھی';
+    return '$description کی ادائیگی $date کو واجب الادا تھی';
   }
 
   @override
@@ -4371,7 +4371,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get onboardingTransactionsBody =>
-      'ایک حقیقی مربوط نظام کا تجربہ کریں۔ جب آپ کسی قرض کو \'وصول شدہ\' کے طور پر نشان زد کرتے ہیں، تو ایپ خود بخود اسے آمدنی کے طور پر ریکارڈ کر لیتی ہے۔ جب آپ بل ادا کرتے ہیں، تو یہ فوری طور پر خرچ کے طور पर درج ہو جاتا ہے۔';
+      'ایک حقیقی مربوط نظام کا تجربہ کریں۔ جب آپ کسی قرض کو \'وصول شدہ\' کے طور پر نشان زد کرتے ہیں، تو ایپ خود بخود اسے آمدنی کے طور پر ریکارڈ کر لیتی ہے۔ جب آپ بل ادا کرتے ہیں، تو یہ فوری طور پر خرچ کے طور پر درج ہو جاتا ہے۔';
 
   @override
   String get onboardingCollaborationTitle => 'ریئل ٹائم تعاون';
@@ -4615,7 +4615,7 @@ class AppLocalizationsUr extends AppLocalizations {
   }
 
   @override
-  String get accountStatement => 'खाता विवरण / اکاؤنٹ اسٹیٹمنٹ';
+  String get accountStatement => 'اکاؤنٹ اسٹیٹمنٹ';
 
   @override
   String get startingBalance => 'ابتدائی بیلنس';
@@ -4775,7 +4775,7 @@ class AppLocalizationsUr extends AppLocalizations {
       'پی ڈی ایف یا دیگر دستاویزات کی فائلیں منتخب کریں';
 
   @override
-  String get exportAsPdf => 'پی ڈی ایف کے طور पर برآمد کریں';
+  String get exportAsPdf => 'پی ڈی ایف کے طور پر برآمد کریں';
 
   @override
   String get exportAsPdfSubtitle =>

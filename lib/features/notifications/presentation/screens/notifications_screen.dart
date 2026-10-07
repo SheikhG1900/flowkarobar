@@ -5,11 +5,12 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
-import 'package:flowpaisa/features/receivables/presentation/screens/edit_receivable_screen.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
-import 'package:flowpaisa/features/payables/presentation/screens/edit_payable_screen.dart';
+import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/payables_list_screen.dart';
+import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/backup/presentation/screens/backup_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
@@ -214,14 +215,14 @@ class NotificationsScreen extends ConsumerWidget {
     switch (notification.type) {
       case NotificationType.receivable:
         if (notification.entityId != null) {
-          screen = EditReceivableScreen(receivableUuid: notification.entityId!);
+          screen = ReceivableDetailsDialog(receivableUuid: notification.entityId!);
         } else {
           screen = const ReceivablesListScreen();
         }
         break;
       case NotificationType.payable:
         if (notification.entityId != null) {
-          screen = EditPayableScreen(payableUuid: notification.entityId!);
+          screen = PayableDetailsDialog(payableUuid: notification.entityId!);
         } else {
           screen = const PayablesListScreen();
         }
@@ -348,23 +349,34 @@ class _NotificationCard extends ConsumerWidget {
     }
   }
 
-  String _getLocalizedMessage(AppLocalizations l10n) {
+  String _getLocalizedMessage(AppLocalizations l10n, WidgetRef ref) {
     if (notification.messageKey == null) return notification.message;
 
     final params = notification.parameters ?? {};
+    final rawDateStr = params['date'] ?? '';
+    String displayDateStr = rawDateStr;
+    
+    if (rawDateStr.isNotEmpty) {
+      final parsedDate = DateTime.tryParse(rawDateStr);
+      if (parsedDate != null) {
+        final profile = ref.watch(userProfileProvider);
+        displayDateStr = AppDateFormatter.formatDate(parsedDate, pattern: profile.dateFormat);
+      }
+    }
+
     switch (notification.messageKey) {
       case 'payableOverdueMessage':
         return l10n.payableOverdueMessage(
-            params['description'] ?? '', params['date'] ?? '');
+            params['description'] ?? '', displayDateStr);
       case 'receivableOverdueMessage':
         return l10n.receivableOverdueMessage(
-            params['description'] ?? '', params['date'] ?? '');
+            params['description'] ?? '', displayDateStr);
       case 'upcomingPayableMessage':
         return l10n.upcomingPayableMessage(
-            params['description'] ?? '', params['date'] ?? '');
+            params['description'] ?? '', displayDateStr);
       case 'upcomingReceivableMessage':
         return l10n.upcomingReceivableMessage(
-            params['description'] ?? '', params['date'] ?? '');
+            params['description'] ?? '', displayDateStr);
       case 'notificationSyncCompleteMessage':
         return l10n.notificationSyncCompleteMessage(
             int.tryParse(params['count'] ?? '0') ?? 0);
@@ -530,7 +542,7 @@ class _NotificationCard extends ConsumerWidget {
                           ],
                           const SizedBox(height: 4),
                           Text(
-                            _getLocalizedMessage(l10n),
+                            _getLocalizedMessage(l10n, ref),
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: theme.colorScheme.onSurface,
                               fontWeight: (notification.isUrgent == true) &&
