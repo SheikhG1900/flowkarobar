@@ -1777,7 +1777,9 @@ class _TrendsBarChart extends ConsumerWidget {
         const double chartHeight = 220;
 
         final selectedData =
-            selectedIndex != null ? trends[selectedIndex] : null;
+            (selectedIndex != null && selectedIndex >= 0 && selectedIndex < trends.length) 
+                ? trends[selectedIndex] 
+                : null;
 
         return Column(
           children: [
@@ -1866,120 +1868,122 @@ class _TrendsBarChart extends ConsumerWidget {
                   ),
                 ),
               ),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: trends.length <= 6
-                    ? MediaQuery.of(context).size.width - 32
-                    : trends.length * barGroupWidth,
-                height: chartHeight,
-                child: BarChart(
-                  BarChartData(
-                    alignment: BarChartAlignment.spaceAround,
-                    maxY: maxY,
-                    barTouchData: BarTouchData(
-                      handleBuiltInTouches: true,
-                      touchCallback:
-                          (FlTouchEvent event, BarTouchResponse? response) {
-                        if (event is FlTapUpEvent && response?.spot != null) {
-                          final index = response!.spot!.touchedBarGroupIndex;
-                          ref
-                              .read(selectedTrendIndexProvider.notifier)
-                              .setIndex(selectedIndex == index ? null : index);
-                        }
-                      },
-                      touchTooltipData: BarTouchTooltipData(
-                        getTooltipColor: (_) => Colors.transparent,
-                        getTooltipItem: (_, __, ___, ____) => null,
+            Center(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: trends.length <= 6
+                      ? (MediaQuery.of(context).size.width - 32).clamp(0.0, 600.0)
+                      : trends.length * barGroupWidth,
+                  height: chartHeight,
+                  child: BarChart(
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      maxY: maxY,
+                      barTouchData: BarTouchData(
+                        handleBuiltInTouches: true,
+                        touchCallback:
+                            (FlTouchEvent event, BarTouchResponse? response) {
+                          if (event is FlTapUpEvent && response?.spot != null) {
+                            final index = response!.spot!.touchedBarGroupIndex;
+                            ref
+                                .read(selectedTrendIndexProvider.notifier)
+                                .setIndex(selectedIndex == index ? null : index);
+                          }
+                        },
+                        touchTooltipData: BarTouchTooltipData(
+                          getTooltipColor: (_) => Colors.transparent,
+                          getTooltipItem: (_, __, ___, ____) => null,
+                        ),
                       ),
-                    ),
-                    titlesData: FlTitlesData(
-                      show: true,
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            final index = value.toInt();
-                            if (index < 0 || index >= trends.length)
-                              return const Text('');
-                            final isSelected = selectedIndex == index;
-                            return SideTitleWidget(
-                              meta: meta,
-                              space: 8,
-                              child: GestureDetector(
-                                onTap: () {
-                                  ref
-                                      .read(selectedTrendIndexProvider.notifier)
-                                      .setIndex(isSelected ? null : index);
-                                },
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? theme.colorScheme.primaryContainer
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    AppDateFormatter.formatMonth(
-                                        trends[index].month,
-                                        context: context),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                      titlesData: FlTitlesData(
+                        show: true,
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              final index = value.toInt();
+                              if (index < 0 || index >= trends.length)
+                                return const Text('');
+                              final isSelected = selectedIndex == index;
+                              return SideTitleWidget(
+                                meta: meta,
+                                space: 8,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    ref
+                                        .read(selectedTrendIndexProvider.notifier)
+                                        .setIndex(isSelected ? null : index);
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
                                       color: isSelected
-                                          ? theme.colorScheme.onPrimaryContainer
-                                          : theme.textTheme.bodySmall?.color,
+                                          ? theme.colorScheme.primaryContainer
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      AppDateFormatter.formatMonth(
+                                          trends[index].month,
+                                          context: context),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        color: isSelected
+                                            ? theme.colorScheme.onPrimaryContainer
+                                            : theme.textTheme.bodySmall?.color,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
-                          reservedSize: 40,
+                              );
+                            },
+                            reservedSize: 40,
+                          ),
                         ),
+                        leftTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
+                        topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
                       ),
-                      leftTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false)),
-                      topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false)),
+                      gridData: const FlGridData(show: false),
+                      borderData: FlBorderData(show: false),
+                      barGroups: trends.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final data = entry.value;
+                        final isSelected = selectedIndex == index;
+                        return BarChartGroupData(
+                          x: index,
+                          barRods: [
+                            BarChartRodData(
+                              toY: data.income,
+                              color: isSelected
+                                  ? AppColors.incomeColor
+                                  : AppColors.incomeColor.withValues(alpha: 0.4),
+                              width: 14,
+                              borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(4)),
+                            ),
+                            BarChartRodData(
+                              toY: data.expense,
+                              color: isSelected
+                                  ? AppColors.expenseColor
+                                  : AppColors.expenseColor.withValues(alpha: 0.4),
+                              width: 14,
+                              borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(4)),
+                            ),
+                          ],
+                        );
+                      }).toList(),
                     ),
-                    gridData: const FlGridData(show: false),
-                    borderData: FlBorderData(show: false),
-                    barGroups: trends.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final data = entry.value;
-                      final isSelected = selectedIndex == index;
-                      return BarChartGroupData(
-                        x: index,
-                        barRods: [
-                          BarChartRodData(
-                            toY: data.income,
-                            color: isSelected
-                                ? AppColors.incomeColor
-                                : AppColors.incomeColor.withValues(alpha: 0.4),
-                            width: 14,
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(4)),
-                          ),
-                          BarChartRodData(
-                            toY: data.expense,
-                            color: isSelected
-                                ? AppColors.expenseColor
-                                : AppColors.expenseColor.withValues(alpha: 0.4),
-                            width: 14,
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(4)),
-                          ),
-                        ],
-                      );
-                    }).toList(),
                   ),
                 ),
               ),
@@ -2055,7 +2059,9 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
         const double chartHeight = 220;
 
         final selectedData =
-            selectedIndex != null ? trends[selectedIndex] : null;
+            (selectedIndex != null && selectedIndex >= 0 && selectedIndex < trends.length) 
+                ? trends[selectedIndex] 
+                : null;
 
         // Calculate combined totals for all months if nothing is selected
         final combinedTotalP = trends.fold(0.0, (sum, t) => sum + (t.totalPayable ?? 0));
@@ -2210,197 +2216,199 @@ class _PayableReceivableTrendsChart extends ConsumerWidget {
                 ),
               ),
             ),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: trends.length <= 6
-                    ? MediaQuery.of(context).size.width - 32
-                    : trends.length * barGroupWidth,
-                height: chartHeight,
-                child: BarChart(
-                  BarChartData(
-                    alignment: BarChartAlignment.spaceAround,
-                    maxY: maxY,
-                    barTouchData: BarTouchData(
-                      enabled: true,
-                      handleBuiltInTouches: true,
-                      touchCallback:
-                          (FlTouchEvent event, BarTouchResponse? response) {
-                        if (event is FlTapUpEvent && response?.spot != null) {
-                          final index = response!.spot!.touchedBarGroupIndex;
-                          ref
-                              .read(
-                                  selectedPayableReceivableTrendIndexProvider.notifier)
-                              .setIndex(selectedIndex == index ? null : index);
-                        }
-                      },
-                      touchTooltipData: BarTouchTooltipData(
-                        getTooltipColor: (_) => Colors.transparent,
-                        getTooltipItem: (_, __, ___, ____) => null,
+            Center(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: trends.length <= 6
+                      ? (MediaQuery.of(context).size.width - 32).clamp(0.0, 600.0)
+                      : trends.length * barGroupWidth,
+                  height: chartHeight,
+                  child: BarChart(
+                    BarChartData(
+                      alignment: BarChartAlignment.spaceAround,
+                      maxY: maxY,
+                      barTouchData: BarTouchData(
+                        enabled: true,
+                        handleBuiltInTouches: true,
+                        touchCallback:
+                            (FlTouchEvent event, BarTouchResponse? response) {
+                          if (event is FlTapUpEvent && response?.spot != null) {
+                            final index = response!.spot!.touchedBarGroupIndex;
+                            ref
+                                .read(
+                                    selectedPayableReceivableTrendIndexProvider.notifier)
+                                .setIndex(selectedIndex == index ? null : index);
+                          }
+                        },
+                        touchTooltipData: BarTouchTooltipData(
+                          getTooltipColor: (_) => Colors.transparent,
+                          getTooltipItem: (_, __, ___, ____) => null,
+                        ),
                       ),
-                    ),
-                    titlesData: FlTitlesData(
-                      show: true,
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            final index = value.toInt();
-                            if (index < 0 || index >= trends.length)
-                              return const Text('');
-                            final isSelected = selectedIndex == index;
-                            return SideTitleWidget(
-                              meta: meta,
-                              space: 8,
-                              child: GestureDetector(
-                                onTap: () {
-                                  ref
-                                      .read(
-                                          selectedPayableReceivableTrendIndexProvider
-                                              .notifier)
-                                      .setIndex(isSelected ? null : index);
-                                },
-                                child: AnimatedContainer(
-                                  duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? theme.colorScheme.primaryContainer
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Text(
-                                    AppDateFormatter.formatMonth(
-                                        trends[index].month,
-                                        context: context),
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: isSelected
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                      titlesData: FlTitlesData(
+                        show: true,
+                        bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                            showTitles: true,
+                            getTitlesWidget: (value, meta) {
+                              final index = value.toInt();
+                              if (index < 0 || index >= trends.length)
+                                return const Text('');
+                              final isSelected = selectedIndex == index;
+                              return SideTitleWidget(
+                                meta: meta,
+                                space: 8,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    ref
+                                        .read(
+                                            selectedPayableReceivableTrendIndexProvider
+                                                .notifier)
+                                        .setIndex(isSelected ? null : index);
+                                  },
+                                  child: AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
                                       color: isSelected
-                                          ? theme.colorScheme.onPrimaryContainer
-                                          : theme.textTheme.bodySmall?.color,
+                                          ? theme.colorScheme.primaryContainer
+                                          : Colors.transparent,
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      AppDateFormatter.formatMonth(
+                                          trends[index].month,
+                                          context: context),
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
+                                        color: isSelected
+                                            ? theme.colorScheme.onPrimaryContainer
+                                            : theme.textTheme.bodySmall?.color,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
-                          reservedSize: 40,
+                              );
+                            },
+                            reservedSize: 40,
+                          ),
                         ),
+                        leftTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
+                        topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
+                        rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false)),
                       ),
-                      leftTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false)),
-                      topTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false)),
-                      rightTitles: const AxisTitles(
-                          sideTitles: SideTitles(showTitles: false)),
+                      gridData: const FlGridData(show: false),
+                      borderData: FlBorderData(show: false),
+                      barGroups: trends.asMap().entries.map((entry) {
+                        final index = entry.key;
+                        final data = entry.value;
+                        final isSelected = selectedIndex == index;
+                        final totalP = (data.totalPayable ?? 0).toDouble();
+                        final pendingP = (data.pendingPayable ?? 0).toDouble();
+                        final paidP = (data.paidPayable ?? 0).toDouble();
+                        final totalR = (data.totalReceivable ?? 0).toDouble();
+                        final pendingR = (data.pendingReceivable ?? 0).toDouble();
+                        final receivedR =
+                            (data.receivedReceivable ?? 0).toDouble();
+
+                        // Payable bar: paid (dark) at bottom, payable/pending (dull) at top
+                        List<BarChartRodStackItem> payableStack = [
+                          if (paidP > 0)
+                            BarChartRodStackItem(0, paidP, (AppColors.payableColor)),
+                          if (pendingP > 0)
+                            BarChartRodStackItem(
+                              paidP,
+                              totalP,
+                              (Color.lerp(AppColors.payableColor, theme.brightness == Brightness.dark ? Colors.black : Colors.white, 0.6)!),
+                            ),
+                        ];
+                        if (payableStack.isEmpty && totalP >= 0) {
+                          payableStack = [
+                            BarChartRodStackItem(0, totalP, (Color.lerp(AppColors.payableColor, theme.brightness == Brightness.dark ? Colors.black : Colors.white, 0.6)!)),
+                          ];
+                        }
+
+                        // Receivable bar: received (dark) at bottom, pending (dull) at top
+                        List<BarChartRodStackItem> receivableStack = [
+                          if (receivedR > 0)
+                            BarChartRodStackItem(
+                              0,
+                              receivedR,
+                              (AppColors.receivableColor),
+                            ),
+                          if (pendingR > 0)
+                            BarChartRodStackItem(
+                              receivedR,
+                              totalR,
+                              (Color.lerp(AppColors.receivableColor, theme.brightness == Brightness.dark ? Colors.black : Colors.white, 0.6)!),
+                            ),
+                        ];
+                        if (receivableStack.isEmpty && totalR >= 0) {
+                          receivableStack = [
+                            BarChartRodStackItem(0, totalR, (Color.lerp(AppColors.receivableColor, theme.brightness == Brightness.dark ? Colors.black : Colors.white, 0.6)!)),
+                          ];
+                        }
+
+                        return BarChartGroupData(
+                          x: index,
+                          barRods: [
+                            BarChartRodData(
+                              toY: totalP,
+                              width: 14,
+                              color: isSelected
+                                  ? null
+                                  : AppColors.payableColor.withValues(alpha: 0.4),
+                              borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(4)),
+                              rodStackItems: payableStack.map((item) {
+                                if (!isSelected) {
+                                  return BarChartRodStackItem(
+                                    item.fromY,
+                                    item.toY,
+                                    (item.color ?? Colors.transparent)
+                                        .withValues(alpha: 0.4),
+                                  );
+                                }
+                                return item;
+                              }).toList(),
+                            ),
+                            BarChartRodData(
+                              toY: totalR,
+                              width: 14,
+                              color: isSelected
+                                  ? null
+                                  : AppColors.receivableColor
+                                      .withValues(alpha: 0.4),
+                              borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(4)),
+                              rodStackItems: receivableStack.map((item) {
+                                if (!isSelected) {
+                                  return BarChartRodStackItem(
+                                    item.fromY,
+                                    item.toY,
+                                    (item.color ?? Colors.transparent)
+                                        .withValues(alpha: 0.4),
+                                  );
+                                }
+                                return item;
+                                }).toList(),
+                              ),
+                            ],
+                          );
+                        }).toList(),
+                      ),
                     ),
-                    gridData: const FlGridData(show: false),
-                    borderData: FlBorderData(show: false),
-                    barGroups: trends.asMap().entries.map((entry) {
-                      final index = entry.key;
-                      final data = entry.value;
-                      final isSelected = selectedIndex == index;
-                      final totalP = (data.totalPayable ?? 0).toDouble();
-                      final pendingP = (data.pendingPayable ?? 0).toDouble();
-                      final paidP = (data.paidPayable ?? 0).toDouble();
-                      final totalR = (data.totalReceivable ?? 0).toDouble();
-                      final pendingR = (data.pendingReceivable ?? 0).toDouble();
-                      final receivedR =
-                          (data.receivedReceivable ?? 0).toDouble();
-
-                      // Payable bar: paid (dark) at bottom, payable/pending (dull) at top
-                      List<BarChartRodStackItem> payableStack = [
-                        if (paidP > 0)
-                          BarChartRodStackItem(0, paidP, (AppColors.payableColor)),
-                        if (pendingP > 0)
-                          BarChartRodStackItem(
-                            paidP,
-                            totalP,
-                            (Color.lerp(AppColors.payableColor, theme.brightness == Brightness.dark ? Colors.black : Colors.white, 0.6)!),
-                          ),
-                      ];
-                      if (payableStack.isEmpty && totalP >= 0) {
-                        payableStack = [
-                          BarChartRodStackItem(0, totalP, (Color.lerp(AppColors.payableColor, theme.brightness == Brightness.dark ? Colors.black : Colors.white, 0.6)!)),
-                        ];
-                      }
-
-                      // Receivable bar: received (dark) at bottom, pending (dull) at top
-                      List<BarChartRodStackItem> receivableStack = [
-                        if (receivedR > 0)
-                          BarChartRodStackItem(
-                            0,
-                            receivedR,
-                            (AppColors.receivableColor),
-                          ),
-                        if (pendingR > 0)
-                          BarChartRodStackItem(
-                            receivedR,
-                            totalR,
-                            (Color.lerp(AppColors.receivableColor, theme.brightness == Brightness.dark ? Colors.black : Colors.white, 0.6)!),
-                          ),
-                      ];
-                      if (receivableStack.isEmpty && totalR >= 0) {
-                        receivableStack = [
-                          BarChartRodStackItem(0, totalR, (Color.lerp(AppColors.receivableColor, theme.brightness == Brightness.dark ? Colors.black : Colors.white, 0.6)!)),
-                        ];
-                      }
-
-                      return BarChartGroupData(
-                        x: index,
-                        barRods: [
-                          BarChartRodData(
-                            toY: totalP,
-                            width: 14,
-                            color: isSelected
-                                ? null
-                                : AppColors.payableColor.withValues(alpha: 0.4),
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(4)),
-                            rodStackItems: payableStack.map((item) {
-                              if (!isSelected) {
-                                return BarChartRodStackItem(
-                                  item.fromY,
-                                  item.toY,
-                                  (item.color ?? Colors.transparent)
-                                      .withValues(alpha: 0.4),
-                                );
-                              }
-                              return item;
-                            }).toList(),
-                          ),
-                          BarChartRodData(
-                            toY: totalR,
-                            width: 14,
-                            color: isSelected
-                                ? null
-                                : AppColors.receivableColor
-                                    .withValues(alpha: 0.4),
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(4)),
-                            rodStackItems: receivableStack.map((item) {
-                              if (!isSelected) {
-                                return BarChartRodStackItem(
-                                  item.fromY,
-                                  item.toY,
-                                  (item.color ?? Colors.transparent)
-                                      .withValues(alpha: 0.4),
-                                );
-                              }
-                              return item;
-                            }).toList(),
-                          ),
-                        ],
-                      );
-                    }).toList(),
                   ),
                 ),
               ),
-            ),
             const SizedBox(height: 16),
             // Chart Legend
             Padding(
