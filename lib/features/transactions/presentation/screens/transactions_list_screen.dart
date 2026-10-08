@@ -1874,13 +1874,11 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                       borderRadius: 20,
                       onEdit: onEditAction,
                       onDelete: onDeleteAction,
-                      showHoverActions: false,
+                      showHoverActions: true,
                       child: _buildTransactionCard(
                         context,
                         ref,
                         item,
-                        onEdit: onEditAction,
-                        onDelete: onDeleteAction,
                       ),
                     ),
                   );
@@ -2033,11 +2031,9 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
   }
 
   Widget _buildTransactionCard(
-      BuildContext context, WidgetRef ref, TransactionWithDetails item, {VoidCallback? onEdit, VoidCallback? onDelete}) {
+      BuildContext context, WidgetRef ref, TransactionWithDetails item) {
     return TransactionListItem(
       item: item,
-      onEdit: onEdit,
-      onDelete: onDelete,
     );
   }
 

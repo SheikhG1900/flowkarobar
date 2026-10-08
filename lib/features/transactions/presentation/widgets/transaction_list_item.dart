@@ -21,8 +21,6 @@ class TransactionListItem extends ConsumerStatefulWidget {
   final VoidCallback? onTap;
   final bool isCompact;
   final bool isHighlighted;
-  final VoidCallback? onEdit;
-  final VoidCallback? onDelete;
 
   const TransactionListItem({
     super.key,
@@ -32,8 +30,6 @@ class TransactionListItem extends ConsumerStatefulWidget {
     this.onTap,
     this.isCompact = false,
     this.isHighlighted = false,
-    this.onEdit,
-    this.onDelete,
   });
 
   @override
@@ -441,56 +437,6 @@ class _TransactionListItemState extends ConsumerState<TransactionListItem> {
                           ],
                         ],
                       ),
-                      if ((kIsWeb || Platform.isWindows || Platform.isMacOS || Platform.isLinux) && (widget.onEdit != null || widget.onDelete != null)) ...[
-                        const SizedBox(width: 12),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
-                            borderRadius: BorderRadius.circular(100),
-                            border: Border.all(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (widget.onEdit != null)
-                                IconButton(
-                                  key: ValueKey('tx-card-edit-btn-${transaction.uuid}'),
-                                  icon: const Icon(Icons.edit_rounded),
-                                  color: theme.colorScheme.primary,
-                                  iconSize: isCompact ? 16 : 18,
-                                  padding: const EdgeInsets.all(6),
-                                  constraints: const BoxConstraints(),
-                                  tooltip: l10n.edit,
-                                  onPressed: widget.onEdit,
-                                ),
-                              if (widget.onEdit != null && widget.onDelete != null)
-                                SizedBox(
-                                  height: isCompact ? 12 : 14,
-                                  child: VerticalDivider(
-                                    width: 12,
-                                    thickness: 1,
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.12),
-                                  ),
-                                ),
-                              if (widget.onDelete != null)
-                                IconButton(
-                                  key: ValueKey('tx-card-delete-btn-${transaction.uuid}'),
-                                  icon: const Icon(Icons.delete_outline_rounded),
-                                  color: AppColors.expenseColor,
-                                  iconSize: isCompact ? 16 : 18,
-                                  padding: const EdgeInsets.all(6),
-                                  constraints: const BoxConstraints(),
-                                  tooltip: l10n.delete,
-                                  onPressed: widget.onDelete,
-                                ),
-                            ],
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),
