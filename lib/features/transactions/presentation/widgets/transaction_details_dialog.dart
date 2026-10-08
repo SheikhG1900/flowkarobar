@@ -1960,6 +1960,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(
                       isPending ? Icons.schedule_rounded : Icons.check_circle_rounded,
@@ -1973,6 +1974,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                         color: isPending ? (Colors.amber[800] ?? Colors.amber) : AppColors.successGreen,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
+                        height: 1.1,
+                        leadingDistribution: TextLeadingDistribution.even,
                       ),
                     ),
                   ],
@@ -2962,6 +2965,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(
                       !isPending
@@ -2983,6 +2987,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                             : (isOverdue ? Colors.red : (Colors.amber[800] ?? Colors.amber)),
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
+                        height: 1.1,
+                        leadingDistribution: TextLeadingDistribution.even,
                       ),
                     ),
                   ],
@@ -3238,6 +3244,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(
                       !isPending
@@ -3259,6 +3266,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                             : (isOverdue ? Colors.red : (Colors.amber[800] ?? Colors.amber)),
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
+                        height: 1.1,
+                        leadingDistribution: TextLeadingDistribution.even,
                       ),
                     ),
                   ],

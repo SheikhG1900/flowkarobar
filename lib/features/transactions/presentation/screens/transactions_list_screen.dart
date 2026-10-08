@@ -1120,7 +1120,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                     }
                     String? initialAccountUuid;
                     if (filters.accountUuids != null && filters.accountUuids!.length == 1) {
-                      initialAccountUuid = filters.accountUuids!.first;
+                      final selectedUuid = filters.accountUuids!.first;
+                      if (selectedUuid != 'no_account') {
+                        initialAccountUuid = selectedUuid;
+                      }
                     }
 
                     Navigator.push(
@@ -1397,6 +1400,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
   Widget _buildSearchTags(RecentSearch search, ThemeData theme, List<Category> categories, List<Contact> contacts, List<Account> accounts) {
     final tags = <Widget>[];
+    final l10n = AppLocalizations.of(context)!;
 
     // 1. Text query tag
     if (search.searchQuery.trim().isNotEmpty) {
@@ -1407,7 +1411,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     if (search.type != null) {
       final isExpense = search.type == 'EXPENSE';
       tags.add(_buildTagChip(
-        isExpense ? 'Expense' : 'Income',
+        isExpense ? l10n.expense : l10n.income,
         isExpense ? Icons.arrow_downward : Icons.arrow_upward,
         theme,
         color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
@@ -1416,16 +1420,28 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
     // 3. Account tags (Limit to 1)
     if (search.accountUuids != null && search.accountUuids!.isNotEmpty) {
+      final hasNoAccount = search.accountUuids!.contains('no_account');
       final accountList = search.accountUuids!
-          .map((uuid) => accounts.firstWhereOrNull((a) => a.uuid == uuid))
+          .map((uuid) {
+            if (uuid == 'no_account') return null;
+            return accounts.firstWhereOrNull((a) => a.uuid == uuid);
+          })
           .whereNotNull()
           .toList();
       
-      for (var i = 0; i < accountList.length && i < 1; i++) {
-        tags.add(_buildTagChip(accountList[i].name, Icons.account_balance_wallet_outlined, theme));
+      final displayNames = <String>[];
+      for (final acc in accountList) {
+        displayNames.add(acc.name);
       }
-      if (accountList.length > 1) {
-        tags.add(_buildTagChip('+${accountList.length - 1} more', Icons.add, theme));
+      if (hasNoAccount) {
+        displayNames.add(l10n.noAccount);
+      }
+
+      for (var i = 0; i < displayNames.length && i < 1; i++) {
+        tags.add(_buildTagChip(displayNames[i], Icons.account_balance_wallet_outlined, theme));
+      }
+      if (displayNames.length > 1) {
+        tags.add(_buildTagChip('+${displayNames.length - 1} more', Icons.add, theme));
       }
     }
 

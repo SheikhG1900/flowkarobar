@@ -640,10 +640,14 @@ class RecentSearch {
     }
 
     if (accountUuids != null && accountUuids!.isNotEmpty) {
-      final names = accountUuids!
-          .map((uuid) => accounts.firstWhereOrNull((a) => a.uuid == uuid)?.name)
+      final namesList = accountUuids!
+          .map((uuid) {
+            if (uuid == 'no_account') return 'No Account';
+            return accounts.firstWhereOrNull((a) => a.uuid == uuid)?.name;
+          })
           .whereNotNull()
-          .join(', ');
+          .toList();
+      final names = namesList.join(', ');
       if (names.isNotEmpty) {
         parts.add('from $names');
       }

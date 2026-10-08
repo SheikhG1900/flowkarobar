@@ -686,55 +686,100 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             ),
           );
         }
+
+        final isNoAccountSelected = _selectedAccountUuids.contains('no_account');
+        final noAccountColor = theme.colorScheme.primary;
+
+        final noAccountChip = FilterChip(
+          avatar: Icon(
+            Symbols.help_outline,
+            size: 16,
+            color: isNoAccountSelected ? Colors.white : theme.colorScheme.onSurfaceVariant,
+          ),
+          label: Text(
+            AppLocalizations.of(context)!.noAccount,
+            style: TextStyle(
+              color: isNoAccountSelected ? Colors.white : theme.colorScheme.onSurface,
+              fontSize: 12,
+            ),
+          ),
+          selected: isNoAccountSelected,
+          selectedColor: noAccountColor,
+          checkmarkColor: Colors.white,
+          backgroundColor: theme.colorScheme.surface,
+          side: BorderSide(
+            color: isNoAccountSelected ? Colors.transparent : theme.dividerColor,
+            width: 1.5,
+          ),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          onSelected: (selected) {
+            setState(() {
+              if (selected) {
+                if (!_selectedAccountUuids.contains('no_account')) {
+                  _selectedAccountUuids.add('no_account');
+                }
+              } else {
+                _selectedAccountUuids.remove('no_account');
+              }
+            });
+          },
+        );
+
+        final List<Widget> chips = list.map((awb) {
+          final acc = awb.account;
+          final isSelected = _selectedAccountUuids.contains(acc.uuid);
+          final accountColor = acc.color != null
+              ? Color(int.parse(acc.color!.replaceAll('#', '0xFF')))
+              : theme.colorScheme.primary;
+          final iconData =
+              IconHelper.getIconData(acc.icon) ?? _accountTypeIcon(awb.type);
+
+          return FilterChip(
+            avatar: Icon(
+              iconData,
+              size: 16,
+              color: isSelected ? Colors.white : accountColor,
+            ),
+            label: Text(
+              acc.name,
+              style: TextStyle(
+                color: isSelected ? Colors.white : theme.colorScheme.onSurface,
+                fontSize: 12,
+              ),
+            ),
+            selected: isSelected,
+            selectedColor: accountColor,
+            checkmarkColor: Colors.white,
+            backgroundColor: theme.colorScheme.surface,
+            side: BorderSide(
+              color: isSelected ? Colors.transparent : theme.dividerColor,
+              width: 1.5,
+            ),
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16)),
+            onSelected: (selected) {
+              setState(() {
+                if (selected) {
+                  if (!_selectedAccountUuids.contains(acc.uuid)) {
+                    _selectedAccountUuids.add(acc.uuid);
+                  }
+                } else {
+                  _selectedAccountUuids.remove(acc.uuid);
+                }
+              });
+            },
+          );
+        }).toList();
+
+        // Put the "No Account" chip at the beginning of the list for easy access
+        chips.insert(0, noAccountChip);
+
         return Wrap(
           spacing: 8,
           runSpacing: 8,
           alignment: WrapAlignment.start,
-          children: list.map((awb) {
-            final acc = awb.account;
-            final isSelected = _selectedAccountUuids.contains(acc.uuid);
-            final accountColor = acc.color != null
-                ? Color(int.parse(acc.color!.replaceAll('#', '0xFF')))
-                : theme.colorScheme.primary;
-            final iconData =
-                IconHelper.getIconData(acc.icon) ?? _accountTypeIcon(awb.type);
-
-            return FilterChip(
-              avatar: Icon(
-                iconData,
-                size: 16,
-                color: isSelected ? Colors.white : accountColor,
-              ),
-              label: Text(
-                acc.name,
-                style: TextStyle(
-                  color: isSelected ? Colors.white : theme.colorScheme.onSurface,
-                  fontSize: 12,
-                ),
-              ),
-              selected: isSelected,
-              selectedColor: accountColor,
-              checkmarkColor: Colors.white,
-              backgroundColor: theme.colorScheme.surface,
-              side: BorderSide(
-                color: isSelected ? Colors.transparent : theme.dividerColor,
-                width: 1.5,
-              ),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              onSelected: (selected) {
-                setState(() {
-                  if (selected) {
-                    if (!_selectedAccountUuids.contains(acc.uuid)) {
-                      _selectedAccountUuids.add(acc.uuid);
-                    }
-                  } else {
-                    _selectedAccountUuids.remove(acc.uuid);
-                  }
-                });
-              },
-            );
-          }).toList(),
+          children: chips,
         );
       },
       loading: () => const Padding(

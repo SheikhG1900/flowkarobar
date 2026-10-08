@@ -901,8 +901,20 @@ class TransactionsRepository {
           _database.transactions.contactUuid.isIn(filters.contactUuids!));
     }
     if (filters.accountUuids != null && filters.accountUuids!.isNotEmpty) {
-      query.where(
-          _database.transactions.accountUuid.isIn(filters.accountUuids!));
+      final containsNoAccount = filters.accountUuids!.contains('no_account');
+      final validAccountUuids = filters.accountUuids!.where((id) => id != 'no_account').toList();
+
+      if (containsNoAccount && validAccountUuids.isNotEmpty) {
+        query.where(
+            _database.transactions.accountUuid.isIn(validAccountUuids) |
+            _database.transactions.accountUuid.isNull()
+        );
+      } else if (containsNoAccount) {
+        query.where(_database.transactions.accountUuid.isNull());
+      } else {
+        query.where(
+            _database.transactions.accountUuid.isIn(validAccountUuids));
+      }
     }
     if (filters.minAmount != null) {
       query.where(_database.transactions.amount
@@ -1056,8 +1068,20 @@ class TransactionsRepository {
           _database.transactions.contactUuid.isIn(filters.contactUuids!));
     }
     if (filters.accountUuids != null && filters.accountUuids!.isNotEmpty) {
-      query.where(
-          _database.transactions.accountUuid.isIn(filters.accountUuids!));
+      final containsNoAccount = filters.accountUuids!.contains('no_account');
+      final validAccountUuids = filters.accountUuids!.where((id) => id != 'no_account').toList();
+
+      if (containsNoAccount && validAccountUuids.isNotEmpty) {
+        query.where(
+            _database.transactions.accountUuid.isIn(validAccountUuids) |
+            _database.transactions.accountUuid.isNull()
+        );
+      } else if (containsNoAccount) {
+        query.where(_database.transactions.accountUuid.isNull());
+      } else {
+        query.where(
+            _database.transactions.accountUuid.isIn(validAccountUuids));
+      }
     }
     if (filters.minAmount != null) {
       query.where(_database.transactions.amount
