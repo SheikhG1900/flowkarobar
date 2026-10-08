@@ -5,18 +5,26 @@
 # Supported parameters:
 #   -SkipRelease: Skips compiling, packaging, committing, and uploading to GitHub. Only deploys the website/version.json to Firebase.
 #   -SkipBuild: Skips the Flutter build step (useful if you already compiled and just want to package/deploy).
+#   -From: Starts execution from a specific step (1 to 5). Useful if a later step fails (e.g. Firebase timeout).
 #
 # Examples:
 #   .\deploy_windows.ps1                  <-- Full pipeline (Production Release)
 #   .\deploy_windows.ps1 -SkipRelease     <-- Fast Website/Config Deploy (Testing)
 #   .\deploy_windows.ps1 -SkipBuild       <-- Fast Packaging & Deploy
+#   .\deploy_windows.ps1 -From 5          <-- Resume pipeline starting from Step 5 (Firebase Deploy)
 
 param (
     [switch]$SkipRelease,
-    [switch]$SkipBuild
+    [switch]$SkipBuild,
+    [int]$From = 1
 )
 
 $ErrorActionPreference = "Stop"
+
+if ($From -lt 1 -or $From -gt 5) {
+    Write-Host "ERROR: -From must be a step number between 1 and 5." -ForegroundColor Red
+    exit 1
+}
 
 # Force PowerShell to use UTF-8 encoding for console output to display special characters correctly
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -28,6 +36,7 @@ $BuildDir = ".\build\windows\x64\runner\Release"
 $SetupOutputName = "flowpaisa_setup.exe"
 $WebsiteDir = ".\website"
 $WebsiteDownloadsDir = "$WebsiteDir\downloads"
+$GeneratedSetupPath = ".\Output\$SetupOutputName" # Default Inno Setup output directory is .\Output\
 
 # Define Flutter Path (Fallback if not in global PATH)
 $FlutterPath = "C:\flutter_github\flutter\bin\flutter.bat"
@@ -42,8 +51,11 @@ if ($SkipRelease) {
 if ($SkipBuild -and !$SkipRelease) {
     Write-Host "[SkipBuild] Mode Active: Skipping Flutter Compilation." -ForegroundColor Yellow
 }
+if ($From -gt 1) {
+    Write-Host "[From Step $From] Starting deployment pipeline directly from Step $From." -ForegroundColor Yellow
+}
 
-# 1. Read version and build number from pubspec.yaml
+# 1. Read version and build number from pubspec.yaml (Always run to ensure consistent version metadata)
 $PubspecPath = ".\pubspec.yaml"
 $AppVersion = "1.0.0"
 $BuildNumber = "61"
@@ -73,191 +85,212 @@ if (Test-Path $VersionJsonPath) {
     Write-Host "Updated version.json to match pubspec.yaml: $AppVersion (Build: $BuildNumber)" -ForegroundColor Gray
 }
 
-# 2. Build the Flutter Windows Release
-if (!$SkipRelease -and !$SkipBuild) {
-    Write-Host "`n[1/5] Building Flutter Windows Release..." -ForegroundColor Green
+# --- PIPELINE STEPS ---
 
-    # Check if flutter is available globally, otherwise use the specific path
-    $FlutterCmd = Get-Command "flutter" -ErrorAction SilentlyContinue
-    if ($FlutterCmd) {
-        & flutter build windows --release
-    } elseif (Test-Path $FlutterPath) {
-        Write-Host "Using Flutter from: $FlutterPath" -ForegroundColor Gray
-        & $FlutterPath build windows --release
-    } else {
-        Write-Error "Flutter SDK was not found in your system PATH or at '$FlutterPath'. Please configure it."
-        exit 1
-    }
-} else {
-    Write-Host "`n[1/5] Skipping Flutter Windows Release build step." -ForegroundColor Yellow
-}
+# 2. Build the Flutter Windows Release (Step 1/5)
+if ($From -le 1) {
+    if (!$SkipRelease -and !$SkipBuild) {
+        Write-Host "`n[1/5] Building Flutter Windows Release..." -ForegroundColor Green
 
-# 3. Package the Installer using Inno Setup
-if (!$SkipRelease) {
-    Write-Host "`n[2/5] Packaging Installer using Inno Setup..." -ForegroundColor Green
-
-    # Check if ISCC.exe exists
-    if (Test-Path $InnoSetupPath) {
-        Write-Host "Found Inno Setup Compiler at: $InnoSetupPath" -ForegroundColor Gray
-        & $InnoSetupPath $InstallerScript
-    } else {
-        # Try finding it in PATH
-        $InnoSetupInPath = Get-Command "ISCC.exe" -ErrorAction SilentlyContinue
-        if ($InnoSetupInPath) {
-            Write-Host "Found Inno Setup Compiler in PATH: $($InnoSetupInPath.Source)" -ForegroundColor Gray
-            & ISCC.exe $InstallerScript
+        # Check if flutter is available globally, otherwise use the specific path
+        $FlutterCmd = Get-Command "flutter" -ErrorAction SilentlyContinue
+        if ($FlutterCmd) {
+            & flutter build windows --release
+        } elseif (Test-Path $FlutterPath) {
+            Write-Host "Using Flutter from: $FlutterPath" -ForegroundColor Gray
+            & $FlutterPath build windows --release
         } else {
-            Write-Host "WARNING: Inno Setup Compiler (ISCC.exe) was not found." -ForegroundColor Yellow
-            Write-Host "Please install Inno Setup 6 (https://jrsoftware.org/isinfo.php) to package the app into an installer." -ForegroundColor Yellow
-            Write-Host "Skipping installer packaging step..." -ForegroundColor Yellow
+            Write-Error "Flutter SDK was not found in your system PATH or at '$FlutterPath'. Please configure it."
+            exit 1
         }
-    }
-} else {
-    Write-Host "`n[2/5] Skipping Inno Setup packaging step." -ForegroundColor Yellow
-}
-
-# 4. Copy Installer to Website Directory
-if (!$SkipRelease) {
-    Write-Host "`n[3/5] Copying installer and version.json to Website directory..." -ForegroundColor Green
-
-    # Create downloads folder if it doesn't exist
-    if (!(Test-Path $WebsiteDownloadsDir)) {
-        New-Item -ItemType Directory -Force -Path $WebsiteDownloadsDir | Out-Null
-    }
-
-    # Check if the setup file was generated
-    $GeneratedSetupPath = ".\Output\$SetupOutputName" # Default Inno Setup output directory is .\Output\
-    if (Test-Path $GeneratedSetupPath) {
-        Copy-Item -Path $GeneratedSetupPath -Destination "$WebsiteDownloadsDir\$SetupOutputName" -Force
-        Write-Host "Successfully copied installer to website downloads folder." -ForegroundColor Gray
     } else {
-        Write-Host "Skipping installer copying because the setup file was not found." -ForegroundColor Yellow
-    }
-
-    # Add a warning file to downloads folder to remind about Spark plan restrictions
-    $ReadmeFile = "$WebsiteDownloadsDir\README_SPARK_PLAN.txt"
-    if (!(Test-Path $ReadmeFile)) {
-        "Note: Executable files (.exe) are forbidden on the Firebase Hosting Spark billing plan. This folder is ignored in firebase.json and the installer is hosted on GitHub Releases instead." | Out-File -FilePath $ReadmeFile -Force
+        Write-Host "`n[1/5] Skipping Flutter Windows Release build step." -ForegroundColor Yellow
     }
 } else {
-    Write-Host "`n[3/5] Skipping installer copying step." -ForegroundColor Yellow
+    Write-Host "`n[1/5] Skipping Step 1 (Build Flutter Windows Release) as requested by -From $From." -ForegroundColor Gray
 }
 
-# 5. Git Commit & Push to GitHub + Create GitHub Release
-if (!$SkipRelease) {
-    Write-Host "`n[4/5] Committing, pushing code, and creating GitHub Release..." -ForegroundColor Green
+# 3. Package the Installer using Inno Setup (Step 2/5)
+if ($From -le 2) {
+    if (!$SkipRelease) {
+        Write-Host "`n[2/5] Packaging Installer using Inno Setup..." -ForegroundColor Green
 
-    $GitCmd = Get-Command "git" -ErrorAction SilentlyContinue
-    if ($GitCmd) {
-        # Get current branch name
-        $BranchName = (git rev-parse --abbrev-ref HEAD).Trim()
-        Write-Host "Current Git Branch: $BranchName" -ForegroundColor Gray
-
-        # Stage all changes
-        Write-Host "Staging changes..." -ForegroundColor Gray
-        git add .
-
-        # Commit changes with version info
-        $CommitMessage = "Release version $AppVersion (Build $BuildNumber)"
-        Write-Host "Committing changes with message: '$CommitMessage'..." -ForegroundColor Gray
-        
-        # Check if there are any changes to commit
-        $Status = git status --porcelain
-        if ($Status) {
-            git commit -m $CommitMessage
-            
-            # Push to remote branch - Run safely in case remote is missing or access is denied
-            Write-Host "Pushing to GitHub (origin $BranchName)..." -ForegroundColor Gray
-            try {
-                # Temporarily allow errors so git push failure doesn't crash the script
-                $oldPreference = $ErrorActionPreference
-                $ErrorActionPreference = "Continue"
-                
-                git push origin $BranchName
-                
-                $ErrorActionPreference = $oldPreference
-                Write-Host "Successfully pushed code to GitHub!" -ForegroundColor Gray
-            } catch {
-                Write-Host "WARNING: Git push failed. (This is normal if your remote repository URL is currently inaccessible). Continuing release pipeline..." -ForegroundColor Yellow
-            }
+        # Check if ISCC.exe exists
+        if (Test-Path $InnoSetupPath) {
+            Write-Host "Found Inno Setup Compiler at: $InnoSetupPath" -ForegroundColor Gray
+            & $InnoSetupPath $InstallerScript
         } else {
-            Write-Host "No changes to commit. Skipping git commit/push." -ForegroundColor Yellow
-        }
-
-        # Handle GitHub Release creation via GitHub CLI (gh)
-        $GhCmd = Get-Command "gh" -ErrorAction SilentlyContinue
-        if ($GhCmd) {
-            Write-Host "GitHub CLI (gh) detected. Creating/updating release 'v$AppVersion' on tamatasoft/flowpaisa..." -ForegroundColor Gray
-            if (Test-Path $GeneratedSetupPath) {
-                # Temporarily allow errors so 'release delete' failing (if release doesn't exist yet) doesn't halt the script
-                $oldPreference = $ErrorActionPreference
-                $ErrorActionPreference = "Continue"
-
-                # Attempt to delete release if it already exists to avoid conflicts
-                & gh release delete "v$AppVersion" --repo "tamatasoft/flowpaisa" --yes 2>$null
-                
-                # Create a release on tamatasoft/flowpaisa and upload the installer asset.
-                & gh release create "v$AppVersion" $GeneratedSetupPath --repo "tamatasoft/flowpaisa" --title "v$AppVersion" --notes "Release v$AppVersion (Build $BuildNumber)"
-                
-                $ErrorActionPreference = $oldPreference
-                Write-Host "Successfully created GitHub Release on tamatasoft/flowpaisa and uploaded flowpaisa_setup.exe!" -ForegroundColor Green
+            # Try finding it in PATH
+            $InnoSetupInPath = Get-Command "ISCC.exe" -ErrorAction SilentlyContinue
+            if ($InnoSetupInPath) {
+                Write-Host "Found Inno Setup Compiler in PATH: $($InnoSetupInPath.Source)" -ForegroundColor Gray
+                & ISCC.exe $InstallerScript
             } else {
-                Write-Host "WARNING: Could not upload release asset because '$GeneratedSetupPath' was not found." -ForegroundColor Yellow
+                Write-Host "WARNING: Inno Setup Compiler (ISCC.exe) was not found." -ForegroundColor Yellow
+                Write-Host "Please install Inno Setup 6 (https://jrsoftware.org/isinfo.php) to package the app into an installer." -ForegroundColor Yellow
+                Write-Host "Skipping installer packaging step..." -ForegroundColor Yellow
             }
-        } else {
-            Write-Host "`n--------------------------------------------------" -ForegroundColor Yellow
-            Write-Host "TIP: Install GitHub CLI (gh) to fully automate uploading the installer!" -ForegroundColor Yellow
-            Write-Host "You can install it right now by running this in PowerShell:" -ForegroundColor Yellow
-            Write-Host "winget install --id GitHub.cli" -ForegroundColor Cyan
-            Write-Host "Then run: gh auth login" -ForegroundColor Cyan
-            Write-Host "Once logged in, this script will automatically upload the installer to GitHub Releases for you!" -ForegroundColor Yellow
-            Write-Host "--------------------------------------------------`n" -ForegroundColor Yellow
         }
     } else {
-        Write-Host "WARNING: Git command was not found in your system PATH. Skipping Git push step..." -ForegroundColor Yellow
+        Write-Host "`n[2/5] Skipping Inno Setup packaging step." -ForegroundColor Yellow
     }
 } else {
-    Write-Host "`n[4/5] Skipping Git push and GitHub Release creation." -ForegroundColor Yellow
+    Write-Host "`n[2/5] Skipping Step 2 (Package Installer using Inno Setup) as requested by -From $From." -ForegroundColor Gray
 }
 
-# 6. Deploy to Firebase Hosting
-Write-Host "`n[5/5] Deploying to Firebase Hosting..." -ForegroundColor Green
+# 4. Copy Installer to Website Directory (Step 3/5)
+if ($From -le 3) {
+    if (!$SkipRelease) {
+        Write-Host "`n[3/5] Copying installer and version.json to Website directory..." -ForegroundColor Green
 
-# Check if Firebase CLI is installed
-$FirebaseCmd = Get-Command "firebase" -ErrorAction SilentlyContinue
-if ($FirebaseCmd) {
-    Write-Host "Deploying website files to Firebase Hosting..." -ForegroundColor Gray
-    & firebase deploy --only hosting
-    
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "`n>>> DEPLOYMENT PIPELINE COMPLETE! <<<" -ForegroundColor Green
-        Write-Host "==================================================" -ForegroundColor Green
-        Write-Host "   RELEASE & DEPLOYMENT DETAILS" -ForegroundColor Green
-        Write-Host "==================================================" -ForegroundColor Green
-        Write-Host "[-] App Version:             v$AppVersion" -ForegroundColor Gray
-        Write-Host "[-] Build Number:            $BuildNumber" -ForegroundColor Gray
-        Write-Host "[-] Landing Page Website:    https://flow-paisa.firebaseapp.com" -ForegroundColor Cyan
-        Write-Host "[-] Auto-Update Config:      https://flow-paisa.firebaseapp.com/version.json" -ForegroundColor Cyan
-        Write-Host "[-] GitHub Release Page:     https://github.com/tamatasoft/flowpaisa/releases/tag/v$AppVersion" -ForegroundColor Cyan
-        Write-Host "[-] Public Download Link:    https://github.com/tamatasoft/flowpaisa/releases/download/v$AppVersion/$SetupOutputName" -ForegroundColor Cyan
-        Write-Host "[-] Latest Download Link:    https://github.com/tamatasoft/flowpaisa/releases/latest/download/$SetupOutputName" -ForegroundColor Cyan
-        Write-Host "==================================================" -ForegroundColor Green
-        
-        if (!$SkipRelease -and !(Get-Command "gh" -ErrorAction SilentlyContinue)) {
-            Write-Host "`n[!] ACTION REQUIRED: GitHub CLI (gh) was not found." -ForegroundColor Yellow
-            Write-Host "Please go to: https://github.com/tamatasoft/flowpaisa/releases" -ForegroundColor Yellow
-            Write-Host "1. Create a release named 'v$AppVersion'" -ForegroundColor Yellow
-            Write-Host "2. Upload the installer located at: .\Output\$SetupOutputName" -ForegroundColor Yellow
+        # Create downloads folder if it doesn't exist
+        if (!(Test-Path $WebsiteDownloadsDir)) {
+            New-Item -ItemType Directory -Force -Path $WebsiteDownloadsDir | Out-Null
+        }
+
+        # Check if the setup file was generated
+        if (Test-Path $GeneratedSetupPath) {
+            Copy-Item -Path $GeneratedSetupPath -Destination "$WebsiteDownloadsDir\$SetupOutputName" -Force
+            Write-Host "Successfully copied installer to website downloads folder." -ForegroundColor Gray
         } else {
-            Write-Host "`nAll assets have been built, pushed, and deployed successfully!" -ForegroundColor Green
+            Write-Host "Skipping installer copying because the setup file was not found." -ForegroundColor Yellow
+        }
+
+        # Add a warning file to downloads folder to remind about Spark plan restrictions
+        $ReadmeFile = "$WebsiteDownloadsDir\README_SPARK_PLAN.txt"
+        if (!(Test-Path $ReadmeFile)) {
+            "Note: Executable files (.exe) are forbidden on the Firebase Hosting Spark billing plan. This folder is ignored in firebase.json and the installer is hosted on GitHub Releases instead." | Out-File -FilePath $ReadmeFile -Force
         }
     } else {
-        Write-Error "Firebase deployment failed!"
-        exit $LASTEXITCODE
+        Write-Host "`n[3/5] Skipping installer copying step." -ForegroundColor Yellow
     }
 } else {
-    Write-Host "WARNING: Firebase CLI (firebase) was not found in your system PATH." -ForegroundColor Yellow
-    Write-Host "You can manually deploy by running: firebase deploy --only hosting" -ForegroundColor Yellow
+    Write-Host "`n[3/5] Skipping Step 3 (Copy Installer to Website Directory) as requested by -From $From." -ForegroundColor Gray
+}
+
+# 5. Git Commit & Push to GitHub + Create GitHub Release (Step 4/5)
+if ($From -le 4) {
+    if (!$SkipRelease) {
+        Write-Host "`n[4/5] Committing, pushing code, and creating GitHub Release..." -ForegroundColor Green
+
+        $GitCmd = Get-Command "git" -ErrorAction SilentlyContinue
+        if ($GitCmd) {
+            # Get current branch name
+            $BranchName = (git rev-parse --abbrev-ref HEAD).Trim()
+            Write-Host "Current Git Branch: $BranchName" -ForegroundColor Gray
+
+            # Stage all changes
+            Write-Host "Staging changes..." -ForegroundColor Gray
+            git add .
+
+            # Commit changes with version info
+            $CommitMessage = "Release version $AppVersion (Build $BuildNumber)"
+            Write-Host "Committing changes with message: '$CommitMessage'..." -ForegroundColor Gray
+            
+            # Check if there are any changes to commit
+            $Status = git status --porcelain
+            if ($Status) {
+                git commit -m $CommitMessage
+                
+                # Push to remote branch - Run safely in case remote is missing or access is denied
+                Write-Host "Pushing to GitHub (origin $BranchName)..." -ForegroundColor Gray
+                try {
+                    # Temporarily allow errors so git push failure doesn't crash the script
+                    $oldPreference = $ErrorActionPreference
+                    $ErrorActionPreference = "Continue"
+                    
+                    git push origin $BranchName
+                    
+                    $ErrorActionPreference = $oldPreference
+                    Write-Host "Successfully pushed code to GitHub!" -ForegroundColor Gray
+                } catch {
+                    Write-Host "WARNING: Git push failed. (This is normal if your remote repository URL is currently inaccessible). Continuing release pipeline..." -ForegroundColor Yellow
+                }
+            } else {
+                Write-Host "No changes to commit. Skipping git commit/push." -ForegroundColor Yellow
+            }
+
+            # Handle GitHub Release creation via GitHub CLI (gh)
+            $GhCmd = Get-Command "gh" -ErrorAction SilentlyContinue
+            if ($GhCmd) {
+                Write-Host "GitHub CLI (gh) detected. Creating/updating release 'v$AppVersion' on tamatasoft/flowpaisa..." -ForegroundColor Gray
+                if (Test-Path $GeneratedSetupPath) {
+                    # Temporarily allow errors so 'release delete' failing (if release doesn't exist yet) doesn't halt the script
+                    $oldPreference = $ErrorActionPreference
+                    $ErrorActionPreference = "Continue"
+
+                    # Attempt to delete release if it already exists to avoid conflicts
+                    & gh release delete "v$AppVersion" --repo "tamatasoft/flowpaisa" --yes 2>$null
+                    
+                    # Create a release on tamatasoft/flowpaisa and upload the installer asset.
+                    & gh release create "v$AppVersion" $GeneratedSetupPath --repo "tamatasoft/flowpaisa" --title "v$AppVersion" --notes "Release v$AppVersion (Build $BuildNumber)"
+                    
+                    $ErrorActionPreference = $oldPreference
+                    Write-Host "Successfully created GitHub Release on tamatasoft/flowpaisa and uploaded flowpaisa_setup.exe!" -ForegroundColor Green
+                } else {
+                    Write-Host "WARNING: Could not upload release asset because '$GeneratedSetupPath' was not found." -ForegroundColor Yellow
+                }
+            } else {
+                Write-Host "`n--------------------------------------------------" -ForegroundColor Yellow
+                Write-Host "TIP: Install GitHub CLI (gh) to fully automate uploading the installer!" -ForegroundColor Yellow
+                Write-Host "You can install it right now by running this in PowerShell:" -ForegroundColor Yellow
+                Write-Host "winget install --id GitHub.cli" -ForegroundColor Cyan
+                Write-Host "Then run: gh auth login" -ForegroundColor Cyan
+                Write-Host "Once logged in, this script will automatically upload the installer to GitHub Releases for you!" -ForegroundColor Yellow
+                Write-Host "--------------------------------------------------`n" -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "WARNING: Git command was not found in your system PATH. Skipping Git push step..." -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "`n[4/5] Skipping Git push and GitHub Release creation." -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "`n[4/5] Skipping Step 4 (Git Commit & Push and Create GitHub Release) as requested by -From $From." -ForegroundColor Gray
+}
+
+# 6. Deploy to Firebase Hosting (Step 5/5)
+if ($From -le 5) {
+    Write-Host "`n[5/5] Deploying to Firebase Hosting..." -ForegroundColor Green
+
+    # Check if Firebase CLI is installed
+    $FirebaseCmd = Get-Command "firebase" -ErrorAction SilentlyContinue
+    if ($FirebaseCmd) {
+        Write-Host "Deploying website files to Firebase Hosting..." -ForegroundColor Gray
+        & firebase deploy --only hosting
+        
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "`n>>> DEPLOYMENT PIPELINE COMPLETE! <<<" -ForegroundColor Green
+            Write-Host "==================================================" -ForegroundColor Green
+            Write-Host "   RELEASE & DEPLOYMENT DETAILS" -ForegroundColor Green
+            Write-Host "==================================================" -ForegroundColor Green
+            Write-Host "[-] App Version:             v$AppVersion" -ForegroundColor Gray
+            Write-Host "[-] Build Number:            $BuildNumber" -ForegroundColor Gray
+            Write-Host "[-] Landing Page Website:    https://flow-paisa.firebaseapp.com" -ForegroundColor Cyan
+            Write-Host "[-] Auto-Update Config:      https://flow-paisa.firebaseapp.com/version.json" -ForegroundColor Cyan
+            Write-Host "[-] GitHub Release Page:     https://github.com/tamatasoft/flowpaisa/releases/tag/v$AppVersion" -ForegroundColor Cyan
+            Write-Host "[-] Public Download Link:    https://github.com/tamatasoft/flowpaisa/releases/download/v$AppVersion/$SetupOutputName" -ForegroundColor Cyan
+            Write-Host "[-] Latest Download Link:    https://github.com/tamatasoft/flowpaisa/releases/latest/download/$SetupOutputName" -ForegroundColor Cyan
+            Write-Host "==================================================" -ForegroundColor Green
+            
+            if (!$SkipRelease -and !(Get-Command "gh" -ErrorAction SilentlyContinue) -and $From -le 4) {
+                Write-Host "`n[!] ACTION REQUIRED: GitHub CLI (gh) was not found." -ForegroundColor Yellow
+                Write-Host "Please go to: https://github.com/tamatasoft/flowpaisa/releases" -ForegroundColor Yellow
+                Write-Host "1. Create a release named 'v$AppVersion'" -ForegroundColor Yellow
+                Write-Host "2. Upload the installer located at: .\Output\$SetupOutputName" -ForegroundColor Yellow
+            } else {
+                Write-Host "`nAll assets have been built, pushed, and deployed successfully!" -ForegroundColor Green
+            }
+        } else {
+            Write-Error "Firebase deployment failed!"
+            exit $LASTEXITCODE
+        }
+    } else {
+        Write-Host "WARNING: Firebase CLI (firebase) was not found in your system PATH." -ForegroundColor Yellow
+        Write-Host "You can manually deploy by running: firebase deploy --only hosting" -ForegroundColor Yellow
+    }
+} else {
+    Write-Host "`n[5/5] Skipping Step 5 (Deploy to Firebase Hosting) as requested by -From $From." -ForegroundColor Gray
 }
 
 Write-Host "`nPipeline completed!" -ForegroundColor Cyan
