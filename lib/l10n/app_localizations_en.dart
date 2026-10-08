@@ -3953,7 +3953,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Applies only to transactions without an assigned account';
 
   @override
-  String get settlementContinueWithoutAccount => 'Continue without account';
+  String get settlementContinueWithoutAccount => 'Keep transaction\'s account';
 
   @override
   String get negativeBalanceWarning =>

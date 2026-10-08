@@ -276,7 +276,7 @@ class ReceivablesRepository {
   /// Mark receivable as received and activate linked transaction.
   /// [accountUuid] — optional account to credit for the received amount.
   Future<void> markAsReceived(String receivableUuid,
-      {String? accountUuid}) async {
+      {Value<String?> accountUuid = const Value.absent()}) async {
     await _database.transaction(() async {
       final receivable = await getReceivableByUuid(receivableUuid);
       if (receivable == null) return;
@@ -309,7 +309,7 @@ class ReceivablesRepository {
         }
 
         // Use selected account if provided, otherwise inherit from linked transaction
-        final effectiveAccountUuid = accountUuid ?? inheritedAccountUuid;
+        final effectiveAccountUuid = accountUuid.present ? accountUuid.value : inheritedAccountUuid;
 
         // Use a deterministic UUID based on receivable UUID to prevent duplicates during sync
         final incomeUuid = "${receivableUuid}_payment";
@@ -353,8 +353,7 @@ class ReceivablesRepository {
                   t.processedDate.isNull()))
             .write(TransactionsCompanion(
           processedDate: Value(receivedDate),
-          accountUuid:
-              accountUuid != null ? Value(accountUuid) : const Value.absent(),
+          accountUuid: accountUuid.present ? Value(accountUuid.value) : const Value.absent(),
           isNotSynced: const Value(true),
         ));
       }

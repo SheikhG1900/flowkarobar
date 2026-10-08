@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flowpaisa/core/utils/tabular_parser.dart';
 import 'package:flowpaisa/features/receivables/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/linked_settlement_account_sheet.dart';
@@ -1170,7 +1171,9 @@ class ReceivableDetailsDialog extends ConsumerWidget {
       final repository = ref.read(receivablesRepositoryProvider);
       await repository.markAsReceived(
         receivableUuid,
-        accountUuid: choice.accountUuid,
+        accountUuid: choice.keepTransactionAccount
+            ? const Value.absent()
+            : Value(choice.accountUuid),
       );
 
       if (context.mounted) {

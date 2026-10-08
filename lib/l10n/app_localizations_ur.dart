@@ -3972,7 +3972,7 @@ class AppLocalizationsUr extends AppLocalizations {
       'صرف ان لین دین پر لاگو ہوتا ہے جن کا اکاؤنٹ مقرر نہیں';
 
   @override
-  String get settlementContinueWithoutAccount => 'اکاؤنٹ کے بغیر جاری رکھیں';
+  String get settlementContinueWithoutAccount => 'لین دین کا اصل اکاؤنٹ رکھیں';
 
   @override
   String get negativeBalanceWarning =>

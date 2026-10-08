@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flowpaisa/core/utils/tabular_parser.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/linked_settlement_account_sheet.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
@@ -1164,7 +1165,9 @@ class PayableDetailsDialog extends ConsumerWidget {
       final repository = ref.read(payablesRepositoryProvider);
       await repository.markAsPaid(
         payableUuid,
-        accountUuid: choice.accountUuid,
+        accountUuid: choice.keepTransactionAccount
+            ? const Value.absent()
+            : Value(choice.accountUuid),
       );
 
       if (context.mounted) {

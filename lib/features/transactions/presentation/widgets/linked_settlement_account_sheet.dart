@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Picked account UUID, or `null` to settle without assigning an account.
 /// Sheet returns `null` if the user cancelled.
-typedef SettlementAccountChoice = ({String? accountUuid});
+typedef SettlementAccountChoice = ({bool keepTransactionAccount, String? accountUuid});
 
 /// Settlement sheet with [AccountPickerField] (create account when needed), cancel,
 /// continue without account, and primary action with a selected account.
@@ -17,6 +17,7 @@ Future<SettlementAccountChoice?> showLinkedSettlementAccountSheet(
   BuildContext context, {
   required bool isPayable,
   Account? initialAccount,
+  bool showKeepOption = true,
 }) {
   return showModalBottomSheet<SettlementAccountChoice>(
     context: context,
@@ -29,6 +30,7 @@ Future<SettlementAccountChoice?> showLinkedSettlementAccountSheet(
     builder: (sheetContext) => _LinkedSettlementAccountSheet(
       isPayable: isPayable,
       initialAccount: initialAccount,
+      showKeepOption: showKeepOption,
     ),
   );
 }
@@ -77,6 +79,7 @@ Future<SettlementAccountChoice?> resolveSettlementAccountChoice(
   required bool isPayable,
   Account? initialAccount,
   Transaction? transactionForAccountDefault,
+  bool showKeepOption = true,
 }) async {
   List<Account> accountsList;
   try {
@@ -99,6 +102,7 @@ Future<SettlementAccountChoice?> resolveSettlementAccountChoice(
     context,
     isPayable: isPayable,
     initialAccount: effectiveInitial,
+    showKeepOption: showKeepOption,
   );
 }
 
@@ -106,10 +110,12 @@ class _LinkedSettlementAccountSheet extends StatefulWidget {
   const _LinkedSettlementAccountSheet({
     required this.isPayable,
     this.initialAccount,
+    this.showKeepOption = true,
   });
 
   final bool isPayable;
   final Account? initialAccount;
+  final bool showKeepOption;
 
   @override
   State<_LinkedSettlementAccountSheet> createState() =>
@@ -200,12 +206,13 @@ class _LinkedSettlementAccountSheetState
           ),
           const SizedBox(height: 20),
           FilledButton(
-            onPressed: _selectedAccount == null
-                ? null
-                : () => Navigator.pop(
-                      context,
-                      (accountUuid: _selectedAccount!.uuid),
-                    ),
+            onPressed: () => Navigator.pop(
+                  context,
+                  (
+                    keepTransactionAccount: false,
+                    accountUuid: _selectedAccount?.uuid,
+                  ),
+                ),
             style: FilledButton.styleFrom(
               backgroundColor: widget.isPayable
                   ? AppColors.payableColor
@@ -214,11 +221,19 @@ class _LinkedSettlementAccountSheetState
             ),
             child: Text(widget.isPayable ? l10n.markAsPaid : l10n.markAsReceived),
           ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: () => Navigator.pop(context, (accountUuid: null)),
-            child: Text(l10n.settlementContinueWithoutAccount),
-          ),
+          if (widget.showKeepOption) ...[
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => Navigator.pop(
+                    context,
+                    (
+                      keepTransactionAccount: true,
+                      accountUuid: null,
+                    ),
+                  ),
+              child: Text(l10n.settlementContinueWithoutAccount),
+            ),
+          ],
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(l10n.cancel),

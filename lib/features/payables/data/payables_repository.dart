@@ -274,7 +274,7 @@ class PayablesRepository {
 
   /// Mark payable as paid and activate linked transaction.
   /// [accountUuid] — optional account to debit for the payment.
-  Future<void> markAsPaid(String payableUuid, {String? accountUuid}) async {
+  Future<void> markAsPaid(String payableUuid, {Value<String?> accountUuid = const Value.absent()}) async {
     await _database.transaction(() async {
       final payable = await getPayableByUuid(payableUuid);
       if (payable == null) return;
@@ -306,7 +306,7 @@ class PayablesRepository {
         }
 
         // Use selected account if provided, otherwise inherit from linked transaction
-        final effectiveAccountUuid = accountUuid ?? inheritedAccountUuid;
+        final effectiveAccountUuid = accountUuid.present ? accountUuid.value : inheritedAccountUuid;
 
         // Use a deterministic UUID based on payable UUID to prevent duplicates during sync
         final expenseUuid = "${payableUuid}_payment";
@@ -350,8 +350,7 @@ class PayablesRepository {
                   t.processedDate.isNull()))
             .write(TransactionsCompanion(
           processedDate: Value(paidDate),
-          accountUuid:
-              accountUuid != null ? Value(accountUuid) : const Value.absent(),
+          accountUuid: accountUuid.present ? Value(accountUuid.value) : const Value.absent(),
           isNotSynced: const Value(true),
           updatedAt: Value(DateTime.now()),
         ));

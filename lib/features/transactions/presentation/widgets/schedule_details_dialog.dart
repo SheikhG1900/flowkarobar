@@ -1507,9 +1507,10 @@ class ScheduleDetailsDialog extends ConsumerWidget {
       ref,
       isPayable: isExpense,
       initialAccount: item.account,
+      showKeepOption: false,
     );
 
-    if (choice != null) {
+    if (choice != null && !choice.keepTransactionAccount) {
       try {
         await ref
             .read(scheduleServiceProvider)

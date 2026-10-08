@@ -7244,7 +7244,7 @@ abstract class AppLocalizations {
   /// No description provided for @settlementContinueWithoutAccount.
   ///
   /// In en, this message translates to:
-  /// **'Continue without account'**
+  /// **'Keep transaction\'s account'**
   String get settlementContinueWithoutAccount;
 
   /// No description provided for @negativeBalanceWarning.

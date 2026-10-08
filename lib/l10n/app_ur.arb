@@ -1512,7 +1512,7 @@
   "selectedTotal": "منتخب کل",
   "selectAccountsToCombine": "مشترکہ بیلنس دیکھنے کے لیے اکاؤنٹس منتخب کریں",
   "accountPickerInfoMessage": "صرف ان لین دین پر لاگو ہوتا ہے جن کا اکاؤنٹ مقرر نہیں",
-  "settlementContinueWithoutAccount": "اکاؤنٹ کے بغیر جاری رکھیں",
+  "settlementContinueWithoutAccount": "لین دین کا اصل اکاؤنٹ رکھیں",
   "negativeBalanceWarning": "اس سے آپ کا نقد بیلنس صفر سے نیچے چلا جائے گا",
   "paymentDueNotification": "کریڈٹ کارڈ ادائیگی {amount} {days} دنوں میں واجب ہے",
   "@paymentDueNotification": {

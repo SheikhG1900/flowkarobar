@@ -1512,7 +1512,7 @@
   "selectedTotal": "चयनित कुल",
   "selectAccountsToCombine": "संयुक्त बैलेंस देखने के लिए खाते चुनें",
   "accountPickerInfoMessage": "केवल उन लेनदेन पर लागू होता है जिनका खाता निर्दिष्ट नहीं है",
-  "settlementContinueWithoutAccount": "बिना खाते के जारी रखें",
+  "settlementContinueWithoutAccount": "मूल लेन-देन खाता रखें",
   "negativeBalanceWarning": "इससे आपका नकद शेष शून्य से नीचे चला जाएगा",
   "paymentDueNotification": "क्रेडिट कार्ड भुगतान {amount} {days} दिनों में देय है",
   "@paymentDueNotification": {

@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_list_item.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_split_transaction_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
@@ -689,7 +690,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                           if (choice == null) return;
 
                           try {
-                            if (choice.accountUuid != null) {
+                            if (!choice.keepTransactionAccount) {
                               await ref
                                   .read(transactionServiceProvider)
                                   .updateTransactionAccount(transaction.uuid, choice.accountUuid);
@@ -842,7 +843,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                         if (choice == null) return;
 
                         try {
-                          if (choice.accountUuid != null) {
+                          if (!choice.keepTransactionAccount) {
                             await ref
                                 .read(transactionServiceProvider)
                                 .updateTransactionAccount(transaction.uuid, choice.accountUuid);
@@ -3560,9 +3561,10 @@ class TransactionDetailsDialog extends ConsumerWidget {
       isPayable: isExpense, // If expense, we pay from account
       initialAccount: item.account,
       transactionForAccountDefault: item.transaction,
+      showKeepOption: false,
     );
 
-    if (choice != null) {
+    if (choice != null && !choice.keepTransactionAccount) {
       try {
         await ref
             .read(transactionServiceProvider)
@@ -3707,7 +3709,9 @@ class TransactionDetailsDialog extends ConsumerWidget {
       final repository = ref.read(payablesRepositoryProvider);
       await repository.markAsPaid(
         payableUuid,
-        accountUuid: choice.accountUuid,
+        accountUuid: choice.keepTransactionAccount
+            ? const Value.absent()
+            : Value(choice.accountUuid),
       );
 
       if (context.mounted) {
@@ -3783,7 +3787,9 @@ class TransactionDetailsDialog extends ConsumerWidget {
       final repository = ref.read(receivablesRepositoryProvider);
       await repository.markAsReceived(
         receivableUuid,
-        accountUuid: choice.accountUuid,
+        accountUuid: choice.keepTransactionAccount
+            ? const Value.absent()
+            : Value(choice.accountUuid),
       );
 
       if (context.mounted) {

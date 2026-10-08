@@ -3964,7 +3964,7 @@ class AppLocalizationsHi extends AppLocalizations {
       'केवल उन लेनदेन पर लागू होता है जिनका खाता निर्दिष्ट नहीं है';
 
   @override
-  String get settlementContinueWithoutAccount => 'बिना खाते के जारी रखें';
+  String get settlementContinueWithoutAccount => 'मूल लेन-देन खाता रखें';
 
   @override
   String get negativeBalanceWarning =>
