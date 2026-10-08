@@ -1066,6 +1066,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
               final isPayableScenario =
                   relationship == 'PAID_BY' || relationship == 'RECEIVED_FROM';
               final isLinked = isReceivableScenario || isPayableScenario;
+              final isMobilePortrait = MediaQuery.of(context).size.width < 600 &&
+                  MediaQuery.of(context).orientation == Orientation.portrait;
 
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1073,55 +1075,113 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   const SizedBox(height: 8),
                   // Summary Row
                   if (isLinked)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildSummaryTile(
-                            context,
-                            label: l10n.totalAmount,
-                            amount: totalAmount,
-                            color: isExpense
-                                ? AppColors.expenseColor
-                                : AppColors.incomeColor,
-                            currency: currency,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: _buildSummaryTile(
-                            context,
-                            label: isExpense ? l10n.statusPaid : l10n.statusReceived,
-                            amount: processedAmount,
-                            color: AppColors.success,
-                            currency: currency,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: _buildSummaryTile(
-                            context,
-                            label: isExpense ? l10n.statusReceived : l10n.statusPaid,
-                            amount: settledAmount,
-                            color: isExpense
-                                ? AppColors.incomeColor
-                                : AppColors.expenseColor,
-                            currency: currency,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: _buildSummaryTile(
-                            context,
-                            label: isExpense
-                                ? l10n.receivableTag
-                                : l10n.payableTag,
-                            amount: (processedAmount - settledAmount).abs(),
-                            color: AppColors.payableColor,
-                            currency: currency,
-                          ),
-                        ),
-                      ],
-                    )
+                    isMobilePortrait
+                        ? Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildSummaryTile(
+                                      context,
+                                      label: l10n.totalAmount,
+                                      amount: totalAmount,
+                                      color: isExpense
+                                          ? AppColors.expenseColor
+                                          : AppColors.incomeColor,
+                                      currency: currency,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: _buildSummaryTile(
+                                      context,
+                                      label: isExpense ? l10n.statusPaid : l10n.statusReceived,
+                                      amount: processedAmount,
+                                      color: AppColors.success,
+                                      currency: currency,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildSummaryTile(
+                                      context,
+                                      label: isExpense ? l10n.statusReceived : l10n.statusPaid,
+                                      amount: settledAmount,
+                                      color: isExpense
+                                          ? AppColors.incomeColor
+                                          : AppColors.expenseColor,
+                                      currency: currency,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: _buildSummaryTile(
+                                      context,
+                                      label: isExpense
+                                          ? l10n.receivableTag
+                                          : l10n.payableTag,
+                                      amount: (processedAmount - settledAmount).abs(),
+                                      color: AppColors.payableColor,
+                                      currency: currency,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          )
+                        : Row(
+                            children: [
+                              Expanded(
+                                child: _buildSummaryTile(
+                                  context,
+                                  label: l10n.totalAmount,
+                                  amount: totalAmount,
+                                  color: isExpense
+                                      ? AppColors.expenseColor
+                                      : AppColors.incomeColor,
+                                  currency: currency,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: _buildSummaryTile(
+                                  context,
+                                  label: isExpense ? l10n.statusPaid : l10n.statusReceived,
+                                  amount: processedAmount,
+                                  color: AppColors.success,
+                                  currency: currency,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: _buildSummaryTile(
+                                  context,
+                                  label: isExpense ? l10n.statusReceived : l10n.statusPaid,
+                                  amount: settledAmount,
+                                  color: isExpense
+                                      ? AppColors.incomeColor
+                                      : AppColors.expenseColor,
+                                  currency: currency,
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: _buildSummaryTile(
+                                  context,
+                                  label: isExpense
+                                      ? l10n.receivableTag
+                                      : l10n.payableTag,
+                                  amount: (processedAmount - settledAmount).abs(),
+                                  color: AppColors.payableColor,
+                                  currency: currency,
+                                ),
+                              ),
+                            ],
+                          )
                   else
                     Row(
                       children: [
@@ -1159,7 +1219,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       ],
                     ),
                   const SizedBox(height: 16),
-                  ...sortedRelated.map((relItem) {
+                  ...sortedRelated.where((relItem) => relItem.transaction.isAutoGenerated != true).map((relItem) {
                       final isCurrent = relItem.transaction.uuid == transaction.uuid;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 8),
