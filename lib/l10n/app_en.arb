@@ -2158,6 +2158,7 @@
   "moreOptions": "More Options",
   "processed": "Processed",
   "processedImmediately": "Paid immediately",
+  "doubleTapForDetails": "Double tap for details",
   "receivedImmediately": "Received immediately",
   "processedOn": "Processed On",
   "paidOnRowLabel": "Paid on",

@@ -4164,6 +4164,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get processedImmediately => 'Paid immediately';
 
   @override
+  String get doubleTapForDetails => 'Double tap for details';
+
+  @override
   String get receivedImmediately => 'Received immediately';
 
   @override

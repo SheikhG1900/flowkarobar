@@ -4183,6 +4183,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get processedImmediately => 'فوری ادائیگی ہوئی';
 
   @override
+  String get doubleTapForDetails => 'تفصیلات کے لیے دو بار تھپتھپائیں';
+
+  @override
   String get receivedImmediately => 'فوری موصول ہوئی';
 
   @override

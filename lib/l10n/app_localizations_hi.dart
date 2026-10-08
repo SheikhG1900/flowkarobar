@@ -4175,6 +4175,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get processedImmediately => 'तुरंत भुगतान किया';
 
   @override
+  String get doubleTapForDetails => 'विवरण के लिए दो बार टैप करें';
+
+  @override
   String get receivedImmediately => 'तुरंत प्राप्त हुआ';
 
   @override

@@ -1702,6 +1702,17 @@ class _ExpensesPieChart extends ConsumerWidget {
                                     ),
                                   ),
                                 ),
+                                if (isSelected) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    AppLocalizations.of(context)!.doubleTapForDetails,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),
@@ -3117,6 +3128,17 @@ class _IncomePieChart extends ConsumerWidget {
                                     ),
                                   ),
                                 ),
+                                if (isSelected) ...[
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    AppLocalizations.of(context)!.doubleTapForDetails,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ],
                               ],
                             ),
                           ),

@@ -7625,6 +7625,12 @@ abstract class AppLocalizations {
   /// **'Paid immediately'**
   String get processedImmediately;
 
+  /// No description provided for @doubleTapForDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Double tap for details'**
+  String get doubleTapForDetails;
+
   /// No description provided for @receivedImmediately.
   ///
   /// In en, this message translates to:
