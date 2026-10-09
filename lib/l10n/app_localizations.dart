@@ -7529,23 +7529,47 @@ abstract class AppLocalizations {
   /// **'Balance Distribution'**
   String get balanceDistribution;
 
-  /// No description provided for @spendingByAccount.
+  /// No description provided for @accountFlowSummary.
   ///
   /// In en, this message translates to:
-  /// **'Spending by Account'**
-  String get spendingByAccount;
-
-  /// No description provided for @transferFlow.
-  ///
-  /// In en, this message translates to:
-  /// **'Transfer Flow'**
-  String get transferFlow;
+  /// **'Account Cashflow'**
+  String get accountFlowSummary;
 
   /// No description provided for @creditUtilisation.
   ///
   /// In en, this message translates to:
   /// **'Credit Utilisation'**
   String get creditUtilisation;
+
+  /// No description provided for @openingBalanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening'**
+  String get openingBalanceLabel;
+
+  /// No description provided for @closingBalanceLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Closing'**
+  String get closingBalanceLabel;
+
+  /// No description provided for @transferFromAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'From {account}'**
+  String transferFromAnalytics(String account);
+
+  /// No description provided for @transferToAnalytics.
+  ///
+  /// In en, this message translates to:
+  /// **'To {account}'**
+  String transferToAnalytics(String account);
+
+  /// No description provided for @unknownAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Other Account'**
+  String get unknownAccount;
 
   /// No description provided for @noAccountActivity.
   ///

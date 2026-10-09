@@ -4114,13 +4114,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get balanceDistribution => 'Balance Distribution';
 
   @override
-  String get spendingByAccount => 'Spending by Account';
-
-  @override
-  String get transferFlow => 'Transfer Flow';
+  String get accountFlowSummary => 'Account Cashflow';
 
   @override
   String get creditUtilisation => 'Credit Utilisation';
+
+  @override
+  String get openingBalanceLabel => 'Opening';
+
+  @override
+  String get closingBalanceLabel => 'Closing';
+
+  @override
+  String transferFromAnalytics(String account) {
+    return 'From $account';
+  }
+
+  @override
+  String transferToAnalytics(String account) {
+    return 'To $account';
+  }
+
+  @override
+  String get unknownAccount => 'Other Account';
 
   @override
   String get noAccountActivity => 'No account activity in this period';

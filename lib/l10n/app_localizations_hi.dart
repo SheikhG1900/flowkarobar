@@ -4125,13 +4125,29 @@ class AppLocalizationsHi extends AppLocalizations {
   String get balanceDistribution => 'शेष वितरण';
 
   @override
-  String get spendingByAccount => 'खाते के अनुसार खर्च';
-
-  @override
-  String get transferFlow => 'स्थानांतरण प्रवाह';
+  String get accountFlowSummary => 'खाता नकद प्रवाह';
 
   @override
   String get creditUtilisation => 'क्रेडिट उपयोग';
+
+  @override
+  String get openingBalanceLabel => 'प्रारंभिक';
+
+  @override
+  String get closingBalanceLabel => 'अंतिम';
+
+  @override
+  String transferFromAnalytics(String account) {
+    return '$account से';
+  }
+
+  @override
+  String transferToAnalytics(String account) {
+    return '$account को';
+  }
+
+  @override
+  String get unknownAccount => 'अन्य खाता';
 
   @override
   String get noAccountActivity => 'इस अवधि में कोई खाता गतिविधि नहीं';

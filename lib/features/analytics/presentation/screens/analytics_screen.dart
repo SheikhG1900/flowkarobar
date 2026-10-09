@@ -223,8 +223,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                       ref.invalidate(topContactsByBalanceProvider);
                       ref.invalidate(paymentStatusDistributionProvider);
                       ref.invalidate(incomeByCategoryProvider);
-                      ref.invalidate(accountSpendingProvider);
-                      ref.invalidate(transferFlowProvider);
+                      ref.invalidate(accountFlowSummaryProvider);
 
                       // Wait for the main summary to load
                       await ref.read(financialSummaryProvider.future);
@@ -436,13 +435,13 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                     ),
                                   ),
 
-                                // Spending by Account
-                                if (visible(AnalyticsSection.spendingByAccount))
+                                // Account Cashflow Summary
+                                if (visible(AnalyticsSection.accountFlowSummary))
                                   RepaintBoundary(
                                     child: _CollapsibleSection(
-                                      title: l10n.spendingByAccount,
+                                      title: l10n.accountFlowSummary,
                                       sectionIndex: 10,
-                                      child: const AccountSpendingChart(),
+                                      child: const AccountFlowSummaryChart(),
                                     ),
                                   ),
 
@@ -454,16 +453,6 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                       sectionIndex: 11,
                                       showAllTimeBadge: true,
                                       child: const CreditUtilisationChart(),
-                                    ),
-                                  ),
-
-                                // Transfer Flow
-                                if (visible(AnalyticsSection.transferFlow))
-                                  RepaintBoundary(
-                                    child: _CollapsibleSection(
-                                      title: l10n.transferFlow,
-                                      sectionIndex: 12,
-                                      child: const TransferFlowChart(),
                                     ),
                                   ),
 
@@ -3200,11 +3189,10 @@ class _AnalyticsSectionsSheet extends ConsumerWidget {
       (AnalyticsSection.netWorth, l10n.netWorth, Symbols.account_balance_wallet),
       (AnalyticsSection.balanceDistribution, l10n.balanceDistribution,
           Symbols.pie_chart),
-      (AnalyticsSection.spendingByAccount, l10n.spendingByAccount,
-          Symbols.bar_chart),
+      (AnalyticsSection.accountFlowSummary, l10n.accountFlowSummary,
+          Symbols.swap_horiz),
       (AnalyticsSection.creditUtilisation, l10n.creditUtilisation,
           Symbols.credit_card),
-      (AnalyticsSection.transferFlow, l10n.transferFlow, Symbols.swap_horiz),
     ];
 
     return Container(

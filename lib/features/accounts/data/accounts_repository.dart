@@ -16,6 +16,33 @@ class AccountSpending {
   });
 }
 
+class AccountFlowSummary {
+  final Account account;
+  final double openingBalance;
+  final double closingBalance;
+  final double totalIncome;
+  final double totalExpense;
+  final Map<String, double> transfersInBreakdown; // fromAccountUuid -> amount
+  final Map<String, double> transfersOutBreakdown; // toAccountUuid -> amount
+
+  double get totalTransfersIn => transfersInBreakdown.values.fold(0.0, (s, v) => s + v);
+  double get totalTransfersOut => transfersOutBreakdown.values.fold(0.0, (s, v) => s + v);
+
+  double get totalInflow => totalIncome + totalTransfersIn;
+  double get totalOutflow => totalExpense + totalTransfersOut;
+  double get netFlow => totalInflow - totalOutflow;
+
+  AccountFlowSummary({
+    required this.account,
+    required this.openingBalance,
+    required this.closingBalance,
+    required this.totalIncome,
+    required this.totalExpense,
+    required this.transfersInBreakdown,
+    required this.transfersOutBreakdown,
+  });
+}
+
 class TransferFlowItem {
   final String fromAccountUuid;
   final String toAccountUuid;
@@ -573,6 +600,112 @@ class AccountsRepository {
     final list = map.values.toList()
       ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
     return list;
+  }
+
+  /// Get unified account flow summaries (opening/closing balance, inflows, outflows) for a date range.
+  Future<List<AccountFlowSummary>> getAccountFlowSummaries(
+      DateTime start, DateTime end) async {
+    final accounts = await getAllAccounts();
+    
+    // Fetch all processed non-deleted transactions
+    final txs = await (_db.select(_db.transactions)
+          ..where((t) => t.isDeleted.equals(false) & t.processedDate.isNotNull()))
+        .get();
+
+    // Fetch all non-deleted transfers
+    final transfers = await (_db.select(_db.accountTransfers)
+          ..where((t) => t.isDeleted.equals(false)))
+        .get();
+
+    final List<AccountFlowSummary> summaries = [];
+
+    for (final acc in accounts) {
+      final isCreditCard = AccountType.fromValue(acc.type).isCreditCard;
+      final openingDate = acc.openingDate;
+
+      // Filter transactions and transfers relevant to this account
+      final myTxs = txs.where((t) => t.accountUuid == acc.uuid && (openingDate == null || t.processedDate!.isAfter(openingDate) || t.processedDate!.isAtSameMomentAs(openingDate)));
+      final myTransfers = transfers.where((t) => (t.fromAccountUuid == acc.uuid || t.toAccountUuid == acc.uuid) && (openingDate == null || t.date.isAfter(openingDate) || t.date.isAtSameMomentAs(openingDate)));
+
+      // Calculate starting balance before 'start' date
+      double balance = isCreditCard ? -acc.openingBalance.abs() : acc.openingBalance;
+
+      final priorTxs = myTxs.where((t) => t.processedDate!.isBefore(start));
+      final priorTransfers = myTransfers.where((t) => t.date.isBefore(start));
+
+      for (final tx in priorTxs) {
+        final isExpense = tx.type == 'EXPENSE';
+        balance += isExpense ? -tx.amount : tx.amount;
+      }
+
+      for (final tf in priorTransfers) {
+        final isFromThis = tf.fromAccountUuid == acc.uuid;
+        balance += isFromThis ? -tf.amount : tf.amount;
+      }
+
+      final double openingBalance = balance;
+
+      // Now calculate period figures (between start and end)
+      final periodEnd = end.add(const Duration(days: 1)); // inclusive of end day
+      final periodTxs = myTxs.where((t) =>
+          (t.processedDate!.isAtSameMomentAs(start) || t.processedDate!.isAfter(start)) &&
+          t.processedDate!.isBefore(periodEnd));
+      
+      final periodTransfers = myTransfers.where((t) =>
+          (t.date.isAtSameMomentAs(start) || t.date.isAfter(start)) &&
+          t.date.isBefore(periodEnd));
+
+      double totalIncome = 0.0;
+      double totalExpense = 0.0;
+      for (final tx in periodTxs) {
+        if (tx.type == 'EXPENSE') {
+          totalExpense += tx.amount;
+        } else {
+          totalIncome += tx.amount;
+        }
+      }
+
+      final Map<String, double> transfersInBreakdown = {};
+      final Map<String, double> transfersOutBreakdown = {};
+
+      for (final tf in periodTransfers) {
+        if (tf.fromAccountUuid == acc.uuid) {
+          transfersOutBreakdown[tf.toAccountUuid] =
+              (transfersOutBreakdown[tf.toAccountUuid] ?? 0.0) + tf.amount;
+        } else {
+          transfersInBreakdown[tf.fromAccountUuid] =
+              (transfersInBreakdown[tf.fromAccountUuid] ?? 0.0) + tf.amount;
+        }
+      }
+
+      // Calculate closing balance
+      double runningBal = openingBalance;
+      runningBal += totalIncome - totalExpense;
+      runningBal += transfersInBreakdown.values.fold(0.0, (s, v) => s + v);
+      runningBal -= transfersOutBreakdown.values.fold(0.0, (s, v) => s + v);
+
+      // Only add to summary if there's any activity or a non-zero opening balance
+      final hasActivity = totalIncome > 0 ||
+          totalExpense > 0 ||
+          transfersInBreakdown.isNotEmpty ||
+          transfersOutBreakdown.isNotEmpty;
+
+      if (hasActivity || openingBalance.abs() > 0.01 || runningBal.abs() > 0.01) {
+        summaries.add(AccountFlowSummary(
+          account: acc,
+          openingBalance: openingBalance,
+          closingBalance: runningBal,
+          totalIncome: totalIncome,
+          totalExpense: totalExpense,
+          transfersInBreakdown: transfersInBreakdown,
+          transfersOutBreakdown: transfersOutBreakdown,
+        ));
+      }
+    }
+
+    // Sort by absolute closing balance
+    summaries.sort((a, b) => b.closingBalance.abs().compareTo(a.closingBalance.abs()));
+    return summaries;
   }
 
   // ---------------------------------------------------------------------------

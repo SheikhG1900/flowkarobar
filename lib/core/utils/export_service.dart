@@ -1,5 +1,6 @@
 import 'package:flowpaisa/core/utils/tabular_parser.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
+import 'package:flowpaisa/features/accounts/data/accounts_repository.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
@@ -3308,6 +3309,9 @@ class ExportService {
     final statusDistribution = await _analyticsRepository
         .getPaymentStatusDistribution(startDate, endDate);
 
+    final accountsRepo = AccountsRepository(_database);
+    final accountFlowSummaries = await accountsRepo.getAccountFlowSummaries(startDate, endDate);
+
     final currency = currencySymbol ?? '₹';
     String fmt(num amount) {
       if (currencyObj != null) {
@@ -4276,6 +4280,141 @@ class ExportService {
                       currencyObj: currencyObj),
               ],
             ),
+
+            if (accountFlowSummaries.isNotEmpty) ...[
+              pw.SizedBox(height: 30),
+              _buildLocalizedHeader(
+                  l10n?.accountFlowSummary ?? 'Account Cashflow',
+                  level: 1,
+                  l10n: l10n),
+              pw.SizedBox(height: 10),
+              ...accountFlowSummaries.map((summary) {
+                final accountNamesMap = {for (final s in accountFlowSummaries) s.account.uuid: s.account.name};
+
+                return pw.Container(
+                  margin: const pw.EdgeInsets.only(bottom: 15),
+                  padding: const pw.EdgeInsets.all(10),
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: PdfColors.grey300, width: 0.5),
+                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+                  ),
+                  child: pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      // Header with account name
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildText(
+                            summary.account.name,
+                            style: pw.TextStyle(
+                              fontWeight: pw.FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                          _buildText(
+                            '${l10n?.netFlow ?? "Net Flow"}: ${summary.netFlow >= 0 ? "+" : ""}${fmt(summary.netFlow)}',
+                            style: pw.TextStyle(
+                              fontWeight: pw.FontWeight.bold,
+                              fontSize: 11,
+                              color: summary.netFlow >= 0
+                                  ? const PdfColor(0 / 255.0, 150 / 255.0, 0 / 255.0) // Green
+                                  : const PdfColor(200 / 255.0, 0 / 255.0, 0 / 255.0), // Red
+                            ),
+                          ),
+                        ],
+                      ),
+                      pw.SizedBox(height: 6),
+                      pw.Divider(color: PdfColors.grey300, thickness: 0.5),
+                      pw.SizedBox(height: 6),
+
+                      // Opening / Closing
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildText(
+                            '${l10n?.openingBalanceLabel ?? "Opening"}: ${fmt(summary.openingBalance)}',
+                            style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                          ),
+                          _buildText(
+                            '${l10n?.closingBalanceLabel ?? "Closing"}: ${fmt(summary.closingBalance)}',
+                            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: PdfColors.grey900),
+                          ),
+                        ],
+                      ),
+                      pw.SizedBox(height: 10),
+
+                      // Inflow Table
+                      pw.Table(
+                        border: pw.TableBorder.all(color: PdfColors.grey200, width: 0.5),
+                        children: [
+                          _buildLocalizedTableRow(
+                            [
+                              _buildTableHeaderCell('${l10n?.inflow ?? "Inflow"}: ${fmt(summary.totalInflow)}', l10n: l10n),
+                              _buildTableHeaderCell(l10n?.amount ?? 'Amount', l10n: l10n),
+                            ],
+                            l10n: l10n,
+                            decoration: const pw.BoxDecoration(color: PdfColors.grey100),
+                          ),
+                          if (summary.totalIncome > 0)
+                            _buildLocalizedTableRow(
+                              [
+                                _buildTableCell(l10n?.income ?? 'Income', null, null, l10n),
+                                _buildTableCell(fmt(summary.totalIncome), null, null, l10n),
+                              ],
+                              l10n: l10n,
+                            ),
+                          ...summary.transfersInBreakdown.entries.map((entry) {
+                            final otherAccName = accountNamesMap[entry.key] ?? l10n?.unknownAccount ?? 'Other Account';
+                            return _buildLocalizedTableRow(
+                              [
+                                _buildTableCell(l10n?.transferFromAnalytics(otherAccName) ?? 'From $otherAccName', null, null, l10n),
+                                _buildTableCell(fmt(entry.value), null, null, l10n),
+                              ],
+                              l10n: l10n,
+                            );
+                          }),
+                        ],
+                      ),
+                      pw.SizedBox(height: 8),
+
+                      // Outflow Table
+                      pw.Table(
+                        border: pw.TableBorder.all(color: PdfColors.grey200, width: 0.5),
+                        children: [
+                          _buildLocalizedTableRow(
+                            [
+                              _buildTableHeaderCell('${l10n?.outflow ?? "Outflow"}: ${fmt(summary.totalOutflow)}', l10n: l10n),
+                              _buildTableHeaderCell(l10n?.amount ?? 'Amount', l10n: l10n),
+                            ],
+                            l10n: l10n,
+                            decoration: const pw.BoxDecoration(color: PdfColors.grey100),
+                          ),
+                          if (summary.totalExpense > 0)
+                            _buildLocalizedTableRow(
+                              [
+                                _buildTableCell(l10n?.expenses ?? 'Expense', null, null, l10n),
+                                _buildTableCell(fmt(summary.totalExpense), null, null, l10n),
+                              ],
+                              l10n: l10n,
+                            ),
+                          ...summary.transfersOutBreakdown.entries.map((entry) {
+                            final otherAccName = accountNamesMap[entry.key] ?? l10n?.unknownAccount ?? 'Other Account';
+                            return _buildLocalizedTableRow(
+                              [
+                                _buildTableCell(l10n?.transferToAnalytics(otherAccName) ?? 'To $otherAccName', null, null, l10n),
+                                _buildTableCell(fmt(entry.value), null, null, l10n),
+                              ],
+                              l10n: l10n,
+                            );
+                          }),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
           ];
         },
       ),

@@ -260,20 +260,12 @@ final transactionListSummaryProvider =
 
 // ── Account Analytics Providers ─────────────────────────────────────────────
 
-/// Spending (expense + income) grouped by account for the selected date range.
-final accountSpendingProvider =
-    FutureProvider.autoDispose<List<AccountSpending>>((ref) async {
+/// Unified Account Flow Summaries (opening/closing balance, inflows, outflows) for the selected date range.
+final accountFlowSummaryProvider =
+    FutureProvider.autoDispose<List<AccountFlowSummary>>((ref) async {
   final repo = ref.watch(accountsRepositoryProvider);
   final dateRange = ref.watch(selectedDateRangeProvider);
-  return repo.getSpendingByAccount(dateRange.startDate, dateRange.endDate);
-});
-
-/// Transfer flow between accounts for the selected date range.
-final transferFlowProvider =
-    FutureProvider.autoDispose<List<TransferFlowItem>>((ref) async {
-  final repo = ref.watch(accountsRepositoryProvider);
-  final dateRange = ref.watch(selectedDateRangeProvider);
-  return repo.getTransferFlow(dateRange.startDate, dateRange.endDate);
+  return repo.getAccountFlowSummaries(dateRange.startDate, dateRange.endDate);
 });
 
 // ── Analytics Section Visibility ────────────────────────────────────────────
@@ -289,9 +281,8 @@ enum AnalyticsSection {
   incomeByCategory,
   netWorth,
   balanceDistribution,
-  spendingByAccount,
+  accountFlowSummary,
   creditUtilisation,
-  transferFlow,
 }
 
 const _kHiddenSectionsKey = 'analytics_hidden_sections';

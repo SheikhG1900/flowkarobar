@@ -2134,9 +2134,23 @@
   "totalAssets": "Total Assets",
   "totalLiabilities": "Total Liabilities",
   "balanceDistribution": "Balance Distribution",
-  "spendingByAccount": "Spending by Account",
-  "transferFlow": "Transfer Flow",
+  "accountFlowSummary": "Account Cashflow",
   "creditUtilisation": "Credit Utilisation",
+  "openingBalanceLabel": "Opening",
+  "closingBalanceLabel": "Closing",
+  "transferFromAnalytics": "From {account}",
+  "@transferFromAnalytics": {
+    "placeholders": {
+      "account": { "type": "String" }
+    }
+  },
+  "transferToAnalytics": "To {account}",
+  "@transferToAnalytics": {
+    "placeholders": {
+      "account": { "type": "String" }
+    }
+  },
+  "unknownAccount": "Other Account",
   "noAccountActivity": "No account activity in this period",
   "noTransferActivity": "No transfers in this period",
   "creditUsedOf": "{used} used of {limit}",

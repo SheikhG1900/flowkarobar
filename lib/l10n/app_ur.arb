@@ -1599,9 +1599,23 @@
   "totalAssets": "کل اثاثے",
   "totalLiabilities": "کل واجبات",
   "balanceDistribution": "بیلنس تقسیم",
-  "spendingByAccount": "اکاؤنٹ کے مطابق خرچ",
-  "transferFlow": "ٹرانسفر بہاؤ",
+  "accountFlowSummary": "اکاؤنٹ کیش فلو",
   "creditUtilisation": "کریڈٹ استعمال",
+  "openingBalanceLabel": "ابتدائی",
+  "closingBalanceLabel": "آخری",
+  "transferFromAnalytics": "{account} سے",
+  "@transferFromAnalytics": {
+    "placeholders": {
+      "account": { "type": "String" }
+    }
+  },
+  "transferToAnalytics": "{account} کو",
+  "@transferToAnalytics": {
+    "placeholders": {
+      "account": { "type": "String" }
+    }
+  },
+  "unknownAccount": "دوسرا اکاؤنٹ",
   "noAccountActivity": "اس مدت میں کوئی اکاؤنٹ سرگرمی نہیں",
   "noTransferActivity": "اس مدت میں کوئی ٹرانسفر نہیں",
   "creditUsedOf": "{limit} میں سے {used} استعمال",

@@ -6,6 +6,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
+import 'package:flowpaisa/features/accounts/data/accounts_repository.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_screen.dart';
 import 'package:flowpaisa/features/analytics/presentation/providers/analytics_provider.dart';
@@ -268,15 +269,16 @@ class _NetWorthTile extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 2. Spending by Account (horizontal bar chart)
+// 2. Account Flow Summary (Unified Cashflow Overview)
 // ─────────────────────────────────────────────────────────────────────────────
 
-class AccountSpendingChart extends ConsumerWidget {
-  const AccountSpendingChart();
+class AccountFlowSummaryChart extends ConsumerWidget {
+  const AccountFlowSummaryChart({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final spendingAsync = ref.watch(accountSpendingProvider);
+    final flowSummaryAsync = ref.watch(accountFlowSummaryProvider);
+    final accountsAsync = ref.watch(accountsWithBalanceProvider);
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value;
 
@@ -284,141 +286,344 @@ class AccountSpendingChart extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    final symbol = currency.symbol;
-    final decimals = currency.decimalPlaces;
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    return spendingAsync.when(
-      data: (list) {
-        if (list.isEmpty) {
+    return flowSummaryAsync.when(
+      data: (summaries) {
+        if (summaries.isEmpty) {
           return _emptyState(
-              context, Symbols.bar_chart, l10n.noAccountActivity);
+              context, Symbols.swap_horiz, l10n.noAccountActivity);
         }
 
-        final maxExpense =
-            list.fold(0.0, (m, e) => e.totalExpense > m ? e.totalExpense : m);
-        final maxIncome =
-            list.fold(0.0, (m, e) => e.totalIncome > m ? e.totalIncome : m);
-        final maxVal = maxExpense > maxIncome ? maxExpense : maxIncome;
+        return accountsAsync.when(
+          data: (accounts) {
+            final accountMap = {for (final a in accounts) a.account.uuid: a};
 
-        return Column(
-          children: list.map((item) {
-            final acc = item.account;
-            final awb = AccountWithBalance(account: acc, balance: 0);
-            final color = _accountColor(awb, theme);
-            final icon = _accountIcon(awb);
+            return Column(
+              children: summaries.map((item) {
+                final acc = item.account;
+                final awb = AccountWithBalance(account: acc, balance: 0);
+                final color = _accountColor(awb, theme);
+                final icon = _accountIcon(awb);
 
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Account name row — taps to account detail
-                  InkWell(
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            AccountDetailScreen(accountUuid: acc.uuid),
-                      ),
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(icon, size: 15, color: color),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(acc.name,
-                              style: theme.textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600),
-                              overflow: TextOverflow.ellipsis),
-                        ),
-                        Icon(Icons.chevron_right,
-                            size: 16, color: theme.disabledColor),
-                      ],
+                final netFlowColor = item.netFlow >= 0
+                    ? AppColors.incomeColor
+                    : AppColors.expenseColor;
+
+                // Max value to scale our bars within this account card
+                final double cardMaxInflow = [
+                  item.totalIncome,
+                  ...item.transfersInBreakdown.values,
+                ].fold(0.0, (m, v) => v > m ? v : m);
+
+                final double cardMaxOutflow = [
+                  item.totalExpense,
+                  ...item.transfersOutBreakdown.values,
+                ].fold(0.0, (m, v) => v > m ? v : m);
+
+                final double cardMax = cardMaxInflow > cardMaxOutflow ? cardMaxInflow : cardMaxOutflow;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: theme.cardColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: color.withValues(alpha: 0.15),
+                      width: 1,
                     ),
                   ),
-                  if (item.totalExpense > 0) ...[
-                    const SizedBox(height: 8),
-                    InkWell(
-                      onTap: () {
-                        final dateRange =
-                            ref.read(selectedDateRangeProvider);
-                        ref
-                            .read(transactionsPaginatedProvider.notifier)
-                            .applyFilters(TransactionFilters(
-                              type: 'EXPENSE',
-                              accountUuids: [acc.uuid],
-                              startDate: dateRange.startDate,
-                              endDate: dateRange.endDate,
-                            ));
-                        Navigator.push(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // ── Account Header ──
+                      InkWell(
+                        onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const TransactionsListScreen(),
+                            builder: (_) => AccountDetailScreen(accountUuid: acc.uuid),
+                          ),
+                        ),
+                        borderRadius: BorderRadius.circular(8),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: color.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(icon, size: 16, color: color),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                acc.name,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Icon(Icons.chevron_right, size: 18, color: theme.disabledColor),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // ── Balance Info (Opening, Closing, Net Flow) ──
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surfaceContainerLowest,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    l10n.openingBalanceLabel,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    AmountFormatter.formatWithCurrency(item.openingBalance, currency),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              width: 1,
+                              height: 24,
+                              color: theme.dividerColor.withValues(alpha: 0.5),
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      l10n.netFlow,
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        color: theme.colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${item.netFlow >= 0 ? "+" : ""}${AmountFormatter.formatWithCurrency(item.netFlow, currency)}',
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        color: netFlowColor,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 1,
+                              height: 24,
+                              color: theme.dividerColor.withValues(alpha: 0.5),
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    l10n.closingBalanceLabel,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    AmountFormatter.formatWithCurrency(item.closingBalance, currency),
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ── INFLOWS ──
+                      Row(
+                        children: [
+                          Icon(Symbols.arrow_downward, color: AppColors.incomeColor, size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${l10n.inflow}: ${AmountFormatter.formatWithCurrency(item.totalInflow, currency)}',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: AppColors.incomeColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Direct Income Bar
+                      if (item.totalIncome > 0) ...[
+                        InkWell(
+                          onTap: () {
+                            final dateRange = ref.read(selectedDateRangeProvider);
+                            ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                              TransactionFilters(
+                                type: 'INCOME',
+                                accountUuids: [acc.uuid],
+                                startDate: dateRange.startDate,
+                                endDate: dateRange.endDate,
+                              ),
+                            );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const TransactionsListScreen()),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(10),
+                          child: _MaskedBar(
+                            label: l10n.income,
+                            amount: AmountFormatter.formatWithCurrency(item.totalIncome, currency),
+                            barColor: AppColors.incomeColor,
+                            fillFactor: cardMax > 0 ? (item.totalIncome / cardMax).clamp(0.0, 1.0) : 0.0,
+                            icon: Symbols.payments,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                      ],
+
+                      // Transfers In breakdown
+                      ...item.transfersInBreakdown.entries.map((entry) {
+                        final otherAccAwb = accountMap[entry.key];
+                        final otherAccColor = otherAccAwb != null ? _accountColor(otherAccAwb, theme) : AppColors.incomeColor;
+                        final otherAccIcon = otherAccAwb != null ? _accountIcon(otherAccAwb) : Symbols.account_balance_wallet;
+                        final otherAccName = otherAccAwb?.account.name ?? l10n.unknownAccount;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: InkWell(
+                            onTap: otherAccAwb != null
+                                ? () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => AccountDetailScreen(accountUuid: otherAccAwb.account.uuid),
+                                      ),
+                                    )
+                                : null,
+                            borderRadius: BorderRadius.circular(10),
+                            child: _MaskedBar(
+                              label: l10n.transferFromAnalytics(otherAccName),
+                              amount: AmountFormatter.formatWithCurrency(entry.value, currency),
+                              barColor: otherAccColor,
+                              fillFactor: cardMax > 0 ? (entry.value / cardMax).clamp(0.0, 1.0) : 0.0,
+                              icon: otherAccIcon,
+                            ),
                           ),
                         );
-                      },
-                      borderRadius: BorderRadius.circular(10),
-                      child: _MaskedBar(
-                        label: l10n.expenses,
-                        amount: AmountFormatter.formatWithCurrency(
-                            item.totalExpense, currency),
-                        barColor: AppColors.expenseColor,
-                        fillFactor: maxVal > 0
-                            ? (item.totalExpense / maxVal).clamp(0.0, 1.0)
-                            : 0.0,
-                        icon: Icons.arrow_upward,
+                      }),
+
+                      const SizedBox(height: 12),
+
+                      // ── OUTFLOWS ──
+                      Row(
+                        children: [
+                          Icon(Symbols.arrow_upward, color: AppColors.expenseColor, size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${l10n.outflow}: ${AmountFormatter.formatWithCurrency(item.totalOutflow, currency)}',
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: AppColors.expenseColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                  if (item.totalIncome > 0) ...[
-                    const SizedBox(height: 6),
-                    InkWell(
-                      onTap: () {
-                        final dateRange =
-                            ref.read(selectedDateRangeProvider);
-                        ref
-                            .read(transactionsPaginatedProvider.notifier)
-                            .applyFilters(TransactionFilters(
-                              type: 'INCOME',
-                              accountUuids: [acc.uuid],
-                              startDate: dateRange.startDate,
-                              endDate: dateRange.endDate,
-                            ));
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const TransactionsListScreen(),
+                      const SizedBox(height: 8),
+
+                      // Direct Expense Bar
+                      if (item.totalExpense > 0) ...[
+                        InkWell(
+                          onTap: () {
+                            final dateRange = ref.read(selectedDateRangeProvider);
+                            ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                              TransactionFilters(
+                                type: 'EXPENSE',
+                                accountUuids: [acc.uuid],
+                                startDate: dateRange.startDate,
+                                endDate: dateRange.endDate,
+                              ),
+                            );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const TransactionsListScreen()),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(10),
+                          child: _MaskedBar(
+                            label: l10n.expenses,
+                            amount: AmountFormatter.formatWithCurrency(item.totalExpense, currency),
+                            barColor: AppColors.expenseColor,
+                            fillFactor: cardMax > 0 ? (item.totalExpense / cardMax).clamp(0.0, 1.0) : 0.0,
+                            icon: Symbols.credit_card,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                      ],
+
+                      // Transfers Out breakdown
+                      ...item.transfersOutBreakdown.entries.map((entry) {
+                        final otherAccAwb = accountMap[entry.key];
+                        final otherAccColor = otherAccAwb != null ? _accountColor(otherAccAwb, theme) : AppColors.expenseColor;
+                        final otherAccIcon = otherAccAwb != null ? _accountIcon(otherAccAwb) : Symbols.account_balance_wallet;
+                        final otherAccName = otherAccAwb?.account.name ?? l10n.unknownAccount;
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: InkWell(
+                            onTap: otherAccAwb != null
+                                ? () => Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => AccountDetailScreen(accountUuid: otherAccAwb.account.uuid),
+                                      ),
+                                    )
+                                : null,
+                            borderRadius: BorderRadius.circular(10),
+                            child: _MaskedBar(
+                              label: l10n.transferToAnalytics(otherAccName),
+                              amount: AmountFormatter.formatWithCurrency(entry.value, currency),
+                              barColor: otherAccColor,
+                              fillFactor: cardMax > 0 ? (entry.value / cardMax).clamp(0.0, 1.0) : 0.0,
+                              icon: otherAccIcon,
+                            ),
                           ),
                         );
-                      },
-                      borderRadius: BorderRadius.circular(10),
-                      child: _MaskedBar(
-                        label: l10n.income,
-                        amount: AmountFormatter.formatWithCurrency(
-                            item.totalIncome, currency),
-                        barColor: AppColors.incomeColor,
-                        fillFactor: maxVal > 0
-                            ? (item.totalIncome / maxVal).clamp(0.0, 1.0)
-                            : 0.0,
-                        icon: Icons.arrow_downward,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+                      }),
+                    ],
+                  ),
+                );
+              }).toList(),
             );
-          }).toList(),
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => _emptyState(context, Symbols.error, e.toString()),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -815,318 +1020,6 @@ class BalanceDistributionChart extends ConsumerWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 5. Transfer Flow
-// ─────────────────────────────────────────────────────────────────────────────
-
-class TransferFlowChart extends ConsumerWidget {
-  const TransferFlowChart();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final flowAsync = ref.watch(transferFlowProvider);
-    final accountsAsync = ref.watch(accountsWithBalanceProvider);
-    final currencyAsync = ref.watch(currentCurrencyProvider);
-    final currency = currencyAsync.value;
-
-    if (currency == null) {
-      return const SizedBox.shrink();
-    }
-
-    final symbol = currency.symbol;
-    final decimals = currency.decimalPlaces;
-    final l10n = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-
-    return flowAsync.when(
-      data: (flowItems) {
-        if (flowItems.isEmpty) {
-          return _emptyState(
-              context, Symbols.swap_horiz, l10n.noTransferActivity);
-        }
-
-        return accountsAsync.when(
-          data: (accounts) {
-            final accountMap = {for (final a in accounts) a.account.uuid: a};
-
-            // Per-account: inflows from each source, outflows to each dest
-            // inflowsBy[accountUuid][sourceUuid] = amount
-            // outflowsBy[accountUuid][destUuid]  = amount
-            final Map<String, Map<String, double>> inflowsBy = {};
-            final Map<String, Map<String, double>> outflowsBy = {};
-
-            for (final item in flowItems) {
-              inflowsBy
-                  .putIfAbsent(item.toAccountUuid, () => {})
-                  .update(item.fromAccountUuid,
-                      (v) => v + item.totalAmount,
-                      ifAbsent: () => item.totalAmount);
-              outflowsBy
-                  .putIfAbsent(item.fromAccountUuid, () => {})
-                  .update(item.toAccountUuid,
-                      (v) => v + item.totalAmount,
-                      ifAbsent: () => item.totalAmount);
-            }
-
-            final allUuids = <String>{
-              ...inflowsBy.keys,
-              ...outflowsBy.keys,
-            };
-
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: allUuids.map((uuid) {
-                final awb = accountMap[uuid];
-                final color = awb != null
-                    ? _accountColor(awb, theme)
-                    : theme.colorScheme.primary;
-                final icon = awb != null
-                    ? _accountIcon(awb)
-                    : Symbols.account_balance_wallet;
-
-                final myInflows = inflowsBy[uuid] ?? {};
-                final myOutflows = outflowsBy[uuid] ?? {};
-
-                final totalIn =
-                    myInflows.values.fold(0.0, (s, v) => s + v);
-                final totalOut =
-                    myOutflows.values.fold(0.0, (s, v) => s + v);
-                final net = totalIn - totalOut;
-                final netColor = net >= 0
-                    ? AppColors.incomeColor
-                    : AppColors.expenseColor;
-
-                // Max for fill factors within this card
-                final cardMax = [
-                  ...myInflows.values,
-                  ...myOutflows.values,
-                ].fold(0.0, (m, v) => v > m ? v : m);
-
-                // Sorted inflow entries (highest first)
-                final sortedInflows = myInflows.entries.toList()
-                  ..sort((a, b) => b.value.compareTo(a.value));
-
-                // Sorted outflow entries (highest first)
-                final sortedOutflows = myOutflows.entries.toList()
-                  ..sort((a, b) => b.value.compareTo(a.value));
-
-                Widget subLabel(String text, IconData ico, Color c) =>
-                    Padding(
-                      padding: const EdgeInsets.only(top: 14, bottom: 8),
-                      child: Row(
-                        children: [
-                          Icon(ico, size: 12, color: c),
-                          const SizedBox(width: 5),
-                          Text(
-                            text,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: c,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.4,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Divider(
-                              color: c.withValues(alpha: 0.3),
-                              thickness: 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: theme.cardColor,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: color.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // ── Account header ──────────────────────────────────
-                      InkWell(
-                        onTap: awb != null
-                            ? () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => AccountDetailScreen(
-                                        accountUuid: awb.account.uuid),
-                                  ),
-                                )
-                            : null,
-                        borderRadius: BorderRadius.circular(8),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: color.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(icon, size: 15, color: color),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                awb?.account.name ?? uuid,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w600),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (awb != null)
-                              Icon(Icons.chevron_right,
-                                  size: 16, color: theme.disabledColor),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-
-                      // ── Inflow / Outflow / Net totals ───────────────────
-                      Row(
-                        children: [
-                          if (totalIn > 0)
-                            Expanded(
-                              child: _FlowStat(
-                                icon: Symbols.arrow_downward,
-                                label: l10n.inflow,
-                                amount: AmountFormatter.formatWithCurrency(
-                                    totalIn, currency),
-                                color: AppColors.incomeColor,
-                                theme: theme,
-                              ),
-                            ),
-                          if (totalOut > 0)
-                            Expanded(
-                              child: _FlowStat(
-                                icon: Symbols.arrow_upward,
-                                label: l10n.outflow,
-                                amount: AmountFormatter.formatWithCurrency(
-                                    totalOut, currency),
-                                color: AppColors.expenseColor,
-                                theme: theme,
-                              ),
-                            ),
-                          Expanded(
-                            child: _FlowStat(
-                              icon: net >= 0
-                                  ? Symbols.trending_up
-                                  : Symbols.trending_down,
-                              label: l10n.netFlow,
-                              amount: AmountFormatter.formatWithCurrency(
-                                  net.abs(), currency),
-                              color: netColor,
-                              theme: theme,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      // ── Inflow bars (reversed) ──────────────────────────
-                      if (sortedInflows.isNotEmpty) ...[
-                        subLabel(l10n.inflow, Symbols.arrow_downward,
-                            AppColors.incomeColor),
-                        ...sortedInflows.map((e) {
-                          final srcAwb = accountMap[e.key];
-                          final srcColor = srcAwb != null
-                              ? _accountColor(srcAwb, theme)
-                              : AppColors.incomeColor;
-                          final srcIcon = srcAwb != null
-                              ? _accountIcon(srcAwb)
-                              : Symbols.account_balance_wallet;
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: InkWell(
-                              onTap: srcAwb != null
-                                  ? () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => AccountDetailScreen(
-                                              accountUuid:
-                                                  srcAwb.account.uuid),
-                                        ),
-                                      )
-                                  : null,
-                              borderRadius: BorderRadius.circular(10),
-                              child: _MaskedBar(
-                                label: srcAwb?.account.name ?? e.key,
-                                amount: AmountFormatter.formatWithCurrency(
-                                    e.value, currency),
-                                barColor: srcColor,
-                                fillFactor: cardMax > 0
-                                    ? (e.value / cardMax).clamp(0.0, 1.0)
-                                    : 0,
-                                icon: srcIcon,
-                              ),
-                            ),
-                          );
-                        }),
-                      ],
-
-                      // ── Outflow bars (normal) ───────────────────────────
-                      if (sortedOutflows.isNotEmpty) ...[
-                        subLabel(l10n.outflow, Symbols.arrow_upward,
-                            AppColors.expenseColor),
-                        ...sortedOutflows.map((e) {
-                          final dstAwb = accountMap[e.key];
-                          final dstColor = dstAwb != null
-                              ? _accountColor(dstAwb, theme)
-                              : AppColors.expenseColor;
-                          final dstIcon = dstAwb != null
-                              ? _accountIcon(dstAwb)
-                              : Symbols.account_balance_wallet;
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 6),
-                            child: InkWell(
-                              onTap: dstAwb != null
-                                  ? () => Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => AccountDetailScreen(
-                                              accountUuid:
-                                                  dstAwb.account.uuid),
-                                        ),
-                                      )
-                                  : null,
-                              borderRadius: BorderRadius.circular(10),
-                              child: _MaskedBar(
-                                label: dstAwb?.account.name ?? e.key,
-                                amount: AmountFormatter.formatWithCurrency(
-                                    e.value, currency),
-                                barColor: dstColor,
-                                fillFactor: cardMax > 0
-                                    ? (e.value / cardMax).clamp(0.0, 1.0)
-                                    : 0,
-                                icon: dstIcon,
-                              ),
-                            ),
-                          );
-                        }),
-                      ],
-                    ],
-                  ),
-                );
-              }).toList(),
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => _emptyState(context, Symbols.error, e.toString()),
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => _emptyState(context, Symbols.error, e.toString()),
-    );
-  }
-}
 
 class _FlowStat extends StatelessWidget {
   final IconData icon;

@@ -1599,9 +1599,23 @@
   "totalAssets": "कुल परिसंपत्तियां",
   "totalLiabilities": "कुल देनदारियां",
   "balanceDistribution": "शेष वितरण",
-  "spendingByAccount": "खाते के अनुसार खर्च",
-  "transferFlow": "स्थानांतरण प्रवाह",
+  "accountFlowSummary": "खाता नकद प्रवाह",
   "creditUtilisation": "क्रेडिट उपयोग",
+  "openingBalanceLabel": "प्रारंभिक",
+  "closingBalanceLabel": "अंतिम",
+  "transferFromAnalytics": "{account} से",
+  "@transferFromAnalytics": {
+    "placeholders": {
+      "account": { "type": "String" }
+    }
+  },
+  "transferToAnalytics": "{account} को",
+  "@transferToAnalytics": {
+    "placeholders": {
+      "account": { "type": "String" }
+    }
+  },
+  "unknownAccount": "अन्य खाता",
   "noAccountActivity": "इस अवधि में कोई खाता गतिविधि नहीं",
   "noTransferActivity": "इस अवधि में कोई स्थानांतरण नहीं",
   "creditUsedOf": "{limit} में से {used} उपयोग",

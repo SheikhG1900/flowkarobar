@@ -4133,13 +4133,29 @@ class AppLocalizationsUr extends AppLocalizations {
   String get balanceDistribution => 'بیلنس تقسیم';
 
   @override
-  String get spendingByAccount => 'اکاؤنٹ کے مطابق خرچ';
-
-  @override
-  String get transferFlow => 'ٹرانسفر بہاؤ';
+  String get accountFlowSummary => 'اکاؤنٹ کیش فلو';
 
   @override
   String get creditUtilisation => 'کریڈٹ استعمال';
+
+  @override
+  String get openingBalanceLabel => 'ابتدائی';
+
+  @override
+  String get closingBalanceLabel => 'آخری';
+
+  @override
+  String transferFromAnalytics(String account) {
+    return '$account سے';
+  }
+
+  @override
+  String transferToAnalytics(String account) {
+    return '$account کو';
+  }
+
+  @override
+  String get unknownAccount => 'دوسرا اکاؤنٹ';
 
   @override
   String get noAccountActivity => 'اس مدت میں کوئی اکاؤنٹ سرگرمی نہیں';
