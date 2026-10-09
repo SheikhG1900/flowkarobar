@@ -621,7 +621,10 @@ class RecentSearch {
 
     if (categoryUuids != null && categoryUuids!.isNotEmpty) {
       final names = categoryUuids!
-          .map((uuid) => categories.firstWhereOrNull((c) => c.uuid == uuid)?.name)
+          .map((uuid) {
+            if (uuid == 'uncategorized') return 'Uncategorized';
+            return categories.firstWhereOrNull((c) => c.uuid == uuid)?.name;
+          })
           .whereNotNull()
           .join(', ');
       if (names.isNotEmpty) {

@@ -55,6 +55,48 @@ class TransactionService {
     );
   }
 
+  Future<void> updateTransactionCategory(String uuid, String? categoryUuid) async {
+    await transactionsRepository.updateTransactionWithCompanion(
+      uuid,
+      TransactionsCompanion(
+        categoryUuid: drift.Value(categoryUuid),
+      ),
+    );
+    if (categoryUuid != null) {
+      await categoriesRepository.incrementUsageCount(categoryUuid);
+    }
+  }
+
+  Future<void> updateTransactionDate(String uuid, DateTime date) async {
+    // If there is a linked receivable or payable, their date should match the transaction date.
+    final tx = await transactionsRepository.getTransactionWithDetailsByUuid(uuid);
+    await database.transaction(() async {
+      await transactionsRepository.updateTransactionWithCompanion(
+        uuid,
+        TransactionsCompanion(
+          date: drift.Value(date),
+          processedDate: tx?.transaction.processedDate != null ? drift.Value(date) : const drift.Value.absent(),
+        ),
+      );
+      if (tx?.transaction.linkedPayableUuid != null) {
+        await payablesRepository.updatePayableWithCompanion(
+          tx!.transaction.linkedPayableUuid!,
+          PayablesCompanion(
+            date: drift.Value(date),
+          ),
+        );
+      }
+      if (tx?.transaction.linkedReceivableUuid != null) {
+        await receivablesRepository.updateReceivableWithCompanion(
+          tx!.transaction.linkedReceivableUuid!,
+          ReceivablesCompanion(
+            date: drift.Value(date),
+          ),
+        );
+      }
+    });
+  }
+
   Future<void> updateTransactionDescription(String uuid, String? description) async {
     await transactionsRepository.updateTransactionWithCompanion(
       uuid,

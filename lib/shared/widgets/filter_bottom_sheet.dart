@@ -611,12 +611,49 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   Widget _buildCategorySelector() {
     final categoriesAsync = ref.watch(categoriesListProvider);
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
     return categoriesAsync.when(
-      data: (categories) => Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        alignment: WrapAlignment.start,
-        children: categories.map((cat) {
+      data: (categories) {
+        final isUncategorizedSelected = _selectedCategoryUuids.contains('uncategorized');
+        final uncategorizedColor = theme.colorScheme.primary;
+
+        final uncategorizedChip = FilterChip(
+          avatar: Icon(
+            Symbols.help_outline,
+            size: 16,
+            color: isUncategorizedSelected ? Colors.white : theme.colorScheme.onSurfaceVariant,
+          ),
+          label: Text(
+            l10n.uncategorized,
+            style: TextStyle(
+              color: isUncategorizedSelected ? Colors.white : theme.colorScheme.onSurface,
+              fontSize: 12,
+            ),
+          ),
+          selected: isUncategorizedSelected,
+          selectedColor: uncategorizedColor,
+          checkmarkColor: Colors.white,
+          backgroundColor: theme.colorScheme.surface,
+          side: BorderSide(
+            color: isUncategorizedSelected ? Colors.transparent : theme.dividerColor,
+            width: 1.5,
+          ),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16)),
+          onSelected: (selected) {
+            setState(() {
+              if (selected) {
+                if (!_selectedCategoryUuids.contains('uncategorized')) {
+                  _selectedCategoryUuids.add('uncategorized');
+                }
+              } else {
+                _selectedCategoryUuids.remove('uncategorized');
+              }
+            });
+          },
+        );
+
+        final List<Widget> chips = categories.map((cat) {
           final isSelected = _selectedCategoryUuids.contains(cat.uuid);
           Color categoryColor;
           if (cat.color != null) {
@@ -663,8 +700,18 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
               });
             },
           );
-        }).toList(),
-      ),
+        }).toList();
+
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.start,
+          children: [
+            uncategorizedChip,
+            ...chips,
+          ],
+        );
+      },
       loading: () => const CircularProgressIndicator(),
       error: (_, __) => const SizedBox.shrink(),
     );

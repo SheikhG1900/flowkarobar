@@ -893,8 +893,20 @@ class TransactionsRepository {
       query.where(_database.transactions.type.equals(filters.type!));
     }
     if (filters.categoryUuids != null && filters.categoryUuids!.isNotEmpty) {
-      query.where(
-          _database.transactions.categoryUuid.isIn(filters.categoryUuids!));
+      final containsUncategorized = filters.categoryUuids!.contains('uncategorized');
+      final validCategoryUuids = filters.categoryUuids!.where((id) => id != 'uncategorized').toList();
+
+      if (containsUncategorized && validCategoryUuids.isNotEmpty) {
+        query.where(
+            _database.transactions.categoryUuid.isIn(validCategoryUuids) |
+            _database.transactions.categoryUuid.isNull()
+        );
+      } else if (containsUncategorized) {
+        query.where(_database.transactions.categoryUuid.isNull());
+      } else {
+        query.where(
+            _database.transactions.categoryUuid.isIn(validCategoryUuids));
+      }
     }
     if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
       query.where(
@@ -1060,8 +1072,20 @@ class TransactionsRepository {
       query.where(_database.transactions.type.equals(filters.type!));
     }
     if (filters.categoryUuids != null && filters.categoryUuids!.isNotEmpty) {
-      query.where(
-          _database.transactions.categoryUuid.isIn(filters.categoryUuids!));
+      final containsUncategorized = filters.categoryUuids!.contains('uncategorized');
+      final validCategoryUuids = filters.categoryUuids!.where((id) => id != 'uncategorized').toList();
+
+      if (containsUncategorized && validCategoryUuids.isNotEmpty) {
+        query.where(
+            _database.transactions.categoryUuid.isIn(validCategoryUuids) |
+            _database.transactions.categoryUuid.isNull()
+        );
+      } else if (containsUncategorized) {
+        query.where(_database.transactions.categoryUuid.isNull());
+      } else {
+        query.where(
+            _database.transactions.categoryUuid.isIn(validCategoryUuids));
+      }
     }
     if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
       query.where(
