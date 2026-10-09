@@ -2451,24 +2451,26 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Column(
-                    key: const ValueKey('tx-details-category-info'),
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
+                    key: const ValueKey('tx-details-category-info-row'),
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        key: const ValueKey('tx-details-category-label'),
-                        l10n.category,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: Text(
+                      Expanded(
+                        child: Column(
+                          key: const ValueKey('tx-details-category-info-col'),
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              key: const ValueKey('tx-details-category-label'),
+                              l10n.category,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
                               key: const ValueKey('tx-details-category-name'),
                               LocalizationHelper.getLocalizedCategoryName(
                                   context, category.name),
@@ -2479,43 +2481,43 @@ class TransactionDetailsDialog extends ConsumerWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          budgetSnapshotAsync.when(
-                            data: (snapshot) {
-                              final periodNetText = AmountFormatter.formatWithCurrency(
-                                snapshot.netAmount,
-                                ref.read(currentCurrencyProvider).value,
-                              );
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    l10n.periodNet,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                  Text(
-                                    periodNetText,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: isExpense ? Colors.red[700] : Colors.green[700],
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                            loading: () => const SizedBox(
-                              width: 10,
-                              height: 10,
-                              child: CircularProgressIndicator(strokeWidth: 1.5),
-                            ),
-                            error: (_, __) => const SizedBox.shrink(),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      budgetSnapshotAsync.when(
+                        data: (snapshot) {
+                          final periodNetText = AmountFormatter.formatWithCurrency(
+                            snapshot.netAmount,
+                            ref.read(currentCurrencyProvider).value,
+                          );
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                l10n.periodNet,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontSize: 10,
+                                ),
+                              ),
+                              Text(
+                                periodNetText,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: isExpense ? Colors.red[700] : Colors.green[700],
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                        loading: () => const SizedBox(
+                          width: 10,
+                          height: 10,
+                          child: CircularProgressIndicator(strokeWidth: 1.5),
+                        ),
+                        error: (_, __) => const SizedBox.shrink(),
                       ),
                     ],
                   ),
@@ -2625,24 +2627,26 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: Column(
-                    key: const ValueKey('tx-details-account-info'),
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
+                    key: const ValueKey('tx-details-account-info-row'),
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        key: const ValueKey('tx-details-account-label'),
-                        l10n.account,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Expanded(
-                            child: Text(
+                      Expanded(
+                        child: Column(
+                          key: const ValueKey('tx-details-account-info-col'),
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              key: const ValueKey('tx-details-account-label'),
+                              l10n.account,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
                               key: const ValueKey('tx-details-account-name'),
                               account.name,
                               style: theme.textTheme.titleMedium?.copyWith(
@@ -2652,44 +2656,44 @@ class TransactionDetailsDialog extends ConsumerWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          accountWithBalanceAsync.when(
-                            data: (awb) {
-                              if (awb == null) return const SizedBox.shrink();
-                              final balanceText = AmountFormatter.formatWithCurrency(
-                                awb.balance,
-                                ref.read(currentCurrencyProvider).value,
-                              );
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    l10n.balanceLabel,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.onSurfaceVariant,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                  Text(
-                                    balanceText,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: awb.balance >= 0 ? Colors.green[700] : Colors.red[700],
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                            loading: () => const SizedBox(
-                              width: 10,
-                              height: 10,
-                              child: CircularProgressIndicator(strokeWidth: 1.5),
-                            ),
-                            error: (_, __) => const SizedBox.shrink(),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      accountWithBalanceAsync.when(
+                        data: (awb) {
+                          if (awb == null) return const SizedBox.shrink();
+                          final balanceText = AmountFormatter.formatWithCurrency(
+                            awb.balance,
+                            ref.read(currentCurrencyProvider).value,
+                          );
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                l10n.balanceLabel,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                  fontSize: 10,
+                                ),
+                              ),
+                              Text(
+                                balanceText,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: awb.balance >= 0 ? Colors.green[700] : Colors.red[700],
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                        loading: () => const SizedBox(
+                          width: 10,
+                          height: 10,
+                          child: CircularProgressIndicator(strokeWidth: 1.5),
+                        ),
+                        error: (_, __) => const SizedBox.shrink(),
                       ),
                     ],
                   ),
@@ -3263,15 +3267,16 @@ class TransactionDetailsDialog extends ConsumerWidget {
                           ),
                         );
                       },
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: Text(
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
                                   key: const ValueKey('tx-details-linked-payable-contact-name'),
                                   contact.name,
                                   style: theme.textTheme.titleSmall?.copyWith(
@@ -3281,54 +3286,54 @@ class TransactionDetailsDialog extends ConsumerWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              ref.watch(contactStatisticsProvider(contact.uuid)).when(
-                                data: (stats) {
-                                  final formattedBalance = AmountFormatter.formatWithCurrency(
-                                    stats.netBalance.abs(),
-                                    ref.read(currentCurrencyProvider).value,
-                                  );
-                                  final balanceLabel = stats.netBalance >= 0 ? l10n.netReceivable : l10n.netPayable;
-                                  final balanceColor = stats.netBalance >= 0 ? AppColors.receivableColor : AppColors.payableColor;
-                                  return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        balanceLabel,
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: theme.colorScheme.onSurfaceVariant,
-                                          fontSize: 10,
-                                        ),
-                                      ),
-                                      Text(
-                                        formattedBalance,
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: balanceColor,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                                loading: () => const SizedBox.shrink(),
-                                error: (_, __) => const SizedBox.shrink(),
-                              ),
-                            ],
-                          ),
-                          if (contact.phone != null) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              contact.phone!,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                                if (contact.phone != null) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    contact.phone!,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ],
                             ),
-                          ],
+                          ),
+                          const SizedBox(width: 8),
+                          ref.watch(contactStatisticsProvider(contact.uuid)).when(
+                            data: (stats) {
+                              final formattedBalance = AmountFormatter.formatWithCurrency(
+                                stats.netBalance.abs(),
+                                ref.read(currentCurrencyProvider).value,
+                              );
+                              final balanceLabel = stats.netBalance >= 0 ? l10n.netReceivable : l10n.netPayable;
+                              final balanceColor = stats.netBalance >= 0 ? AppColors.receivableColor : AppColors.payableColor;
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    balanceLabel,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                  Text(
+                                    formattedBalance,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: balanceColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
+                          ),
                         ],
                       ),
                     ),
@@ -3584,15 +3589,16 @@ class TransactionDetailsDialog extends ConsumerWidget {
                           ),
                         );
                       },
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              Expanded(
-                                child: Text(
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
                                   key: const ValueKey('tx-details-linked-receivable-contact-name'),
                                   contact.name,
                                   style: theme.textTheme.titleSmall?.copyWith(
@@ -3602,54 +3608,54 @@ class TransactionDetailsDialog extends ConsumerWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              ref.watch(contactStatisticsProvider(contact.uuid)).when(
-                                data: (stats) {
-                                  final formattedBalance = AmountFormatter.formatWithCurrency(
-                                    stats.netBalance.abs(),
-                                    ref.read(currentCurrencyProvider).value,
-                                  );
-                                  final balanceLabel = stats.netBalance >= 0 ? l10n.netReceivable : l10n.netPayable;
-                                  final balanceColor = stats.netBalance >= 0 ? AppColors.receivableColor : AppColors.payableColor;
-                                  return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.end,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        balanceLabel,
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: theme.colorScheme.onSurfaceVariant,
-                                          fontSize: 10,
-                                        ),
-                                      ),
-                                      Text(
-                                        formattedBalance,
-                                        style: theme.textTheme.bodySmall?.copyWith(
-                                          color: balanceColor,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                                loading: () => const SizedBox.shrink(),
-                                error: (_, __) => const SizedBox.shrink(),
-                              ),
-                            ],
-                          ),
-                          if (contact.phone != null) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              contact.phone!,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                                if (contact.phone != null) ...[
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    contact.phone!,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ],
                             ),
-                          ],
+                          ),
+                          const SizedBox(width: 8),
+                          ref.watch(contactStatisticsProvider(contact.uuid)).when(
+                            data: (stats) {
+                              final formattedBalance = AmountFormatter.formatWithCurrency(
+                                stats.netBalance.abs(),
+                                ref.read(currentCurrencyProvider).value,
+                              );
+                              final balanceLabel = stats.netBalance >= 0 ? l10n.netReceivable : l10n.netPayable;
+                              final balanceColor = stats.netBalance >= 0 ? AppColors.receivableColor : AppColors.payableColor;
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    balanceLabel,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                  Text(
+                                    formattedBalance,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: balanceColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
+                          ),
                         ],
                       ),
                     ),
