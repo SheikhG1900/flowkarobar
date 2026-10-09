@@ -81,6 +81,11 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
     try {
       final exportService = ref.read(exportServiceProvider);
       final currency = ref.read(currentCurrencyProvider).value;
+      final hiddenSections = ref.read(analyticsSectionsProvider);
+      final visibleSections = AnalyticsSection.values
+          .where((s) => !hiddenSections.contains(s))
+          .map((s) => s.name)
+          .toSet();
 
       // Generate PDF bytes once
       final pdfBytes = await exportService.exportAnalyticsToPDF(
@@ -90,6 +95,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         decimalPlaces: decimalPlaces,
         l10n: l10n,
         currency: currency,
+        visibleSections: visibleSections,
       );
 
       // Save PDF to temporary file for save/share actions

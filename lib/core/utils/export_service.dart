@@ -1788,11 +1788,17 @@ class ExportService {
       {AppLocalizations? l10n}) {
     // Try to parse icon codePoint and render with Material Icons font
     if (font != null && iconCodePoint != null && iconCodePoint.isNotEmpty) {
-      final codePoint = int.tryParse(iconCodePoint);
+      int? codePoint = int.tryParse(iconCodePoint);
+      if (codePoint == null) {
+        final iconData = IconHelper.getIconData(iconCodePoint);
+        if (iconData != null) {
+          codePoint = iconData.codePoint;
+        }
+      }
       if (codePoint != null) {
-        // Material Icons use private Unicode range 0xe000-0xefff
+        // Material Icons use private Unicode range 0xe000 and above
         // Validate codePoint is in valid range
-        if (codePoint >= 0xe000 && codePoint <= 0xefff) {
+        if (codePoint >= 0xe000) {
           // Use pw.Icon widget with pw.IconData wrapped in circular container
           // to match avatar appearance (12x12 with colored background)
           return pw.SizedBox(
@@ -1893,15 +1899,25 @@ class ExportService {
     );
   }
 
-  pw.Widget _buildTableHeaderCell(String text, {AppLocalizations? l10n}) {
+  pw.Widget _buildTableHeaderCell(String text, {String? value, PdfColor? color, AppLocalizations? l10n}) {
     final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
+    
+    final children = [
+      _buildText(text,
+          style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+          align: isRtl ? pw.TextAlign.right : pw.TextAlign.left),
+      if (value != null)
+        _buildText(value,
+            style: pw.TextStyle(
+                fontSize: 10, fontWeight: pw.FontWeight.bold, color: color),
+            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left),
+    ];
+
     return pw.Padding(
       padding: const pw.EdgeInsets.all(4),
-      child: pw.Container(
-        alignment: isRtl ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
-        child: _buildText(text,
-            style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: isRtl ? children.reversed.toList() : children,
       ),
     );
   }
@@ -3067,7 +3083,7 @@ class ExportService {
       pw.Widget buildIconWidget(IconData icon, pw.Font? font) {
         if (font != null) {
           final codePoint = icon.codePoint;
-          if (codePoint >= 0xe000 && codePoint <= 0xefff) {
+          if (codePoint >= 0xe000) {
             return pw.Icon(
               pw.IconData(codePoint),
               font: font,
@@ -3241,6 +3257,7 @@ class ExportService {
     int decimalPlaces = 2,
     AppLocalizations? l10n,
     AppCurrency? currency,
+    Set<String>? visibleSections,
   }) async {
     try {
       // Load Material Icons and Unicode fonts
@@ -3260,6 +3277,7 @@ class ExportService {
         englishFont: englishFont,
         l10n: l10n,
         currencyObj: currency,
+        visibleSections: visibleSections,
       );
       return await pdf.save();
     } catch (e) {
@@ -3279,6 +3297,7 @@ class ExportService {
     pw.Font? englishFont,
     AppLocalizations? l10n,
     AppCurrency? currencyObj,
+    Set<String>? visibleSections,
   }) async {
     String? logoSvgString;
     try {
@@ -3311,6 +3330,42 @@ class ExportService {
 
     final accountsRepo = AccountsRepository(_database);
     final accountFlowSummaries = await accountsRepo.getAccountFlowSummaries(startDate, endDate);
+    final accountsWithBalance = await accountsRepo.getAllAccountsWithBalance();
+
+    double totalAssets = 0;
+    double totalLiabilities = 0;
+    for (final awb in accountsWithBalance) {
+      if (awb.type.isCreditCard) {
+        if (awb.balance < 0) totalLiabilities += awb.balance.abs();
+      } else {
+        if (awb.balance > 0) {
+          totalAssets += awb.balance;
+        } else {
+          totalLiabilities += awb.balance.abs();
+        }
+      }
+    }
+    final netWorth = totalAssets - totalLiabilities;
+
+    final positiveAccounts = accountsWithBalance.where((a) => a.balance > 0).toList();
+    final totalPositiveBalance = positiveAccounts.fold<double>(0.0, (s, a) => s + a.balance);
+
+    final creditCards = accountsWithBalance
+        .where((a) => a.type.isCreditCard && (a.account.creditLimit ?? 0) > 0)
+        .toList();
+    double totalCreditLimit = 0;
+    double totalOutstandingCredit = 0;
+    for (final c in creditCards) {
+      totalCreditLimit += c.account.creditLimit ?? 0;
+      if (c.balance < 0) totalOutstandingCredit += c.balance.abs();
+    }
+    final overallCreditPct = totalCreditLimit > 0
+        ? (totalOutstandingCredit / totalCreditLimit).clamp(0.0, 1.0)
+        : 0.0;
+
+    bool visible(String sectionName) {
+      return visibleSections == null || visibleSections.contains(sectionName);
+    }
 
     final currency = currencySymbol ?? '₹';
     String fmt(num amount) {
@@ -3585,101 +3640,103 @@ class ExportService {
             pw.SizedBox(height: 20),
 
             // Financial Summary
-            _buildLocalizedHeader(l10n?.summary ?? 'Financial Summary',
-                level: 1, l10n: l10n),
-            pw.SizedBox(height: 10),
-            pw.Table(
-              border: pw.TableBorder.all(color: PdfColors.grey300),
-              children: [
-                _buildLocalizedTableRow(
-                  [
-                    _buildTableCell(
-                        '${l10n?.payable ?? 'Payable'}',
-                        fmt(financialSummary.totalPayable),
-                        ExportService.getPayablePdfColor(),
-                        l10n),
-                    _buildTableCell(
-                        '${l10n?.payable ?? 'Payable'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
-                        fmt(allTimeFinancialSummary.totalPayable),
-                        ExportService.getPayablePdfColor(),
-                        l10n),
-                  ],
-                  l10n: l10n,
-                ),
-                _buildLocalizedTableRow(
-                  [
-                    _buildTableCell(
-                        '${l10n?.receivable ?? 'Receivable'}',
-                        fmt(financialSummary.totalReceivable),
-                        ExportService.getReceivablePdfColor(),
-                        l10n),
-                    _buildTableCell(
-                        '${l10n?.receivable ?? 'Receivable'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
-                        fmt(allTimeFinancialSummary.totalReceivable),
-                        ExportService.getReceivablePdfColor(),
-                        l10n),
-                  ],
-                  l10n: l10n,
-                ),
-                _buildLocalizedTableRow(
-                  [
-                    _buildTableCell(
-                        '${l10n?.expense ?? 'Expenses'}',
-                        fmt(financialSummary.totalExpense),
-                        ExportService.getExpensePdfColor(),
-                        l10n),
-                    _buildTableCell(
-                        '${l10n?.expense ?? 'Expenses'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
-                        fmt(allTimeFinancialSummary.totalExpense),
-                        ExportService.getExpensePdfColor(),
-                        l10n),
-                  ],
-                  l10n: l10n,
-                ),
-                _buildLocalizedTableRow(
-                  [
-                    _buildTableCell(
-                        '${l10n?.income ?? 'Income'}',
-                        fmt(financialSummary.totalIncome),
-                        ExportService.getIncomePdfColor(),
-                        l10n),
-                    _buildTableCell(
-                        '${l10n?.income ?? 'Income'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
-                        fmt(allTimeFinancialSummary.totalIncome),
-                        ExportService.getIncomePdfColor(),
-                        l10n),
-                  ],
-                  l10n: l10n,
-                ),
-                _buildLocalizedTableRow(
-                  [
-                    _buildTableCell(
-                        '${l10n?.netBalance ?? 'Net Balance'}',
-                        fmt(financialSummary.netBalance),
-                        financialSummary.netBalance == 0
-                            ? PdfColors.black
-                            : financialSummary.netBalance >= 0
-                                ? ExportService.getIncomePdfColor()
-                                : ExportService.getExpensePdfColor(),
-                        l10n),
-                    _buildTableCell(
-                        '${l10n?.netBalance ?? 'Net Balance'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
-                        fmt(allTimeFinancialSummary.netBalance),
-                        allTimeFinancialSummary.netBalance == 0
-                            ? PdfColors.black
-                            : allTimeFinancialSummary.netBalance >= 0
-                                ? ExportService.getIncomePdfColor()
-                                : ExportService.getExpensePdfColor(),
-                        l10n),
-                  ],
-                  l10n: l10n,
-                ),
-              ],
-            ),
-            pw.SizedBox(height: 30),
+            if (visible('financialSummary')) ...[
+              _buildLocalizedHeader(l10n?.summary ?? 'Financial Summary',
+                  level: 1, l10n: l10n),
+              pw.SizedBox(height: 10),
+              pw.Table(
+                border: pw.TableBorder.all(color: PdfColors.grey300),
+                children: [
+                  _buildLocalizedTableRow(
+                    [
+                      _buildTableCell(
+                          '${l10n?.payable ?? 'Payable'}',
+                          fmt(financialSummary.totalPayable),
+                          ExportService.getPayablePdfColor(),
+                          l10n),
+                      _buildTableCell(
+                          '${l10n?.payable ?? 'Payable'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
+                          fmt(allTimeFinancialSummary.totalPayable),
+                          ExportService.getPayablePdfColor(),
+                          l10n),
+                    ],
+                    l10n: l10n,
+                  ),
+                  _buildLocalizedTableRow(
+                    [
+                      _buildTableCell(
+                          '${l10n?.receivable ?? 'Receivable'}',
+                          fmt(financialSummary.totalReceivable),
+                          ExportService.getReceivablePdfColor(),
+                          l10n),
+                      _buildTableCell(
+                          '${l10n?.receivable ?? 'Receivable'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
+                          fmt(allTimeFinancialSummary.totalReceivable),
+                          ExportService.getReceivablePdfColor(),
+                          l10n),
+                    ],
+                    l10n: l10n,
+                  ),
+                  _buildLocalizedTableRow(
+                    [
+                      _buildTableCell(
+                          '${l10n?.expense ?? 'Expenses'}',
+                          fmt(financialSummary.totalExpense),
+                          ExportService.getExpensePdfColor(),
+                          l10n),
+                      _buildTableCell(
+                          '${l10n?.expense ?? 'Expenses'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
+                          fmt(allTimeFinancialSummary.totalExpense),
+                          ExportService.getExpensePdfColor(),
+                          l10n),
+                    ],
+                    l10n: l10n,
+                  ),
+                  _buildLocalizedTableRow(
+                    [
+                      _buildTableCell(
+                          '${l10n?.income ?? 'Income'}',
+                          fmt(financialSummary.totalIncome),
+                          ExportService.getIncomePdfColor(),
+                          l10n),
+                      _buildTableCell(
+                          '${l10n?.income ?? 'Income'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
+                          fmt(allTimeFinancialSummary.totalIncome),
+                          ExportService.getIncomePdfColor(),
+                          l10n),
+                    ],
+                    l10n: l10n,
+                  ),
+                  _buildLocalizedTableRow(
+                    [
+                      _buildTableCell(
+                          '${l10n?.netBalance ?? 'Net Balance'}',
+                          fmt(financialSummary.netBalance),
+                          financialSummary.netBalance == 0
+                              ? PdfColors.black
+                              : financialSummary.netBalance >= 0
+                                  ? ExportService.getIncomePdfColor()
+                                  : ExportService.getExpensePdfColor(),
+                          l10n),
+                      _buildTableCell(
+                          '${l10n?.netBalance ?? 'Net Balance'} (${l10n?.allTime.replaceAll(':', '').trim() ?? 'All Time'})',
+                          fmt(allTimeFinancialSummary.netBalance),
+                          allTimeFinancialSummary.netBalance == 0
+                              ? PdfColors.black
+                              : allTimeFinancialSummary.netBalance >= 0
+                                  ? ExportService.getIncomePdfColor()
+                                  : ExportService.getExpensePdfColor(),
+                          l10n),
+                    ],
+                    l10n: l10n,
+                  ),
+                ],
+              ),
+              pw.SizedBox(height: 30),
+            ],
 
             // Contact Summaries
-            if (contactSummaries.isNotEmpty) ...[
+            if (visible('contactSummaries') && contactSummaries.isNotEmpty) ...[
               _buildLocalizedHeader(l10n?.contacts ?? 'Contact Summaries',
                   level: 1, l10n: l10n),
               pw.SizedBox(height: 10),
@@ -3845,7 +3902,7 @@ class ExportService {
             ],
 
             // Expenses by Category
-            if (expensesByCategory.isNotEmpty) ...[
+            if (visible('expensesByCategory') && expensesByCategory.isNotEmpty) ...[
               _buildLocalizedHeader(
                   l10n?.expensesByCategory ?? 'Expenses by Category',
                   level: 1,
@@ -3871,7 +3928,7 @@ class ExportService {
             ],
 
             // Income by Category
-            if (incomeByCategory.isNotEmpty) ...[
+            if (visible('incomeByCategory') && incomeByCategory.isNotEmpty) ...[
               _buildLocalizedHeader(
                   l10n?.incomeByCategory ?? 'Income by Category',
                   level: 1,
@@ -3896,8 +3953,175 @@ class ExportService {
               pw.SizedBox(height: 30),
             ],
 
+            // Net Worth
+            if (visible('netWorth') && accountsWithBalance.isNotEmpty) ...[
+              _buildLocalizedHeader(l10n?.netWorth ?? 'Net Worth', level: 1, l10n: l10n),
+              pw.SizedBox(height: 10),
+              pw.Container(
+                width: double.infinity,
+                padding: const pw.EdgeInsets.all(12),
+                decoration: pw.BoxDecoration(
+                  color: netWorth >= 0 ? const PdfColor(0.9, 0.96, 0.9) : const PdfColor(0.98, 0.9, 0.9),
+                  borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: isRtl ? pw.CrossAxisAlignment.end : pw.CrossAxisAlignment.start,
+                  children: [
+                    _buildText(
+                      l10n?.netWorth ?? 'Net Worth',
+                      style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+                    ),
+                    pw.SizedBox(height: 4),
+                    _buildText(
+                      fmt(netWorth),
+                      style: pw.TextStyle(
+                        fontSize: 16,
+                        fontWeight: pw.FontWeight.bold,
+                        color: netWorth >= 0 ? PdfColors.green800 : PdfColors.red800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              pw.SizedBox(height: 10),
+              pw.Table(
+                border: pw.TableBorder.all(color: PdfColors.grey300),
+                children: [
+                  _buildLocalizedTableRow([
+                    _buildTableCell(l10n?.totalAssets ?? 'Total Assets', fmt(totalAssets), PdfColors.green800, l10n),
+                    _buildTableCell(l10n?.totalLiabilities ?? 'Total Liabilities', fmt(totalLiabilities), PdfColors.red800, l10n),
+                  ], l10n: l10n),
+                ],
+              ),
+              pw.SizedBox(height: 30),
+            ],
+
+            // Balance Distribution
+            if (visible('balanceDistribution')) ...[
+              _buildLocalizedHeader(l10n?.balanceDistribution ?? 'Balance Distribution', level: 1, l10n: l10n),
+              pw.SizedBox(height: 10),
+              if (positiveAccounts.isNotEmpty) ...[
+                pw.Container(
+                  padding: const pw.EdgeInsets.all(8),
+                  decoration: pw.BoxDecoration(
+                    border: pw.Border.all(color: PdfColors.grey300),
+                    borderRadius: pw.BorderRadius.circular(4),
+                  ),
+                  child: pw.Column(
+                    crossAxisAlignment: isRtl ? pw.CrossAxisAlignment.end : pw.CrossAxisAlignment.start,
+                    children: [
+                      ...positiveAccounts.map((awb) {
+                        final pct = totalPositiveBalance > 0 ? (awb.balance / totalPositiveBalance) : 0.0;
+                        final accColor = awb.account.color != null ? hexToPdfColor(awb.account.color!) : PdfColors.cyan800;
+                        return pw.Padding(
+                          padding: const pw.EdgeInsets.only(bottom: 6),
+                          child: pw.Column(
+                            crossAxisAlignment: isRtl ? pw.CrossAxisAlignment.end : pw.CrossAxisAlignment.start,
+                            children: [
+                              pw.Row(
+                                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Row(
+                                    children: [
+                                      pw.SizedBox(
+                                        width: 12,
+                                        height: 12,
+                                        child: self._buildCategoryIcon(awb.account.icon, accColor, materialIconsFont, l10n: l10n),
+                                      ),
+                                      pw.SizedBox(width: 4),
+                                      _buildText(awb.account.name, style: const pw.TextStyle(fontSize: 8)),
+                                    ],
+                                  ),
+                                  _buildText('${(pct * 100).toStringAsFixed(1)}%', style: pw.TextStyle(fontSize: 8, color: accColor)),
+                                ],
+                              ),
+                              pw.SizedBox(height: 2),
+                              pw.Container(
+                                height: 8,
+                                decoration: pw.BoxDecoration(
+                                  color: PdfColors.grey200,
+                                  borderRadius: pw.BorderRadius.circular(4),
+                                ),
+                                child: pw.Stack(
+                                  alignment: isRtl ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
+                                  children: [
+                                    pw.Container(
+                                      width: 200.0 * pct,
+                                      height: 8,
+                                      decoration: pw.BoxDecoration(
+                                        color: accColor,
+                                        borderRadius: pw.BorderRadius.circular(4),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+                pw.SizedBox(height: 10),
+                pw.Table(
+                  border: pw.TableBorder.all(color: PdfColors.grey300),
+                  columnWidths: {
+                    0: const pw.FlexColumnWidth(3),
+                    1: const pw.FixedColumnWidth(80),
+                    2: const pw.FixedColumnWidth(100),
+                  },
+                  children: [
+                    _buildLocalizedTableRow(
+                      [
+                        _buildTableHeaderCell(l10n?.account ?? 'Account'),
+                        _buildTableHeaderCell(l10n?.percentage ?? 'Percentage'),
+                        _buildTableHeaderCell(l10n?.amount ?? 'Amount'),
+                      ],
+                      l10n: l10n,
+                      decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                    ),
+                    ...positiveAccounts.map((awb) {
+                      final pct = totalPositiveBalance > 0 ? (awb.balance / totalPositiveBalance) * 100 : 0.0;
+                      final accColor = awb.account.color != null ? hexToPdfColor(awb.account.color!) : PdfColors.cyan800;
+                      return _buildLocalizedTableRow(
+                        [
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(4),
+                            child: pw.Row(
+                              children: [
+                                pw.SizedBox(
+                                  width: 12,
+                                  height: 12,
+                                  child: self._buildCategoryIcon(awb.account.icon, accColor, materialIconsFont, l10n: l10n),
+                                ),
+                                pw.SizedBox(width: 4),
+                                _buildText(awb.account.name, style: const pw.TextStyle(fontSize: 9)),
+                              ],
+                            ),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(4),
+                            child: _buildText('${pct.toStringAsFixed(1)}%', style: pw.TextStyle(fontSize: 9, color: accColor)),
+                          ),
+                          pw.Padding(
+                            padding: const pw.EdgeInsets.all(4),
+                            child: _buildText(fmt(awb.balance), style: pw.TextStyle(fontSize: 9, color: accColor)),
+                          ),
+                        ],
+                        l10n: l10n,
+                      );
+                    }),
+                  ],
+                ),
+              ] else ...[
+                _buildText(l10n?.noAccountActivity ?? 'No account activity in this period', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+              ],
+              pw.SizedBox(height: 30),
+            ],
+
             // Monthly Trends
-            if (monthlyTrends.isNotEmpty) ...[
+            if (visible('incomeVsExpenseTrend') && monthlyTrends.isNotEmpty) ...[
               _buildLocalizedHeader(
                   l10n?.incomeVsExpenseTrend ??
                       'Monthly Trends (Last 6 Months)',
@@ -3985,7 +4209,7 @@ class ExportService {
             ],
 
             // Payable/Receivable Trends
-            if (payableReceivableTrends.isNotEmpty) ...[
+            if (visible('payablesVsReceivablesTrend') && payableReceivableTrends.isNotEmpty) ...[
               _buildLocalizedHeader(
                   l10n?.payableVsReceivableTrend ??
                       'Payable/Receivable Trends (Last 6 Months)',
@@ -4075,7 +4299,7 @@ class ExportService {
             ],
 
             // Top Contacts by Balance
-            if (topContacts.isNotEmpty) ...[
+            if (visible('topContacts') && topContacts.isNotEmpty) ...[
               _buildLocalizedHeader(l10n?.contacts ?? 'Top Contacts by Balance',
                   level: 1, l10n: l10n),
               pw.SizedBox(height: 10),
@@ -4203,85 +4427,88 @@ class ExportService {
             ],
 
             // Payment Status Distribution
-            _buildLocalizedHeader(
-                l10n?.paymentStatusDistribution ??
-                    'Payment Status Distribution',
-                level: 1,
-                l10n: l10n),
-            pw.SizedBox(height: 10),
-            pw.Table(
-              border: pw.TableBorder.all(color: PdfColors.grey300),
-              columnWidths: {
-                0: const pw.FlexColumnWidth(2),
-                1: const pw.FixedColumnWidth(120),
-              },
-              children: [
-                _buildLocalizedTableRow(
-                  [
-                    _buildTableHeaderCell(l10n?.status ?? 'Status'),
-                    _buildTableHeaderCell(l10n?.amount ?? 'Amount'),
-                  ],
-                  l10n: l10n,
-                  decoration: const pw.BoxDecoration(color: PdfColors.grey200),
-                ),
-                if (statusDistribution.pendingPayables > 0)
-                  _buildStatusRow(
-                      '${l10n?.payables ?? 'Payables'} - ${l10n?.pending ?? 'Pending'}',
-                      statusDistribution.pendingPayables,
-                      Colors.orange,
-                      currency,
-                      decimalPlaces,
-                      l10n: l10n,
-                      currencyObj: currencyObj),
-                if (statusDistribution.paidPayables > 0)
-                  _buildStatusRow(
-                      '${l10n?.payables ?? 'Payables'} - ${l10n?.statusPaid ?? 'Paid'}',
-                      statusDistribution.paidPayables,
-                      Colors.green,
-                      currency,
-                      decimalPlaces,
-                      l10n: l10n,
-                      currencyObj: currencyObj),
-                if (statusDistribution.cancelledPayables > 0)
-                  _buildStatusRow(
-                      '${l10n?.payables ?? 'Payables'} - ${l10n?.statusCancelled ?? 'Cancelled'}',
-                      statusDistribution.cancelledPayables,
-                      Colors.grey,
-                      currency,
-                      decimalPlaces,
-                      l10n: l10n,
-                      currencyObj: currencyObj),
-                if (statusDistribution.pendingReceivables > 0)
-                  _buildStatusRow(
-                      '${l10n?.receivables ?? 'Receivables'} - ${l10n?.pending ?? 'Pending'}',
-                      statusDistribution.pendingReceivables,
-                      Colors.orange,
-                      currency,
-                      decimalPlaces,
-                      l10n: l10n,
-                      currencyObj: currencyObj),
-                if (statusDistribution.receivedReceivables > 0)
-                  _buildStatusRow(
-                      '${l10n?.receivables ?? 'Receivables'} - ${l10n?.statusReceived ?? 'Received'}',
-                      statusDistribution.receivedReceivables,
-                      Colors.green,
-                      currency,
-                      decimalPlaces,
-                      l10n: l10n,
-                      currencyObj: currencyObj),
-                if (statusDistribution.cancelledReceivables > 0)
-                  _buildStatusRow(
-                      '${l10n?.receivables ?? 'Receivables'} - ${l10n?.statusCancelled ?? 'Cancelled'}',
-                      statusDistribution.cancelledReceivables,
-                      Colors.grey,
-                      currency,
-                      decimalPlaces,
-                      l10n: l10n,
-                      currencyObj: currencyObj),
-              ],
-            ),
+            if (visible('paymentStatus')) ...[
+              _buildLocalizedHeader(
+                  l10n?.paymentStatusDistribution ??
+                      'Payment Status Distribution',
+                  level: 1,
+                  l10n: l10n),
+              pw.SizedBox(height: 10),
+              pw.Table(
+                border: pw.TableBorder.all(color: PdfColors.grey300),
+                columnWidths: {
+                  0: const pw.FlexColumnWidth(2),
+                  1: const pw.FixedColumnWidth(120),
+                },
+                children: [
+                  _buildLocalizedTableRow(
+                    [
+                      _buildTableHeaderCell(l10n?.status ?? 'Status'),
+                      _buildTableHeaderCell(l10n?.amount ?? 'Amount'),
+                    ],
+                    l10n: l10n,
+                    decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                  ),
+                  if (statusDistribution.pendingPayables > 0)
+                    _buildStatusRow(
+                        '${l10n?.payables ?? 'Payables'} - ${l10n?.pending ?? 'Pending'}',
+                        statusDistribution.pendingPayables,
+                        Colors.orange,
+                        currency,
+                        decimalPlaces,
+                        l10n: l10n,
+                        currencyObj: currencyObj),
+                  if (statusDistribution.paidPayables > 0)
+                    _buildStatusRow(
+                        '${l10n?.payables ?? 'Payables'} - ${l10n?.statusPaid ?? 'Paid'}',
+                        statusDistribution.paidPayables,
+                        Colors.green,
+                        currency,
+                        decimalPlaces,
+                        l10n: l10n,
+                        currencyObj: currencyObj),
+                  if (statusDistribution.cancelledPayables > 0)
+                    _buildStatusRow(
+                        '${l10n?.payables ?? 'Payables'} - ${l10n?.statusCancelled ?? 'Cancelled'}',
+                        statusDistribution.cancelledPayables,
+                        Colors.grey,
+                        currency,
+                        decimalPlaces,
+                        l10n: l10n,
+                        currencyObj: currencyObj),
+                  if (statusDistribution.pendingReceivables > 0)
+                    _buildStatusRow(
+                        '${l10n?.receivables ?? 'Receivables'} - ${l10n?.pending ?? 'Pending'}',
+                        statusDistribution.pendingReceivables,
+                        Colors.orange,
+                        currency,
+                        decimalPlaces,
+                        l10n: l10n,
+                        currencyObj: currencyObj),
+                  if (statusDistribution.receivedReceivables > 0)
+                    _buildStatusRow(
+                        '${l10n?.receivables ?? 'Receivables'} - ${l10n?.statusReceived ?? 'Received'}',
+                        statusDistribution.receivedReceivables,
+                        Colors.green,
+                        currency,
+                        decimalPlaces,
+                        l10n: l10n,
+                        currencyObj: currencyObj),
+                  if (statusDistribution.cancelledReceivables > 0)
+                    _buildStatusRow(
+                        '${l10n?.receivables ?? 'Receivables'} - ${l10n?.statusCancelled ?? 'Cancelled'}',
+                        statusDistribution.cancelledReceivables,
+                        Colors.grey,
+                        currency,
+                        decimalPlaces,
+                        l10n: l10n,
+                        currencyObj: currencyObj),
+                ],
+              ),
+              pw.SizedBox(height: 30),
+            ],
 
-            if (accountFlowSummaries.isNotEmpty) ...[
+            if (visible('accountFlowSummary') && accountFlowSummaries.isNotEmpty) ...[
               pw.SizedBox(height: 30),
               _buildLocalizedHeader(
                   l10n?.accountFlowSummary ?? 'Account Cashflow',
@@ -4290,6 +4517,7 @@ class ExportService {
               pw.SizedBox(height: 10),
               ...accountFlowSummaries.map((summary) {
                 final accountNamesMap = {for (final s in accountFlowSummaries) s.account.uuid: s.account.name};
+                final accColor = summary.account.color != null ? hexToPdfColor(summary.account.color!) : PdfColors.cyan800;
 
                 return pw.Container(
                   margin: const pw.EdgeInsets.only(bottom: 15),
@@ -4305,12 +4533,28 @@ class ExportService {
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
-                          _buildText(
-                            summary.account.name,
-                            style: pw.TextStyle(
-                              fontWeight: pw.FontWeight.bold,
-                              fontSize: 12,
-                            ),
+                          pw.Row(
+                            children: [
+                              pw.SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: self._buildCategoryIcon(
+                                  summary.account.icon,
+                                  accColor,
+                                  materialIconsFont,
+                                  l10n: l10n,
+                                ),
+                              ),
+                              pw.SizedBox(width: 6),
+                              _buildText(
+                                summary.account.name,
+                                style: pw.TextStyle(
+                                  fontWeight: pw.FontWeight.bold,
+                                  fontSize: 12,
+                                  color: accColor,
+                                ),
+                              ),
+                            ],
                           ),
                           _buildText(
                             '${l10n?.netFlow ?? "Net Flow"}: ${summary.netFlow >= 0 ? "+" : ""}${fmt(summary.netFlow)}',
@@ -4350,8 +4594,7 @@ class ExportService {
                         children: [
                           _buildLocalizedTableRow(
                             [
-                              _buildTableHeaderCell('${l10n?.inflow ?? "Inflow"}: ${fmt(summary.totalInflow)}', l10n: l10n),
-                              _buildTableHeaderCell(l10n?.amount ?? 'Amount', l10n: l10n),
+                              _buildTableHeaderCell(l10n?.inflow ?? "Inflow", value: fmt(summary.totalInflow), l10n: l10n),
                             ],
                             l10n: l10n,
                             decoration: const pw.BoxDecoration(color: PdfColors.grey100),
@@ -4359,8 +4602,7 @@ class ExportService {
                           if (summary.totalIncome > 0)
                             _buildLocalizedTableRow(
                               [
-                                _buildTableCell(l10n?.income ?? 'Income', null, null, l10n),
-                                _buildTableCell(fmt(summary.totalIncome), null, null, l10n),
+                                _buildTableCell(l10n?.income ?? 'Income', fmt(summary.totalIncome), PdfColors.green800, l10n),
                               ],
                               l10n: l10n,
                             ),
@@ -4368,8 +4610,7 @@ class ExportService {
                             final otherAccName = accountNamesMap[entry.key] ?? l10n?.unknownAccount ?? 'Other Account';
                             return _buildLocalizedTableRow(
                               [
-                                _buildTableCell(l10n?.transferFromAnalytics(otherAccName) ?? 'From $otherAccName', null, null, l10n),
-                                _buildTableCell(fmt(entry.value), null, null, l10n),
+                                _buildTableCell(l10n?.transferFromAnalytics(otherAccName) ?? 'From $otherAccName', fmt(entry.value), null, l10n),
                               ],
                               l10n: l10n,
                             );
@@ -4384,8 +4625,7 @@ class ExportService {
                         children: [
                           _buildLocalizedTableRow(
                             [
-                              _buildTableHeaderCell('${l10n?.outflow ?? "Outflow"}: ${fmt(summary.totalOutflow)}', l10n: l10n),
-                              _buildTableHeaderCell(l10n?.amount ?? 'Amount', l10n: l10n),
+                              _buildTableHeaderCell(l10n?.outflow ?? "Outflow", value: fmt(summary.totalOutflow), l10n: l10n),
                             ],
                             l10n: l10n,
                             decoration: const pw.BoxDecoration(color: PdfColors.grey100),
@@ -4393,8 +4633,7 @@ class ExportService {
                           if (summary.totalExpense > 0)
                             _buildLocalizedTableRow(
                               [
-                                _buildTableCell(l10n?.expenses ?? 'Expense', null, null, l10n),
-                                _buildTableCell(fmt(summary.totalExpense), null, null, l10n),
+                                _buildTableCell(l10n?.expenses ?? 'Expense', fmt(summary.totalExpense), PdfColors.red800, l10n),
                               ],
                               l10n: l10n,
                             ),
@@ -4402,8 +4641,7 @@ class ExportService {
                             final otherAccName = accountNamesMap[entry.key] ?? l10n?.unknownAccount ?? 'Other Account';
                             return _buildLocalizedTableRow(
                               [
-                                _buildTableCell(l10n?.transferToAnalytics(otherAccName) ?? 'To $otherAccName', null, null, l10n),
-                                _buildTableCell(fmt(entry.value), null, null, l10n),
+                                _buildTableCell(l10n?.transferToAnalytics(otherAccName) ?? 'To $otherAccName', fmt(entry.value), null, l10n),
                               ],
                               l10n: l10n,
                             );
@@ -4414,6 +4652,114 @@ class ExportService {
                   ),
                 );
               }),
+            ],
+
+            // Credit Utilisation
+            if (visible('creditUtilisation')) ...[
+              _buildLocalizedHeader(l10n?.creditUtilisation ?? 'Credit Utilisation', level: 1, l10n: l10n),
+              pw.SizedBox(height: 10),
+              if (creditCards.isNotEmpty) ...[
+                // Overall utilization summary
+                pw.Container(
+                  padding: const pw.EdgeInsets.all(12),
+                  decoration: pw.BoxDecoration(
+                    color: PdfColors.grey100,
+                    borderRadius: const pw.BorderRadius.all(pw.Radius.circular(6)),
+                    border: pw.Border.all(color: PdfColors.grey300, width: 0.5),
+                  ),
+                  child: pw.Column(
+                    crossAxisAlignment: isRtl ? pw.CrossAxisAlignment.end : pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildText(l10n?.creditUsedOf(fmt(totalOutstandingCredit), fmt(totalCreditLimit)) ?? '${fmt(totalOutstandingCredit)} used of ${fmt(totalCreditLimit)}', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+                          _buildText('${(overallCreditPct * 100).toStringAsFixed(1)}%', style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold, color: overallCreditPct > 0.8 ? PdfColors.red800 : PdfColors.green800)),
+                        ],
+                      ),
+                      pw.SizedBox(height: 6),
+                      pw.Container(
+                        height: 8,
+                        decoration: pw.BoxDecoration(
+                          color: PdfColors.grey300,
+                          borderRadius: pw.BorderRadius.circular(4),
+                        ),
+                        child: pw.Stack(
+                          alignment: isRtl ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
+                          children: [
+                            pw.Container(
+                              width: 200.0 * overallCreditPct,
+                              height: 8,
+                              decoration: pw.BoxDecoration(
+                                color: overallCreditPct > 0.8 ? PdfColors.red800 : PdfColors.green800,
+                                borderRadius: pw.BorderRadius.circular(4),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                pw.SizedBox(height: 12),
+                // Card breakdown
+                ...creditCards.map((awb) {
+                  final limit = awb.account.creditLimit ?? 0;
+                  final outstanding = awb.balance < 0 ? awb.balance.abs() : 0.0;
+                  final pct = limit > 0 ? (outstanding / limit).clamp(0.0, 1.0) : 0.0;
+                  final accColor = awb.account.color != null ? hexToPdfColor(awb.account.color!) : PdfColors.red800;
+
+                  return pw.Padding(
+                    padding: const pw.EdgeInsets.only(bottom: 8),
+                    child: pw.Column(
+                      crossAxisAlignment: isRtl ? pw.CrossAxisAlignment.end : pw.CrossAxisAlignment.start,
+                      children: [
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Row(
+                              children: [
+                                pw.SizedBox(
+                                  width: 12,
+                                  height: 12,
+                                  child: self._buildCategoryIcon(awb.account.icon, accColor, materialIconsFont, l10n: l10n),
+                                ),
+                                pw.SizedBox(width: 4),
+                                _buildText(awb.account.name, style: const pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                              ],
+                            ),
+                            _buildText('${fmt(outstanding)} / ${fmt(limit)} (${(pct * 100).toStringAsFixed(1)}%)', style: pw.TextStyle(fontSize: 8, color: accColor)),
+                          ],
+                        ),
+                        pw.SizedBox(height: 2),
+                        pw.Container(
+                          height: 6,
+                          decoration: pw.BoxDecoration(
+                            color: PdfColors.grey200,
+                            borderRadius: pw.BorderRadius.circular(3),
+                          ),
+                          child: pw.Stack(
+                            alignment: isRtl ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
+                            children: [
+                              pw.Container(
+                                width: 200.0 * pct,
+                                height: 6,
+                                decoration: pw.BoxDecoration(
+                                  color: pct > 0.8 ? PdfColors.red800 : accColor,
+                                  borderRadius: pw.BorderRadius.circular(3),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ] else ...[
+                _buildText(l10n?.noAccountActivity ?? 'No credit card activity in this period', style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+              ],
+              pw.SizedBox(height: 30),
             ],
           ];
         },
