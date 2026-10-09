@@ -804,6 +804,7 @@
   "transactionDeleted": "لین دین کامیابی سے حذف کر دیا گیا",
   "errorLoadingCurrency": "کرنسی لوڈ کرنے میں غلطی",
   "balanceLabel": "بیلنس",
+  "periodNet": "مدت کا خالص",
   "errorLabel": "غلطی",
   "importTransaction": "لین دین درآمد کریں",
   "importReceivable": "وصولی درآمد کریں",

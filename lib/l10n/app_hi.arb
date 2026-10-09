@@ -804,6 +804,7 @@
   "transactionDeleted": "लेन-देन सफलतापूर्वक हटा दिया गया",
   "errorLoadingCurrency": "मुद्रा लोड करने में त्रुटि",
   "balanceLabel": "शेष",
+  "periodNet": "अवधि का शुद्ध",
   "errorLabel": "त्रुटि",
   "importTransaction": "लेन-देन आयात करें",
   "importReceivable": "प्राप्य आयात करें",

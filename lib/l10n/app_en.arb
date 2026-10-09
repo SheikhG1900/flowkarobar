@@ -1160,6 +1160,7 @@
   "transactionDeleted": "Transaction deleted successfully",
   "errorLoadingCurrency": "Error loading currency",
   "balanceLabel": "Balance",
+  "periodNet": "Period Net",
   "errorLabel": "Error",
   "importTransaction": "Import Transaction",
   "importReceivable": "Import Receivable",

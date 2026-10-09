@@ -1,6 +1,8 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flowpaisa/core/utils/category_helper.dart';
+import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_list_item.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_split_transaction_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
@@ -729,6 +731,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 context,
                 theme,
                 l10n,
+                ref,
                 category: category as Category,
                 isExpense: isExpense,
                 onEdit: () => _changeCategory(context, ref, item),
@@ -748,6 +751,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 context,
                 theme,
                 l10n,
+                ref,
                 account: item.account!,
                 onEdit: () => _changeAccount(context, ref, item),
               ),
@@ -2376,7 +2380,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
   static Widget _buildTxCategoryCard(
     BuildContext context,
     ThemeData theme,
-    AppLocalizations l10n, {
+    AppLocalizations l10n,
+    WidgetRef ref, {
     required Category category,
     required bool isExpense,
     VoidCallback? onEdit,
@@ -2384,6 +2389,9 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final color = category.color != null
         ? Color(int.parse(category.color!.replaceAll('#', '0xFF')))
         : (isExpense ? AppColors.expenseColor : AppColors.incomeColor);
+
+    // Watch period net amount snapshot for this category
+    final budgetSnapshotAsync = ref.watch(categoryDetailBudgetSnapshotStreamProvider(category.uuid));
 
     return Container(
       key: const ValueKey('tx-details-category-card'),
@@ -2455,14 +2463,59 @@ class TransactionDetailsDialog extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        key: const ValueKey('tx-details-category-name'),
-                        LocalizationHelper.getLocalizedCategoryName(
-                            context, category.name),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: color,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              key: const ValueKey('tx-details-category-name'),
+                              LocalizationHelper.getLocalizedCategoryName(
+                                  context, category.name),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          budgetSnapshotAsync.when(
+                            data: (snapshot) {
+                              final periodNetText = AmountFormatter.formatWithCurrency(
+                                snapshot.netAmount,
+                                ref.read(currentCurrencyProvider).value,
+                              );
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    l10n.periodNet,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                  Text(
+                                    periodNetText,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: isExpense ? Colors.red[700] : Colors.green[700],
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                            loading: () => const SizedBox(
+                              width: 10,
+                              height: 10,
+                              child: CircularProgressIndicator(strokeWidth: 1.5),
+                            ),
+                            error: (_, __) => const SizedBox.shrink(),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -2491,7 +2544,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
   static Widget _buildTxAccountCard(
     BuildContext context,
     ThemeData theme,
-    AppLocalizations l10n, {
+    AppLocalizations l10n,
+    WidgetRef ref, {
     required Account account,
     VoidCallback? onEdit,
   }) {
@@ -2514,6 +2568,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
           return Symbols.credit_card;
       }
     }
+
+    final accountWithBalanceAsync = ref.watch(accountDetailWithBalanceProvider(account.uuid));
 
     return Container(
       key: const ValueKey('tx-details-account-card'),
@@ -2581,13 +2637,59 @@ class TransactionDetailsDialog extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        key: const ValueKey('tx-details-account-name'),
-                        account.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: color,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              key: const ValueKey('tx-details-account-name'),
+                              account.name,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: color,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          accountWithBalanceAsync.when(
+                            data: (awb) {
+                              if (awb == null) return const SizedBox.shrink();
+                              final balanceText = AmountFormatter.formatWithCurrency(
+                                awb.balance,
+                                ref.read(currentCurrencyProvider).value,
+                              );
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    l10n.balanceLabel,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                  Text(
+                                    balanceText,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: awb.balance >= 0 ? Colors.green[700] : Colors.red[700],
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                            loading: () => const SizedBox(
+                              width: 10,
+                              height: 10,
+                              child: CircularProgressIndicator(strokeWidth: 1.5),
+                            ),
+                            error: (_, __) => const SizedBox.shrink(),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -3164,15 +3266,57 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            key: const ValueKey('tx-details-linked-payable-contact-name'),
-                            contact.name,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  key: const ValueKey('tx-details-linked-payable-contact-name'),
+                                  contact.name,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ref.watch(contactStatisticsProvider(contact.uuid)).when(
+                                data: (stats) {
+                                  final formattedBalance = AmountFormatter.formatWithCurrency(
+                                    stats.netBalance.abs(),
+                                    ref.read(currentCurrencyProvider).value,
+                                  );
+                                  final balanceLabel = stats.netBalance >= 0 ? l10n.netReceivable : l10n.netPayable;
+                                  final balanceColor = stats.netBalance >= 0 ? AppColors.receivableColor : AppColors.payableColor;
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        balanceLabel,
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                      Text(
+                                        formattedBalance,
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: balanceColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                                loading: () => const SizedBox.shrink(),
+                                error: (_, __) => const SizedBox.shrink(),
+                              ),
+                            ],
                           ),
                           if (contact.phone != null) ...[
                             const SizedBox(height: 2),
@@ -3443,15 +3587,57 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            key: const ValueKey('tx-details-linked-receivable-contact-name'),
-                            contact.name,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.onSurface,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  key: const ValueKey('tx-details-linked-receivable-contact-name'),
+                                  contact.name,
+                                  style: theme.textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.colorScheme.onSurface,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ref.watch(contactStatisticsProvider(contact.uuid)).when(
+                                data: (stats) {
+                                  final formattedBalance = AmountFormatter.formatWithCurrency(
+                                    stats.netBalance.abs(),
+                                    ref.read(currentCurrencyProvider).value,
+                                  );
+                                  final balanceLabel = stats.netBalance >= 0 ? l10n.netReceivable : l10n.netPayable;
+                                  final balanceColor = stats.netBalance >= 0 ? AppColors.receivableColor : AppColors.payableColor;
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        balanceLabel,
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: theme.colorScheme.onSurfaceVariant,
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                      Text(
+                                        formattedBalance,
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          color: balanceColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 11,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                                loading: () => const SizedBox.shrink(),
+                                error: (_, __) => const SizedBox.shrink(),
+                              ),
+                            ],
                           ),
                           if (contact.phone != null) ...[
                             const SizedBox(height: 2),

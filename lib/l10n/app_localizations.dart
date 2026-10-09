@@ -4306,6 +4306,12 @@ abstract class AppLocalizations {
   /// **'Balance'**
   String get balanceLabel;
 
+  /// No description provided for @periodNet.
+  ///
+  /// In en, this message translates to:
+  /// **'Period Net'**
+  String get periodNet;
+
   /// No description provided for @errorLabel.
   ///
   /// In en, this message translates to:

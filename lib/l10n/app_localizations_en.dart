@@ -2330,6 +2330,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get balanceLabel => 'Balance';
 
   @override
+  String get periodNet => 'Period Net';
+
+  @override
   String get errorLabel => 'Error';
 
   @override

@@ -2339,6 +2339,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get balanceLabel => 'शेष';
 
   @override
+  String get periodNet => 'अवधि का शुद्ध';
+
+  @override
   String get errorLabel => 'त्रुटि';
 
   @override

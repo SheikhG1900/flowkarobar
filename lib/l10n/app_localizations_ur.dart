@@ -2345,6 +2345,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get balanceLabel => 'بیلنس';
 
   @override
+  String get periodNet => 'مدت کا خالص';
+
+  @override
   String get errorLabel => 'غلطی';
 
   @override
