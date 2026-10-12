@@ -4837,4 +4837,49 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get documentSyncRequiredSubtitle =>
       'You have unsaved or new attachments. Tap to backup now.';
+
+  @override
+  String get textSize => 'Text Size';
+
+  @override
+  String get textSizeSubtitle =>
+      'Adjust the display size of text across the application';
+
+  @override
+  String get horizontalSpacing => 'Horizontal Spacing';
+
+  @override
+  String get horizontalSpacingSubtitle =>
+      'Adjust the horizontal character spacing of the text';
+
+  @override
+  String get verticalSpacing => 'Vertical Spacing';
+
+  @override
+  String get verticalSpacingSubtitle =>
+      'Adjust the vertical line spacing of the text';
+
+  @override
+  String get largeLabel => 'Large';
+
+  @override
+  String get smallLabel => 'Small';
+
+  @override
+  String get tightLabel => 'Tight';
+
+  @override
+  String get wideLabel => 'Wide';
+
+  @override
+  String get condensedLabel => 'Condensed';
+
+  @override
+  String get looseLabel => 'Loose';
+
+  @override
+  String get doubleLabel => 'Double';
+
+  @override
+  String get tripleLabel => 'Triple';
 }

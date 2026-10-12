@@ -2455,5 +2455,20 @@
   "attachmentFile": "Attachment File",
   "noTransactionsWithAttachments": "No transactions with attachments found.",
   "documentSyncRequired": "Document backup required",
-  "documentSyncRequiredSubtitle": "You have unsaved or new attachments. Tap to backup now."
+  "documentSyncRequiredSubtitle": "You have unsaved or new attachments. Tap to backup now.",
+  "textSize": "Text Size",
+  "textSizeSubtitle": "Adjust the display size of text across the application",
+  "horizontalSpacing": "Horizontal Spacing",
+  "horizontalSpacingSubtitle": "Adjust the horizontal character spacing of the text",
+  "verticalSpacing": "Vertical Spacing",
+  "verticalSpacingSubtitle": "Adjust the vertical line spacing of the text",
+  "defaultLabel": "Default",
+  "largeLabel": "Large",
+  "smallLabel": "Small",
+  "tightLabel": "Tight",
+  "wideLabel": "Wide",
+  "condensedLabel": "Condensed",
+  "looseLabel": "Loose",
+  "doubleLabel": "Double",
+  "tripleLabel": "Triple"
 }

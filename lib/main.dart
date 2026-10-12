@@ -206,6 +206,9 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
     final activeCashbook = ref.watch(activeCashbookProvider);
     final activeColor = activeCashbook.color;
     final onboardingCompleted = ref.watch(onboardingCompletedProvider);
+    final textScale = ref.watch(textScaleProvider);
+    final letterSpacing = ref.watch(letterSpacingProvider);
+    final lineSpacing = ref.watch(lineSpacingProvider);
 
     return MaterialApp(
       title: AppConstants.appName,
@@ -219,7 +222,17 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
         },
       ),
       builder: (context, child) {
-        if (kIsWeb || !Platform.isWindows) return child!;
+        if (child == null) return const SizedBox.shrink();
+
+        // Wrap child in MediaQuery to apply TextScaler globally across all platforms
+        final scaledChild = MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(textScale),
+          ),
+          child: child,
+        );
+
+        if (kIsWeb || !Platform.isWindows) return scaledChild;
 
         // Always use a dark ambient background to create a theater-like cinematic experience
         // matching the gorgeous dark theme, even when the app itself is in light mode.
@@ -285,7 +298,7 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
                       ),
                     ],
                   ),
-                  child: child,
+                  child: scaledChild,
                 ),
               ),
             ],
@@ -319,9 +332,13 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
 
       // Theme
       theme: AppTheme.lightTheme(currentLocale.languageCode, currentFont,
-          primaryColor: activeColor),
+          primaryColor: activeColor,
+          letterSpacing: letterSpacing,
+          lineSpacing: lineSpacing),
       darkTheme: AppTheme.darkTheme(currentLocale.languageCode, currentFont,
-          primaryColor: activeColor),
+          primaryColor: activeColor,
+          letterSpacing: letterSpacing,
+          lineSpacing: lineSpacing),
       themeMode: currentThemeMode,
 
       // Home

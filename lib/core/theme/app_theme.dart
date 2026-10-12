@@ -7,18 +7,27 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 /// Modern Material Design 3 with Wortek-inspired gradients
 class AppTheme {
   // Get text theme based on locale and selected font
-  static TextTheme getTextTheme(String languageCode, String fontName) {
+  static TextTheme getTextTheme(String languageCode, String fontName,
+      {double letterSpacing = 0.0, double lineSpacing = 1.2}) {
     // Helper to get GoogleFont method by name dynamically with robust hardcoded fallbacks
     TextStyle getFont(TextStyle baseStyle) {
       try {
-        return GoogleFonts.getFont(fontName, textStyle: baseStyle);
+        return GoogleFonts.getFont(fontName,
+            textStyle: baseStyle.copyWith(
+                letterSpacing: letterSpacing, height: lineSpacing));
       } catch (_) {
         if (languageCode == 'hi') {
-          return GoogleFonts.notoSansDevanagari(textStyle: baseStyle);
+          return GoogleFonts.notoSansDevanagari(
+              textStyle: baseStyle.copyWith(
+                  letterSpacing: letterSpacing, height: lineSpacing));
         } else if (languageCode == 'ur') {
-          return GoogleFonts.marhey(textStyle: baseStyle);
+          return GoogleFonts.marhey(
+              textStyle: baseStyle.copyWith(
+                  letterSpacing: letterSpacing, height: lineSpacing));
         } else {
-          return GoogleFonts.inter(textStyle: baseStyle);
+          return GoogleFonts.inter(
+              textStyle: baseStyle.copyWith(
+                  letterSpacing: letterSpacing, height: lineSpacing));
         }
       }
     }
@@ -86,8 +95,9 @@ class AppTheme {
 
   // Light Theme with Wortek colors
   static ThemeData lightTheme(String languageCode, String fontName,
-      {Color? primaryColor}) {
-    final textTheme = getTextTheme(languageCode, fontName);
+      {Color? primaryColor, double letterSpacing = 0.0, double lineSpacing = 1.2}) {
+    final textTheme = getTextTheme(languageCode, fontName,
+        letterSpacing: letterSpacing, lineSpacing: lineSpacing);
     final primary = primaryColor ?? const Color.fromARGB(255, 0, 82, 98);
 
     return ThemeData(
@@ -297,8 +307,9 @@ class AppTheme {
 
   // Dark Theme with Wortek colors
   static ThemeData darkTheme(String languageCode, String fontName,
-      {Color? primaryColor}) {
-    final textTheme = getTextTheme(languageCode, fontName);
+      {Color? primaryColor, double letterSpacing = 0.0, double lineSpacing = 1.2}) {
+    final textTheme = getTextTheme(languageCode, fontName,
+        letterSpacing: letterSpacing, lineSpacing: lineSpacing);
     final primary = primaryColor ?? AppColors.brightCyan;
     return ThemeData(
       useMaterial3: true,

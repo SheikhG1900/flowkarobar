@@ -4851,4 +4851,49 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String get documentSyncRequiredSubtitle =>
       'आपके पास नए अटैचमेंट हैं। बैकअप के लिए टैप करें।';
+
+  @override
+  String get textSize => 'टेक्स्ट का आकार';
+
+  @override
+  String get textSizeSubtitle =>
+      'पूरे ऐप में टेक्स्ट का प्रदर्शन आकार समायोजित करें';
+
+  @override
+  String get horizontalSpacing => 'क्षैतिज अंतर';
+
+  @override
+  String get horizontalSpacingSubtitle =>
+      'टेक्स्ट के क्षैतिज वर्णों के बीच की दूरी समायोजित करें';
+
+  @override
+  String get verticalSpacing => 'ऊर्ध्वाधर अंतर';
+
+  @override
+  String get verticalSpacingSubtitle =>
+      'टेक्स्ट के ऊर्ध्वाधर लाइनों के बीच की दूरी समायोजित करें';
+
+  @override
+  String get largeLabel => 'बड़ा';
+
+  @override
+  String get smallLabel => 'छोटा';
+
+  @override
+  String get tightLabel => 'सघन';
+
+  @override
+  String get wideLabel => 'चौड़ा';
+
+  @override
+  String get condensedLabel => 'संकुचित';
+
+  @override
+  String get looseLabel => 'ढीला';
+
+  @override
+  String get doubleLabel => 'दोगुना';
+
+  @override
+  String get tripleLabel => 'तिगुना';
 }

@@ -1869,5 +1869,20 @@
   "attachmentFile": "منسلکہ فائل",
   "noTransactionsWithAttachments": "منسلکات کے ساتھ کوئی لین دین نہیں ملا۔",
   "documentSyncRequired": "دستاویزات کا بیک اپ ضروری ہے",
-  "documentSyncRequiredSubtitle": "آپ کے پاس نئے منسلکات ہیں۔ بیک اپ کے لیے ٹیپ کریں۔"
+  "documentSyncRequiredSubtitle": "آپ کے پاس نئے منسلکات ہیں۔ بیک اپ کے لیے ٹیپ کریں۔",
+  "textSize": "ٹیکسٹ کا سائز",
+  "textSizeSubtitle": "پوری ایپلیکیشن میں ٹیکسٹ کا سائز تبدیل کریں",
+  "horizontalSpacing": "افقی فاصلہ",
+  "horizontalSpacingSubtitle": "ٹیکسٹ کے حروف کے درمیان افقی فاصلہ تبدیل کریں",
+  "verticalSpacing": "عمودی فاصلہ",
+  "verticalSpacingSubtitle": "ٹیکسٹ کی لائنوں کے درمیان عمودی فاصلہ تبدیل کریں",
+  "defaultLabel": "پہلے سے طے شدہ",
+  "largeLabel": "بڑا",
+  "smallLabel": "چھوٹا",
+  "tightLabel": "تنگ",
+  "wideLabel": "کشادہ",
+  "condensedLabel": "گنجان",
+  "looseLabel": "کھلا",
+  "doubleLabel": "دوگنا",
+  "tripleLabel": "تگنا"
 }

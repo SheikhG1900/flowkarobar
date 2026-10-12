@@ -8830,6 +8830,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You have unsaved or new attachments. Tap to backup now.'**
   String get documentSyncRequiredSubtitle;
+
+  /// No description provided for @textSize.
+  ///
+  /// In en, this message translates to:
+  /// **'Text Size'**
+  String get textSize;
+
+  /// No description provided for @textSizeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust the display size of text across the application'**
+  String get textSizeSubtitle;
+
+  /// No description provided for @horizontalSpacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Horizontal Spacing'**
+  String get horizontalSpacing;
+
+  /// No description provided for @horizontalSpacingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust the horizontal character spacing of the text'**
+  String get horizontalSpacingSubtitle;
+
+  /// No description provided for @verticalSpacing.
+  ///
+  /// In en, this message translates to:
+  /// **'Vertical Spacing'**
+  String get verticalSpacing;
+
+  /// No description provided for @verticalSpacingSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust the vertical line spacing of the text'**
+  String get verticalSpacingSubtitle;
+
+  /// No description provided for @largeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Large'**
+  String get largeLabel;
+
+  /// No description provided for @smallLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Small'**
+  String get smallLabel;
+
+  /// No description provided for @tightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tight'**
+  String get tightLabel;
+
+  /// No description provided for @wideLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Wide'**
+  String get wideLabel;
+
+  /// No description provided for @condensedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Condensed'**
+  String get condensedLabel;
+
+  /// No description provided for @looseLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Loose'**
+  String get looseLabel;
+
+  /// No description provided for @doubleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Double'**
+  String get doubleLabel;
+
+  /// No description provided for @tripleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Triple'**
+  String get tripleLabel;
 }
 
 class _AppLocalizationsDelegate

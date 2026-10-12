@@ -264,19 +264,7 @@ class FontSelectorScreen extends ConsumerWidget {
         'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
       },
       {
-        'name': 'Qahiri',
-        'isPremium': true,
-        'language': 'ur',
-        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
-      },
-      {
         'name': 'Jomhuria',
-        'isPremium': true,
-        'language': 'ur',
-        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
-      },
-      {
-        'name': 'Alkalami',
         'isPremium': true,
         'language': 'ur',
         'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
@@ -366,12 +354,8 @@ class FontSelectorScreen extends ConsumerWidget {
                   return GoogleFonts.arefRuqaa(fontSize: 18);
                 case 'Rakkas':
                   return GoogleFonts.rakkas(fontSize: 18);
-                case 'Qahiri':
-                  return GoogleFonts.qahiri(fontSize: 18);
                 case 'Jomhuria':
                   return GoogleFonts.jomhuria(fontSize: 18);
-                case 'Alkalami':
-                  return GoogleFonts.alkalami(fontSize: 18);
                 case 'Lalezar':
                   return GoogleFonts.lalezar(fontSize: 18);
                 case 'Kufam':

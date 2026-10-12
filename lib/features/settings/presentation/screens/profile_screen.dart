@@ -891,6 +891,303 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 12),
+
+              // Text Size Preference
+              Container(
+                decoration: BoxDecoration(
+                  color: theme.cardColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: theme.dividerColor.withValues(alpha: 0.1),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.format_size,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.textSize,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  l10n.textSizeSubtitle,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final currentScale = ref.watch(textScaleProvider);
+                          final currentLetterSpacing = ref.watch(letterSpacingProvider);
+                          final currentLineSpacing = ref.watch(lineSpacingProvider);
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              // Text Size Slider
+                              Row(
+                                children: [
+                                  Text(
+                                    'A',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Slider(
+                                      value: currentScale,
+                                      min: 0.5,
+                                      max: 2.0,
+                                      divisions: 30,
+                                      label: '${(currentScale * 100).round()}%',
+                                      onChanged: (value) {
+                                        ref.read(textScaleProvider.notifier).setTextScale(value);
+                                      },
+                                    ),
+                                  ),
+                                  Text(
+                                    'A',
+                                    style: theme.textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '50%',
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                  Text(
+                                    '${(currentScale * 100).round()}% (${currentScale == 1.0 ? l10n.defaultLabel : currentScale > 1.0 ? l10n.largeLabel : l10n.smallLabel})',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                  Text(
+                                    '200%',
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8.0),
+                                child: Divider(height: 1, thickness: 0.5),
+                              ),
+
+                              // Horizontal (Letter) Spacing Slider
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(Icons.unfold_more_outlined, size: 16, color: theme.colorScheme.primary),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    l10n.horizontalSpacing,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Text(
+                                    '-2.0',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Slider(
+                                      value: currentLetterSpacing,
+                                      min: -2.0,
+                                      max: 5.0,
+                                      divisions: 70,
+                                      label: currentLetterSpacing.toStringAsFixed(1),
+                                      onChanged: (value) {
+                                        ref.read(letterSpacingProvider.notifier).setLetterSpacing(value);
+                                      },
+                                    ),
+                                  ),
+                                  Text(
+                                    '5.0',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    l10n.tightLabel,
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                  Text(
+                                    '${currentLetterSpacing.toStringAsFixed(1)} (${currentLetterSpacing == 0.0 ? l10n.defaultLabel : currentLetterSpacing > 0.0 ? l10n.wideLabel : l10n.condensedLabel})',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                  Text(
+                                    l10n.wideLabel,
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8.0),
+                                child: Divider(height: 1, thickness: 0.5),
+                              ),
+
+                              // Vertical (Line) Spacing Slider
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Icon(Icons.unfold_more, size: 16, color: theme.colorScheme.primary),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    l10n.verticalSpacing,
+                                    style: theme.textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Text(
+                                    '0.8',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Slider(
+                                      value: currentLineSpacing,
+                                      min: 0.8,
+                                      max: 3.0,
+                                      divisions: 44,
+                                      label: currentLineSpacing.toStringAsFixed(2),
+                                      onChanged: (value) {
+                                        ref.read(lineSpacingProvider.notifier).setLineSpacing(value);
+                                      },
+                                    ),
+                                  ),
+                                  Text(
+                                    '3.0',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    l10n.tightLabel,
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                  Text(
+                                    '${currentLineSpacing.toStringAsFixed(2)} (${currentLineSpacing == 1.2 ? l10n.defaultLabel : currentLineSpacing > 1.2 ? l10n.looseLabel : l10n.tightLabel})',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                  Text(
+                                    l10n.tripleLabel,
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 8.0),
+                                child: Divider(height: 1, thickness: 0.5),
+                              ),
+
+                              // Preview Box
+                              const SizedBox(height: 12),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: theme.dividerColor.withValues(alpha: 0.1),
+                                  ),
+                                ),
+                                child: () {
+                                  final currentLocale = ref.watch(languageProvider);
+                                  String previewText;
+                                  switch (currentLocale.languageCode) {
+                                    case 'hi':
+                                      previewText = 'त्वरित भूरा लोमड़ी आलसी कुत्ते के ऊपर कूदता है';
+                                      break;
+                                    case 'ur':
+                                      previewText = 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.';
+                                      break;
+                                    case 'en':
+                                    default:
+                                      previewText = 'The quick brown fox jumps over the lazy dog.';
+                                      break;
+                                  }
+                                  return Text(
+                                    l10n.sample(previewText),
+                                    textAlign: TextAlign.center,
+                                    style: theme.textTheme.bodyMedium,
+                                  );
+                                }(),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: 32),
 
               // Save Button

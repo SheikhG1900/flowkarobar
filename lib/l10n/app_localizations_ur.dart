@@ -1293,7 +1293,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get categoryDeletedSuccessfully => 'زمرہ کامیابی سے حذف کر دیا گیا';
 
   @override
-  String get defaultLabel => 'ڈیفالٹ';
+  String get defaultLabel => 'پہلے سے طے شدہ';
 
   @override
   String get addCategory => 'زمرہ شامل کریں';
@@ -4858,4 +4858,48 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String get documentSyncRequiredSubtitle =>
       'آپ کے پاس نئے منسلکات ہیں۔ بیک اپ کے لیے ٹیپ کریں۔';
+
+  @override
+  String get textSize => 'ٹیکسٹ کا سائز';
+
+  @override
+  String get textSizeSubtitle => 'پوری ایپلیکیشن میں ٹیکسٹ کا سائز تبدیل کریں';
+
+  @override
+  String get horizontalSpacing => 'افقی فاصلہ';
+
+  @override
+  String get horizontalSpacingSubtitle =>
+      'ٹیکسٹ کے حروف کے درمیان افقی فاصلہ تبدیل کریں';
+
+  @override
+  String get verticalSpacing => 'عمودی فاصلہ';
+
+  @override
+  String get verticalSpacingSubtitle =>
+      'ٹیکسٹ کی لائنوں کے درمیان عمودی فاصلہ تبدیل کریں';
+
+  @override
+  String get largeLabel => 'بڑا';
+
+  @override
+  String get smallLabel => 'چھوٹا';
+
+  @override
+  String get tightLabel => 'تنگ';
+
+  @override
+  String get wideLabel => 'کشادہ';
+
+  @override
+  String get condensedLabel => 'گنجان';
+
+  @override
+  String get looseLabel => 'کھلا';
+
+  @override
+  String get doubleLabel => 'دوگنا';
+
+  @override
+  String get tripleLabel => 'تگنا';
 }

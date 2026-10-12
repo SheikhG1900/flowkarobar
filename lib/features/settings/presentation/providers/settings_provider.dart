@@ -473,3 +473,70 @@ final currentFontProvider = Provider<String>((ref) {
   }
   return font ?? 'Inter';
 });
+
+// Text Scale Factor Notifier (Device-specific, saved to SharedPreferences)
+class TextScaleNotifier extends Notifier<double> {
+  static const String _key = 'device_text_scale_factor';
+
+  @override
+  double build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final value = prefs.getDouble(_key) ?? 1.0; // Default to 1.0 (100%)
+    // Clamp inside safe limits to prevent visual breakages if legacy value exists
+    return value.clamp(0.5, 2.0);
+  }
+
+  Future<void> setTextScale(double value) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setDouble(_key, value);
+    state = value;
+  }
+}
+
+final textScaleProvider = NotifierProvider<TextScaleNotifier, double>(() {
+  return TextScaleNotifier();
+});
+
+// Letter Spacing Notifier (Device-specific, saved to SharedPreferences)
+class LetterSpacingNotifier extends Notifier<double> {
+  static const String _key = 'device_letter_spacing';
+
+  @override
+  double build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final value = prefs.getDouble(_key) ?? 0.0; // Default to 0.0
+    return value.clamp(-2.0, 5.0);
+  }
+
+  Future<void> setLetterSpacing(double value) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setDouble(_key, value);
+    state = value;
+  }
+}
+
+final letterSpacingProvider = NotifierProvider<LetterSpacingNotifier, double>(() {
+  return LetterSpacingNotifier();
+});
+
+// Line Spacing (Height) Notifier (Device-specific, saved to SharedPreferences)
+class LineSpacingNotifier extends Notifier<double> {
+  static const String _key = 'device_line_spacing';
+
+  @override
+  double build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final value = prefs.getDouble(_key) ?? 1.2; // Default to 1.2
+    return value.clamp(0.8, 3.0);
+  }
+
+  Future<void> setLineSpacing(double value) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    await prefs.setDouble(_key, value);
+    state = value;
+  }
+}
+
+final lineSpacingProvider = NotifierProvider<LineSpacingNotifier, double>(() {
+  return LineSpacingNotifier();
+});
