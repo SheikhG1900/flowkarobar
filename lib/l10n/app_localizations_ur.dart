@@ -3295,6 +3295,11 @@ class AppLocalizationsUr extends AppLocalizations {
   String get fontSelection => 'فونٹ کا انتخاب';
 
   @override
+  String fontChanged(String fontName) {
+    return 'فونٹ تبدیل کر کے $fontName کر دیا گیا ہے';
+  }
+
+  @override
   String get restoreToNewCashbookTitle => 'نئی کیش بک میں بحال کریں؟';
 
   @override

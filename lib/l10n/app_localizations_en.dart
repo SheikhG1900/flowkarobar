@@ -3276,6 +3276,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fontSelection => 'Font Selection';
 
   @override
+  String fontChanged(String fontName) {
+    return 'Font changed to $fontName';
+  }
+
+  @override
   String get restoreToNewCashbookTitle => 'Restore to New Cashbook?';
 
   @override

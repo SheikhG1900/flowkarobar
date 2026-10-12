@@ -13,41 +13,328 @@ class FontSelectorScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final currentLocale = ref.watch(languageProvider);
-    final fonts = ref.watch(fontProvider);
-    final selectedFont = fonts[currentLocale.languageCode] ?? 'Inter';
+    final selectedFont = ref.watch(currentFontProvider);
     final theme = Theme.of(context);
     final isPremium = PremiumGate.isPremium(ref);
 
     final availableFonts = [
+      // English Fonts
       {
-        'name': 'Montserrat',
+        'name': 'Inter',
         'isPremium': false,
+        'language': 'en',
         'preview': 'The quick brown fox jumps over the lazy dog.',
       },
       {
+        'name': 'Montserrat',
+        'isPremium': false,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Saira',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Julius Sans One',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG.',
+      },
+      {
+        'name': 'Space Grotesk',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Josefin Sans',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Grechen Fuemen',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Nothing You Could Do',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Russo One',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Alata',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Oxanium',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Audiowide',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Courgette',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Kaushan Script',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Philosopher',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Sacramento',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Satisfy',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Petit Formal Script',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Tektur',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Geomini',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Eagle Lake',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+      {
+        'name': 'Fugaz One',
+        'isPremium': true,
+        'language': 'en',
+        'preview': 'The quick brown fox jumps over the lazy dog.',
+      },
+
+      // Hindi Fonts
+      {
         'name': 'Noto Sans Devanagari',
         'isPremium': false,
+        'language': 'hi',
         'preview': 'त्वरित भूरा लोमड़ी आलसी कुत्ते के ऊपर कूदता है',
       },
       {
+        'name': 'Rozha One',
+        'isPremium': true,
+        'language': 'hi',
+        'preview': 'त्वरित भूरा लोमड़ी आलसी कुत्ते के ऊपर कूदता है',
+      },
+      {
+        'name': 'Yatra One',
+        'isPremium': true,
+        'language': 'hi',
+        'preview': 'त्वरित भूरा लोमड़ी आलसी कुत्ते के ऊपर कूदता है',
+      },
+      {
+        'name': 'Arya',
+        'isPremium': true,
+        'language': 'hi',
+        'preview': 'त्वरित भूरा लोमड़ी आलसी कुत्ते के ऊपर कूदता है',
+      },
+      {
+        'name': 'Rajdhani',
+        'isPremium': true,
+        'language': 'hi',
+        'preview': 'त्वरित भूरा लोमड़ी आलसी कुत्ते के ऊपर कूदता है',
+      },
+      {
+        'name': 'Martel',
+        'isPremium': true,
+        'language': 'hi',
+        'preview': 'त्वरित भूरा लोमड़ी आलसी कुत्ते के ऊपर कूदता है',
+      },
+      {
+        'name': 'Tiro Devanagari Hindi',
+        'isPremium': true,
+        'language': 'hi',
+        'preview': 'त्वरित भूरा लोमड़ी आलसी कुत्ते के ऊपर कूदता है',
+      },
+      {
+        'name': 'Kripa',
+        'isPremium': true,
+        'language': 'hi',
+        'preview': 'त्वरित भूरा लोमड़ी आलसी कुत्ते के ऊपर कूदता है',
+      },
+      {
+        'name': 'Poppins',
+        'isPremium': true,
+        'language': 'hi',
+        'preview': 'त्वरित भूरा लोमड़ी आलसी कुत्ते के ऊपर कूदता है',
+      },
+      {
+        'name': 'Khand',
+        'isPremium': true,
+        'language': 'hi',
+        'preview': 'त्वरित भूरा लोमड़ी आलसी कुत्ते के ऊपर कूदता है',
+      },
+      {
+        'name': 'Kalam',
+        'isPremium': true,
+        'language': 'hi',
+        'preview': 'त्वरित भूरा लोमड़ी आलसी कुत्ते के ऊपर कूदता है',
+      },
+      {
+        'name': 'Biryani',
+        'isPremium': true,
+        'language': 'hi',
+        'preview': 'त्वरित भूरा लोमड़ी आलसी कुत्ते के ऊपर कूदता है',
+      },
+
+      // Urdu Fonts
+      {
         'name': 'Marhey',
         'isPremium': false,
-        'preview':
-            'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے. The quick brown fox jumps over the lazy dog',
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
+      },
+      {
+        'name': 'Lemonada',
+        'isPremium': true,
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
+      },
+      {
+        'name': 'Mada',
+        'isPremium': true,
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
+      },
+      {
+        'name': 'Markazi Text',
+        'isPremium': true,
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
+      },
+      {
+        'name': 'Aref Ruqaa',
+        'isPremium': true,
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
+      },
+      {
+        'name': 'Rakkas',
+        'isPremium': true,
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
+      },
+      {
+        'name': 'Qahiri',
+        'isPremium': true,
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
+      },
+      {
+        'name': 'Jomhuria',
+        'isPremium': true,
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
+      },
+      {
+        'name': 'Alkalami',
+        'isPremium': true,
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
+      },
+      {
+        'name': 'Reem Kufi',
+        'isPremium': true,
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
       },
       {
         'name': 'Lalezar',
         'isPremium': true,
-        'preview':
-            'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے. The quick brown fox jumps over the lazy dog',
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
+      },
+      {
+        'name': 'El Messiri',
+        'isPremium': true,
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
+      },
+      {
+        'name': 'Almarai',
+        'isPremium': true,
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
+      },
+      {
+        'name': 'IBM Plex Sans Arabic',
+        'isPremium': true,
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
+      },
+      {
+        'name': 'Noto Kufi Arabic',
+        'isPremium': true,
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
+      },
+      {
+        'name': 'Fustat',
+        'isPremium': true,
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
       },
       {
         'name': 'Kufam',
         'isPremium': true,
-        'preview':
-            'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے. The quick brown fox jumps over the lazy dog',
+        'language': 'ur',
+        'preview': 'تیز رفتار بھوری لومڑی سست کتے کے اوپر سے چھلانگ لگاتی ہے.',
       },
     ];
+
+    final currentLanguage = currentLocale.languageCode;
+    final filteredFonts = availableFonts
+        .where((font) => font['language'] == currentLanguage)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -56,26 +343,54 @@ class FontSelectorScreen extends ConsumerWidget {
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: availableFonts.length,
+        itemCount: filteredFonts.length,
         itemBuilder: (context, index) {
-          final font = availableFonts[index];
+          final font = filteredFonts[index];
           final fontName = font['name'] as String;
           final isFontPremium = font['isPremium'] as bool;
           final isSelected = selectedFont == fontName;
           final isLocked = isFontPremium && !isPremium;
 
           TextStyle getPreviewStyle() {
-            switch (fontName) {
-              case 'Lalezar':
-                return GoogleFonts.lalezar(fontSize: 18);
-              case 'Kufam':
-                return GoogleFonts.kufam(fontSize: 18);
-              case 'Marhey':
-                return GoogleFonts.marhey(fontSize: 18);
-              case 'Noto Sans Devanagari':
-                return GoogleFonts.notoSansDevanagari(fontSize: 18);
-              default:
-                return GoogleFonts.montserrat(fontSize: 18);
+            try {
+              return GoogleFonts.getFont(fontName, fontSize: 18);
+            } catch (_) {
+              switch (fontName) {
+                case 'Lemonada':
+                  return GoogleFonts.lemonada(fontSize: 18);
+                case 'Mada':
+                  return GoogleFonts.mada(fontSize: 18);
+                case 'Markazi Text':
+                  return GoogleFonts.markaziText(fontSize: 18);
+                case 'Aref Ruqaa':
+                  return GoogleFonts.arefRuqaa(fontSize: 18);
+                case 'Rakkas':
+                  return GoogleFonts.rakkas(fontSize: 18);
+                case 'Qahiri':
+                  return GoogleFonts.qahiri(fontSize: 18);
+                case 'Jomhuria':
+                  return GoogleFonts.jomhuria(fontSize: 18);
+                case 'Alkalami':
+                  return GoogleFonts.alkalami(fontSize: 18);
+                case 'Lalezar':
+                  return GoogleFonts.lalezar(fontSize: 18);
+                case 'Kufam':
+                  return GoogleFonts.kufam(fontSize: 18);
+                case 'Marhey':
+                  return GoogleFonts.marhey(fontSize: 18);
+                case 'Noto Sans Devanagari':
+                  return GoogleFonts.notoSansDevanagari(fontSize: 18);
+                case 'Rozha One':
+                  return GoogleFonts.rozhaOne(fontSize: 18);
+                case 'Yatra One':
+                  return GoogleFonts.yatraOne(fontSize: 18);
+                case 'Arya':
+                  return GoogleFonts.arya(fontSize: 18);
+                case 'Petit Formal Script':
+                  return GoogleFonts.petitFormalScript(fontSize: 18);
+                default:
+                  return GoogleFonts.montserrat(fontSize: 18);
+              }
             }
           }
 
@@ -123,7 +438,7 @@ class FontSelectorScreen extends ConsumerWidget {
                     ToastUtils.showSuccessToast(
                       context,
                       ref,
-                      'Font changed to $fontName',
+                      l10n.fontChanged(fontName),
                     );
                   }
                 },

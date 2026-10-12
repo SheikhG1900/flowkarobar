@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
@@ -26,6 +27,10 @@ class LanguageNotifier extends Notifier<Locale> {
 
   Future<void> _loadLanguage() async {
     final languageCode = await _repository.getLanguage();
+    try {
+      final prefs = ref.read(sharedPreferencesProvider);
+      await prefs.setString('startup_language', languageCode);
+    } catch (_) {}
     state = _getLocaleFromCode(languageCode);
   }
 
@@ -43,6 +48,10 @@ class LanguageNotifier extends Notifier<Locale> {
 
   Future<void> setLanguage(String languageCode) async {
     await _repository.setLanguage(languageCode);
+    try {
+      final prefs = ref.read(sharedPreferencesProvider);
+      await prefs.setString('startup_language', languageCode);
+    } catch (_) {}
     state = _getLocaleFromCode(languageCode);
   }
 
@@ -229,12 +238,29 @@ class FontNotifier extends Notifier<Map<String, String>> {
     final en = await _repository.getFontForLanguage('en');
     final hi = await _repository.getFontForLanguage('hi');
     final ur = await _repository.getFontForLanguage('ur');
+    try {
+      final prefs = ref.read(sharedPreferencesProvider);
+      await prefs.setString('startup_font_en', en);
+      await prefs.setString('startup_font_hi', hi);
+      await prefs.setString('startup_font_ur', ur);
+    } catch (_) {}
     state = {'en': en, 'hi': hi, 'ur': ur};
   }
 
   Future<void> setFont(String languageCode, String fontName) async {
     await _repository.setFontForLanguage(languageCode, fontName);
+    try {
+      final prefs = ref.read(sharedPreferencesProvider);
+      await prefs.setString('startup_font_$languageCode', fontName);
+    } catch (_) {}
     state = {...state, languageCode: fontName};
+    
+    // Smooth preloading of the selected font upon actual selection
+    try {
+      await GoogleFonts.pendingFonts([
+        GoogleFonts.getFont(fontName),
+      ]);
+    } catch (_) {}
   }
 }
 

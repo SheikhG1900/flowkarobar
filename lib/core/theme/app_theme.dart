@@ -8,45 +8,33 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 class AppTheme {
   // Get text theme based on locale and selected font
   static TextTheme getTextTheme(String languageCode, String fontName) {
-    // Helper to get GoogleFont method by name
+    // Helper to get GoogleFont method by name dynamically with robust hardcoded fallbacks
     TextStyle getFont(TextStyle baseStyle) {
-      switch (fontName) {
-        case 'Lalezar':
-          return GoogleFonts.lalezar(textStyle: baseStyle);
-        case 'Kufam':
-          return GoogleFonts.kufam(
-            textStyle: baseStyle,
-          );
-        case 'Marhey':
-          return GoogleFonts.marhey(textStyle: baseStyle);
-        case 'Noto Sans Devanagari':
+      try {
+        return GoogleFonts.getFont(fontName, textStyle: baseStyle);
+      } catch (_) {
+        if (languageCode == 'hi') {
           return GoogleFonts.notoSansDevanagari(textStyle: baseStyle);
-        case 'Inter':
+        } else if (languageCode == 'ur') {
+          return GoogleFonts.marhey(textStyle: baseStyle);
+        } else {
           return GoogleFonts.inter(textStyle: baseStyle);
-        case 'Montserrat':
-        default:
-          return GoogleFonts.montserrat(textStyle: baseStyle);
+        }
       }
     }
 
-    // Map the selected font to the appropriate TextTheme
+    // Map the selected font to the appropriate TextTheme dynamically with robust fallbacks
     TextTheme baseTextTheme;
-    switch (fontName) {
-      case 'Lalezar':
-        baseTextTheme = GoogleFonts.lalezarTextTheme();
-        break;
-      case 'Kufam':
-        baseTextTheme = GoogleFonts.kufamTextTheme();
-        break;
-      case 'Marhey':
-        baseTextTheme = GoogleFonts.marheyTextTheme();
-        break;
-      case 'Noto Sans Devanagari':
+    try {
+      baseTextTheme = GoogleFonts.getTextTheme(fontName);
+    } catch (_) {
+      if (languageCode == 'hi') {
         baseTextTheme = GoogleFonts.notoSansDevanagariTextTheme();
-        break;
-      case 'Inter':
-      default:
+      } else if (languageCode == 'ur') {
+        baseTextTheme = GoogleFonts.marheyTextTheme();
+      } else {
         baseTextTheme = GoogleFonts.interTextTheme();
+      }
     }
 
     // Apply custom sizes/weights

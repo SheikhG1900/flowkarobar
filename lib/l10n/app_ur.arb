@@ -994,6 +994,7 @@
   "filterTransactionProcessed": "مکمل شدہ",
   "filterTransactionNotProcessed": "نامکمل",
   "fontSelection": "فونٹ کا انتخاب",
+  "fontChanged": "فونٹ تبدیل کر کے {fontName} کر دیا گیا ہے",
   "defaultPremiumPrice": "Rs. 2500",
   "noDataForTrends": "رجحانات کے لیے کوئی ڈیٹا نہیں ہے",
   "cancelled": "منسوخ کر دیا گیا",

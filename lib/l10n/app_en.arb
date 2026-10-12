@@ -1687,6 +1687,14 @@
   "addCashbook": "Add Cashbook",
   "cashbookCreated": "Cashbook created successfully",
   "fontSelection": "Font Selection",
+  "fontChanged": "Font changed to {fontName}",
+  "@fontChanged": {
+    "placeholders": {
+      "fontName": {
+        "type": "String"
+      }
+    }
+  },
   "restoreToNewCashbookTitle": "Restore to New Cashbook?",
   "restoreToNewCashbookMessage": "This backup belongs to \"{cloudCashbookName}\". Restoring it will create a new cashbook entry on this device with its data.",
   "@restoreToNewCashbookMessage": {

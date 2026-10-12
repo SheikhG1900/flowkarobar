@@ -6034,6 +6034,12 @@ abstract class AppLocalizations {
   /// **'Font Selection'**
   String get fontSelection;
 
+  /// No description provided for @fontChanged.
+  ///
+  /// In en, this message translates to:
+  /// **'Font changed to {fontName}'**
+  String fontChanged(String fontName);
+
   /// No description provided for @restoreToNewCashbookTitle.
   ///
   /// In en, this message translates to:

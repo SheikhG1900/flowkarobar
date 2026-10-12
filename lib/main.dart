@@ -115,8 +115,8 @@ void main() async {
     }
   }
 
-  // Pre-cache fonts for all languages
-  await _initializeFonts();
+  // Pre-cache fonts for the current active language and font selection only (Optimized Strategy)
+  await _initializeFonts(prefs);
 
   // Force tree shaking for Material Symbols icons
   // This ensures only used icons are included in the build
@@ -134,14 +134,25 @@ void main() async {
   );
 }
 
-Future<void> _initializeFonts() async {
-  await GoogleFonts.pendingFonts([
-    GoogleFonts.montserrat(),
-    GoogleFonts.notoSansDevanagari(),
-    GoogleFonts.marhey(),
-    GoogleFonts.lalezar(),
-    GoogleFonts.kufam(),
-  ]);
+Future<void> _initializeFonts(SharedPreferences prefs) async {
+  final languageCode = prefs.getString('startup_language') ?? 'en';
+  final fontName = prefs.getString('startup_font_$languageCode') ?? (
+    languageCode == 'hi' ? 'Noto Sans Devanagari' : (languageCode == 'ur' ? 'Marhey' : 'Inter')
+  );
+
+  try {
+    await GoogleFonts.pendingFonts([
+      GoogleFonts.getFont(fontName),
+    ]);
+  } catch (e) {
+    debugPrint('Failed to preload font $fontName: $e');
+    // Fallback to pre-caching basic system default font on failure
+    try {
+      await GoogleFonts.pendingFonts([
+        GoogleFonts.inter(),
+      ]);
+    } catch (_) {}
+  }
 }
 
 class FlowpaisaApp extends ConsumerStatefulWidget {

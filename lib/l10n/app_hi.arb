@@ -994,6 +994,7 @@
   "filterTransactionProcessed": "संसाधित",
   "filterTransactionNotProcessed": "असंसाधित",
   "fontSelection": "फ़ॉन्ट चयन",
+  "fontChanged": "फ़ॉन्ट को बदलकर {fontName} कर दिया गया है",
   "defaultPremiumPrice": "Rs. 2500",
   "noDataForTrends": "रुझानों के लिए कोई डेटा नहीं है",
   "cancelled": "रद्द किया गया",

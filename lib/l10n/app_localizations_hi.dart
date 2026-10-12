@@ -3285,6 +3285,11 @@ class AppLocalizationsHi extends AppLocalizations {
   String get fontSelection => 'फ़ॉन्ट चयन';
 
   @override
+  String fontChanged(String fontName) {
+    return 'फ़ॉन्ट को बदलकर $fontName कर दिया गया है';
+  }
+
+  @override
   String get restoreToNewCashbookTitle => 'नई कैशबुक में बहाल करें?';
 
   @override
