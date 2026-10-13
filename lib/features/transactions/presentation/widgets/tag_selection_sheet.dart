@@ -256,13 +256,17 @@ class _TagSelectionSheetState extends ConsumerState<TagSelectionSheet> {
                                         backgroundColor: theme.colorScheme.surface,
                                         selectedColor: tagColor.withValues(alpha: 0.2),
                                         side: BorderSide(
-                                          color: isSelected ? tagColor : theme.dividerColor.withValues(alpha: 0.1),
+                                          color: isSelected ? tagColor : tagColor.withValues(alpha: 0.3),
                                           width: isSelected ? 1.5 : 1.0,
                                         ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
                                         labelStyle: theme.textTheme.bodyMedium?.copyWith(
-                                          color: isSelected ? tagColor : theme.colorScheme.onSurface,
+                                          color: isSelected ? tagColor : tagColor.withValues(alpha: 0.7),
                                           fontWeight: isSelected ? FontWeight.bold : null,
                                           fontStyle: FontStyle.italic,
+                                          fontSize: 12,
                                         ),
                                         deleteIcon: Icon(Icons.close, size: 14, color: tagColor.withValues(alpha: 0.7)),
                                         onDeleted: () => _handleTagLongPress(context, tag),
@@ -282,11 +286,15 @@ class _TagSelectionSheetState extends ConsumerState<TagSelectionSheet> {
                                         backgroundColor: theme.colorScheme.surface,
                                         selectedColor: tagColor.withValues(alpha: 0.2),
                                         side: BorderSide(
-                                          color: isSelected ? tagColor : theme.dividerColor.withValues(alpha: 0.2),
+                                          color: isSelected ? tagColor : tagColor.withValues(alpha: 0.35),
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(16),
                                         ),
                                         labelStyle: theme.textTheme.bodyMedium?.copyWith(
-                                          color: isSelected ? tagColor : theme.colorScheme.onSurface,
+                                          color: isSelected ? tagColor : tagColor.withValues(alpha: 0.7),
                                           fontWeight: isSelected ? FontWeight.bold : null,
+                                          fontSize: 12,
                                         ),
                                       ),
                               );
@@ -469,9 +477,13 @@ class TransactionTagsSelector extends ConsumerWidget {
                       label: Text(tag.name),
                       backgroundColor: tagColor.withValues(alpha: 0.15),
                       side: BorderSide(color: tagColor.withValues(alpha: 0.3)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       labelStyle: TextStyle(
                         color: tagColor,
                         fontWeight: FontWeight.bold,
+                        fontSize: 12,
                       ),
                       deleteIcon: Icon(Icons.close, size: 14, color: tagColor),
                       onDeleted: () {
@@ -487,10 +499,14 @@ class TransactionTagsSelector extends ConsumerWidget {
                       style: TextStyle(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.bold,
+                        fontSize: 12,
                       ),
                     ),
                     backgroundColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.15),
                     side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
                     onPressed: () async {
                       final updated = await showTagSelectionSheet(
                         context,

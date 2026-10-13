@@ -33,6 +33,7 @@ import 'package:flowpaisa/features/transactions/presentation/screens/edit_transa
 import 'package:flowpaisa/features/transactions/presentation/screens/splitted_transactions_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/utils/split_share_settled_label.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/linked_settlement_account_sheet.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/tag_selection_sheet.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
@@ -765,6 +766,96 @@ class TransactionDetailsDialog extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
             ],
+
+            // Tags display section card (unified, real-time reactive)
+            ref.watch(transactionTagsProvider(transaction.uuid)).when(
+                  data: (assignedTags) {
+                    final currentUuids = assignedTags.map((t) => t.uuid).toList();
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildSectionCard(
+                          context,
+                          key: const ValueKey('tx-details-tags-section'),
+                          title: l10n.tags,
+                          titleIcon: Icons.local_offer_outlined,
+                          body: Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              ...assignedTags.map((tag) {
+                                final tagColor = tag.color != null
+                                    ? Color(int.parse(tag.color!))
+                                    : AppColors.getTagColor(tag.name);
+                                return Chip(
+                                  label: Text(tag.name),
+                                  backgroundColor: tagColor.withValues(alpha: 0.15),
+                                  side: BorderSide(color: tagColor.withValues(alpha: 0.3)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  labelStyle: TextStyle(
+                                    color: tagColor,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                  deleteIcon: Icon(Icons.close, size: 14, color: tagColor),
+                                  onDeleted: () async {
+                                    try {
+                                      final updated = List<String>.from(currentUuids)..remove(tag.uuid);
+                                      await ref.read(transactionsRepositoryProvider).setTransactionTags(transaction.uuid, updated);
+                                      ref.invalidate(transactionTagsProvider(transaction.uuid));
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ToastUtils.showErrorToast(context, ref, 'Failed to update tags: $e');
+                                      }
+                                    }
+                                  },
+                                );
+                              }),
+                              ActionChip(
+                                avatar: Icon(Icons.add_rounded, size: 16, color: theme.colorScheme.primary),
+                                label: Text(
+                                  l10n.tags,
+                                  style: TextStyle(
+                                    color: theme.colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                backgroundColor: theme.colorScheme.primaryContainer.withValues(alpha: 0.15),
+                                side: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.3)),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                onPressed: () async {
+                                  final updated = await showTagSelectionSheet(
+                                    context,
+                                    initialSelectedTagUuids: currentUuids,
+                                  );
+                                  if (updated != null) {
+                                    try {
+                                      await ref.read(transactionsRepositoryProvider).setTransactionTags(transaction.uuid, updated);
+                                      ref.invalidate(transactionTagsProvider(transaction.uuid));
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ToastUtils.showErrorToast(context, ref, 'Failed to update tags: $e');
+                                      }
+                                    }
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    );
+                  },
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, __) => const SizedBox.shrink(),
+                ),
 
             _buildSectionCard(
               context,

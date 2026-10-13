@@ -548,6 +548,7 @@ class RecentSearch {
   final List<String>? categoryUuids;
   final List<String>? contactUuids;
   final List<String>? accountUuids;
+  final List<String>? tagUuids;
   final double? minAmount;
   final double? maxAmount;
   final List<String>? statusCodes;
@@ -561,6 +562,7 @@ class RecentSearch {
     this.categoryUuids,
     this.contactUuids,
     this.accountUuids,
+    this.tagUuids,
     this.minAmount,
     this.maxAmount,
     this.statusCodes,
@@ -579,6 +581,7 @@ class RecentSearch {
       'categoryUuids': categoryUuids,
       'contactUuids': contactUuids,
       'accountUuids': accountUuids,
+      'tagUuids': tagUuids,
       'minAmount': minAmount,
       'maxAmount': maxAmount,
       'statusCodes': statusCodes,
@@ -596,6 +599,7 @@ class RecentSearch {
       categoryUuids: (json['categoryUuids'] as List<dynamic>?)?.map((e) => e as String).toList(),
       contactUuids: (json['contactUuids'] as List<dynamic>?)?.map((e) => e as String).toList(),
       accountUuids: (json['accountUuids'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      tagUuids: (json['tagUuids'] as List<dynamic>?)?.map((e) => e as String).toList(),
       minAmount: (json['minAmount'] as num?)?.toDouble(),
       maxAmount: (json['maxAmount'] as num?)?.toDouble(),
       statusCodes: (json['statusCodes'] as List<dynamic>?)?.map((e) => e as String).toList(),
@@ -608,6 +612,7 @@ class RecentSearch {
     required List<Category> categories,
     required List<Contact> contacts,
     required List<Account> accounts,
+    required List<Tag> tags,
   }) {
     final parts = <String>[];
 
@@ -629,6 +634,16 @@ class RecentSearch {
           .join(', ');
       if (names.isNotEmpty) {
         parts.add('in $names');
+      }
+    }
+
+    if (tagUuids != null && tagUuids!.isNotEmpty) {
+      final names = tagUuids!
+          .map((uuid) => tags.firstWhereOrNull((t) => t.uuid == uuid)?.name)
+          .whereNotNull()
+          .join(', ');
+      if (names.isNotEmpty) {
+        parts.add('tagged $names');
       }
     }
 
@@ -725,6 +740,7 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
         categoryUuids: item.categoryUuids,
         contactUuids: item.contactUuids,
         accountUuids: item.accountUuids,
+        tagUuids: item.tagUuids,
         minAmount: item.minAmount,
         maxAmount: item.maxAmount,
         statusCodes: item.statusCodes,
@@ -747,6 +763,7 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
           categoryUuids: existing.categoryUuids,
           contactUuids: existing.contactUuids,
           accountUuids: existing.accountUuids,
+          tagUuids: existing.tagUuids,
           minAmount: existing.minAmount,
           maxAmount: existing.maxAmount,
           statusCodes: existing.statusCodes,
@@ -759,6 +776,7 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
       final categories = ref.read(categoriesListProvider).value ?? [];
       final contacts = ref.read(contactsListProvider).value ?? [];
       final accounts = ref.read(accountsStreamProvider).value ?? [];
+      final tags = ref.read(allTagsProvider).value ?? [];
 
       final id = DateTime.now().millisecondsSinceEpoch.toString();
       
@@ -770,6 +788,7 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
         categoryUuids: cleanFilters.categoryUuids,
         contactUuids: cleanFilters.contactUuids,
         accountUuids: cleanFilters.accountUuids,
+        tagUuids: cleanFilters.tagUuids,
         minAmount: cleanFilters.minAmount,
         maxAmount: cleanFilters.maxAmount,
         statusCodes: cleanFilters.statusCodes,
@@ -780,6 +799,7 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
         categories: categories,
         contacts: contacts,
         accounts: accounts,
+        tags: tags,
       );
 
       final newSearch = RecentSearch(
@@ -790,6 +810,7 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
         categoryUuids: cleanFilters.categoryUuids,
         contactUuids: cleanFilters.contactUuids,
         accountUuids: cleanFilters.accountUuids,
+        tagUuids: cleanFilters.tagUuids,
         minAmount: cleanFilters.minAmount,
         maxAmount: cleanFilters.maxAmount,
         statusCodes: cleanFilters.statusCodes,
@@ -836,6 +857,7 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
           categoryUuids: item.categoryUuids,
           contactUuids: item.contactUuids,
           accountUuids: item.accountUuids,
+          tagUuids: item.tagUuids,
           minAmount: item.minAmount,
           maxAmount: item.maxAmount,
           statusCodes: item.statusCodes,
@@ -860,6 +882,7 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
           categoryUuids: item.categoryUuids,
           contactUuids: item.contactUuids,
           accountUuids: item.accountUuids,
+          tagUuids: item.tagUuids,
           minAmount: item.minAmount,
           maxAmount: item.maxAmount,
           statusCodes: item.statusCodes,

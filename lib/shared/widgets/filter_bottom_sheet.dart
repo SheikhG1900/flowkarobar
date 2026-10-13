@@ -274,7 +274,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                           child: _buildCategorySelector(),
                         ),
                         _buildCollapsibleSection(
-                          title: 'Tags',
+                          title: l10n.tags,
                           initiallyExpanded: true,
                           icon: Icons.local_offer,
                           primaryColor: primaryFilterColor,
@@ -1045,13 +1045,17 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                         side: BorderSide(
                           color: isSelected
                               ? tagColor
-                              : theme.dividerColor.withValues(alpha: 0.1),
+                              : tagColor.withValues(alpha: 0.3),
                           width: 1.0,
                         ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         labelStyle: theme.textTheme.bodyMedium?.copyWith(
-                          color: isSelected ? tagColor : theme.colorScheme.onSurface,
+                          color: isSelected ? tagColor : tagColor.withValues(alpha: 0.7),
                           fontWeight: isSelected ? FontWeight.bold : null,
                           fontStyle: FontStyle.italic,
+                          fontSize: 12,
                         ),
                         deleteIcon: Icon(Icons.close, size: 14, color: tagColor.withValues(alpha: 0.7)),
                         onDeleted: () => _handleTagLongPress(context, tag),
@@ -1073,11 +1077,15 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                         side: BorderSide(
                           color: isSelected
                               ? tagColor
-                              : theme.dividerColor.withValues(alpha: 0.2),
+                              : tagColor.withValues(alpha: 0.35),
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
                         labelStyle: theme.textTheme.bodyMedium?.copyWith(
-                          color: isSelected ? tagColor : theme.colorScheme.onSurface,
+                          color: isSelected ? tagColor : tagColor.withValues(alpha: 0.7),
                           fontWeight: isSelected ? FontWeight.bold : null,
+                          fontSize: 12,
                         ),
                       ),
               ),
@@ -1147,7 +1155,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('OK'),
+              child: Text(l10n.ok),
             ),
           ],
         ),

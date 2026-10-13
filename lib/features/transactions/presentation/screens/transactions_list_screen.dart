@@ -1197,11 +1197,13 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     final categories = ref.watch(categoriesListProvider).value ?? [];
     final contacts = ref.watch(contactsListProvider).value ?? [];
     final accounts = ref.watch(accountsStreamProvider).value ?? [];
+    final tags = ref.watch(allTagsProvider).value ?? [];
 
     // Ensure we trigger a loading watch of the stream providers if they are not yet resolved
     final categoriesAsync = ref.watch(categoriesListProvider);
     final contactsAsync = ref.watch(contactsListProvider);
     final accountsAsync = ref.watch(accountsStreamProvider);
+    final tagsAsync = ref.watch(allTagsProvider);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1366,7 +1368,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      subtitle: _buildSearchTags(search, theme, categories, contacts, accounts),
+                      subtitle: _buildSearchTags(search, theme, categories, contacts, accounts, tags),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -1398,7 +1400,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     );
   }
 
-  Widget _buildSearchTags(RecentSearch search, ThemeData theme, List<Category> categories, List<Contact> contacts, List<Account> accounts) {
+  Widget _buildSearchTags(RecentSearch search, ThemeData theme, List<Category> categories, List<Contact> contacts, List<Account> accounts, List<Tag> allTags) {
     final tags = <Widget>[];
     final l10n = AppLocalizations.of(context)!;
 
@@ -1532,6 +1534,25 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       tags.add(_buildTagChip(statusLabel, statusIcon, theme, color: statusColor));
       if (search.statusCodes!.length > 1) {
         tags.add(_buildTagChip('+${search.statusCodes!.length - 1} more', Icons.add, theme));
+      }
+    }
+
+    // 8. Tag chips (Limit to 1)
+    if (search.tagUuids != null && search.tagUuids!.isNotEmpty) {
+      final tagList = search.tagUuids!
+          .map((uuid) => allTags.firstWhereOrNull((t) => t.uuid == uuid))
+          .whereNotNull()
+          .toList();
+      
+      for (var i = 0; i < tagList.length && i < 1; i++) {
+        final tag = tagList[i];
+        final tagColor = tag.color != null
+            ? Color(int.parse(tag.color!))
+            : AppColors.getTagColor(tag.name);
+        tags.add(_buildTagChip(tag.name, Icons.local_offer_rounded, theme, color: tagColor));
+      }
+      if (tagList.length > 1) {
+        tags.add(_buildTagChip('+${tagList.length - 1} more', Icons.add, theme));
       }
     }
 
