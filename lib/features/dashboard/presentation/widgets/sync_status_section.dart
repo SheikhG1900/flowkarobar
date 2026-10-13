@@ -153,6 +153,10 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                   return Icons.settings_rounded;
                 case 'transaction_documents':
                   return Icons.insert_drive_file_rounded;
+                case 'tags':
+                  return Icons.local_offer_rounded;
+                case 'transaction_tags':
+                  return Icons.tag_rounded;
                 default:
                   return Icons.info_outline_rounded;
               }
@@ -184,6 +188,10 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                   return l10n.preferences;
                 case 'transaction_documents':
                   return l10n.documents;
+                case 'tags':
+                  return l10n.tags;
+                case 'transaction_tags':
+                  return l10n.transactionTags;
                 default:
                   return table;
               }

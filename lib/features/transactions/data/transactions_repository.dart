@@ -937,6 +937,13 @@ class TransactionsRepository {
           .isSmallerOrEqualValue(filters.maxAmount!));
     }
 
+    if (filters.tagUuids != null && filters.tagUuids!.isNotEmpty) {
+      final subquery = _database.selectOnly(_database.transactionTags)
+        ..addColumns([_database.transactionTags.transactionUuid])
+        ..where(_database.transactionTags.tagUuid.isIn(filters.tagUuids!) & _database.transactionTags.isDeleted.equals(false));
+      query.where(_database.transactions.uuid.isInQuery(subquery));
+    }
+
     // Status-based filters: PAID / RECEIVED / PAYABLE / RECEIVABLE / AUTO /
     // SCHEDULED / PROCESSED / NOT_PROCESSED
     bool hasNotProcessedFilter = false;
@@ -1116,6 +1123,13 @@ class TransactionsRepository {
           .isSmallerOrEqualValue(filters.maxAmount!));
     }
 
+    if (filters.tagUuids != null && filters.tagUuids!.isNotEmpty) {
+      final subquery = _database.selectOnly(_database.transactionTags)
+        ..addColumns([_database.transactionTags.transactionUuid])
+        ..where(_database.transactionTags.tagUuid.isIn(filters.tagUuids!) & _database.transactionTags.isDeleted.equals(false));
+      query.where(_database.transactions.uuid.isInQuery(subquery));
+    }
+
     // Status-based filters: PAID / RECEIVED / PAYABLE / RECEIVABLE / AUTO /
     // SCHEDULED / PROCESSED / NOT_PROCESSED
     bool hasNotProcessedFilter = false;
@@ -1288,6 +1302,172 @@ class TransactionsRepository {
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );
       }).toList();
+    });
+  }
+
+  // Get all active tags
+  Future<List<Tag>> getAllTags() async {
+    return (_database.select(_database.tags)
+          ..where((t) => t.isDeleted.equals(false))
+          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
+        .get();
+  }
+
+  // Watch all active tags
+  Stream<List<Tag>> watchAllTags() {
+    return (_database.select(_database.tags)
+          ..where((t) => t.isDeleted.equals(false))
+          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
+        .watch();
+  }
+
+  // Watch all active tags ordered by transaction usage frequency
+  Stream<List<Tag>> watchTagsByUsage() {
+    final query = _database.customSelect(
+      'SELECT t.* FROM tags t '
+      'LEFT JOIN transaction_tags tt ON t.uuid = tt.tag_uuid AND tt.is_deleted = 0 '
+      'WHERE t.is_deleted = 0 '
+      'GROUP BY t.uuid '
+      'ORDER BY COUNT(tt.tag_uuid) DESC, t.name ASC',
+      readsFrom: {_database.tags, _database.transactionTags},
+    );
+    return query.watch().map((rows) {
+      return rows.map((row) => _database.tags.map(row.data)).toList();
+    });
+  }
+
+  // Create or get tag by name (case-insensitive)
+  Future<Tag> createTag(String name, {String? color}) async {
+    final cleanName = name.trim();
+    if (cleanName.isEmpty) throw ArgumentError('Tag name cannot be empty');
+
+    // Check case-insensitive
+    final existing = await (_database.select(_database.tags)
+          ..where((t) => t.name.lower().equals(cleanName.toLowerCase()) & t.isDeleted.equals(false)))
+        .getSingleOrNull();
+
+    if (existing != null) {
+      return existing;
+    }
+
+    // Create new
+    final uuid = const Uuid().v4();
+    final companion = TagsCompanion(
+      uuid: Value(uuid),
+      name: Value(cleanName),
+      color: Value(color),
+      createdAt: Value(DateTime.now()),
+      updatedAt: Value(DateTime.now()),
+      isDeleted: const Value(false),
+      isNotSynced: const Value(true),
+    );
+
+    await _database.into(_database.tags).insert(companion);
+    return Tag(
+      uuid: uuid,
+      name: cleanName,
+      color: color,
+      createdAt: companion.createdAt.value,
+      updatedAt: companion.updatedAt.value,
+      isDeleted: false,
+      isNotSynced: true,
+    );
+  }
+
+  // Get tags for a transaction
+  Future<List<Tag>> getTagsForTransaction(String transactionUuid) async {
+    final query = _database.select(_database.tags).join([
+      innerJoin(
+        _database.transactionTags,
+        _database.transactionTags.tagUuid.equalsExp(_database.tags.uuid),
+      ),
+    ])
+      ..where(_database.transactionTags.transactionUuid.equals(transactionUuid) &
+          _database.transactionTags.isDeleted.equals(false) &
+          _database.tags.isDeleted.equals(false));
+
+    final rows = await query.get();
+    return rows.map((row) => row.readTable(_database.tags)).toList();
+  }
+
+  // Watch tags for a transaction
+  Stream<List<Tag>> watchTagsForTransaction(String transactionUuid) {
+    final query = _database.select(_database.tags).join([
+      innerJoin(
+        _database.transactionTags,
+        _database.transactionTags.tagUuid.equalsExp(_database.tags.uuid),
+      ),
+    ])
+      ..where(_database.transactionTags.transactionUuid.equals(transactionUuid) &
+          _database.transactionTags.isDeleted.equals(false) &
+          _database.tags.isDeleted.equals(false));
+
+    return query.watch().map((rows) {
+      return rows.map((row) => row.readTable(_database.tags)).toList();
+    });
+  }
+
+  // Set tags for a transaction (replaces existing tags for this transaction)
+  Future<void> setTransactionTags(String transactionUuid, List<String> tagUuids) async {
+    await _database.transaction(() async {
+      // 1. Mark existing transaction tags as deleted (or delete them if not synced yet,
+      // but to support cloud sync soft deleting is safer)
+      await (_database.update(_database.transactionTags)
+            ..where((t) => t.transactionUuid.equals(transactionUuid)))
+          .write(const TransactionTagsCompanion(
+            isDeleted: Value(true),
+            isNotSynced: Value(true),
+          ));
+
+      // 2. Insert new transaction tags or update isDeleted = false if already exist
+      for (final tagUuid in tagUuids) {
+        final existing = await (_database.select(_database.transactionTags)
+              ..where((t) => t.transactionUuid.equals(transactionUuid) & t.tagUuid.equals(tagUuid)))
+            .getSingleOrNull();
+
+        if (existing != null) {
+          await (_database.update(_database.transactionTags)
+                ..where((t) => t.transactionUuid.equals(transactionUuid) & t.tagUuid.equals(tagUuid)))
+              .write(const TransactionTagsCompanion(
+                isDeleted: Value(false),
+                isNotSynced: Value(true),
+              ));
+        } else {
+          await _database.into(_database.transactionTags).insert(TransactionTagsCompanion(
+            transactionUuid: Value(transactionUuid),
+            tagUuid: Value(tagUuid),
+            isDeleted: const Value(false),
+            isNotSynced: const Value(true),
+          ));
+        }
+      }
+    });
+  }
+
+  // Get transaction usage count for a tag
+  Future<int> getTagUsageCount(String tagUuid) async {
+    final result = await _database.customSelect(
+      'SELECT COUNT(*) as count FROM transaction_tags WHERE tag_uuid = ? AND is_deleted = 0',
+      variables: [Variable.withString(tagUuid)],
+    ).getSingle();
+    return (result.data['count'] as num).toInt();
+  }
+
+  // Soft-delete a tag (and its associations) so it syncs deletion to the cloud
+  Future<void> deleteTag(String uuid) async {
+    await _database.transaction(() async {
+      await (_database.update(_database.tags)..where((t) => t.uuid.equals(uuid)))
+          .write(TagsCompanion(
+            isDeleted: const Value(true),
+            isNotSynced: const Value(true),
+            updatedAt: Value(DateTime.now()),
+          ));
+
+      await (_database.update(_database.transactionTags)..where((t) => t.tagUuid.equals(uuid)))
+          .write(const TransactionTagsCompanion(
+            isDeleted: Value(true),
+            isNotSynced: Value(true),
+          ));
     });
   }
 }

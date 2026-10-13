@@ -4896,4 +4896,46 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get tripleLabel => 'तिगुना';
+
+  @override
+  String get tags => 'टैग';
+
+  @override
+  String get transactionTags => 'लेनदेन टैग';
+
+  @override
+  String get suggestedTags => 'सुझाए गए टैग';
+
+  @override
+  String get addTagHint => 'एक टैग जोड़ें...';
+
+  @override
+  String get noTagsUsedYet => 'अभी तक कोई टैग उपयोग नहीं किया गया है।';
+
+  @override
+  String get deleteTagTitle => 'टैग हटाएं';
+
+  @override
+  String deleteTagConfirm(String tagName) {
+    return 'क्या आप वाकई टैग \"$tagName\" को स्थायी रूप से हटाना चाहते हैं? इसका उपयोग किसी भी लेनदेन में नहीं किया गया है।';
+  }
+
+  @override
+  String get cannotDeleteTagTitle => 'टैग हटाया नहीं जा सकता';
+
+  @override
+  String cannotDeleteTagMessage(int count) {
+    return 'यह टैग वर्तमान में $count लेनदेन में उपयोग किया जा रहा है। इसे हटाने से पहले आपको उन लेनदेन से हटाना होगा।';
+  }
+
+  @override
+  String get tagDeletedSuccessfully => 'टैग सफलतापूर्वक हटा दिया गया';
+
+  @override
+  String get unusedTagIndicator => 'अप्रयुक्त';
+
+  @override
+  String createTagQuery(String tagName) {
+    return 'टैग \"$tagName\" बनाएं';
+  }
 }

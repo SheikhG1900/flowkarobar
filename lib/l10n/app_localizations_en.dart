@@ -4882,4 +4882,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tripleLabel => 'Triple';
+
+  @override
+  String get tags => 'Tags';
+
+  @override
+  String get transactionTags => 'Transaction Tags';
+
+  @override
+  String get suggestedTags => 'Suggested Tags';
+
+  @override
+  String get addTagHint => 'Add a tag...';
+
+  @override
+  String get noTagsUsedYet => 'No tags used yet.';
+
+  @override
+  String get deleteTagTitle => 'Delete Tag';
+
+  @override
+  String deleteTagConfirm(String tagName) {
+    return 'Are you sure you want to permanently delete the tag \"$tagName\"? It is not used in any transactions.';
+  }
+
+  @override
+  String get cannotDeleteTagTitle => 'Cannot Delete Tag';
+
+  @override
+  String cannotDeleteTagMessage(int count) {
+    return 'This tag is currently used in $count transactions. You must remove it from those transactions first before you can delete it.';
+  }
+
+  @override
+  String get tagDeletedSuccessfully => 'Tag deleted successfully';
+
+  @override
+  String get unusedTagIndicator => 'Unused';
+
+  @override
+  String createTagQuery(String tagName) {
+    return 'Create Tag \"$tagName\"';
+  }
 }

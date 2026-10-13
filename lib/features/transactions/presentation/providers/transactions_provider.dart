@@ -908,3 +908,37 @@ final exportServiceProvider = Provider<ExportService>((ref) {
   return ExportService(transactionsRepository, db,
       dateFormat: userProfile.dateFormat);
 });
+
+// Tags Stream Providers
+final allTagsProvider = StreamProvider<List<Tag>>((ref) {
+  final repository = ref.watch(transactionsRepositoryProvider);
+  return repository.watchAllTags();
+});
+
+final tagsByUsageProvider = StreamProvider<List<Tag>>((ref) {
+  final repository = ref.watch(transactionsRepositoryProvider);
+  return repository.watchTagsByUsage();
+});
+
+final tagUsageCountsProvider = StreamProvider<Map<String, int>>((ref) {
+  final db = ref.watch(databaseProvider);
+  final query = db.customSelect(
+    'SELECT tag_uuid, COUNT(*) as count FROM transaction_tags WHERE is_deleted = 0 GROUP BY tag_uuid',
+    readsFrom: {db.transactionTags},
+  );
+  return query.watch().map((rows) {
+    final counts = <String, int>{};
+    for (final row in rows) {
+      final uuid = row.data['tag_uuid'] as String?;
+      if (uuid != null) {
+        counts[uuid] = (row.data['count'] as num).toInt();
+      }
+    }
+    return counts;
+  });
+});
+
+final transactionTagsProvider = StreamProvider.family<List<Tag>, String>((ref, transactionUuid) {
+  final repository = ref.watch(transactionsRepositoryProvider);
+  return repository.watchTagsForTransaction(transactionUuid);
+});

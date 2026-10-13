@@ -8914,6 +8914,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Triple'**
   String get tripleLabel;
+
+  /// No description provided for @tags.
+  ///
+  /// In en, this message translates to:
+  /// **'Tags'**
+  String get tags;
+
+  /// No description provided for @transactionTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Transaction Tags'**
+  String get transactionTags;
+
+  /// No description provided for @suggestedTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested Tags'**
+  String get suggestedTags;
+
+  /// No description provided for @addTagHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a tag...'**
+  String get addTagHint;
+
+  /// No description provided for @noTagsUsedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No tags used yet.'**
+  String get noTagsUsedYet;
+
+  /// No description provided for @deleteTagTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Tag'**
+  String get deleteTagTitle;
+
+  /// No description provided for @deleteTagConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to permanently delete the tag \"{tagName}\"? It is not used in any transactions.'**
+  String deleteTagConfirm(String tagName);
+
+  /// No description provided for @cannotDeleteTagTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot Delete Tag'**
+  String get cannotDeleteTagTitle;
+
+  /// No description provided for @cannotDeleteTagMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This tag is currently used in {count} transactions. You must remove it from those transactions first before you can delete it.'**
+  String cannotDeleteTagMessage(int count);
+
+  /// No description provided for @tagDeletedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag deleted successfully'**
+  String get tagDeletedSuccessfully;
+
+  /// No description provided for @unusedTagIndicator.
+  ///
+  /// In en, this message translates to:
+  /// **'Unused'**
+  String get unusedTagIndicator;
+
+  /// No description provided for @createTagQuery.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Tag \"{tagName}\"'**
+  String createTagQuery(String tagName);
 }
 
 class _AppLocalizationsDelegate

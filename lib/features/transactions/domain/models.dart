@@ -87,6 +87,7 @@ class TransactionFilters {
   final List<String>? contactUuids;
   /// Filter by transaction [accountUuid] (cashbook account).
   final List<String>? accountUuids;
+  final List<String>? tagUuids;
   final double? minAmount;
   final double? maxAmount;
 
@@ -102,6 +103,7 @@ class TransactionFilters {
     this.categoryUuids,
     this.contactUuids,
     this.accountUuids,
+    this.tagUuids,
     this.minAmount,
     this.maxAmount,
     this.statusCodes,
@@ -114,6 +116,7 @@ class TransactionFilters {
       (categoryUuids == null || categoryUuids!.isEmpty) &&
       (contactUuids == null || contactUuids!.isEmpty) &&
       (accountUuids == null || accountUuids!.isEmpty) &&
+      (tagUuids == null || tagUuids!.isEmpty) &&
       minAmount == null &&
       maxAmount == null &&
       (statusCodes == null || statusCodes!.isEmpty);
@@ -128,6 +131,7 @@ class TransactionFilters {
     List<String>? categoryUuids,
     List<String>? contactUuids,
     List<String>? accountUuids,
+    List<String>? tagUuids,
     double? minAmount,
     bool clearMinAmount = false,
     double? maxAmount,
@@ -141,6 +145,7 @@ class TransactionFilters {
       categoryUuids: categoryUuids ?? this.categoryUuids,
       contactUuids: contactUuids ?? this.contactUuids,
       accountUuids: accountUuids ?? this.accountUuids,
+      tagUuids: tagUuids ?? this.tagUuids,
       minAmount: clearMinAmount ? null : (minAmount ?? this.minAmount),
       maxAmount: clearMaxAmount ? null : (maxAmount ?? this.maxAmount),
       statusCodes: statusCodes ?? this.statusCodes,
@@ -160,6 +165,7 @@ class TransactionFilters {
         listEquals(other.categoryUuids, categoryUuids) &&
         listEquals(other.contactUuids, contactUuids) &&
         listEquals(other.accountUuids, accountUuids) &&
+        listEquals(other.tagUuids, tagUuids) &&
         other.minAmount == minAmount &&
         other.maxAmount == maxAmount &&
         listEquals(other.statusCodes, statusCodes);
@@ -175,6 +181,7 @@ class TransactionFilters {
         listHash(categoryUuids) ^
         listHash(contactUuids) ^
         listHash(accountUuids) ^
+        listHash(tagUuids) ^
         minAmount.hashCode ^
         maxAmount.hashCode ^
         listHash(statusCodes);

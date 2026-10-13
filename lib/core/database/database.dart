@@ -359,6 +359,29 @@ class TransactionDocuments extends Table {
   Set<Column> get primaryKey => {uuid};
 }
 
+class Tags extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get name => text().withLength(min: 1, max: 100).unique()();
+  TextColumn get color => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+class TransactionTags extends Table {
+  TextColumn get transactionUuid => text().references(Transactions, #uuid)();
+  TextColumn get tagUuid => text().references(Tags, #uuid)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {transactionUuid, tagUuid};
+}
+
 @DriftDatabase(tables: [
   Categories,
   Contacts,
@@ -366,6 +389,8 @@ class TransactionDocuments extends Table {
   Transactions,
   AccountTransfers,
   TransactionDocuments,
+  Tags,
+  TransactionTags,
   Receivables,
   Payables,
   Reminders,
@@ -383,7 +408,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 27;
+  int get schemaVersion => 28;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -702,6 +727,24 @@ class AppDatabase extends _$AppDatabase {
             } catch (e) {
               if (kDebugMode) {
                 print('Migration: transaction_documents table might already exist: $e');
+              }
+            }
+          }
+
+          // Migration from version 27 to 28: Add Tags and TransactionTags tables
+          if (from <= 27) {
+            try {
+              await m.createTable(tags);
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: tags table might already exist: $e');
+              }
+            }
+            try {
+              await m.createTable(transactionTags);
+            } catch (e) {
+              if (kDebugMode) {
+                print('Migration: transaction_tags table might already exist: $e');
               }
             }
           }

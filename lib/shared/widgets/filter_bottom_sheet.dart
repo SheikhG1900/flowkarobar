@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/features/accounts/domain/models/account_models.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -40,6 +44,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   late List<String> _selectedContactUuids;
   late List<String> _selectedStatusCodes;
   late List<String> _selectedAccountUuids;
+  late List<String> _selectedTagUuids;
   late bool _filterByDueDate;
   late TextEditingController _minAmountController;
   late TextEditingController _maxAmountController;
@@ -68,11 +73,13 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       _selectedCategoryUuids = List.from(filters.categoryUuids ?? []);
       _selectedStatusCodes = List.from(filters.statusCodes ?? []);
       _selectedAccountUuids = List.from(filters.accountUuids ?? []);
+      _selectedTagUuids = List.from(filters.tagUuids ?? []);
     } else {
       _transactionType = null;
       _selectedCategoryUuids = [];
       _selectedStatusCodes = [];
       _selectedAccountUuids = [];
+      _selectedTagUuids = [];
     }
   }
 
@@ -93,6 +100,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       _selectedContactUuids = [];
       _selectedStatusCodes = [];
       _selectedAccountUuids = [];
+      _selectedTagUuids = [];
       _minAmountController.text = '';
       _maxAmountController.text = '';
       _filterByDueDate = false;
@@ -266,6 +274,13 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                           child: _buildCategorySelector(),
                         ),
                         _buildCollapsibleSection(
+                          title: 'Tags',
+                          initiallyExpanded: true,
+                          icon: Icons.local_offer,
+                          primaryColor: primaryFilterColor,
+                          child: _buildTagSelector(theme, primaryFilterColor),
+                        ),
+                        _buildCollapsibleSection(
                           title: l10n.status,
                           initiallyExpanded: true,
                           icon: Icons.label,
@@ -358,6 +373,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
         categoryUuids: _selectedCategoryUuids,
         contactUuids: _selectedContactUuids,
         accountUuids: _selectedAccountUuids,
+        tagUuids: _selectedTagUuids,
         minAmount: minAmount,
         clearMinAmount: minAmount == null,
         maxAmount: maxAmount,
@@ -974,5 +990,168 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
         ),
       ],
     );
+  }
+
+  Widget _buildTagSelector(ThemeData theme, Color primaryColor) {
+    final tagsAsync = ref.watch(allTagsProvider);
+    final tagUsageCountsAsync = ref.watch(tagUsageCountsProvider);
+
+    final l10n = AppLocalizations.of(context)!;
+    return tagsAsync.when(
+      data: (tags) {
+        if (tags.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              l10n.noTagsUsedYet,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
+            ),
+          );
+        }
+
+        final usageCounts = tagUsageCountsAsync.value ?? const {};
+
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: tags.map((tag) {
+            final isSelected = _selectedTagUuids.contains(tag.uuid);
+            final tagColor = tag.color != null
+                ? Color(int.parse(tag.color!))
+                : AppColors.getTagColor(tag.name);
+            final isOrphan = (usageCounts[tag.uuid] ?? 0) == 0;
+
+            return Tooltip(
+              message: isOrphan ? l10n.deleteTagTitle : '',
+              child: GestureDetector(
+                onLongPress: () => _handleTagLongPress(context, tag),
+                child: isOrphan
+                    ? InputChip(
+                        label: Text(tag.name),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedTagUuids.add(tag.uuid);
+                            } else {
+                              _selectedTagUuids.remove(tag.uuid);
+                            }
+                          });
+                        },
+                        backgroundColor: theme.colorScheme.surface,
+                        selectedColor: tagColor.withValues(alpha: 0.2),
+                        side: BorderSide(
+                          color: isSelected
+                              ? tagColor
+                              : theme.dividerColor.withValues(alpha: 0.1),
+                          width: 1.0,
+                        ),
+                        labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                          color: isSelected ? tagColor : theme.colorScheme.onSurface,
+                          fontWeight: isSelected ? FontWeight.bold : null,
+                          fontStyle: FontStyle.italic,
+                        ),
+                        deleteIcon: Icon(Icons.close, size: 14, color: tagColor.withValues(alpha: 0.7)),
+                        onDeleted: () => _handleTagLongPress(context, tag),
+                      )
+                    : FilterChip(
+                        label: Text(tag.name),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedTagUuids.add(tag.uuid);
+                            } else {
+                              _selectedTagUuids.remove(tag.uuid);
+                            }
+                          });
+                        },
+                        backgroundColor: theme.colorScheme.surface,
+                        selectedColor: tagColor.withValues(alpha: 0.2),
+                        side: BorderSide(
+                          color: isSelected
+                              ? tagColor
+                              : theme.dividerColor.withValues(alpha: 0.2),
+                        ),
+                        labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                          color: isSelected ? tagColor : theme.colorScheme.onSurface,
+                          fontWeight: isSelected ? FontWeight.bold : null,
+                        ),
+                      ),
+              ),
+            );
+          }).toList(),
+        );
+      },
+      loading: () => const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+      error: (err, stack) => Text('Error loading tags: $err'),
+    );
+  }
+
+  Future<void> _handleTagLongPress(BuildContext context, Tag tag) async {
+    final repo = ref.read(transactionsRepositoryProvider);
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    
+    final count = await repo.getTagUsageCount(tag.uuid);
+    
+    if (!mounted) return;
+    
+    if (count == 0) {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.deleteTagTitle),
+          content: Text(l10n.deleteTagConfirm(tag.name)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: theme.colorScheme.error,
+              ),
+              onPressed: () async {
+                Navigator.pop(ctx);
+                try {
+                  await repo.deleteTag(tag.uuid);
+                  if (mounted) {
+                    ToastUtils.showSuccessToast(context, ref, l10n.tagDeletedSuccessfully);
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ToastUtils.showErrorToast(context, ref, 'Failed to delete tag: $e');
+                  }
+                }
+              },
+              child: Text(l10n.delete),
+            ),
+          ],
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.cannotDeleteTagTitle),
+          content: Text(l10n.cannotDeleteTagMessage(count)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 }

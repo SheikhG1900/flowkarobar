@@ -7,6 +7,7 @@ import 'package:flowpaisa/features/messages/presentation/providers/message_templ
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/tag_selection_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
@@ -111,6 +112,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
   Category? _selectedCategory;
   Contact? _selectedContact;
   String? _selectedCategoryUuid;
+  List<String> _selectedTagUuids = [];
 
   // Linked transaction fields
   String? _selectedContactUuid;
@@ -588,6 +590,12 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
           accountUuid: _selectedAccount?.uuid,
           isPending: _saveIsPending,
         );
+
+        // Save tags
+        if (_selectedTagUuids.isNotEmpty) {
+          final txRepo = ref.read(transactionsRepositoryProvider);
+          await txRepo.setTransactionTags(transactionUuid, _selectedTagUuids);
+        }
 
         // Save attachments
         if (_attachments.isNotEmpty) {
@@ -2635,6 +2643,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
                 ),
               const SizedBox(height: 16),
 
+              // Tags Selector (first-class citizen)
+              TransactionTagsSelector(
+                selectedTagUuids: _selectedTagUuids,
+                onChanged: (tags) => setState(() => _selectedTagUuids = tags),
+              ),
+              const SizedBox(height: 16),
+
               // Date Selector
               InkWell(
                 onTap: _selectDate,
@@ -3644,3 +3659,4 @@ class TxDueDateRow extends StatelessWidget {
     );
   }
 }
+

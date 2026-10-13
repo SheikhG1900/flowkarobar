@@ -1884,5 +1884,38 @@
   "condensedLabel": "संकुचित",
   "looseLabel": "ढीला",
   "doubleLabel": "दोगुना",
-  "tripleLabel": "तिगुना"
+  "tripleLabel": "तिगुना",
+  "tags": "टैग",
+  "transactionTags": "लेनदेन टैग",
+  "suggestedTags": "सुझाए गए टैग",
+  "addTagHint": "एक टैग जोड़ें...",
+  "noTagsUsedYet": "अभी तक कोई टैग उपयोग नहीं किया गया है।",
+  "deleteTagTitle": "टैग हटाएं",
+  "deleteTagConfirm": "क्या आप वाकई टैग \"{tagName}\" को स्थायी रूप से हटाना चाहते हैं? इसका उपयोग किसी भी लेनदेन में नहीं किया गया है।",
+  "@deleteTagConfirm": {
+    "placeholders": {
+      "tagName": {
+        "type": "String"
+      }
+    }
+  },
+  "cannotDeleteTagTitle": "टैग हटाया नहीं जा सकता",
+  "cannotDeleteTagMessage": "यह टैग वर्तमान में {count} लेनदेन में उपयोग किया जा रहा है। इसे हटाने से पहले आपको उन लेनदेन से हटाना होगा।",
+  "@cannotDeleteTagMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tagDeletedSuccessfully": "टैग सफलतापूर्वक हटा दिया गया",
+  "unusedTagIndicator": "अप्रयुक्त",
+  "createTagQuery": "टैग \"{tagName}\" बनाएं",
+  "@createTagQuery": {
+    "placeholders": {
+      "tagName": {
+        "type": "String"
+      }
+    }
+  }
 }

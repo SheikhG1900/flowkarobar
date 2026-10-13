@@ -4138,6 +4138,685 @@ class TransactionDocumentsCompanion
   }
 }
 
+class $TagsTable extends Tags with TableInfo<$TagsTable, Tag> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TagsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 100),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
+  static const VerificationMeta _colorMeta = const VerificationMeta('color');
+  @override
+  late final GeneratedColumn<String> color = GeneratedColumn<String>(
+      'color', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [uuid, name, color, createdAt, updatedAt, isDeleted, isNotSynced];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'tags';
+  @override
+  VerificationContext validateIntegrity(Insertable<Tag> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('color')) {
+      context.handle(
+          _colorMeta, color.isAcceptableOrUnknown(data['color']!, _colorMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  Tag map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Tag(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      color: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}color']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $TagsTable createAlias(String alias) {
+    return $TagsTable(attachedDatabase, alias);
+  }
+}
+
+class Tag extends DataClass implements Insertable<Tag> {
+  final String uuid;
+  final String name;
+  final String? color;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const Tag(
+      {required this.uuid,
+      required this.name,
+      this.color,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || color != null) {
+      map['color'] = Variable<String>(color);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  TagsCompanion toCompanion(bool nullToAbsent) {
+    return TagsCompanion(
+      uuid: Value(uuid),
+      name: Value(name),
+      color:
+          color == null && nullToAbsent ? const Value.absent() : Value(color),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory Tag.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Tag(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      name: serializer.fromJson<String>(json['name']),
+      color: serializer.fromJson<String?>(json['color']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'name': serializer.toJson<String>(name),
+      'color': serializer.toJson<String?>(color),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  Tag copyWith(
+          {String? uuid,
+          String? name,
+          Value<String?> color = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      Tag(
+        uuid: uuid ?? this.uuid,
+        name: name ?? this.name,
+        color: color.present ? color.value : this.color,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  Tag copyWithCompanion(TagsCompanion data) {
+    return Tag(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      name: data.name.present ? data.name.value : this.name,
+      color: data.color.present ? data.color.value : this.color,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Tag(')
+          ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
+          ..write('color: $color, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid, name, color, createdAt, updatedAt, isDeleted, isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Tag &&
+          other.uuid == this.uuid &&
+          other.name == this.name &&
+          other.color == this.color &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class TagsCompanion extends UpdateCompanion<Tag> {
+  final Value<String> uuid;
+  final Value<String> name;
+  final Value<String?> color;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const TagsCompanion({
+    this.uuid = const Value.absent(),
+    this.name = const Value.absent(),
+    this.color = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TagsCompanion.insert({
+    required String uuid,
+    required String name,
+    this.color = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        name = Value(name);
+  static Insertable<Tag> custom({
+    Expression<String>? uuid,
+    Expression<String>? name,
+    Expression<String>? color,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (name != null) 'name': name,
+      if (color != null) 'color': color,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TagsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? name,
+      Value<String?>? color,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return TagsCompanion(
+      uuid: uuid ?? this.uuid,
+      name: name ?? this.name,
+      color: color ?? this.color,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (color.present) {
+      map['color'] = Variable<String>(color.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TagsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
+          ..write('color: $color, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $TransactionTagsTable extends TransactionTags
+    with TableInfo<$TransactionTagsTable, TransactionTag> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $TransactionTagsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _transactionUuidMeta =
+      const VerificationMeta('transactionUuid');
+  @override
+  late final GeneratedColumn<String> transactionUuid = GeneratedColumn<String>(
+      'transaction_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES transactions (uuid)'));
+  static const VerificationMeta _tagUuidMeta =
+      const VerificationMeta('tagUuid');
+  @override
+  late final GeneratedColumn<String> tagUuid = GeneratedColumn<String>(
+      'tag_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES tags (uuid)'));
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [transactionUuid, tagUuid, isDeleted, isNotSynced];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'transaction_tags';
+  @override
+  VerificationContext validateIntegrity(Insertable<TransactionTag> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('transaction_uuid')) {
+      context.handle(
+          _transactionUuidMeta,
+          transactionUuid.isAcceptableOrUnknown(
+              data['transaction_uuid']!, _transactionUuidMeta));
+    } else if (isInserting) {
+      context.missing(_transactionUuidMeta);
+    }
+    if (data.containsKey('tag_uuid')) {
+      context.handle(_tagUuidMeta,
+          tagUuid.isAcceptableOrUnknown(data['tag_uuid']!, _tagUuidMeta));
+    } else if (isInserting) {
+      context.missing(_tagUuidMeta);
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {transactionUuid, tagUuid};
+  @override
+  TransactionTag map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return TransactionTag(
+      transactionUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}transaction_uuid'])!,
+      tagUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}tag_uuid'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $TransactionTagsTable createAlias(String alias) {
+    return $TransactionTagsTable(attachedDatabase, alias);
+  }
+}
+
+class TransactionTag extends DataClass implements Insertable<TransactionTag> {
+  final String transactionUuid;
+  final String tagUuid;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const TransactionTag(
+      {required this.transactionUuid,
+      required this.tagUuid,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['transaction_uuid'] = Variable<String>(transactionUuid);
+    map['tag_uuid'] = Variable<String>(tagUuid);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  TransactionTagsCompanion toCompanion(bool nullToAbsent) {
+    return TransactionTagsCompanion(
+      transactionUuid: Value(transactionUuid),
+      tagUuid: Value(tagUuid),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory TransactionTag.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return TransactionTag(
+      transactionUuid: serializer.fromJson<String>(json['transactionUuid']),
+      tagUuid: serializer.fromJson<String>(json['tagUuid']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'transactionUuid': serializer.toJson<String>(transactionUuid),
+      'tagUuid': serializer.toJson<String>(tagUuid),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  TransactionTag copyWith(
+          {String? transactionUuid,
+          String? tagUuid,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      TransactionTag(
+        transactionUuid: transactionUuid ?? this.transactionUuid,
+        tagUuid: tagUuid ?? this.tagUuid,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  TransactionTag copyWithCompanion(TransactionTagsCompanion data) {
+    return TransactionTag(
+      transactionUuid: data.transactionUuid.present
+          ? data.transactionUuid.value
+          : this.transactionUuid,
+      tagUuid: data.tagUuid.present ? data.tagUuid.value : this.tagUuid,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TransactionTag(')
+          ..write('transactionUuid: $transactionUuid, ')
+          ..write('tagUuid: $tagUuid, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(transactionUuid, tagUuid, isDeleted, isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is TransactionTag &&
+          other.transactionUuid == this.transactionUuid &&
+          other.tagUuid == this.tagUuid &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class TransactionTagsCompanion extends UpdateCompanion<TransactionTag> {
+  final Value<String> transactionUuid;
+  final Value<String> tagUuid;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const TransactionTagsCompanion({
+    this.transactionUuid = const Value.absent(),
+    this.tagUuid = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  TransactionTagsCompanion.insert({
+    required String transactionUuid,
+    required String tagUuid,
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : transactionUuid = Value(transactionUuid),
+        tagUuid = Value(tagUuid);
+  static Insertable<TransactionTag> custom({
+    Expression<String>? transactionUuid,
+    Expression<String>? tagUuid,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (transactionUuid != null) 'transaction_uuid': transactionUuid,
+      if (tagUuid != null) 'tag_uuid': tagUuid,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  TransactionTagsCompanion copyWith(
+      {Value<String>? transactionUuid,
+      Value<String>? tagUuid,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return TransactionTagsCompanion(
+      transactionUuid: transactionUuid ?? this.transactionUuid,
+      tagUuid: tagUuid ?? this.tagUuid,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (transactionUuid.present) {
+      map['transaction_uuid'] = Variable<String>(transactionUuid.value);
+    }
+    if (tagUuid.present) {
+      map['tag_uuid'] = Variable<String>(tagUuid.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('TransactionTagsCompanion(')
+          ..write('transactionUuid: $transactionUuid, ')
+          ..write('tagUuid: $tagUuid, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ReceivablesTable extends Receivables
     with TableInfo<$ReceivablesTable, Receivable> {
   @override
@@ -9921,6 +10600,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $AccountTransfersTable(this);
   late final $TransactionDocumentsTable transactionDocuments =
       $TransactionDocumentsTable(this);
+  late final $TagsTable tags = $TagsTable(this);
+  late final $TransactionTagsTable transactionTags =
+      $TransactionTagsTable(this);
   late final $ReceivablesTable receivables = $ReceivablesTable(this);
   late final $PayablesTable payables = $PayablesTable(this);
   late final $RemindersTable reminders = $RemindersTable(this);
@@ -9947,6 +10629,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         transactions,
         accountTransfers,
         transactionDocuments,
+        tags,
+        transactionTags,
         receivables,
         payables,
         reminders,
@@ -11973,6 +12657,24 @@ final class $$TransactionsTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
+
+  static MultiTypedResultKey<$TransactionTagsTable, List<TransactionTag>>
+      _transactionTagsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.transactionTags,
+              aliasName: $_aliasNameGenerator(
+                  db.transactions.uuid, db.transactionTags.transactionUuid));
+
+  $$TransactionTagsTableProcessedTableManager get transactionTagsRefs {
+    final manager = $$TransactionTagsTableTableManager(
+            $_db, $_db.transactionTags)
+        .filter((f) =>
+            f.transactionUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_transactionTagsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
 }
 
 class $$TransactionsTableFilterComposer
@@ -12097,6 +12799,27 @@ class $$TransactionsTableFilterComposer
             $$TransactionDocumentsTableFilterComposer(
               $db: $db,
               $table: $db.transactionDocuments,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> transactionTagsRefs(
+      Expression<bool> Function($$TransactionTagsTableFilterComposer f) f) {
+    final $$TransactionTagsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.transactionTags,
+        getReferencedColumn: (t) => t.transactionUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionTagsTableFilterComposer(
+              $db: $db,
+              $table: $db.transactionTags,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -12342,6 +13065,27 @@ class $$TransactionsTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> transactionTagsRefs<T extends Object>(
+      Expression<T> Function($$TransactionTagsTableAnnotationComposer a) f) {
+    final $$TransactionTagsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.transactionTags,
+        getReferencedColumn: (t) => t.transactionUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionTagsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.transactionTags,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$TransactionsTableTableManager extends RootTableManager<
@@ -12356,7 +13100,10 @@ class $$TransactionsTableTableManager extends RootTableManager<
     (Transaction, $$TransactionsTableReferences),
     Transaction,
     PrefetchHooks Function(
-        {bool categoryUuid, bool contactUuid, bool transactionDocumentsRefs})> {
+        {bool categoryUuid,
+        bool contactUuid,
+        bool transactionDocumentsRefs,
+        bool transactionTagsRefs})> {
   $$TransactionsTableTableManager(_$AppDatabase db, $TransactionsTable table)
       : super(TableManagerState(
           db: db,
@@ -12468,11 +13215,13 @@ class $$TransactionsTableTableManager extends RootTableManager<
           prefetchHooksCallback: (
               {categoryUuid = false,
               contactUuid = false,
-              transactionDocumentsRefs = false}) {
+              transactionDocumentsRefs = false,
+              transactionTagsRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
-                if (transactionDocumentsRefs) db.transactionDocuments
+                if (transactionDocumentsRefs) db.transactionDocuments,
+                if (transactionTagsRefs) db.transactionTags
               ],
               addJoins: <
                   T extends TableManagerState<
@@ -12526,6 +13275,19 @@ class $$TransactionsTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.transactionUuid == item.uuid),
+                        typedResults: items),
+                  if (transactionTagsRefs)
+                    await $_getPrefetchedData<Transaction, $TransactionsTable,
+                            TransactionTag>(
+                        currentTable: table,
+                        referencedTable: $$TransactionsTableReferences
+                            ._transactionTagsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$TransactionsTableReferences(db, table, p0)
+                                .transactionTagsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.transactionUuid == item.uuid),
                         typedResults: items)
                 ];
               },
@@ -12546,7 +13308,10 @@ typedef $$TransactionsTableProcessedTableManager = ProcessedTableManager<
     (Transaction, $$TransactionsTableReferences),
     Transaction,
     PrefetchHooks Function(
-        {bool categoryUuid, bool contactUuid, bool transactionDocumentsRefs})>;
+        {bool categoryUuid,
+        bool contactUuid,
+        bool transactionDocumentsRefs,
+        bool transactionTagsRefs})>;
 typedef $$AccountTransfersTableCreateCompanionBuilder
     = AccountTransfersCompanion Function({
   required String uuid,
@@ -13335,6 +14100,626 @@ typedef $$TransactionDocumentsTableProcessedTableManager
         (TransactionDocument, $$TransactionDocumentsTableReferences),
         TransactionDocument,
         PrefetchHooks Function({bool transactionUuid})>;
+typedef $$TagsTableCreateCompanionBuilder = TagsCompanion Function({
+  required String uuid,
+  required String name,
+  Value<String?> color,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$TagsTableUpdateCompanionBuilder = TagsCompanion Function({
+  Value<String> uuid,
+  Value<String> name,
+  Value<String?> color,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$TagsTableReferences
+    extends BaseReferences<_$AppDatabase, $TagsTable, Tag> {
+  $$TagsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$TransactionTagsTable, List<TransactionTag>>
+      _transactionTagsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.transactionTags,
+              aliasName: $_aliasNameGenerator(
+                  db.tags.uuid, db.transactionTags.tagUuid));
+
+  $$TransactionTagsTableProcessedTableManager get transactionTagsRefs {
+    final manager = $$TransactionTagsTableTableManager(
+            $_db, $_db.transactionTags)
+        .filter((f) => f.tagUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_transactionTagsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$TagsTableFilterComposer extends Composer<_$AppDatabase, $TagsTable> {
+  $$TagsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get color => $composableBuilder(
+      column: $table.color, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> transactionTagsRefs(
+      Expression<bool> Function($$TransactionTagsTableFilterComposer f) f) {
+    final $$TransactionTagsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.transactionTags,
+        getReferencedColumn: (t) => t.tagUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionTagsTableFilterComposer(
+              $db: $db,
+              $table: $db.transactionTags,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$TagsTableOrderingComposer extends Composer<_$AppDatabase, $TagsTable> {
+  $$TagsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get color => $composableBuilder(
+      column: $table.color, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+}
+
+class $$TagsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TagsTable> {
+  $$TagsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get color =>
+      $composableBuilder(column: $table.color, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  Expression<T> transactionTagsRefs<T extends Object>(
+      Expression<T> Function($$TransactionTagsTableAnnotationComposer a) f) {
+    final $$TransactionTagsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.transactionTags,
+        getReferencedColumn: (t) => t.tagUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionTagsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.transactionTags,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$TagsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $TagsTable,
+    Tag,
+    $$TagsTableFilterComposer,
+    $$TagsTableOrderingComposer,
+    $$TagsTableAnnotationComposer,
+    $$TagsTableCreateCompanionBuilder,
+    $$TagsTableUpdateCompanionBuilder,
+    (Tag, $$TagsTableReferences),
+    Tag,
+    PrefetchHooks Function({bool transactionTagsRefs})> {
+  $$TagsTableTableManager(_$AppDatabase db, $TagsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TagsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TagsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TagsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> color = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TagsCompanion(
+            uuid: uuid,
+            name: name,
+            color: color,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String name,
+            Value<String?> color = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TagsCompanion.insert(
+            uuid: uuid,
+            name: name,
+            color: color,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) =>
+                  (e.readTable(table), $$TagsTableReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: ({transactionTagsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (transactionTagsRefs) db.transactionTags
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (transactionTagsRefs)
+                    await $_getPrefetchedData<Tag, $TagsTable, TransactionTag>(
+                        currentTable: table,
+                        referencedTable:
+                            $$TagsTableReferences._transactionTagsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$TagsTableReferences(db, table, p0)
+                                .transactionTagsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.tagUuid == item.uuid),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$TagsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $TagsTable,
+    Tag,
+    $$TagsTableFilterComposer,
+    $$TagsTableOrderingComposer,
+    $$TagsTableAnnotationComposer,
+    $$TagsTableCreateCompanionBuilder,
+    $$TagsTableUpdateCompanionBuilder,
+    (Tag, $$TagsTableReferences),
+    Tag,
+    PrefetchHooks Function({bool transactionTagsRefs})>;
+typedef $$TransactionTagsTableCreateCompanionBuilder = TransactionTagsCompanion
+    Function({
+  required String transactionUuid,
+  required String tagUuid,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$TransactionTagsTableUpdateCompanionBuilder = TransactionTagsCompanion
+    Function({
+  Value<String> transactionUuid,
+  Value<String> tagUuid,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$TransactionTagsTableReferences extends BaseReferences<
+    _$AppDatabase, $TransactionTagsTable, TransactionTag> {
+  $$TransactionTagsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $TransactionsTable _transactionUuidTable(_$AppDatabase db) =>
+      db.transactions.createAlias($_aliasNameGenerator(
+          db.transactionTags.transactionUuid, db.transactions.uuid));
+
+  $$TransactionsTableProcessedTableManager get transactionUuid {
+    final $_column = $_itemColumn<String>('transaction_uuid')!;
+
+    final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_transactionUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $TagsTable _tagUuidTable(_$AppDatabase db) => db.tags.createAlias(
+      $_aliasNameGenerator(db.transactionTags.tagUuid, db.tags.uuid));
+
+  $$TagsTableProcessedTableManager get tagUuid {
+    final $_column = $_itemColumn<String>('tag_uuid')!;
+
+    final manager = $$TagsTableTableManager($_db, $_db.tags)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_tagUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$TransactionTagsTableFilterComposer
+    extends Composer<_$AppDatabase, $TransactionTagsTable> {
+  $$TransactionTagsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$TransactionsTableFilterComposer get transactionUuid {
+    final $$TransactionsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.transactionUuid,
+        referencedTable: $db.transactions,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionsTableFilterComposer(
+              $db: $db,
+              $table: $db.transactions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$TagsTableFilterComposer get tagUuid {
+    final $$TagsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.tagUuid,
+        referencedTable: $db.tags,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TagsTableFilterComposer(
+              $db: $db,
+              $table: $db.tags,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$TransactionTagsTableOrderingComposer
+    extends Composer<_$AppDatabase, $TransactionTagsTable> {
+  $$TransactionTagsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$TransactionsTableOrderingComposer get transactionUuid {
+    final $$TransactionsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.transactionUuid,
+        referencedTable: $db.transactions,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionsTableOrderingComposer(
+              $db: $db,
+              $table: $db.transactions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$TagsTableOrderingComposer get tagUuid {
+    final $$TagsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.tagUuid,
+        referencedTable: $db.tags,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TagsTableOrderingComposer(
+              $db: $db,
+              $table: $db.tags,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$TransactionTagsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $TransactionTagsTable> {
+  $$TransactionTagsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$TransactionsTableAnnotationComposer get transactionUuid {
+    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.transactionUuid,
+        referencedTable: $db.transactions,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TransactionsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.transactions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$TagsTableAnnotationComposer get tagUuid {
+    final $$TagsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.tagUuid,
+        referencedTable: $db.tags,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$TagsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.tags,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$TransactionTagsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $TransactionTagsTable,
+    TransactionTag,
+    $$TransactionTagsTableFilterComposer,
+    $$TransactionTagsTableOrderingComposer,
+    $$TransactionTagsTableAnnotationComposer,
+    $$TransactionTagsTableCreateCompanionBuilder,
+    $$TransactionTagsTableUpdateCompanionBuilder,
+    (TransactionTag, $$TransactionTagsTableReferences),
+    TransactionTag,
+    PrefetchHooks Function({bool transactionUuid, bool tagUuid})> {
+  $$TransactionTagsTableTableManager(
+      _$AppDatabase db, $TransactionTagsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TransactionTagsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TransactionTagsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TransactionTagsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> transactionUuid = const Value.absent(),
+            Value<String> tagUuid = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TransactionTagsCompanion(
+            transactionUuid: transactionUuid,
+            tagUuid: tagUuid,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String transactionUuid,
+            required String tagUuid,
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              TransactionTagsCompanion.insert(
+            transactionUuid: transactionUuid,
+            tagUuid: tagUuid,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$TransactionTagsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({transactionUuid = false, tagUuid = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (transactionUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.transactionUuid,
+                    referencedTable: $$TransactionTagsTableReferences
+                        ._transactionUuidTable(db),
+                    referencedColumn: $$TransactionTagsTableReferences
+                        ._transactionUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (tagUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.tagUuid,
+                    referencedTable:
+                        $$TransactionTagsTableReferences._tagUuidTable(db),
+                    referencedColumn:
+                        $$TransactionTagsTableReferences._tagUuidTable(db).uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$TransactionTagsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $TransactionTagsTable,
+    TransactionTag,
+    $$TransactionTagsTableFilterComposer,
+    $$TransactionTagsTableOrderingComposer,
+    $$TransactionTagsTableAnnotationComposer,
+    $$TransactionTagsTableCreateCompanionBuilder,
+    $$TransactionTagsTableUpdateCompanionBuilder,
+    (TransactionTag, $$TransactionTagsTableReferences),
+    TransactionTag,
+    PrefetchHooks Function({bool transactionUuid, bool tagUuid})>;
 typedef $$ReceivablesTableCreateCompanionBuilder = ReceivablesCompanion
     Function({
   required String uuid,
@@ -17144,6 +18529,9 @@ class $AppDatabaseManager {
       $$AccountTransfersTableTableManager(_db, _db.accountTransfers);
   $$TransactionDocumentsTableTableManager get transactionDocuments =>
       $$TransactionDocumentsTableTableManager(_db, _db.transactionDocuments);
+  $$TagsTableTableManager get tags => $$TagsTableTableManager(_db, _db.tags);
+  $$TransactionTagsTableTableManager get transactionTags =>
+      $$TransactionTagsTableTableManager(_db, _db.transactionTags);
   $$ReceivablesTableTableManager get receivables =>
       $$ReceivablesTableTableManager(_db, _db.receivables);
   $$PayablesTableTableManager get payables =>

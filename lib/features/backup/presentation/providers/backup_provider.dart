@@ -788,6 +788,8 @@ class BackupNotifier extends Notifier<BackupState> {
       'transaction_schedules',
       'user_preferences',
       'transaction_documents',
+      'tags',
+      'transaction_tags',
     ];
     for (final table in tables) {
       try {
@@ -834,6 +836,8 @@ class BackupNotifier extends Notifier<BackupState> {
       'transaction_schedules',
       'user_preferences',
       'transaction_documents',
+      'tags',
+      'transaction_tags',
     ];
     for (final table in tables) {
       try {
@@ -953,6 +957,8 @@ class BackupNotifier extends Notifier<BackupState> {
       db.reminders,
       db.appCurrencies,
       db.transactionSchedules,
+      db.tags,
+      db.transactionTags,
     });
 
           // If we just finished a sync (transitioned from syncing to success), trigger refresh
@@ -1039,6 +1045,8 @@ class BackupNotifier extends Notifier<BackupState> {
       db.reminders,
       db.appCurrencies,
       db.transactionSchedules,
+      db.tags,
+      db.transactionTags,
     });
 
     // Do NOT invalidate StreamProviders or paginated Notifiers here: Drift streams

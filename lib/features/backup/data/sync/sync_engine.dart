@@ -159,7 +159,9 @@ class SyncEngine {
           _db.accounts,
           _db.accountTransfers,
           _db.receivables,
-          _db.payables
+          _db.payables,
+          _db.tags,
+          _db.transactionTags,
         });
       }
 
@@ -692,6 +694,8 @@ class SyncEngine {
       _db.appCurrencies,
       _db.transactionSchedules,
       _db.userPreferences,
+      _db.tags,
+      _db.transactionTags,
     });
   }
 
@@ -715,7 +719,9 @@ class SyncEngine {
         'contacts',
         'app_currencies',
         'accounts',
+        'tags',
         'transactions',
+        'transaction_tags',
         'account_transfers',
         'receivables',
         'payables',
@@ -795,6 +801,10 @@ class SyncEngine {
                 return _db.contacts;
               case 'accounts':
                 return _db.accounts;
+              case 'tags':
+                return _db.tags;
+              case 'transaction_tags':
+                return _db.transactionTags;
               case 'transactions':
                 return _db.transactions;
               case 'account_transfers':
@@ -851,7 +861,9 @@ class SyncEngine {
       'contacts',
       'app_currencies',
       'accounts',
+      'tags',
       'transactions',
+      'transaction_tags',
       'account_transfers',
       'receivables',
       'payables',
@@ -937,13 +949,22 @@ class SyncEngine {
           updatedTables.add(tableName);
         }
         for (final row in rows) {
-          final idColumn = tableName == 'user_preferences' ? 'key' : 'uuid';
-          final idValue =
-              tableName == 'user_preferences' ? row['key'] : row['uuid'];
-          await _db.customStatement(
-            'UPDATE $tableName SET is_not_synced = 0 WHERE $idColumn = ?',
-            [idValue],
-          );
+          if (tableName == 'transaction_tags') {
+            final tUuid = row['transaction_uuid'] ?? row['transactionUuid'];
+            final tagUuid = row['tag_uuid'] ?? row['tagUuid'];
+            await _db.customStatement(
+              'UPDATE transaction_tags SET is_not_synced = 0 WHERE transaction_uuid = ? AND tag_uuid = ?',
+              [tUuid, tagUuid],
+            );
+          } else {
+            final idColumn = tableName == 'user_preferences' ? 'key' : 'uuid';
+            final idValue =
+                tableName == 'user_preferences' ? row['key'] : row['uuid'];
+            await _db.customStatement(
+              'UPDATE $tableName SET is_not_synced = 0 WHERE $idColumn = ?',
+              [idValue],
+            );
+          }
         }
       }
     });
@@ -959,6 +980,10 @@ class SyncEngine {
                 return _db.contacts;
               case 'accounts':
                 return _db.accounts;
+              case 'tags':
+                return _db.tags;
+              case 'transaction_tags':
+                return _db.transactionTags;
               case 'transactions':
                 return _db.transactions;
               case 'account_transfers':
@@ -1060,7 +1085,9 @@ class SyncEngine {
     final columns = sqlData.keys.join(', ');
     final placeholders = List.filled(sqlData.length, '?').join(', ');
     final updates = sqlData.keys.map((k) => '$k = EXCLUDED.$k').join(', ');
-    final conflictColumn = tableName == 'user_preferences' ? 'key' : 'uuid';
+    final conflictColumn = tableName == 'user_preferences'
+        ? 'key'
+        : (tableName == 'transaction_tags' ? 'transaction_uuid, tag_uuid' : 'uuid');
 
     await _runWithRetryOnBusy(() async {
       try {

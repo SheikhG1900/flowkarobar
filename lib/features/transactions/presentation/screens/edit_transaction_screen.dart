@@ -7,6 +7,7 @@ import 'package:flowpaisa/core/utils/share_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/tag_selection_sheet.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
@@ -102,6 +103,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
   bool _isGroupSplit = false;
   List<AttachmentItem> _attachments = [];
   final List<String> _pendingDeletions = [];
+  List<String> _selectedTagUuids = [];
 
   // Tabular Description fields
   bool _isTabularMode = false;
@@ -144,6 +146,17 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
     // Fetch due date from linked payable/receivable if exists
     _loadLinkedEntryDueDate();
     _loadAttachments();
+    _loadTags();
+  }
+
+  Future<void> _loadTags() async {
+    final txRepo = ref.read(transactionsRepositoryProvider);
+    final tags = await txRepo.getTagsForTransaction(widget.transaction.uuid);
+    if (mounted) {
+      setState(() {
+        _selectedTagUuids = tags.map((t) => t.uuid).toList();
+      });
+    }
   }
 
   Future<void> _loadAttachments() async {
@@ -341,6 +354,10 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
           dueDate: _dueDate,
           isPending: _saveIsPending,
         );
+
+        // Update tags
+        final txRepo = ref.read(transactionsRepositoryProvider);
+        await txRepo.setTransactionTags(widget.transaction.uuid, _selectedTagUuids);
 
         // Process document deletions and additions
         final docRepo = ref.read(transactionDocumentsRepositoryProvider);
@@ -2083,6 +2100,13 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
                 ),
               const SizedBox(height: 16),
 
+              // Tags Selector (first-class citizen)
+              TransactionTagsSelector(
+                selectedTagUuids: _selectedTagUuids,
+                onChanged: (tags) => setState(() => _selectedTagUuids = tags),
+              ),
+              const SizedBox(height: 16),
+
               // Date Selector
               InkWell(
                 onTap: _selectDate,
@@ -2605,3 +2629,4 @@ class _EditFabChip extends StatelessWidget {
     );
   }
 }
+

@@ -321,6 +321,16 @@ class AppColors {
     return colors[hash.abs() % colors.length];
   }
 
+  // Generate a consistent color for a tag from its name (using same logic as contacts)
+  static Color getTagColor(String seed) {
+    return getContactColor(seed);
+  }
+
+  // Generate a gradient for a tag from its name
+  static LinearGradient getTagGradient(String seed) {
+    return getContactGradient(seed);
+  }
+
   // Generate a gradient from a seed string
   static LinearGradient getContactGradient(String seed) {
     final color = getContactColor(seed);

@@ -1884,5 +1884,38 @@
   "condensedLabel": "گنجان",
   "looseLabel": "کھلا",
   "doubleLabel": "دوگنا",
-  "tripleLabel": "تگنا"
+  "tripleLabel": "تگنا",
+  "tags": "ٹیگز",
+  "transactionTags": "لین دین کے ٹیگز",
+  "suggestedTags": "تجویز کردہ ٹیگز",
+  "addTagHint": "ٹیگ شامل کریں...",
+  "noTagsUsedYet": "ابھی تک کوئی ٹیگ استعمال نہیں ہوا۔",
+  "deleteTagTitle": "ٹیگ حذف کریں",
+  "deleteTagConfirm": "کیا آپ واقعی ٹیگ \"{tagName}\" کو مستقل طور پر حذف کرنا چاہتے ہیں؟ یہ کسی بھی لین دین میں استعمال نہیں ہو رہا ہے۔",
+  "@deleteTagConfirm": {
+    "placeholders": {
+      "tagName": {
+        "type": "String"
+      }
+    }
+  },
+  "cannotDeleteTagTitle": "ٹیگ حذف نہیں کیا جا سکتا",
+  "cannotDeleteTagMessage": "یہ ٹیگ فی الحال {count} لین دین میں استعمال ہو رہا ہے۔ حذف کرنے سے پہلے آپ کو ان لین دین سے اسے ہٹانا ہوگا۔",
+  "@cannotDeleteTagMessage": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tagDeletedSuccessfully": "ٹیگ کامیابی کے ساتھ حذف ہو گیا",
+  "unusedTagIndicator": "غیر استعمال شدہ",
+  "createTagQuery": "ٹیگ \"{tagName}\" بنائیں",
+  "@createTagQuery": {
+    "placeholders": {
+      "tagName": {
+        "type": "String"
+      }
+    }
+  }
 }

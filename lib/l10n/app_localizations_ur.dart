@@ -4902,4 +4902,46 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get tripleLabel => 'تگنا';
+
+  @override
+  String get tags => 'ٹیگز';
+
+  @override
+  String get transactionTags => 'لین دین کے ٹیگز';
+
+  @override
+  String get suggestedTags => 'تجویز کردہ ٹیگز';
+
+  @override
+  String get addTagHint => 'ٹیگ شامل کریں...';
+
+  @override
+  String get noTagsUsedYet => 'ابھی تک کوئی ٹیگ استعمال نہیں ہوا۔';
+
+  @override
+  String get deleteTagTitle => 'ٹیگ حذف کریں';
+
+  @override
+  String deleteTagConfirm(String tagName) {
+    return 'کیا آپ واقعی ٹیگ \"$tagName\" کو مستقل طور پر حذف کرنا چاہتے ہیں؟ یہ کسی بھی لین دین میں استعمال نہیں ہو رہا ہے۔';
+  }
+
+  @override
+  String get cannotDeleteTagTitle => 'ٹیگ حذف نہیں کیا جا سکتا';
+
+  @override
+  String cannotDeleteTagMessage(int count) {
+    return 'یہ ٹیگ فی الحال $count لین دین میں استعمال ہو رہا ہے۔ حذف کرنے سے پہلے آپ کو ان لین دین سے اسے ہٹانا ہوگا۔';
+  }
+
+  @override
+  String get tagDeletedSuccessfully => 'ٹیگ کامیابی کے ساتھ حذف ہو گیا';
+
+  @override
+  String get unusedTagIndicator => 'غیر استعمال شدہ';
+
+  @override
+  String createTagQuery(String tagName) {
+    return 'ٹیگ \"$tagName\" بنائیں';
+  }
 }
