@@ -231,6 +231,7 @@ class AnalyticsRepository {
             endDate: endDate,
             categoryUuids: filters.categoryUuids,
             contactUuids: filters.contactUuids,
+            tagUuids: filters.tagUuids,
             minAmount: filters.minAmount,
             maxAmount: filters.maxAmount,
             statusCodes: filters.statusCodes,
@@ -243,6 +244,7 @@ class AnalyticsRepository {
             endDate: endDate,
             categoryUuids: filters.categoryUuids,
             contactUuids: filters.contactUuids,
+            tagUuids: filters.tagUuids,
             minAmount: filters.minAmount,
             maxAmount: filters.maxAmount,
             statusCodes: filters.statusCodes,
@@ -268,12 +270,15 @@ class AnalyticsRepository {
     required DateTime endDate,
     List<String>? categoryUuids,
     List<String>? contactUuids,
+    List<String>? tagUuids,
     double? minAmount,
     double? maxAmount,
     List<String>? statusCodes,
   }) {
     final hasCategoryFilter =
         categoryUuids != null && categoryUuids.isNotEmpty;
+    final hasTagFilter =
+        tagUuids != null && tagUuids.isNotEmpty;
     final hasContactFilter =
         contactUuids != null && contactUuids.isNotEmpty;
 
@@ -291,12 +296,22 @@ class AnalyticsRepository {
       payableStatuses.add('PENDING');
     }
 
-    if (hasCategoryFilter) {
+    if (hasCategoryFilter || hasTagFilter) {
       final joinExpr =
           _database.transactions.uuid.equalsExp(_database.payables.linkedExpenseUuid) |
               _database.transactions.uuid.equalsExp(_database.payables.linkedIncomeUuid);
-      Expression<bool> whereExpr = _database.payables.isDeleted.equals(false) &
-          _database.transactions.categoryUuid.isIn(categoryUuids);
+      Expression<bool> whereExpr = _database.payables.isDeleted.equals(false);
+
+      if (hasCategoryFilter) {
+        whereExpr = whereExpr & _database.transactions.categoryUuid.isIn(categoryUuids!);
+      }
+
+      if (hasTagFilter) {
+        final subquery = _database.selectOnly(_database.transactionTags)
+          ..addColumns([_database.transactionTags.transactionUuid])
+          ..where(_database.transactionTags.tagUuid.isIn(tagUuids!) & _database.transactionTags.isDeleted.equals(false));
+        whereExpr = whereExpr & _database.transactions.uuid.isInQuery(subquery);
+      }
 
       if (payableStatuses.isNotEmpty) {
         whereExpr =
@@ -363,12 +378,15 @@ class AnalyticsRepository {
     required DateTime endDate,
     List<String>? categoryUuids,
     List<String>? contactUuids,
+    List<String>? tagUuids,
     double? minAmount,
     double? maxAmount,
     List<String>? statusCodes,
   }) {
     final hasCategoryFilter =
         categoryUuids != null && categoryUuids.isNotEmpty;
+    final hasTagFilter =
+        tagUuids != null && tagUuids.isNotEmpty;
     final hasContactFilter =
         contactUuids != null && contactUuids.isNotEmpty;
 
@@ -386,12 +404,22 @@ class AnalyticsRepository {
       receivableStatuses.add('PENDING');
     }
 
-    if (hasCategoryFilter) {
+    if (hasCategoryFilter || hasTagFilter) {
       final joinExpr =
           _database.transactions.uuid.equalsExp(_database.receivables.linkedExpenseUuid) |
               _database.transactions.uuid.equalsExp(_database.receivables.linkedIncomeUuid);
-      Expression<bool> whereExpr = _database.receivables.isDeleted.equals(false) &
-          _database.transactions.categoryUuid.isIn(categoryUuids);
+      Expression<bool> whereExpr = _database.receivables.isDeleted.equals(false);
+
+      if (hasCategoryFilter) {
+        whereExpr = whereExpr & _database.transactions.categoryUuid.isIn(categoryUuids!);
+      }
+
+      if (hasTagFilter) {
+        final subquery = _database.selectOnly(_database.transactionTags)
+          ..addColumns([_database.transactionTags.transactionUuid])
+          ..where(_database.transactionTags.tagUuid.isIn(tagUuids!) & _database.transactionTags.isDeleted.equals(false));
+        whereExpr = whereExpr & _database.transactions.uuid.isInQuery(subquery);
+      }
 
       if (receivableStatuses.isNotEmpty) {
         whereExpr = whereExpr &
@@ -476,6 +504,12 @@ class AnalyticsRepository {
     if (filters.categoryUuids != null && filters.categoryUuids!.isNotEmpty) {
       whereExpr = whereExpr &
           _database.transactions.categoryUuid.isIn(filters.categoryUuids!);
+    }
+    if (filters.tagUuids != null && filters.tagUuids!.isNotEmpty) {
+      final subquery = _database.selectOnly(_database.transactionTags)
+        ..addColumns([_database.transactionTags.transactionUuid])
+        ..where(_database.transactionTags.tagUuid.isIn(filters.tagUuids!) & _database.transactionTags.isDeleted.equals(false));
+      whereExpr = whereExpr & _database.transactions.uuid.isInQuery(subquery);
     }
     if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
       whereExpr = whereExpr &

@@ -1607,6 +1607,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       categoryUuids: search.categoryUuids,
       contactUuids: search.contactUuids,
       accountUuids: search.accountUuids,
+      tagUuids: search.tagUuids,
       minAmount: search.minAmount,
       maxAmount: search.maxAmount,
       statusCodes: search.statusCodes,

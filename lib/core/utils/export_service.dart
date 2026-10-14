@@ -600,6 +600,25 @@ class ExportService {
         }).toList();
       }
 
+      // If tag filter is applied, filter payables/receivables that are linked to transactions of those tags
+      if (filters.tagUuids != null && filters.tagUuids!.isNotEmpty) {
+        payablesWithContacts = payablesWithContacts.where((p) {
+          final isLinkedExpenseMatch = p.payable.linkedExpenseUuid != null && 
+              transactionsWithDetails.any((t) => t.transaction.uuid == p.payable.linkedExpenseUuid);
+          final isLinkedIncomeMatch = p.payable.linkedIncomeUuid != null && 
+              transactionsWithDetails.any((t) => t.transaction.uuid == p.payable.linkedIncomeUuid);
+          return isLinkedExpenseMatch || isLinkedIncomeMatch;
+        }).toList();
+
+        receivablesWithContacts = receivablesWithContacts.where((r) {
+          final isLinkedExpenseMatch = r.receivable.linkedExpenseUuid != null && 
+              transactionsWithDetails.any((t) => t.transaction.uuid == r.receivable.linkedExpenseUuid);
+          final isLinkedIncomeMatch = r.receivable.linkedIncomeUuid != null && 
+              transactionsWithDetails.any((t) => t.transaction.uuid == r.receivable.linkedIncomeUuid);
+          return isLinkedExpenseMatch || isLinkedIncomeMatch;
+        }).toList();
+      }
+
       // 2. If contact filter is applied
       if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
         payablesWithContacts = payablesWithContacts
