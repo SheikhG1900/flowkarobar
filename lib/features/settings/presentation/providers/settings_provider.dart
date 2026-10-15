@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
@@ -235,16 +236,26 @@ class FontNotifier extends Notifier<Map<String, String>> {
   }
 
   Future<void> _loadFonts() async {
-    final en = await _repository.getFontForLanguage('en');
-    final hi = await _repository.getFontForLanguage('hi');
-    final ur = await _repository.getFontForLanguage('ur');
     try {
-      final prefs = ref.read(sharedPreferencesProvider);
-      await prefs.setString('startup_font_en', en);
-      await prefs.setString('startup_font_hi', hi);
-      await prefs.setString('startup_font_ur', ur);
-    } catch (_) {}
-    state = {'en': en, 'hi': hi, 'ur': ur};
+      final en = await _repository.getFontForLanguage('en');
+      final hi = await _repository.getFontForLanguage('hi');
+      final ur = await _repository.getFontForLanguage('ur');
+      try {
+        final prefs = ref.read(sharedPreferencesProvider);
+        await prefs.setString('startup_font_en', en);
+        await prefs.setString('startup_font_hi', hi);
+        await prefs.setString('startup_font_ur', ur);
+      } catch (_) {}
+      state = {
+        'en': en.isEmpty ? 'Inter' : en,
+        'hi': hi.isEmpty ? 'Noto Sans Devanagari' : hi,
+        'ur': ur.isEmpty ? 'Marhey' : ur,
+      };
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('Error in _loadFonts: $e');
+      }
+    }
   }
 
   Future<void> setFont(String languageCode, String fontName) async {
@@ -463,11 +474,19 @@ final autoSyncOnStartupProvider =
 
 // Helper provider to get the font for the CURRENT language
 final currentFontProvider = Provider<String>((ref) {
-  final fonts = ref.watch(fontProvider);
+  Map<String, String>? fonts;
+  try {
+    fonts = ref.watch(fontProvider);
+  } catch (e) {
+    if (kDebugMode) {
+      debugPrint('Error watching fontProvider in currentFontProvider: $e');
+    }
+  }
+
   final currentLocale = ref.watch(languageProvider);
   final isPremium = ref.watch(premiumProvider).isPremiumActive;
   
-  final font = fonts[currentLocale.languageCode];
+  final font = fonts?[currentLocale.languageCode];
   if (currentLocale.languageCode == 'ur' && font == 'Marhey' && isPremium) {
     return 'Kufam';
   }

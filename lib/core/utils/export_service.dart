@@ -33,24 +33,28 @@ class ExportService {
   final TransactionsRepository _transactionsRepository;
   final AppDatabase _database;
   final String _dateFormat;
-  final String? _customEnglishFont;
-  final String? _customHindiFont;
+  final Map<String, String> _customFonts;
 
   static pw.Font? _cachedFont;
   static pw.Font? _unicodeFont;
   static pw.Font? _unicodeFontBold;
   final _reshaper = ArabicReshaper();
 
-  pw.Font? _instHindiFont;
-  pw.Font? _instHindiFontBold;
-  pw.Font? _instEnglishFont;
-  pw.Font? _instEnglishFontBold;
+  // Maps language code to loaded font instance
+  final Map<String, pw.Font?> _loadedFonts = {};
+  final Map<String, pw.Font?> _loadedBoldFonts = {};
+
+  pw.Font? get _instHindiFont => _loadedFonts['hi'];
+  pw.Font? get _instHindiFontBold => _loadedBoldFonts['hi'];
+  pw.Font? get _instEnglishFont => _loadedFonts['en'];
+  pw.Font? get _instEnglishFontBold => _loadedBoldFonts['en'];
 
   ExportService(this._transactionsRepository, this._database,
-      {String? dateFormat, String? customEnglishFont, String? customHindiFont})
+      {String? dateFormat, Map<dynamic, dynamic>? customFonts})
       : _dateFormat = dateFormat ?? AppDateFormatter.defaultPattern,
-        _customEnglishFont = customEnglishFont,
-        _customHindiFont = customHindiFont;
+        _customFonts = customFonts != null
+            ? Map<String, String>.from(customFonts)
+            : const {};
 
   // Helper to translate category names
   String _getLocalizedCategoryName(String? name, AppLocalizations? l10n) {
@@ -311,72 +315,80 @@ class ExportService {
     }
   }
 
-  // Load Hindi font for PDF generation
-  Future<pw.Font?> loadHindiFont() async {
-    if (_instHindiFont != null) return _instHindiFont;
-    try {
-      if (_customHindiFont != null && _customHindiFont!.isNotEmpty) {
-        _instHindiFont = await _getGoogleFont(_customHindiFont!);
-        try {
-          _instHindiFontBold = await _getGoogleFont(_customHindiFont!, isBold: true);
-        } catch (_) {
-          _instHindiFontBold = _instHindiFont;
-        }
-      } else {
-        _instHindiFont = await PdfGoogleFonts.notoSansDevanagariRegular();
-        try {
-          _instHindiFontBold = await PdfGoogleFonts.notoSansDevanagariBold();
-        } catch (_) {
-          _instHindiFontBold = _instHindiFont;
-        }
-      }
-      return _instHindiFont;
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('Error loading Hindi font: $e');
-      }
+  // Dynamic scalable language font preloader
+  Future<pw.Font?> loadFontForLanguage(String languageCode, {bool isBold = false}) async {
+    final cacheKey = '$languageCode${isBold ? "_bold" : "_reg"}';
+    final targetMap = isBold ? _loadedBoldFonts : _loadedFonts;
+    if (targetMap.containsKey(languageCode)) {
+      return targetMap[languageCode];
+    }
+
+    // Always enforce the clean Amiri fallback rule for Urdu RTL script
+    if (languageCode == 'ur' || languageCode == 'ar') {
       try {
-        _instHindiFont = await PdfGoogleFonts.notoSansDevanagariRegular();
-        _instHindiFontBold = await PdfGoogleFonts.notoSansDevanagariBold();
-        return _instHindiFont;
+        final font = isBold 
+            ? await PdfGoogleFonts.amiriBold() 
+            : await PdfGoogleFonts.amiriRegular();
+        targetMap[languageCode] = font;
+        return font;
+      } catch (_) {
+        final fallback = await PdfGoogleFonts.amiriRegular();
+        targetMap[languageCode] = fallback;
+        return fallback;
+      }
+    }
+
+    // Resolve any custom/selected font dynamically for all other scripts (e.g. English, Hindi, etc.)
+    final customName = _customFonts[languageCode];
+    if (customName != null && customName.isNotEmpty) {
+      try {
+        final font = await _getGoogleFont(customName, isBold: isBold);
+        targetMap[languageCode] = font;
+        return font;
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('Error loading custom font $customName for language $languageCode: $e');
+        }
+      }
+    }
+
+    // Dynamic Default Script Fallbacks if no custom font is set
+    try {
+      pw.Font defaultFont;
+      if (languageCode == 'hi') {
+        defaultFont = isBold 
+            ? await PdfGoogleFonts.notoSansDevanagariBold() 
+            : await PdfGoogleFonts.notoSansDevanagariRegular();
+      } else {
+        defaultFont = isBold 
+            ? await PdfGoogleFonts.montserratBold() 
+            : await PdfGoogleFonts.montserratRegular();
+      }
+      targetMap[languageCode] = defaultFont;
+      return defaultFont;
+    } catch (_) {
+      try {
+        final absoluteFallback = await PdfGoogleFonts.montserratRegular();
+        targetMap[languageCode] = absoluteFallback;
+        return absoluteFallback;
       } catch (_) {
         return null;
       }
     }
   }
 
-  // Load English font for PDF generation
+  // Load Hindi font for PDF generation (kept for backward compatibility, mapped to dynamic locator)
+  Future<pw.Font?> loadHindiFont() async {
+    // Preload both regular and bold versions into the cache
+    await loadFontForLanguage('hi', isBold: true);
+    return loadFontForLanguage('hi', isBold: false);
+  }
+
+  // Load English font for PDF generation (kept for backward compatibility, mapped to dynamic locator)
   Future<pw.Font?> loadEnglishFont() async {
-    if (_instEnglishFont != null) return _instEnglishFont;
-    try {
-      if (_customEnglishFont != null && _customEnglishFont!.isNotEmpty) {
-        _instEnglishFont = await _getGoogleFont(_customEnglishFont!);
-        try {
-          _instEnglishFontBold = await _getGoogleFont(_customEnglishFont!, isBold: true);
-        } catch (_) {
-          _instEnglishFontBold = _instEnglishFont;
-        }
-      } else {
-        _instEnglishFont = await PdfGoogleFonts.montserratRegular();
-        try {
-          _instEnglishFontBold = await PdfGoogleFonts.montserratBold();
-        } catch (_) {
-          _instEnglishFontBold = _instEnglishFont;
-        }
-      }
-      return _instEnglishFont;
-    } catch (e) {
-      if (kDebugMode) {
-        debugPrint('Error loading English font: $e');
-      }
-      try {
-        _instEnglishFont = await PdfGoogleFonts.montserratRegular();
-        _instEnglishFontBold = await PdfGoogleFonts.montserratBold();
-        return _instEnglishFont;
-      } catch (_) {
-        return null;
-      }
-    }
+    // Preload both regular and bold versions into the cache
+    await loadFontForLanguage('en', isBold: true);
+    return loadFontForLanguage('en', isBold: false);
   }
 
   // Helper to construct a safe, unique font fallback list

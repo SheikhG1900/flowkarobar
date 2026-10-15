@@ -928,13 +928,21 @@ final exportServiceProvider = Provider<ExportService>((ref) {
   final db = ref.watch(databaseProvider);
   final userProfile = ref.watch(userProfileProvider);
   final transactionsRepository = ref.watch(transactionsRepositoryProvider);
-  final fonts = ref.watch(fontProvider);
+  
+  Map<String, String>? fonts;
+  try {
+    fonts = ref.watch(fontProvider);
+  } catch (e) {
+    if (kDebugMode) {
+      debugPrint('Error watching fontProvider in exportServiceProvider: $e');
+    }
+  }
+
   return ExportService(
     transactionsRepository,
     db,
     dateFormat: userProfile.dateFormat,
-    customEnglishFont: fonts['en'],
-    customHindiFont: fonts['hi'],
+    customFonts: fonts,
   );
 });
 
