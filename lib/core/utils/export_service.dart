@@ -1104,8 +1104,20 @@ class ExportService {
     // Create PDF document
     final pdf = pw.Document();
 
-    final baseFont = englishFont ?? unicodeFont;
-    final boldFont = _instEnglishFontBold ?? _unicodeFontBold ?? baseFont;
+    final isHindiLocale = l10n?.localeName == 'hi';
+    final isUrduLocale = l10n?.localeName == 'ur' || l10n?.localeName == 'ar';
+
+    final baseFont = isHindiLocale
+        ? (hindiFont ?? unicodeFont ?? englishFont)
+        : isUrduLocale
+            ? (unicodeFont ?? englishFont)
+            : (englishFont ?? unicodeFont);
+
+    final boldFont = isHindiLocale
+        ? (_instHindiFontBold ?? _unicodeFontBold ?? baseFont)
+        : isUrduLocale
+            ? (_unicodeFontBold ?? baseFont)
+            : (_instEnglishFontBold ?? _unicodeFontBold ?? baseFont);
 
     // Set default theme with Unicode font and fallbacks
     final theme = pw.ThemeData.withFont(
@@ -2448,8 +2460,20 @@ class ExportService {
       }
 
       // Set default theme with Unicode font and fallbacks
-      final baseFont = englishFont ?? unicodeFont;
-      final boldFont = _instEnglishFontBold ?? _unicodeFontBold ?? baseFont;
+      final isHindiLocale = l10n?.localeName == 'hi';
+      final isUrduLocale = l10n?.localeName == 'ur' || l10n?.localeName == 'ar';
+
+      final baseFont = isHindiLocale
+          ? (hindiFont ?? unicodeFont ?? englishFont)
+          : isUrduLocale
+              ? (unicodeFont ?? englishFont)
+              : (englishFont ?? unicodeFont);
+
+      final boldFont = isHindiLocale
+          ? (_instHindiFontBold ?? _unicodeFontBold ?? baseFont)
+          : isUrduLocale
+              ? (_unicodeFontBold ?? baseFont)
+              : (_instEnglishFontBold ?? _unicodeFontBold ?? baseFont);
 
       final theme = pw.ThemeData.withFont(
         base: baseFont,
@@ -3672,8 +3696,20 @@ class ExportService {
     // Create PDF document
     final pdf = pw.Document();
 
-    final baseFont = englishFont ?? unicodeFont;
-    final boldFont = _instEnglishFontBold ?? _unicodeFontBold ?? baseFont;
+    final isHindiLocale = l10n?.localeName == 'hi';
+    final isUrduLocale = l10n?.localeName == 'ur' || l10n?.localeName == 'ar';
+
+    final baseFont = isHindiLocale
+        ? (hindiFont ?? unicodeFont ?? englishFont)
+        : isUrduLocale
+            ? (unicodeFont ?? englishFont)
+            : (englishFont ?? unicodeFont);
+
+    final boldFont = isHindiLocale
+        ? (_instHindiFontBold ?? _unicodeFontBold ?? baseFont)
+        : isUrduLocale
+            ? (_unicodeFontBold ?? baseFont)
+            : (_instEnglishFontBold ?? _unicodeFontBold ?? baseFont);
 
     // Set default theme with Unicode font and fallbacks
     final theme = pw.ThemeData.withFont(
@@ -5075,8 +5111,20 @@ class ExportService {
     final hindiFont = await loadHindiFont();
     final englishFont = await loadEnglishFont();
 
-    final baseFont = englishFont ?? unicodeFont;
-    final boldFont = _instEnglishFontBold ?? _unicodeFontBold ?? baseFont;
+    final isHindiLocale = l10n?.localeName == 'hi';
+    final isUrduLocale = l10n?.localeName == 'ur' || l10n?.localeName == 'ar';
+
+    final baseFont = isHindiLocale
+        ? (hindiFont ?? unicodeFont ?? englishFont)
+        : isUrduLocale
+            ? (unicodeFont ?? englishFont)
+            : (englishFont ?? unicodeFont);
+
+    final boldFont = isHindiLocale
+        ? (_instHindiFontBold ?? _unicodeFontBold ?? baseFont)
+        : isUrduLocale
+            ? (_unicodeFontBold ?? baseFont)
+            : (_instEnglishFontBold ?? _unicodeFontBold ?? baseFont);
 
     final theme = pw.ThemeData.withFont(
       base: baseFont,
