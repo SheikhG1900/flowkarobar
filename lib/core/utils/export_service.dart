@@ -33,14 +33,24 @@ class ExportService {
   final TransactionsRepository _transactionsRepository;
   final AppDatabase _database;
   final String _dateFormat;
+  final String? _customEnglishFont;
+  final String? _customHindiFont;
+
   static pw.Font? _cachedFont;
   static pw.Font? _unicodeFont;
   static pw.Font? _unicodeFontBold;
   final _reshaper = ArabicReshaper();
 
+  pw.Font? _instHindiFont;
+  pw.Font? _instHindiFontBold;
+  pw.Font? _instEnglishFont;
+  pw.Font? _instEnglishFontBold;
+
   ExportService(this._transactionsRepository, this._database,
-      {String? dateFormat})
-      : _dateFormat = dateFormat ?? AppDateFormatter.defaultPattern;
+      {String? dateFormat, String? customEnglishFont, String? customHindiFont})
+      : _dateFormat = dateFormat ?? AppDateFormatter.defaultPattern,
+        _customEnglishFont = customEnglishFont,
+        _customHindiFont = customHindiFont;
 
   // Helper to translate category names
   String _getLocalizedCategoryName(String? name, AppLocalizations? l10n) {
@@ -163,7 +173,9 @@ class ExportService {
   }
 
   // Load Unicode font for Hindi and Urdu support
+  // ALWAYS fallback to Amiri for Urdu (RTL) as requested, completely ignoring custom RTL fonts in PDF
   Future<pw.Font?> loadUnicodeFont() async {
+    if (_unicodeFont != null) return _unicodeFont;
     try {
       _unicodeFont = await PdfGoogleFonts.amiriRegular();
       try {
@@ -172,6 +184,7 @@ class ExportService {
         if (kDebugMode) {
           debugPrint('Error loading Arabic bold font: $e');
         }
+        _unicodeFontBold = _unicodeFont;
       }
       return _unicodeFont;
     } catch (e) {
@@ -182,34 +195,215 @@ class ExportService {
     }
   }
 
+  // Helper method to resolve Google Font names dynamically to static PdfGoogleFonts getters
+  Future<pw.Font> _getGoogleFont(String fontName, {bool isBold = false}) async {
+    switch (fontName) {
+      // English Fonts
+      case 'Inter':
+        return isBold
+            ? await PdfGoogleFonts.interBold()
+            : await PdfGoogleFonts.interRegular();
+      case 'Montserrat':
+        return isBold
+            ? await PdfGoogleFonts.montserratBold()
+            : await PdfGoogleFonts.montserratRegular();
+      case 'Saira':
+        return isBold
+            ? await PdfGoogleFonts.sairaBold()
+            : await PdfGoogleFonts.sairaRegular();
+      case 'Julius Sans One':
+        return await PdfGoogleFonts.juliusSansOneRegular();
+      case 'Space Grotesk':
+        return isBold
+            ? await PdfGoogleFonts.spaceGroteskBold()
+            : await PdfGoogleFonts.spaceGroteskRegular();
+      case 'Josefin Sans':
+        return isBold
+            ? await PdfGoogleFonts.josefinSansBold()
+            : await PdfGoogleFonts.josefinSansRegular();
+      case 'Grechen Fuemen':
+        return await PdfGoogleFonts.grechenFuemenRegular();
+      case 'Nothing You Could Do':
+        return await PdfGoogleFonts.nothingYouCouldDoRegular();
+      case 'Russo One':
+        return await PdfGoogleFonts.russoOneRegular();
+      case 'Alata':
+        return await PdfGoogleFonts.alataRegular();
+      case 'Oxanium':
+        return isBold
+            ? await PdfGoogleFonts.oxaniumBold()
+            : await PdfGoogleFonts.oxaniumRegular();
+      case 'Audiowide':
+        return await PdfGoogleFonts.audiowideRegular();
+      case 'Courgette':
+        return await PdfGoogleFonts.courgetteRegular();
+      case 'Kaushan Script':
+        return await PdfGoogleFonts.kaushanScriptRegular();
+      case 'Philosopher':
+        return isBold
+            ? await PdfGoogleFonts.philosopherBold()
+            : await PdfGoogleFonts.philosopherRegular();
+      case 'Sacramento':
+        return await PdfGoogleFonts.sacramentoRegular();
+      case 'Satisfy':
+        return await PdfGoogleFonts.satisfyRegular();
+      case 'Petit Formal Script':
+        return await PdfGoogleFonts.petitFormalScriptRegular();
+      case 'Tektur':
+        return isBold
+            ? await PdfGoogleFonts.tekturBold()
+            : await PdfGoogleFonts.tekturRegular();
+      case 'Eagle Lake':
+        return await PdfGoogleFonts.eagleLakeRegular();
+      case 'Fugaz One':
+        return await PdfGoogleFonts.fugazOneRegular();
+
+      // Hindi Fonts
+      case 'Noto Sans Devanagari':
+        return isBold
+            ? await PdfGoogleFonts.notoSansDevanagariBold()
+            : await PdfGoogleFonts.notoSansDevanagariRegular();
+      case 'Rozha One':
+        return await PdfGoogleFonts.rozhaOneRegular();
+      case 'Yatra One':
+        return await PdfGoogleFonts.yatraOneRegular();
+      case 'Arya':
+        return isBold
+            ? await PdfGoogleFonts.aryaBold()
+            : await PdfGoogleFonts.aryaRegular();
+      case 'Rajdhani':
+        return isBold
+            ? await PdfGoogleFonts.rajdhaniBold()
+            : await PdfGoogleFonts.rajdhaniRegular();
+      case 'Martel':
+        return isBold
+            ? await PdfGoogleFonts.martelBold()
+            : await PdfGoogleFonts.martelRegular();
+      case 'Tiro Devanagari Hindi':
+        return await PdfGoogleFonts.tiroDevanagariHindiRegular();
+      case 'Poppins':
+        return isBold
+            ? await PdfGoogleFonts.poppinsBold()
+            : await PdfGoogleFonts.poppinsRegular();
+      case 'Khand':
+        return isBold
+            ? await PdfGoogleFonts.khandBold()
+            : await PdfGoogleFonts.khandRegular();
+      case 'Kalam':
+        return isBold
+            ? await PdfGoogleFonts.kalamBold()
+            : await PdfGoogleFonts.kalamRegular();
+      case 'Biryani':
+        return isBold
+            ? await PdfGoogleFonts.biryaniBold()
+            : await PdfGoogleFonts.biryaniRegular();
+      case 'Kripa':
+        // Fallback to Noto Sans Devanagari
+        return isBold
+            ? await PdfGoogleFonts.notoSansDevanagariBold()
+            : await PdfGoogleFonts.notoSansDevanagariRegular();
+
+      default:
+        // Absolute fallback
+        return isBold
+            ? await PdfGoogleFonts.montserratBold()
+            : await PdfGoogleFonts.montserratRegular();
+    }
+  }
+
   // Load Hindi font for PDF generation
-  static pw.Font? _hindiFont;
   Future<pw.Font?> loadHindiFont() async {
-    if (_hindiFont != null) return _hindiFont;
+    if (_instHindiFont != null) return _instHindiFont;
     try {
-      _hindiFont = await PdfGoogleFonts.notoSansDevanagariRegular();
-      return _hindiFont;
+      if (_customHindiFont != null && _customHindiFont!.isNotEmpty) {
+        _instHindiFont = await _getGoogleFont(_customHindiFont!);
+        try {
+          _instHindiFontBold = await _getGoogleFont(_customHindiFont!, isBold: true);
+        } catch (_) {
+          _instHindiFontBold = _instHindiFont;
+        }
+      } else {
+        _instHindiFont = await PdfGoogleFonts.notoSansDevanagariRegular();
+        try {
+          _instHindiFontBold = await PdfGoogleFonts.notoSansDevanagariBold();
+        } catch (_) {
+          _instHindiFontBold = _instHindiFont;
+        }
+      }
+      return _instHindiFont;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Error loading Hindi font: $e');
       }
-      return null;
+      try {
+        _instHindiFont = await PdfGoogleFonts.notoSansDevanagariRegular();
+        _instHindiFontBold = await PdfGoogleFonts.notoSansDevanagariBold();
+        return _instHindiFont;
+      } catch (_) {
+        return null;
+      }
     }
   }
 
   // Load English font for PDF generation
-  static pw.Font? _englishFont;
   Future<pw.Font?> loadEnglishFont() async {
-    if (_englishFont != null) return _englishFont;
+    if (_instEnglishFont != null) return _instEnglishFont;
     try {
-      _englishFont = await PdfGoogleFonts.montserratRegular();
-      return _englishFont;
+      if (_customEnglishFont != null && _customEnglishFont!.isNotEmpty) {
+        _instEnglishFont = await _getGoogleFont(_customEnglishFont!);
+        try {
+          _instEnglishFontBold = await _getGoogleFont(_customEnglishFont!, isBold: true);
+        } catch (_) {
+          _instEnglishFontBold = _instEnglishFont;
+        }
+      } else {
+        _instEnglishFont = await PdfGoogleFonts.montserratRegular();
+        try {
+          _instEnglishFontBold = await PdfGoogleFonts.montserratBold();
+        } catch (_) {
+          _instEnglishFontBold = _instEnglishFont;
+        }
+      }
+      return _instEnglishFont;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('Error loading English font: $e');
       }
-      return null;
+      try {
+        _instEnglishFont = await PdfGoogleFonts.montserratRegular();
+        _instEnglishFontBold = await PdfGoogleFonts.montserratBold();
+        return _instEnglishFont;
+      } catch (_) {
+        return null;
+      }
     }
+  }
+
+  // Helper to construct a safe, unique font fallback list
+  List<pw.Font> _getSafeFontFallback({
+    required pw.Font? baseFont,
+    required pw.Font? unicodeFont,
+    required pw.Font? hindiFont,
+    required pw.Font? englishFont,
+  }) {
+    final List<pw.Font> fallback = [];
+    final Set<pw.Font> registered = {};
+    if (baseFont != null) {
+      registered.add(baseFont);
+    }
+    
+    void addFont(pw.Font? f) {
+      if (f == null) return;
+      if (registered.contains(f)) return;
+      registered.add(f);
+      fallback.add(f);
+    }
+    
+    addFont(unicodeFont);
+    addFont(hindiFont);
+    addFont(englishFont);
+    
+    return fallback;
   }
 
   // Generate CSV content
@@ -910,15 +1104,20 @@ class ExportService {
     // Create PDF document
     final pdf = pw.Document();
 
+    final baseFont = englishFont ?? unicodeFont;
+    final boldFont = _instEnglishFontBold ?? _unicodeFontBold ?? baseFont;
+
     // Set default theme with Unicode font and fallbacks
     final theme = pw.ThemeData.withFont(
-      base: englishFont ?? unicodeFont,
-      bold: englishFont ?? unicodeFont,
-      fontFallback: [
-        if (unicodeFont != null) unicodeFont,
-        if (hindiFont != null) hindiFont,
-        if (englishFont != null) englishFont,
-      ],
+      base: baseFont,
+      bold: boldFont,
+      icons: materialIconsFont,
+      fontFallback: _getSafeFontFallback(
+        baseFont: baseFont,
+        unicodeFont: unicodeFont,
+        hindiFont: hindiFont,
+        englishFont: englishFont,
+      ),
     );
 
     // Helper function to convert hex color to PdfColor
@@ -1077,6 +1276,23 @@ class ExportService {
           final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
 
           return [
+            // Safe Font Primer - guarantees no registered font has empty character list
+            pw.SizedBox(
+              width: 1,
+              height: 1,
+              child: pw.Row(
+                mainAxisSize: pw.MainAxisSize.min,
+                children: [
+                  if (unicodeFont != null) pw.Text('ا', style: pw.TextStyle(font: unicodeFont, fontSize: 1, color: PdfColors.white)),
+                  if (_unicodeFontBold != null) pw.Text('ا', style: pw.TextStyle(font: _unicodeFontBold, fontSize: 1, color: PdfColors.white)),
+                  if (hindiFont != null) pw.Text('अ', style: pw.TextStyle(font: hindiFont, fontSize: 1, color: PdfColors.white)),
+                  if (_instHindiFontBold != null) pw.Text('अ', style: pw.TextStyle(font: _instHindiFontBold, fontSize: 1, color: PdfColors.white)),
+                  if (englishFont != null) pw.Text('A', style: pw.TextStyle(font: englishFont, fontSize: 1, color: PdfColors.white)),
+                  if (_instEnglishFontBold != null) pw.Text('A', style: pw.TextStyle(font: _instEnglishFontBold, fontSize: 1, color: PdfColors.white)),
+                  if (materialIconsFont != null) pw.Text(String.fromCharCode(0xe88a), style: pw.TextStyle(font: materialIconsFont, fontSize: 1, color: PdfColors.white)),
+                ],
+              ),
+            ),
             // Header
             pw.Header(
               level: 0,
@@ -2075,6 +2291,7 @@ class ExportService {
       final unicodeFont = await loadUnicodeFont();
       final hindiFont = await loadHindiFont();
       final englishFont = await loadEnglishFont();
+      final materialIconsFont = await loadMaterialIconsFont();
 
       String? logoSvgString;
       try {
@@ -2231,14 +2448,19 @@ class ExportService {
       }
 
       // Set default theme with Unicode font and fallbacks
+      final baseFont = englishFont ?? unicodeFont;
+      final boldFont = _instEnglishFontBold ?? _unicodeFontBold ?? baseFont;
+
       final theme = pw.ThemeData.withFont(
-        base: englishFont ?? unicodeFont,
-        bold: englishFont ?? unicodeFont,
-        fontFallback: [
-          if (unicodeFont != null) unicodeFont,
-          if (hindiFont != null) hindiFont,
-          if (englishFont != null) englishFont,
-        ],
+        base: baseFont,
+        bold: boldFont,
+        icons: materialIconsFont,
+        fontFallback: _getSafeFontFallback(
+          baseFont: baseFont,
+          unicodeFont: unicodeFont,
+          hindiFont: hindiFont,
+          englishFont: englishFont,
+        ),
       );
 
       final pageTheme = pw.PageTheme(
@@ -2425,6 +2647,26 @@ class ExportService {
               },
               build: (pw.Context context) {
                 final List<pw.Widget> pageWidgets = [];
+
+                // Safe Font Primer - guarantees no registered font has empty character list
+                pageWidgets.add(
+                  pw.SizedBox(
+                    width: 1,
+                    height: 1,
+                    child: pw.Row(
+                      mainAxisSize: pw.MainAxisSize.min,
+                      children: [
+                        if (unicodeFont != null) pw.Text('ا', style: pw.TextStyle(font: unicodeFont, fontSize: 1, color: PdfColors.white)),
+                        if (_unicodeFontBold != null) pw.Text('ا', style: pw.TextStyle(font: _unicodeFontBold, fontSize: 1, color: PdfColors.white)),
+                        if (hindiFont != null) pw.Text('अ', style: pw.TextStyle(font: hindiFont, fontSize: 1, color: PdfColors.white)),
+                        if (_instHindiFontBold != null) pw.Text('अ', style: pw.TextStyle(font: _instHindiFontBold, fontSize: 1, color: PdfColors.white)),
+                        if (englishFont != null) pw.Text('A', style: pw.TextStyle(font: englishFont, fontSize: 1, color: PdfColors.white)),
+                        if (_instEnglishFontBold != null) pw.Text('A', style: pw.TextStyle(font: _instEnglishFontBold, fontSize: 1, color: PdfColors.white)),
+                        if (materialIconsFont != null) pw.Text(String.fromCharCode(0xe88a), style: pw.TextStyle(font: materialIconsFont, fontSize: 1, color: PdfColors.white)),
+                      ],
+                    ),
+                  ),
+                );
 
                 // Title on the first page of the document
                 if (currentIsFirstPage) {
@@ -3430,15 +3672,20 @@ class ExportService {
     // Create PDF document
     final pdf = pw.Document();
 
+    final baseFont = englishFont ?? unicodeFont;
+    final boldFont = _instEnglishFontBold ?? _unicodeFontBold ?? baseFont;
+
     // Set default theme with Unicode font and fallbacks
     final theme = pw.ThemeData.withFont(
-      base: englishFont ?? unicodeFont,
-      bold: englishFont ?? unicodeFont,
-      fontFallback: [
-        if (unicodeFont != null) unicodeFont,
-        if (hindiFont != null) hindiFont,
-        if (englishFont != null) englishFont,
-      ],
+      base: baseFont,
+      bold: boldFont,
+      icons: materialIconsFont,
+      fontFallback: _getSafeFontFallback(
+        baseFont: baseFont,
+        unicodeFont: unicodeFont,
+        hindiFont: hindiFont,
+        englishFont: englishFont,
+      ),
     );
 
     // Capture this for use in closure
@@ -3568,6 +3815,22 @@ class ExportService {
           final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
 
           return [
+            // Safe Font Primer - guarantees no registered font has empty character list
+            pw.SizedBox(
+              width: 1,
+              height: 1,
+              child: pw.Row(
+                mainAxisSize: pw.MainAxisSize.min,
+                children: [
+                  if (unicodeFont != null) pw.Text('ا', style: pw.TextStyle(font: unicodeFont, fontSize: 1, color: PdfColors.white)),
+                  if (_unicodeFontBold != null) pw.Text('ا', style: pw.TextStyle(font: _unicodeFontBold, fontSize: 1, color: PdfColors.white)),
+                  if (hindiFont != null) pw.Text('अ', style: pw.TextStyle(font: hindiFont, fontSize: 1, color: PdfColors.white)),
+                  if (_instHindiFontBold != null) pw.Text('अ', style: pw.TextStyle(font: _instHindiFontBold, fontSize: 1, color: PdfColors.white)),
+                  if (englishFont != null) pw.Text('A', style: pw.TextStyle(font: englishFont, fontSize: 1, color: PdfColors.white)),
+                  if (_instEnglishFontBold != null) pw.Text('A', style: pw.TextStyle(font: _instEnglishFontBold, fontSize: 1, color: PdfColors.white)),
+                ],
+              ),
+            ),
             // Header
             pw.Header(
               level: 0,
@@ -4744,7 +5007,7 @@ class ExportService {
                                   child: self._buildCategoryIcon(awb.account.icon, accColor, materialIconsFont, l10n: l10n),
                                 ),
                                 pw.SizedBox(width: 4),
-                                _buildText(awb.account.name, style: const pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
+                                _buildText(awb.account.name, style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
                               ],
                             ),
                             _buildText('${fmt(outstanding)} / ${fmt(limit)} (${(pct * 100).toStringAsFixed(1)}%)', style: pw.TextStyle(fontSize: 8, color: accColor)),
@@ -4812,14 +5075,18 @@ class ExportService {
     final hindiFont = await loadHindiFont();
     final englishFont = await loadEnglishFont();
 
+    final baseFont = englishFont ?? unicodeFont;
+    final boldFont = _instEnglishFontBold ?? _unicodeFontBold ?? baseFont;
+
     final theme = pw.ThemeData.withFont(
-      base: englishFont ?? unicodeFont,
-      bold: englishFont ?? unicodeFont,
-      fontFallback: [
-        if (unicodeFont != null) unicodeFont,
-        if (hindiFont != null) hindiFont,
-        if (englishFont != null) englishFont,
-      ],
+      base: baseFont,
+      bold: boldFont,
+      fontFallback: _getSafeFontFallback(
+        baseFont: baseFont,
+        unicodeFont: unicodeFont,
+        hindiFont: hindiFont,
+        englishFont: englishFont,
+      ),
     );
 
     final pageTheme = pw.PageTheme(
@@ -4979,6 +5246,22 @@ class ExportService {
           final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
 
           return [
+            // Safe Font Primer - guarantees no registered font has empty character list
+            pw.SizedBox(
+              width: 1,
+              height: 1,
+              child: pw.Row(
+                mainAxisSize: pw.MainAxisSize.min,
+                children: [
+                  if (unicodeFont != null) pw.Text('ا', style: pw.TextStyle(font: unicodeFont, fontSize: 1, color: PdfColors.white)),
+                  if (_unicodeFontBold != null) pw.Text('ا', style: pw.TextStyle(font: _unicodeFontBold, fontSize: 1, color: PdfColors.white)),
+                  if (hindiFont != null) pw.Text('अ', style: pw.TextStyle(font: hindiFont, fontSize: 1, color: PdfColors.white)),
+                  if (_instHindiFontBold != null) pw.Text('अ', style: pw.TextStyle(font: _instHindiFontBold, fontSize: 1, color: PdfColors.white)),
+                  if (englishFont != null) pw.Text('A', style: pw.TextStyle(font: englishFont, fontSize: 1, color: PdfColors.white)),
+                  if (_instEnglishFontBold != null) pw.Text('A', style: pw.TextStyle(font: _instEnglishFontBold, fontSize: 1, color: PdfColors.white)),
+                ],
+              ),
+            ),
             // Header
             pw.Header(
               level: 0,

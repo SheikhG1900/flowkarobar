@@ -20,7 +20,6 @@ import 'package:flowpaisa/shared/models/date_range_state.dart';
 import 'package:flowpaisa/shared/widgets/collapsible_list_summary.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
-import 'package:flowpaisa/core/utils/export_service.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:file_selector/file_selector.dart';
@@ -100,9 +99,7 @@ class _AccountStatementScreenState extends ConsumerState<AccountStatementScreen>
 
   Future<void> _exportCSV(List<StatementEntry> entries, AppCurrency currency) async {
     final l10n = AppLocalizations.of(context)!;
-    final db = ref.read(databaseProvider);
-    final txRepo = ref.read(transactionsRepositoryProvider);
-    final exportService = ExportService(txRepo, db);
+    final exportService = ref.read(exportServiceProvider);
 
     try {
       final csvContent = _generateCSVContent(entries, currency, l10n);
@@ -139,9 +136,7 @@ class _AccountStatementScreenState extends ConsumerState<AccountStatementScreen>
 
   Future<void> _exportPDF(List<StatementEntry> entries, AppCurrency currency) async {
     final l10n = AppLocalizations.of(context)!;
-    final db = ref.read(databaseProvider);
-    final txRepo = ref.read(transactionsRepositoryProvider);
-    final exportService = ExportService(txRepo, db);
+    final exportService = ref.read(exportServiceProvider);
 
     // Show loading indicator dialog
     showDialog<void>(

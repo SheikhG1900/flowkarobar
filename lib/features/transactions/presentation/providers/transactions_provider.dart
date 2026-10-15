@@ -928,8 +928,14 @@ final exportServiceProvider = Provider<ExportService>((ref) {
   final db = ref.watch(databaseProvider);
   final userProfile = ref.watch(userProfileProvider);
   final transactionsRepository = ref.watch(transactionsRepositoryProvider);
-  return ExportService(transactionsRepository, db,
-      dateFormat: userProfile.dateFormat);
+  final fonts = ref.watch(fontProvider);
+  return ExportService(
+    transactionsRepository,
+    db,
+    dateFormat: userProfile.dateFormat,
+    customEnglishFont: fonts['en'],
+    customHindiFont: fonts['hi'],
+  );
 });
 
 // Tags Stream Providers
