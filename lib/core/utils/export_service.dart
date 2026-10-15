@@ -307,6 +307,67 @@ class ExportService {
             ? await PdfGoogleFonts.notoSansDevanagariBold()
             : await PdfGoogleFonts.notoSansDevanagariRegular();
 
+      // Urdu / Arabic Fonts
+      case 'Marhey':
+        return isBold
+            ? await PdfGoogleFonts.marheyBold()
+            : await PdfGoogleFonts.marheyRegular();
+      case 'Lemonada':
+        return isBold
+            ? await PdfGoogleFonts.lemonadaBold()
+            : await PdfGoogleFonts.lemonadaRegular();
+      case 'Mada':
+        return isBold
+            ? await PdfGoogleFonts.madaBold()
+            : await PdfGoogleFonts.madaRegular();
+      case 'Markazi Text':
+        return isBold
+            ? await PdfGoogleFonts.markaziTextBold()
+            : await PdfGoogleFonts.markaziTextRegular();
+      case 'Aref Ruqaa':
+        return isBold
+            ? await PdfGoogleFonts.arefRuqaaBold()
+            : await PdfGoogleFonts.arefRuqaaRegular();
+      case 'Rakkas':
+        return await PdfGoogleFonts.rakkasRegular();
+      case 'Jomhuria':
+        return await PdfGoogleFonts.jomhuriaRegular();
+      case 'Reem Kufi':
+        return isBold
+            ? await PdfGoogleFonts.reemKufiBold()
+            : await PdfGoogleFonts.reemKufiRegular();
+      case 'Lalezar':
+        return await PdfGoogleFonts.lalezarRegular();
+      case 'El Messiri':
+        return isBold
+            ? await PdfGoogleFonts.elMessiriBold()
+            : await PdfGoogleFonts.elMessiriRegular();
+      case 'Almarai':
+        return isBold
+            ? await PdfGoogleFonts.almaraiBold()
+            : await PdfGoogleFonts.almaraiRegular();
+      case 'IBM Plex Sans Arabic':
+        // Safe fallback using Noto Kufi Arabic regular and bold
+        return isBold
+            ? await PdfGoogleFonts.notoKufiArabicBold()
+            : await PdfGoogleFonts.notoKufiArabicRegular();
+      case 'Noto Kufi Arabic':
+        return isBold
+            ? await PdfGoogleFonts.notoKufiArabicBold()
+            : await PdfGoogleFonts.notoKufiArabicRegular();
+      case 'Fustat':
+        return isBold
+            ? await PdfGoogleFonts.fustatBold()
+            : await PdfGoogleFonts.fustatRegular();
+      case 'Kufam':
+        return isBold
+            ? await PdfGoogleFonts.kufamBold()
+            : await PdfGoogleFonts.kufamRegular();
+      case 'Amiri':
+        return isBold
+            ? await PdfGoogleFonts.amiriBold()
+            : await PdfGoogleFonts.amiriRegular();
+
       default:
         // Absolute fallback
         return isBold
@@ -323,22 +384,7 @@ class ExportService {
       return targetMap[languageCode];
     }
 
-    // Always enforce the clean Amiri fallback rule for Urdu RTL script
-    if (languageCode == 'ur' || languageCode == 'ar') {
-      try {
-        final font = isBold 
-            ? await PdfGoogleFonts.amiriBold() 
-            : await PdfGoogleFonts.amiriRegular();
-        targetMap[languageCode] = font;
-        return font;
-      } catch (_) {
-        final fallback = await PdfGoogleFonts.amiriRegular();
-        targetMap[languageCode] = fallback;
-        return fallback;
-      }
-    }
-
-    // Resolve any custom/selected font dynamically for all other scripts (e.g. English, Hindi, etc.)
+    // Resolve any custom/selected font dynamically for all scripts (e.g. English, Hindi, Urdu, etc.)
     final customName = _customFonts[languageCode];
     if (customName != null && customName.isNotEmpty) {
       try {
@@ -359,6 +405,10 @@ class ExportService {
         defaultFont = isBold 
             ? await PdfGoogleFonts.notoSansDevanagariBold() 
             : await PdfGoogleFonts.notoSansDevanagariRegular();
+      } else if (languageCode == 'ur' || languageCode == 'ar') {
+        defaultFont = isBold 
+            ? await PdfGoogleFonts.amiriBold() 
+            : await PdfGoogleFonts.amiriRegular();
       } else {
         defaultFont = isBold 
             ? await PdfGoogleFonts.montserratBold() 
@@ -368,7 +418,9 @@ class ExportService {
       return defaultFont;
     } catch (_) {
       try {
-        final absoluteFallback = await PdfGoogleFonts.montserratRegular();
+        final absoluteFallback = languageCode == 'ur' || languageCode == 'ar'
+            ? await PdfGoogleFonts.amiriRegular()
+            : await PdfGoogleFonts.montserratRegular();
         targetMap[languageCode] = absoluteFallback;
         return absoluteFallback;
       } catch (_) {
@@ -389,6 +441,13 @@ class ExportService {
     // Preload both regular and bold versions into the cache
     await loadFontForLanguage('en', isBold: true);
     return loadFontForLanguage('en', isBold: false);
+  }
+
+  // Load Urdu font for PDF generation (kept for backward compatibility, mapped to dynamic locator)
+  Future<pw.Font?> loadUrduFont() async {
+    // Preload both regular and bold versions into the cache
+    await loadFontForLanguage('ur', isBold: true);
+    return loadFontForLanguage('ur', isBold: false);
   }
 
   // Helper to construct a safe, unique font fallback list
@@ -1118,17 +1177,18 @@ class ExportService {
 
     final isHindiLocale = l10n?.localeName == 'hi';
     final isUrduLocale = l10n?.localeName == 'ur' || l10n?.localeName == 'ar';
+    final urduFont = await loadUrduFont();
 
     final baseFont = isHindiLocale
         ? (hindiFont ?? unicodeFont ?? englishFont)
         : isUrduLocale
-            ? (unicodeFont ?? englishFont)
+            ? (urduFont ?? unicodeFont ?? englishFont)
             : (englishFont ?? unicodeFont);
 
     final boldFont = isHindiLocale
         ? (_instHindiFontBold ?? _unicodeFontBold ?? baseFont)
         : isUrduLocale
-            ? (_unicodeFontBold ?? baseFont)
+            ? (_loadedBoldFonts['ur'] ?? _unicodeFontBold ?? baseFont)
             : (_instEnglishFontBold ?? _unicodeFontBold ?? baseFont);
 
     // Set default theme with Unicode font and fallbacks
@@ -2474,17 +2534,18 @@ class ExportService {
       // Set default theme with Unicode font and fallbacks
       final isHindiLocale = l10n?.localeName == 'hi';
       final isUrduLocale = l10n?.localeName == 'ur' || l10n?.localeName == 'ar';
+      final urduFont = await loadUrduFont();
 
       final baseFont = isHindiLocale
           ? (hindiFont ?? unicodeFont ?? englishFont)
           : isUrduLocale
-              ? (unicodeFont ?? englishFont)
+              ? (urduFont ?? unicodeFont ?? englishFont)
               : (englishFont ?? unicodeFont);
 
       final boldFont = isHindiLocale
           ? (_instHindiFontBold ?? _unicodeFontBold ?? baseFont)
           : isUrduLocale
-              ? (_unicodeFontBold ?? baseFont)
+              ? (_loadedBoldFonts['ur'] ?? _unicodeFontBold ?? baseFont)
               : (_instEnglishFontBold ?? _unicodeFontBold ?? baseFont);
 
       final theme = pw.ThemeData.withFont(
@@ -3710,17 +3771,18 @@ class ExportService {
 
     final isHindiLocale = l10n?.localeName == 'hi';
     final isUrduLocale = l10n?.localeName == 'ur' || l10n?.localeName == 'ar';
+    final urduFont = await loadUrduFont();
 
     final baseFont = isHindiLocale
         ? (hindiFont ?? unicodeFont ?? englishFont)
         : isUrduLocale
-            ? (unicodeFont ?? englishFont)
+            ? (urduFont ?? unicodeFont ?? englishFont)
             : (englishFont ?? unicodeFont);
 
     final boldFont = isHindiLocale
         ? (_instHindiFontBold ?? _unicodeFontBold ?? baseFont)
         : isUrduLocale
-            ? (_unicodeFontBold ?? baseFont)
+            ? (_loadedBoldFonts['ur'] ?? _unicodeFontBold ?? baseFont)
             : (_instEnglishFontBold ?? _unicodeFontBold ?? baseFont);
 
     // Set default theme with Unicode font and fallbacks
@@ -5125,17 +5187,18 @@ class ExportService {
 
     final isHindiLocale = l10n?.localeName == 'hi';
     final isUrduLocale = l10n?.localeName == 'ur' || l10n?.localeName == 'ar';
+    final urduFont = await loadUrduFont();
 
     final baseFont = isHindiLocale
         ? (hindiFont ?? unicodeFont ?? englishFont)
         : isUrduLocale
-            ? (unicodeFont ?? englishFont)
+            ? (urduFont ?? unicodeFont ?? englishFont)
             : (englishFont ?? unicodeFont);
 
     final boldFont = isHindiLocale
         ? (_instHindiFontBold ?? _unicodeFontBold ?? baseFont)
         : isUrduLocale
-            ? (_unicodeFontBold ?? baseFont)
+            ? (_loadedBoldFonts['ur'] ?? _unicodeFontBold ?? baseFont)
             : (_instEnglishFontBold ?? _unicodeFontBold ?? baseFont);
 
     final theme = pw.ThemeData.withFont(
