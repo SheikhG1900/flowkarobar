@@ -565,3 +565,19 @@ class LineSpacingNotifier extends Notifier<double> {
 final lineSpacingProvider = NotifierProvider<LineSpacingNotifier, double>(() {
   return LineSpacingNotifier();
 });
+
+// Home Selected Tab Notifier
+class HomeTabNotifier extends Notifier<int> {
+  @override
+  int build() {
+    return 0; // Default to Dashboard Tab (0)
+  }
+
+  void setTab(int index) {
+    state = index;
+  }
+}
+
+final homeTabProvider = NotifierProvider<HomeTabNotifier, int>(() {
+  return HomeTabNotifier();
+});

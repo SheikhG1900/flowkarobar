@@ -429,7 +429,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _selectedIndex = 0;
   bool _isSwitchingCashbook = false;
   Timer? _cashbookSwitchRevealTimer;
 
@@ -525,6 +524,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final _selectedIndex = ref.watch(homeTabProvider);
     final l10n = AppLocalizations.of(context)!;
 
     // Listen to active cashbook changes: dull UI briefly, then reveal
@@ -651,9 +651,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     }
                     // Unfocus before tab switch to avoid FocusScope assertion
                     FocusManager.instance.primaryFocus?.unfocus();
-                    setState(() {
-                      _selectedIndex = index;
-                    });
+                    ref.read(homeTabProvider.notifier).setTab(index);
                   },
                   labelType: NavigationRailLabelType.all,
                   leading: Consumer(
@@ -806,9 +804,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           notifier.applyFilters(TransactionFilters());
                         }
                         FocusManager.instance.primaryFocus?.unfocus();
-                        setState(() {
-                          _selectedIndex = index;
-                        });
+                        ref.read(homeTabProvider.notifier).setTab(index);
                       },
                       destinations: [
                         NavigationDestination(

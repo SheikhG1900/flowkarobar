@@ -788,7 +788,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                                 final tagColor = tag.color != null
                                     ? Color(int.parse(tag.color!))
                                     : AppColors.getTagColor(tag.name);
-                                return Chip(
+                                return InputChip(
                                   label: Text(tag.name),
                                   backgroundColor: tagColor.withValues(alpha: 0.15),
                                   side: BorderSide(color: tagColor.withValues(alpha: 0.3)),
@@ -800,15 +800,46 @@ class TransactionDetailsDialog extends ConsumerWidget {
                                     fontWeight: FontWeight.bold,
                                     fontSize: 12,
                                   ),
+                                  onPressed: () {
+                                    // Apply filter and navigate to transactions list tab
+                                    ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                                      TransactionFilters(tagUuids: [tag.uuid]),
+                                    );
+                                    ref.read(homeTabProvider.notifier).setTab(1);
+                                    Navigator.pop(context);
+                                  },
                                   deleteIcon: Icon(Icons.close, size: 14, color: tagColor),
                                   onDeleted: () async {
-                                    try {
-                                      final updated = List<String>.from(currentUuids)..remove(tag.uuid);
-                                      await ref.read(transactionsRepositoryProvider).setTransactionTags(transaction.uuid, updated);
-                                      ref.invalidate(transactionTagsProvider(transaction.uuid));
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        ToastUtils.showErrorToast(context, ref, 'Failed to update tags: $e');
+                                    final bool? confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder: (ctx) => AlertDialog(
+                                        title: Text(l10n.tags),
+                                        content: Text('Are you sure you want to remove this tag?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(ctx, false),
+                                            child: Text(l10n.cancel),
+                                          ),
+                                          TextButton(
+                                            style: TextButton.styleFrom(
+                                              foregroundColor: theme.colorScheme.error,
+                                            ),
+                                            onPressed: () => Navigator.pop(ctx, true),
+                                            child: Text(l10n.delete),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+
+                                    if (confirm == true) {
+                                      try {
+                                        final updated = List<String>.from(currentUuids)..remove(tag.uuid);
+                                        await ref.read(transactionsRepositoryProvider).setTransactionTags(transaction.uuid, updated);
+                                        ref.invalidate(transactionTagsProvider(transaction.uuid));
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ToastUtils.showErrorToast(context, ref, 'Failed to update tags: $e');
+                                        }
                                       }
                                     }
                                   },
