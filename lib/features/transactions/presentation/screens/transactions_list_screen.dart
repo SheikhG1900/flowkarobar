@@ -1348,6 +1348,21 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                   key: ValueKey('search-swipe-${search.id}'),
                   enableEdit: true,
                   enableDelete: true,
+                  additionalHoverActions: [
+                    IconButton(
+                      icon: Icon(
+                        search.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                        size: 18,
+                        color: search.isPinned ? theme.colorScheme.primary : null,
+                      ),
+                      padding: const EdgeInsets.all(6),
+                      constraints: const BoxConstraints(),
+                      tooltip: search.isPinned ? 'Unpin search' : 'Pin search',
+                      onPressed: () {
+                        ref.read(recentSearchesProvider.notifier).togglePinSearch(search.id);
+                      },
+                    ),
+                  ],
                   borderRadius: 12,
                   onEdit: () => _showRenameDialog(search),
                   onDelete: () {

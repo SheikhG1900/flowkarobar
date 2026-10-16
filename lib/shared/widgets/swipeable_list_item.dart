@@ -9,6 +9,7 @@ class SwipeableListItem extends StatefulWidget {
   final Widget child;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final List<Widget>? additionalHoverActions;
   final bool enableEdit;
   final bool enableDelete;
   final Color editBackgroundColor;
@@ -28,6 +29,7 @@ class SwipeableListItem extends StatefulWidget {
     required this.child,
     this.onEdit,
     this.onDelete,
+    this.additionalHoverActions,
     this.enableEdit = true,
     this.enableDelete = true,
     this.editBackgroundColor = Colors.blue,
@@ -233,6 +235,18 @@ class _SwipeableListItemState extends State<SwipeableListItem> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          if (widget.additionalHoverActions != null && widget.additionalHoverActions!.isNotEmpty) ...[
+                            ...widget.additionalHoverActions!,
+                            if ((widget.onEdit != null && widget.enableEdit) || (widget.onDelete != null && widget.enableDelete))
+                              SizedBox(
+                                height: 14,
+                                child: VerticalDivider(
+                                  width: 12,
+                                  thickness: 1,
+                                  color: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+                                ),
+                              ),
+                          ],
                           if (widget.onEdit != null && widget.enableEdit)
                             IconButton(
                               icon: Icon(widget.editIcon),

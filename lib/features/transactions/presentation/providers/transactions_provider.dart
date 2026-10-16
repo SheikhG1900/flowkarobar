@@ -692,7 +692,12 @@ class RecentSearch {
 }
 
 class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
-  static const _key = 'recent_transaction_searches';
+  static const _baseKey = 'recent_transaction_searches';
+
+  String get _key {
+    final activeId = ref.watch(activeCashbookIdProvider);
+    return '${_baseKey}_$activeId';
+  }
 
   @override
   List<RecentSearch> build() {
