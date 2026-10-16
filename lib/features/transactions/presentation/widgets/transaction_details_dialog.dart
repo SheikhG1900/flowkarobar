@@ -41,6 +41,7 @@ import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_prov
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
 import 'package:flutter/services.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
@@ -801,12 +802,16 @@ class TransactionDetailsDialog extends ConsumerWidget {
                                     fontSize: 12,
                                   ),
                                   onPressed: () {
-                                    // Apply filter and navigate to transactions list tab
+                                    // Apply filter and navigate to transactions list screen as a popup
                                     ref.read(transactionsPaginatedProvider.notifier).applyFilters(
                                       TransactionFilters(tagUuids: [tag.uuid]),
                                     );
-                                    ref.read(homeTabProvider.notifier).setTab(1);
-                                    Navigator.pop(context);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const TransactionsListScreen(),
+                                      ),
+                                    );
                                   },
                                   deleteIcon: Icon(Icons.close, size: 14, color: tagColor),
                                   onDeleted: () async {
