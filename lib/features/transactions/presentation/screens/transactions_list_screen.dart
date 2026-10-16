@@ -933,6 +933,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       key: const ValueKey('transactions-list-scaffold'),
       appBar: AppBar(
             key: const ValueKey('transactions-list-appbar'),
+            toolbarHeight: hasActiveFilters && !_isSearching ? 100 : null,
             title: _isSearching
                 ? TextField(
                     key: const ValueKey('tx-search-field'),
@@ -961,7 +962,77 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                       }
                     },
                   )
-                : Text(key: const ValueKey('tx-title'), l10n.transactions),
+                : Consumer(
+                    builder: (context, ref, child) {
+                      final categories = ref.watch(categoriesListProvider).value ?? [];
+                      final contacts = ref.watch(contactsListProvider).value ?? [];
+                      final accounts = ref.watch(accountsStreamProvider).value ?? [];
+                      final tags = ref.watch(allTagsProvider).value ?? [];
+                      final currency = ref.watch(currentCurrencyProvider).value;
+                      
+                      final currentSearchVal = ref.watch(transactionsPaginatedProvider).searchQuery ?? '';
+
+                      final tempSearch = RecentSearch(
+                        id: 'temp',
+                        name: '',
+                        searchQuery: currentSearchVal,
+                        type: currentFilters.type,
+                        categoryUuids: currentFilters.categoryUuids,
+                        contactUuids: currentFilters.contactUuids,
+                        accountUuids: currentFilters.accountUuids,
+                        tagUuids: currentFilters.tagUuids,
+                        minAmount: currentFilters.minAmount,
+                        maxAmount: currentFilters.maxAmount,
+                        statusCodes: currentFilters.statusCodes,
+                        timestamp: DateTime.now(),
+                      );
+
+                      final titleText = tempSearch.generateDefaultName(
+                        categories: categories,
+                        contacts: contacts,
+                        accounts: accounts,
+                        tags: tags,
+                      );
+
+                      final isAllTx = titleText == 'All Transactions';
+                      final titleWidget = Text(
+                        key: const ValueKey('tx-title'), 
+                        isAllTx ? l10n.transactions : titleText,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+
+                      if (hasActiveFilters) {
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              titleWidget,
+                              const SizedBox(height: 8),
+                              _buildFilterChipsRow(
+                                ref,
+                                currentFilters,
+                                theme,
+                                l10n,
+                                categories,
+                                contacts,
+                                accounts,
+                                tags,
+                                currency,
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      return titleWidget;
+                    },
+                  ),
             bottom: hasSchedules && !_isSearching
                 ? TabBar(
                     key: const ValueKey('tx-tab-bar'),
@@ -1160,6 +1231,325 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             ],
           ),
         );
+  }
+
+  Widget _buildFilterChip({
+    required String label,
+    required IconData icon,
+    required ThemeData theme,
+    required Color color,
+    required VoidCallback onClear,
+  }) {
+    final chipColor = color;
+    return Container(
+      margin: const EdgeInsets.only(right: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: chipColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: chipColor.withValues(alpha: 0.18), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(icon, size: 12, color: chipColor),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: chipColor,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onClear,
+            child: Icon(
+              Icons.close_rounded,
+              size: 14,
+              color: chipColor.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterChipsRow(
+    WidgetRef ref,
+    TransactionFilters currentFilters,
+    ThemeData theme,
+    AppLocalizations l10n,
+    List<Category> categories,
+    List<Contact> contacts,
+    List<Account> accounts,
+    List<Tag> allTags,
+    AppCurrency? currency,
+  ) {
+    final chips = <Widget>[];
+
+    // 1. Search Query Filter (if there is one active but not currently editing in search field)
+    final searchQuery = ref.watch(transactionsPaginatedProvider).searchQuery ?? '';
+    if (searchQuery.trim().isNotEmpty && !_isSearching) {
+      chips.add(_buildFilterChip(
+        label: '"${searchQuery.trim()}"',
+        icon: Icons.search,
+        theme: theme,
+        color: theme.colorScheme.primary,
+        onClear: () {
+          _searchController.clear();
+          ref.read(transactionsPaginatedProvider.notifier).search('');
+        },
+      ));
+    }
+
+    // 2. Type Filter
+    if (currentFilters.type != null) {
+      final isExpense = currentFilters.type == 'EXPENSE';
+      chips.add(_buildFilterChip(
+        label: isExpense ? l10n.expense : l10n.income,
+        icon: isExpense ? Icons.arrow_downward : Icons.arrow_upward,
+        theme: theme,
+        color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+        onClear: () {
+          ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+            currentFilters.copyWith(clearType: true),
+          );
+        },
+      ));
+    }
+
+    // 3. Category Filters
+    if (currentFilters.categoryUuids != null && currentFilters.categoryUuids!.isNotEmpty) {
+      for (final catUuid in currentFilters.categoryUuids!) {
+        final cat = categories.firstWhereOrNull((c) => c.uuid == catUuid);
+        final label = cat != null
+            ? LocalizationHelper.getLocalizedCategoryName(context, cat.name)
+            : (catUuid == 'uncategorized' ? l10n.uncategorized : catUuid);
+        
+        Color categoryColor;
+        if (cat?.color != null) {
+          try {
+            categoryColor = Color(int.parse(cat!.color!.replaceAll('#', '0xFF')));
+          } catch (_) {
+            categoryColor = theme.colorScheme.primary;
+          }
+        } else {
+          categoryColor = theme.colorScheme.primary;
+        }
+
+        final icon = cat != null ? (IconHelper.getIconData(cat.icon) ?? Icons.category) : Icons.category;
+
+        chips.add(_buildFilterChip(
+          label: label,
+          icon: icon,
+          theme: theme,
+          color: categoryColor,
+          onClear: () {
+            ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+              currentFilters.copyWith(
+                categoryUuids: currentFilters.categoryUuids!.where((uuid) => uuid != catUuid).toList(),
+              ),
+            );
+          },
+        ));
+      }
+    }
+
+    // 4. Contact Filters
+    if (currentFilters.contactUuids != null && currentFilters.contactUuids!.isNotEmpty) {
+      for (final contactUuid in currentFilters.contactUuids!) {
+        final contact = contacts.firstWhereOrNull((c) => c.uuid == contactUuid);
+        if (contact != null) {
+          chips.add(_buildFilterChip(
+            label: contact.name,
+            icon: Icons.person_outline,
+            theme: theme,
+            color: AppColors.receivableColor,
+            onClear: () {
+              ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                currentFilters.copyWith(
+                  contactUuids: currentFilters.contactUuids!.where((uuid) => uuid != contactUuid).toList(),
+                ),
+              );
+            },
+          ));
+        }
+      }
+    }
+
+    // 5. Account Filters
+    if (currentFilters.accountUuids != null && currentFilters.accountUuids!.isNotEmpty) {
+      for (final accountUuid in currentFilters.accountUuids!) {
+        final isNoAccount = accountUuid == 'no_account';
+        final acc = accounts.firstWhereOrNull((a) => a.uuid == accountUuid);
+        final label = isNoAccount ? l10n.noAccount : (acc?.name ?? accountUuid);
+
+        chips.add(_buildFilterChip(
+          label: label,
+          icon: Icons.account_balance_wallet_outlined,
+          theme: theme,
+          color: AppColors.transactionsSectionColor,
+          onClear: () {
+            ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+              currentFilters.copyWith(
+                accountUuids: currentFilters.accountUuids!.where((uuid) => uuid != accountUuid).toList(),
+              ),
+            );
+          },
+        ));
+      }
+    }
+
+    // 6. Tag Filters
+    if (currentFilters.tagUuids != null && currentFilters.tagUuids!.isNotEmpty) {
+      for (final tagUuid in currentFilters.tagUuids!) {
+        final tag = allTags.firstWhereOrNull((t) => t.uuid == tagUuid);
+        if (tag != null) {
+          final tagColor = tag.color != null
+              ? Color(int.parse(tag.color!))
+              : AppColors.getTagColor(tag.name);
+
+          chips.add(_buildFilterChip(
+            label: tag.name,
+            icon: Icons.local_offer_rounded,
+            theme: theme,
+            color: tagColor,
+            onClear: () {
+              ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                currentFilters.copyWith(
+                  tagUuids: currentFilters.tagUuids!.where((uuid) => uuid != tagUuid).toList(),
+                ),
+              );
+            },
+          ));
+        }
+      }
+    }
+
+    // 7. Date Range Filters
+    if (currentFilters.startDate != null || currentFilters.endDate != null) {
+      String dateLabel = '';
+      if (currentFilters.startDate != null && currentFilters.endDate != null) {
+        dateLabel = '${AppDateFormatter.formatMediumDate(currentFilters.startDate!)} - ${AppDateFormatter.formatMediumDate(currentFilters.endDate!)}';
+      } else if (currentFilters.startDate != null) {
+        dateLabel = '>= ${AppDateFormatter.formatMediumDate(currentFilters.startDate!)}';
+      } else if (currentFilters.endDate != null) {
+        dateLabel = '<= ${AppDateFormatter.formatMediumDate(currentFilters.endDate!)}';
+      }
+
+      chips.add(_buildFilterChip(
+        label: dateLabel,
+        icon: Icons.calendar_today_rounded,
+        theme: theme,
+        color: Colors.indigo,
+        onClear: () {
+          ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+            currentFilters.copyWith(
+              clearStartDate: true,
+              clearEndDate: true,
+            ),
+          );
+        },
+      ));
+    }
+
+    // 8. Amount Range Filters
+    if (currentFilters.minAmount != null || currentFilters.maxAmount != null) {
+      String amtLabel = '';
+      final minAmtStr = currentFilters.minAmount != null
+          ? (currency != null 
+              ? AmountFormatter.formatWithCurrency(currentFilters.minAmount!, currency) 
+              : currentFilters.minAmount!.toStringAsFixed(2))
+          : '';
+      final maxAmtStr = currentFilters.maxAmount != null
+          ? (currency != null 
+              ? AmountFormatter.formatWithCurrency(currentFilters.maxAmount!, currency) 
+              : currentFilters.maxAmount!.toStringAsFixed(2))
+          : '';
+
+      if (currentFilters.minAmount != null && currentFilters.maxAmount != null) {
+        amtLabel = '$minAmtStr - $maxAmtStr';
+      } else if (currentFilters.minAmount != null) {
+        amtLabel = '>= $minAmtStr';
+      } else if (currentFilters.maxAmount != null) {
+        amtLabel = '<= $maxAmtStr';
+      }
+
+      chips.add(_buildFilterChip(
+        label: amtLabel,
+        icon: Icons.payments_outlined,
+        theme: theme,
+        color: Colors.blueGrey,
+        onClear: () {
+          ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+            currentFilters.copyWith(
+              clearMinAmount: true,
+              clearMaxAmount: true,
+            ),
+          );
+        },
+      ));
+    }
+
+    // 9. Status Filters
+    if (currentFilters.statusCodes != null && currentFilters.statusCodes!.isNotEmpty) {
+      for (final sc in currentFilters.statusCodes!) {
+        IconData statusIcon = Icons.info_outline;
+        Color statusColor = theme.colorScheme.primary;
+        String statusLabel = sc;
+
+        if (sc == 'PAID' || sc == 'PROCESSED') {
+          statusLabel = l10n.paid;
+          statusIcon = Icons.check_circle_outline;
+          statusColor = AppColors.successGreen;
+        } else if (sc == 'RECEIVED') {
+          statusLabel = l10n.received;
+          statusIcon = Icons.check_circle_outline;
+          statusColor = AppColors.successGreen;
+        } else if (sc == 'PAYABLE') {
+          statusLabel = l10n.payable;
+          statusIcon = Icons.pending_actions;
+          statusColor = AppColors.payableColor;
+        } else if (sc == 'RECEIVABLE') {
+          statusLabel = l10n.receivable;
+          statusIcon = Icons.pending_actions;
+          statusColor = AppColors.receivableColor;
+        }
+
+        chips.add(_buildFilterChip(
+          label: statusLabel,
+          icon: statusIcon,
+          theme: theme,
+          color: statusColor,
+          onClear: () {
+            ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+              currentFilters.copyWith(
+                statusCodes: currentFilters.statusCodes!.where((code) => code != sc).toList(),
+              ),
+            );
+          },
+        ));
+      }
+    }
+
+    if (chips.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return SizedBox(
+      height: 28,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        shrinkWrap: true,
+        padding: EdgeInsets.zero,
+        physics: const BouncingScrollPhysics(),
+        children: chips,
+      ),
+    );
   }
 
   Widget _buildRecentSearchesList(WidgetRef ref, List<RecentSearch> recentSearches, ThemeData theme) {
