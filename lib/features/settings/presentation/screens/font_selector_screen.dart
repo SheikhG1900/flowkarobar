@@ -337,7 +337,14 @@ class FontSelectorScreen extends ConsumerWidget {
           final fontName = font['name'] as String;
           final isFontPremium = font['isPremium'] as bool;
           final isSelected = selectedFont == fontName;
-          final isLocked = isFontPremium && !isPremium;
+          
+          // A Premium user can select ANY font. 
+          // A Free user can select ANY font WHERE isPremium is false.
+          final isLocked = !isPremium && isFontPremium;
+          
+          // PDF Ready Condition: Geomini is NOT in PdfGoogleFonts (hence not PDF compatible).
+          // And all Urdu fonts are not PDF compatible.
+          final isPdfCompatible = fontName != 'Geomini' && font['language'] != 'ur';
 
           TextStyle getPreviewStyle() {
             try {
@@ -455,6 +462,17 @@ class FontSelectorScreen extends ConsumerWidget {
                                     size: 16,
                                     color:
                                         isLocked ? Colors.grey : Colors.amber,
+                                  ),
+                                ],
+                                if (isPdfCompatible) ...[
+                                  const SizedBox(width: 8),
+                                  const Tooltip(
+                                    message: 'PDF Export Ready',
+                                    child: Icon(
+                                      Icons.picture_as_pdf,
+                                      size: 16,
+                                      color: Colors.green,
+                                    ),
                                   ),
                                 ],
                               ],

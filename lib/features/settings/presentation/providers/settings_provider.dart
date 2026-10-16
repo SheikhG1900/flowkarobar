@@ -487,10 +487,16 @@ final currentFontProvider = Provider<String>((ref) {
   final isPremium = ref.watch(premiumProvider).isPremiumActive;
   
   final font = fonts?[currentLocale.languageCode];
-  if (currentLocale.languageCode == 'ur' && font == 'Marhey' && isPremium) {
-    return 'Kufam';
+  if (font != null) return font;
+  
+  switch (currentLocale.languageCode) {
+    case 'hi':
+      return 'Noto Sans Devanagari';
+    case 'ur':
+      return 'Marhey';
+    default:
+      return 'Inter';
   }
-  return font ?? 'Inter';
 });
 
 // Text Scale Factor Notifier (Device-specific, saved to SharedPreferences)
