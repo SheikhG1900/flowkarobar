@@ -687,15 +687,6 @@ class _ShareCardSheetState extends ConsumerState<ShareCardSheet> {
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        _getTranslatedText('businessAccount', locale),
-                                        style: TextStyle(
-                                          color: Colors.white.withValues(alpha: 0.75),
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
                                       // Customizable Profile Details based on active toggles
                                       if (_showPhone && hasPhone) ...[
                                         const SizedBox(height: 2),
