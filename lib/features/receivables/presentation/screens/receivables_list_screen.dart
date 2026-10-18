@@ -13,8 +13,6 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/shared/widgets/faded_bottom_logo.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
-import 'package:flowpaisa/features/receivables/presentation/screens/add_receivable_screen.dart';
-import 'package:flowpaisa/features/receivables/presentation/screens/edit_receivable_screen.dart';
 import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
@@ -386,19 +384,6 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                     _buildReceivablesList('RECEIVED'),
                   ],
                 ),
-          floatingActionButton: AppFloatingActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AddReceivableScreen(),
-                ),
-              );
-            },
-            backgroundColor: AppColors.receivablesSectionColor,
-            foregroundColor: Colors.white,
-            child: const Icon(Icons.add),
-          ),
     );
   }
 
@@ -550,36 +535,14 @@ class _ReceivablesListScreenState extends ConsumerState<ReceivablesListScreen>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     child: SwipeableListItem(
-                      enableEdit: canEdit,
-                      enableDelete: canEdit,
+                      enableEdit: false,
+                      enableDelete: false,
                       borderRadius: 20,
                       confirmTitle: l10n.deleteReceivable,
                       confirmMessage: l10n.deleteReceivableConfirm,
                       deleteLabel: l10n.delete,
-                      onEdit: canEdit
-                          ? () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => EditReceivableScreen(
-                                      receivableUuid: item.receivable.uuid),
-                                ),
-                              );
-                            }
-                          : null,
-                      onDelete: canEdit
-                          ? () async {
-                              final l10n = AppLocalizations.of(context)!;
-                              final repository =
-                                  ref.read(receivablesRepositoryProvider);
-                              await repository
-                                  .deleteReceivable(item.receivable.uuid);
-                              if (context.mounted) {
-                                ToastUtils.showSuccessToast(
-                                    context, ref, l10n.receivableDeleted);
-                              }
-                            }
-                          : null,
+                      onEdit: null,
+                      onDelete: null,
                       child: _ReceivableCard(item: item, currency: currency),
                     ),
                   );

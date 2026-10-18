@@ -50,6 +50,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bulkImport => 'Bulk Import';
 
   @override
+  String get open => 'Open';
+
+  @override
   String get pasteFromClipboard => 'Paste from Clipboard';
 
   @override

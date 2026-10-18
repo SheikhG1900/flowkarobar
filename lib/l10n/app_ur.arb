@@ -20,6 +20,7 @@
     }
   },
   "bulkImport": "بلک امپورٹ",
+  "open": "کھولیں",
   "pasteFromClipboard": "کلپ بورڈ سے پیسٹ کریں",
   "pickCsvFile": "CSV فائل منتخب کریں",
   "importSettings": "امپورٹ سیٹنگز",

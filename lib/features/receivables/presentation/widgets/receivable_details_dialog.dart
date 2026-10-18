@@ -40,13 +40,6 @@ class ReceivableDetailsDialog extends ConsumerWidget {
     required this.receivableUuid,
   });
 
-  bool _canEditReceivable(Receivable receivable) {
-    // Can edit only if PENDING and not linked to any transaction
-    return receivable.status == 'PENDING' &&
-        receivable.linkedExpenseUuid == null &&
-        receivable.linkedIncomeUuid == null;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
@@ -241,98 +234,6 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.link, color: Colors.white, size: 22),
-                            tooltip: l10n.copyLink,
-                            onPressed: () {
-                              final link = DeepLinkService().generateEntityOpenLinkHttps(
-                                  'receivable', receivable.uuid);
-                              Clipboard.setData(ClipboardData(text: link));
-                              ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.share, color: Colors.white, size: 22),
-                            tooltip: l10n.share,
-                            onPressed: () {
-                              final capturedCurrency = currency;
-                              final capturedUserProfile = ref.read(userProfileProvider);
-                              final capturedTransactionService =
-                                  ref.read(transactionServiceProvider);
-                              final capturedWhatsAppService =
-                                  ref.read(whatsAppServiceProvider);
-                              final capturedTemplateService =
-                                  ref.read(messageTemplateServiceProvider);
-                              final capturedLanguage = getCurrentLanguageCode(ref);
-                              ShareHelper.shareReceivable(
-                                context,
-                                ref,
-                                receivable,
-                                contact,
-                                currencyOverride: capturedCurrency,
-                                userProfileOverride: capturedUserProfile,
-                                transactionServiceOverride: capturedTransactionService,
-                                whatsAppServiceOverride: capturedWhatsAppService,
-                                templateServiceOverride: capturedTemplateService,
-                                languageOverride: capturedLanguage,
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.copy, color: Colors.white, size: 22),
-                            tooltip: l10n.duplicate,
-                            onPressed: () {
-                              int dueDateOffset = 0;
-                              if (receivable.dueDate != null) {
-                                dueDateOffset =
-                                    receivable.dueDate!.difference(receivable.date).inDays;
-                              }
-                              final now = DateTime.now();
-                              final initialDueDate = dueDateOffset != 0
-                                  ? now.add(Duration(days: dueDateOffset))
-                                  : null;
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AddReceivableScreen(
-                                    initialAmount: receivable.amount,
-                                    initialDate: now,
-                                    initialDescription: receivable.description,
-                                    initialContactName: contact?.name,
-                                    initialContactPhone: contact?.phone,
-                                    initialDueDate: initialDueDate,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                          if (_canEditReceivable(receivable))
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.white, size: 22),
-                              tooltip: l10n.editReceivable,
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => EditReceivableScreen(
-                                        receivableUuid: receivable.uuid),
-                                  ),
-                                );
-                              },
-                            ),
-                          if (receivable.status != 'RECEIVED')
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.white, size: 22),
-                              tooltip: l10n.delete,
-                              onPressed: () =>
-                                  _deleteReceivable(context, ref, receivable.uuid),
-                            ),
-                        ],
-                      ),
                     ],
                   ),
                 ),
@@ -708,29 +609,6 @@ class ReceivableDetailsDialog extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    if (contact.phone != null)
-                      IconButton(
-                        icon:
-                            const Icon(Icons.chat, color: Color(0xFF25D366)),
-                        onPressed: () {
-                          ShareHelper.shareReceivable(
-                            context,
-                            ref,
-                            receivable,
-                            contact,
-                            currencyOverride: currency,
-                            userProfileOverride: ref.read(userProfileProvider),
-                            transactionServiceOverride:
-                                ref.read(transactionServiceProvider),
-                            whatsAppServiceOverride:
-                                ref.read(whatsAppServiceProvider),
-                            templateServiceOverride:
-                                ref.read(messageTemplateServiceProvider),
-                            languageOverride: getCurrentLanguageCode(ref),
-                          );
-                        },
-                        tooltip: l10n.sendMessage,
-                      ),
                     Icon(
                       Icons.chevron_right,
                       color: theme.colorScheme.onSurfaceVariant,
@@ -1111,46 +989,6 @@ class ReceivableDetailsDialog extends ConsumerWidget {
     );
   }
 
-  Future<void> _deleteReceivable(
-      BuildContext context, WidgetRef ref, String receivableUuid) async {
-    final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.deleteReceivableTitle),
-        content: Text(l10n.deleteReceivableMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-                backgroundColor: Colors.red, foregroundColor: Colors.white),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      try {
-        final repository = ref.read(receivablesRepositoryProvider);
-        await repository.deleteReceivable(receivableUuid);
-
-        if (context.mounted) {
-          Navigator.pop(context);
-          ToastUtils.showSuccessToast(context, ref, l10n.receivableDeleted);
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ToastUtils.showErrorToast(
-              context, ref, l10n.errorOccurred(e.toString()));
-        }
-      }
-    }
-  }
 
   Future<void> _markAsReceived(
     BuildContext context,
@@ -1177,40 +1015,10 @@ class ReceivableDetailsDialog extends ConsumerWidget {
       );
 
       if (context.mounted) {
-        // Refresh item to get updated status and externalLinkId
-        final updatedItem =
-            await repository.getReceivableWithLinkedDataByUuid(receivableUuid);
-
-        if (context.mounted) {
-          final activeColor = ref.read(activeCashbookProvider).color;
-          final currency = ref.read(currentCurrencyProvider).value!;
-          final userProfile = ref.read(userProfileProvider);
-          final transactionService = ref.read(transactionServiceProvider);
-          final whatsAppService = ref.read(whatsAppServiceProvider);
-
-          final capturedCurrency = currency;
-          final capturedUserProfile = userProfile;
-          final capturedTransactionService = transactionService;
-          final capturedWhatsAppService = whatsAppService;
-
-          ToastUtils.showSuccessToast(context, ref, l10n.markedAsReceived,
-              color: activeColor);
-
-          if (updatedItem != null) {
-            _showSettlementShareOption(
-              context,
-              ref,
-              updatedItem.receivable,
-              updatedItem.contact,
-              activeColor: activeColor,
-              currency: capturedCurrency,
-              userProfile: capturedUserProfile,
-              transactionService: capturedTransactionService,
-              whatsAppService: capturedWhatsAppService,
-            );
-          }
-          Navigator.pop(context);
-        }
+        final activeColor = ref.read(activeCashbookProvider).color;
+        ToastUtils.showSuccessToast(context, ref, l10n.markedAsReceived,
+            color: activeColor);
+        Navigator.pop(context);
       }
     } catch (e) {
       if (context.mounted) {
@@ -1218,47 +1026,5 @@ class ReceivableDetailsDialog extends ConsumerWidget {
             context, ref, l10n.errorOccurred(e.toString()));
       }
     }
-  }
-
-  void _showSettlementShareOption(
-    BuildContext context,
-    WidgetRef ref,
-    Receivable receivable,
-    dynamic contact, {
-    Color? activeColor,
-    dynamic currency,
-    dynamic userProfile,
-    dynamic transactionService,
-    dynamic whatsAppService,
-  }) {
-    final l10n = AppLocalizations.of(context)!;
-    final capturedCurrency = currency;
-    final capturedUserProfile = userProfile;
-    final capturedTransactionService = transactionService;
-    final capturedWhatsAppService = whatsAppService;
-    final capturedTemplateService = ref.read(messageTemplateServiceProvider);
-    final capturedLanguage = getCurrentLanguageCode(ref);
-
-    ToastUtils.showSuccessToast(
-      context,
-      ref,
-      l10n.informContactSettlement,
-      actionLabel: l10n.share,
-      onActionPressed: (snackContext) {
-        ShareHelper.shareReceivable(
-          snackContext,
-          ref,
-          receivable,
-          contact,
-          currencyOverride: capturedCurrency,
-          userProfileOverride: capturedUserProfile,
-          transactionServiceOverride: capturedTransactionService,
-          whatsAppServiceOverride: capturedWhatsAppService,
-          templateServiceOverride: capturedTemplateService,
-          languageOverride: capturedLanguage,
-        );
-      },
-      color: activeColor,
-    );
   }
 }

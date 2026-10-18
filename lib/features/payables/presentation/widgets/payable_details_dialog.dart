@@ -40,13 +40,6 @@ class PayableDetailsDialog extends ConsumerWidget {
     required this.payableUuid,
   });
 
-  bool _canEditPayable(Payable payable) {
-    // Can edit only if PENDING and not linked to any transaction
-    return payable.status == 'PENDING' &&
-        payable.linkedExpenseUuid == null &&
-        payable.linkedIncomeUuid == null;
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
@@ -237,97 +230,6 @@ class PayableDetailsDialog extends ConsumerWidget {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.link, color: Colors.white, size: 22),
-                            tooltip: l10n.copyLink,
-                            onPressed: () {
-                              final link = DeepLinkService()
-                                  .generateEntityOpenLinkHttps('payable', payable.uuid);
-                              Clipboard.setData(ClipboardData(text: link));
-                              ToastUtils.showSuccessToast(context, ref, l10n.linkCopied);
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.share, color: Colors.white, size: 22),
-                            tooltip: l10n.share,
-                            onPressed: () {
-                              final capturedCurrency = currency;
-                              final capturedUserProfile = ref.read(userProfileProvider);
-                              final capturedTransactionService =
-                                  ref.read(transactionServiceProvider);
-                              final capturedWhatsAppService =
-                                  ref.read(whatsAppServiceProvider);
-                              final capturedTemplateService =
-                                  ref.read(messageTemplateServiceProvider);
-                              final capturedLanguage = getCurrentLanguageCode(ref);
-                              ShareHelper.sharePayable(
-                                context,
-                                ref,
-                                payable,
-                                contact,
-                                currencyOverride: capturedCurrency,
-                                userProfileOverride: capturedUserProfile,
-                                transactionServiceOverride: capturedTransactionService,
-                                whatsAppServiceOverride: capturedWhatsAppService,
-                                templateServiceOverride: capturedTemplateService,
-                                languageOverride: capturedLanguage,
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.copy, color: Colors.white, size: 22),
-                            tooltip: l10n.duplicate,
-                            onPressed: () {
-                              int dueDateOffset = 0;
-                              if (payable.dueDate != null) {
-                                dueDateOffset =
-                                    payable.dueDate!.difference(payable.date).inDays;
-                              }
-                              final now = DateTime.now();
-                              final initialDueDate = dueDateOffset != 0
-                                  ? now.add(Duration(days: dueDateOffset))
-                                  : null;
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AddPayableScreen(
-                                    initialAmount: payable.amount,
-                                    initialDate: now,
-                                    initialDescription: payable.description,
-                                    initialContactName: contact?.name,
-                                    initialContactPhone: contact?.phone,
-                                    initialDueDate: initialDueDate,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                          if (_canEditPayable(payable))
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.white, size: 22),
-                              tooltip: l10n.editPayable,
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        EditPayableScreen(payableUuid: payable.uuid),
-                                  ),
-                                );
-                              },
-                            ),
-                          if (payable.status != 'PAID')
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.white, size: 22),
-                              tooltip: l10n.delete,
-                              onPressed: () => _deletePayable(context, ref, payable.uuid),
-                            ),
-                        ],
-                      ),
                     ],
                   ),
                 ),
@@ -702,29 +604,6 @@ class PayableDetailsDialog extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    if (contact.phone != null)
-                      IconButton(
-                        icon:
-                            const Icon(Icons.chat, color: Color(0xFF25D366)),
-                        onPressed: () {
-                          ShareHelper.sharePayable(
-                            context,
-                            ref,
-                            payable,
-                            contact,
-                            currencyOverride: currency,
-                            userProfileOverride: ref.read(userProfileProvider),
-                            transactionServiceOverride:
-                                ref.read(transactionServiceProvider),
-                            whatsAppServiceOverride:
-                                ref.read(whatsAppServiceProvider),
-                            templateServiceOverride:
-                                ref.read(messageTemplateServiceProvider),
-                            languageOverride: getCurrentLanguageCode(ref),
-                          );
-                        },
-                        tooltip: l10n.sendMessage,
-                      ),
                     Icon(
                       Icons.chevron_right,
                       color: theme.colorScheme.onSurfaceVariant,
@@ -1105,46 +984,6 @@ class PayableDetailsDialog extends ConsumerWidget {
     );
   }
 
-  Future<void> _deletePayable(
-      BuildContext context, WidgetRef ref, String payableUuid) async {
-    final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.deletePayableTitle),
-        content: Text(l10n.deletePayableMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-                backgroundColor: Colors.red, foregroundColor: Colors.white),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && context.mounted) {
-      try {
-        final repository = ref.read(payablesRepositoryProvider);
-        await repository.deletePayable(payableUuid);
-
-        if (context.mounted) {
-          Navigator.pop(context);
-          ToastUtils.showSuccessToast(context, ref, l10n.payableDeleted);
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ToastUtils.showErrorToast(
-              context, ref, l10n.errorOccurred(e.toString()));
-        }
-      }
-    }
-  }
 
   Future<void> _markAsPaid(
     BuildContext context,
@@ -1171,40 +1010,10 @@ class PayableDetailsDialog extends ConsumerWidget {
       );
 
       if (context.mounted) {
-        // Refresh item to get updated status and externalLinkId
-        final updatedItem =
-            await repository.getPayableWithLinkedDataByUuid(payableUuid);
-
-        if (context.mounted) {
-          final activeColor = ref.read(activeCashbookProvider).color;
-          final currency = ref.read(currentCurrencyProvider).value!;
-          final userProfile = ref.read(userProfileProvider);
-          final transactionService = ref.read(transactionServiceProvider);
-          final whatsAppService = ref.read(whatsAppServiceProvider);
-
-          final capturedCurrency = currency;
-          final capturedUserProfile = userProfile;
-          final capturedTransactionService = transactionService;
-          final capturedWhatsAppService = whatsAppService;
-
-          ToastUtils.showSuccessToast(context, ref, l10n.markedAsPaid,
-              color: activeColor);
-
-          if (updatedItem != null) {
-            _showSettlementShareOption(
-              context,
-              ref,
-              updatedItem.payable,
-              updatedItem.contact,
-              activeColor: activeColor,
-              currency: capturedCurrency,
-              userProfile: capturedUserProfile,
-              transactionService: capturedTransactionService,
-              whatsAppService: capturedWhatsAppService,
-            );
-          }
-          Navigator.pop(context);
-        }
+        final activeColor = ref.read(activeCashbookProvider).color;
+        ToastUtils.showSuccessToast(context, ref, l10n.markedAsPaid,
+            color: activeColor);
+        Navigator.pop(context);
       }
     } catch (e) {
       if (context.mounted) {
@@ -1212,47 +1021,5 @@ class PayableDetailsDialog extends ConsumerWidget {
             context, ref, l10n.errorOccurred(e.toString()));
       }
     }
-  }
-
-  void _showSettlementShareOption(
-    BuildContext context,
-    WidgetRef ref,
-    Payable payable,
-    dynamic contact, {
-    Color? activeColor,
-    dynamic currency,
-    dynamic userProfile,
-    dynamic transactionService,
-    dynamic whatsAppService,
-  }) {
-    final l10n = AppLocalizations.of(context)!;
-    final capturedCurrency = currency;
-    final capturedUserProfile = userProfile;
-    final capturedTransactionService = transactionService;
-    final capturedWhatsAppService = whatsAppService;
-    final capturedTemplateService = ref.read(messageTemplateServiceProvider);
-    final capturedLanguage = getCurrentLanguageCode(ref);
-
-    ToastUtils.showSuccessToast(
-      context,
-      ref,
-      l10n.informContactSettlementPayable,
-      actionLabel: l10n.share,
-      onActionPressed: (snackContext) {
-        ShareHelper.sharePayable(
-          snackContext,
-          ref,
-          payable,
-          contact,
-          currencyOverride: capturedCurrency,
-          userProfileOverride: capturedUserProfile,
-          transactionServiceOverride: capturedTransactionService,
-          whatsAppServiceOverride: capturedWhatsAppService,
-          templateServiceOverride: capturedTemplateService,
-          languageOverride: capturedLanguage,
-        );
-      },
-      color: activeColor,
-    );
   }
 }

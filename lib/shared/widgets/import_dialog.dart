@@ -12,8 +12,6 @@ import "package:flowpaisa/features/receivables/presentation/providers/receivable
 import "package:flowpaisa/features/payables/presentation/providers/payables_provider.dart";
 import "package:flowpaisa/shared/providers/currency_provider.dart";
 import "package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart";
-import "package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart";
-import "package:flowpaisa/features/receivables/presentation/screens/add_receivable_screen.dart";
 import "package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart";
 import "package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart";
 
@@ -149,10 +147,12 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => AddReceivableScreen(
+          builder: (context) => AddTransactionScreen(
             initialAmount: data.amount,
             initialDate: data.date,
             initialDescription: data.description,
+            initialType: 'INCOME',
+            initialRelationship: 'WILL_RECEIVE',
             initialContactName: data.senderName,
             initialContactPhone: data.senderPhone,
             initialExternalLinkId: data.externalLinkId,
@@ -165,10 +165,12 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => AddPayableScreen(
+          builder: (context) => AddTransactionScreen(
             initialAmount: data.amount,
             initialDate: data.date,
             initialDescription: data.description,
+            initialType: 'EXPENSE',
+            initialRelationship: 'PAID_BY',
             initialContactName: data.senderName,
             initialContactPhone: data.senderPhone,
             initialExternalLinkId: data.externalLinkId,

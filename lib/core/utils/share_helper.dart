@@ -16,6 +16,7 @@ import '../../features/messages/data/default_templates.dart';
 import '../../shared/providers/database_provider.dart';
 import '../../features/receivables/data/receivables_repository.dart';
 import '../../features/payables/data/payables_repository.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/share_card_sheet.dart';
 
 class ShareHelper {
   static Future<void> sharePayable(
@@ -30,6 +31,10 @@ class ShareHelper {
     dynamic templateServiceOverride,
     String? languageOverride,
     bool forceSystemShare = false,
+    String? transactionDescriptionOverride, // Add override so transaction description is prioritized
+    String? categoryName,
+    String? categoryIcon,
+    String? categoryColor,
   }) async {
     final currency =
         currencyOverride ?? ref?.read(currentCurrencyProvider).value!;
@@ -61,6 +66,10 @@ class ShareHelper {
         currency: currency,
         userProfile: userProfile,
         transactionService: transactionService,
+        transactionDescriptionOverride: transactionDescriptionOverride,
+        categoryName: categoryName,
+        categoryIcon: categoryIcon,
+        categoryColor: categoryColor,
       );
     }
   }
@@ -77,6 +86,10 @@ class ShareHelper {
     dynamic templateServiceOverride,
     String? languageOverride,
     bool forceSystemShare = false,
+    String? transactionDescriptionOverride, // Add override so transaction description is prioritized
+    String? categoryName,
+    String? categoryIcon,
+    String? categoryColor,
   }) async {
     final currency =
         currencyOverride ?? ref?.read(currentCurrencyProvider).value!;
@@ -108,6 +121,10 @@ class ShareHelper {
         currency: currency,
         userProfile: userProfile,
         transactionService: transactionService,
+        transactionDescriptionOverride: transactionDescriptionOverride,
+        categoryName: categoryName,
+        categoryIcon: categoryIcon,
+        categoryColor: categoryColor,
       );
     }
   }
@@ -545,6 +562,10 @@ class ShareHelper {
     required dynamic currency,
     required dynamic userProfile,
     required TransactionService transactionService,
+    String? transactionDescriptionOverride,
+    String? categoryName,
+    String? categoryIcon,
+    String? categoryColor,
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final deepLinkService = DeepLinkService();
@@ -552,16 +573,38 @@ class ShareHelper {
     final effectiveExternalId = await transactionService.ensureExternalLinkId(
         payableUuid: payable.uuid);
 
+    final finalDescription = transactionDescriptionOverride ?? payable.description;
+
+    String? effectiveCategoryName = categoryName;
+    String? effectiveCategoryIcon = categoryIcon;
+    String? effectiveCategoryColor = categoryColor;
+
+    if (ref != null && effectiveCategoryName == null) {
+      final database = ref.read(databaseProvider);
+      if (database != null) {
+        final withLinked = await PayablesRepository(database)
+            .getPayableWithLinkedDataByUuid(payable.uuid);
+        if (withLinked?.linkedCategory != null) {
+          effectiveCategoryName = withLinked!.linkedCategory!.name;
+          effectiveCategoryIcon = withLinked.linkedCategory!.icon;
+          effectiveCategoryColor = withLinked.linkedCategory!.color;
+        }
+      }
+    }
+
     if (context.mounted) {
       final link = deepLinkService.generateReceivableLink(ReceivableShareData(
         amount: payable.amount,
         date: payable.date,
-        description: payable.description,
+        description: finalDescription,
         dueDate: payable.dueDate,
         senderName: userProfile.name ?? 'Someone',
         senderPhone: userProfile.phone ?? '',
         externalLinkId: effectiveExternalId,
         status: payable.status,
+        categoryName: effectiveCategoryName,
+        categoryIcon: effectiveCategoryIcon,
+        categoryColor: effectiveCategoryColor,
       ));
 
       String message;
@@ -581,10 +624,31 @@ class ShareHelper {
         );
       }
 
-      await SharePlus.instance.share(ShareParams(
-        text: message,
-        subject: AppConstants.appName,
-      ));
+      if (ref != null) {
+        await ShareCardSheet.show(
+          context: context,
+          ref: ref,
+          transactionType: 'PAYABLE',
+          amount: payable.amount,
+          date: payable.date,
+          description: finalDescription,
+          deepLink: link,
+          initialTextMessage: message,
+          senderName: userProfile.name ?? 'Someone',
+          senderPhone: userProfile.phone,
+          partnerName: contact?.name,
+          partnerPhone: contact?.phone,
+          categoryName: effectiveCategoryName,
+          categoryIcon: effectiveCategoryIcon,
+          categoryColor: effectiveCategoryColor,
+          isLinked: true,
+        );
+      } else {
+        await SharePlus.instance.share(ShareParams(
+          text: message,
+          subject: AppConstants.appName,
+        ));
+      }
     }
   }
 
@@ -596,6 +660,10 @@ class ShareHelper {
     required dynamic currency,
     required dynamic userProfile,
     required TransactionService transactionService,
+    String? transactionDescriptionOverride,
+    String? categoryName,
+    String? categoryIcon,
+    String? categoryColor,
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final deepLinkService = DeepLinkService();
@@ -603,16 +671,38 @@ class ShareHelper {
     final effectiveExternalId = await transactionService.ensureExternalLinkId(
         receivableUuid: receivable.uuid);
 
+    final finalDescription = transactionDescriptionOverride ?? receivable.description;
+
+    String? effectiveCategoryName = categoryName;
+    String? effectiveCategoryIcon = categoryIcon;
+    String? effectiveCategoryColor = categoryColor;
+
+    if (ref != null && effectiveCategoryName == null) {
+      final database = ref.read(databaseProvider);
+      if (database != null) {
+        final withLinked = await ReceivablesRepository(database)
+            .getReceivableWithLinkedDataByUuid(receivable.uuid);
+        if (withLinked?.linkedCategory != null) {
+          effectiveCategoryName = withLinked!.linkedCategory!.name;
+          effectiveCategoryIcon = withLinked.linkedCategory!.icon;
+          effectiveCategoryColor = withLinked.linkedCategory!.color;
+        }
+      }
+    }
+
     if (context.mounted) {
       final link = deepLinkService.generatePayableLink(PayableShareData(
         amount: receivable.amount,
         date: receivable.date,
-        description: receivable.description,
+        description: finalDescription,
         dueDate: receivable.dueDate,
         senderName: userProfile.name ?? 'Someone',
         senderPhone: userProfile.phone ?? '',
         externalLinkId: effectiveExternalId,
         status: receivable.status,
+        categoryName: effectiveCategoryName,
+        categoryIcon: effectiveCategoryIcon,
+        categoryColor: effectiveCategoryColor,
       ));
 
       String message;
@@ -632,10 +722,31 @@ class ShareHelper {
         );
       }
 
-      await SharePlus.instance.share(ShareParams(
-        text: message,
-        subject: AppConstants.appName,
-      ));
+      if (ref != null) {
+        await ShareCardSheet.show(
+          context: context,
+          ref: ref,
+          transactionType: 'RECEIVABLE',
+          amount: receivable.amount,
+          date: receivable.date,
+          description: finalDescription,
+          deepLink: link,
+          initialTextMessage: message,
+          senderName: userProfile.name ?? 'Someone',
+          senderPhone: userProfile.phone,
+          partnerName: contact?.name,
+          partnerPhone: contact?.phone,
+          categoryName: effectiveCategoryName,
+          categoryIcon: effectiveCategoryIcon,
+          categoryColor: effectiveCategoryColor,
+          isLinked: true,
+        );
+      } else {
+        await SharePlus.instance.share(ShareParams(
+          text: message,
+          subject: AppConstants.appName,
+        ));
+      }
     }
   }
 
@@ -709,10 +820,33 @@ class ShareHelper {
         link,
       );
 
-      await SharePlus.instance.share(ShareParams(
-        text: message,
-        subject: AppConstants.appName,
-      ));
+      final isLinked = transaction.linkedPayableUuid != null || transaction.linkedReceivableUuid != null;
+
+      if (ref != null) {
+        await ShareCardSheet.show(
+          context: context,
+          ref: ref,
+          transactionType: transaction.type,
+          amount: transaction.amount,
+          date: transaction.date,
+          description: transaction.description,
+          deepLink: link,
+          initialTextMessage: message,
+          senderName: userProfile.name ?? 'Someone',
+          senderPhone: userProfile.phone,
+          partnerName: contact?.name,
+          partnerPhone: contact?.phone,
+          categoryName: category?.name,
+          categoryIcon: category?.icon,
+          categoryColor: category?.color,
+          isLinked: isLinked,
+        );
+      } else {
+        await SharePlus.instance.share(ShareParams(
+          text: message,
+          subject: AppConstants.appName,
+        ));
+      }
     }
   }
 }

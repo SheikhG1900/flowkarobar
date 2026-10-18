@@ -20,6 +20,7 @@
     }
   },
   "bulkImport": "Bulk Import",
+  "open": "Open",
   "pasteFromClipboard": "Paste from Clipboard",
   "pickCsvFile": "Pick CSV File",
   "importSettings": "Import Settings",

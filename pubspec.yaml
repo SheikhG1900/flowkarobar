@@ -93,6 +93,7 @@ dependencies:
   
   # Sticky Headers
   flutter_sticky_header: ^0.8.0
+  qr_flutter: ^4.1.0
   rxdart: ^0.28.0
   device_info_plus: ^12.3.0
   in_app_review: ^2.0.9

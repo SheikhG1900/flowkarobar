@@ -42,6 +42,7 @@ import 'dart:io';
 import 'package:flowpaisa/features/transactions/presentation/widgets/split_bill_multi_contact_picker_sheet.dart';
 import 'package:flowpaisa/shared/widgets/amount_calculator_sheet.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/core/utils/tabular_parser.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/tabular_editor_sheet.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/account_picker.dart';
@@ -406,22 +407,13 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
             context,
             ref,
             l10n.transactionUpdated,
-            actionLabel: l10n.share,
+            actionLabel: l10n.open,
             onActionPressed: (snackContext) {
-              ShareHelper.shareTransaction(
-                snackContext,
-                null,
-                transactionWithDetails.transaction,
-                transactionWithDetails.contact,
-                transactionWithDetails.category,
-                false,
-                currencyOverride: capturedCurrency,
-                userProfileOverride: capturedUserProfile,
-                transactionServiceOverride: capturedTransactionService,
-                whatsAppServiceOverride: capturedWhatsAppService,
-                templateServiceOverride: capturedTemplateService,
-                languageOverride: capturedLanguage,
-                container: capturedContainer,
+              showDialog(
+                context: snackContext,
+                builder: (dialogContext) => TransactionDetailsDialog(
+                  transactionUuid: widget.transaction.uuid,
+                ),
               );
             },
             color: capturedActiveColor,

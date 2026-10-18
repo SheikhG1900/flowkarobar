@@ -20,6 +20,7 @@
     }
   },
   "bulkImport": "बल्क इंपोर्ट",
+  "open": "खोलें",
   "pasteFromClipboard": "क्लिपबोर्ड से पेस्ट करें",
   "pickCsvFile": "CSV फ़ाइल चुनें",
   "importSettings": "इंपोर्ट सेटिंग्स",

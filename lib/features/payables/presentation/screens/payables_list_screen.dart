@@ -13,8 +13,6 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/shared/widgets/faded_bottom_logo.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
-import 'package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart';
-import 'package:flowpaisa/features/payables/presentation/screens/edit_payable_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/widgets/payable_details_dialog.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
@@ -362,19 +360,6 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                     _buildPayablesList('PAID'),
                   ],
                 ),
-          floatingActionButton: AppFloatingActionButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AddPayableScreen(),
-                ),
-              );
-            },
-            backgroundColor: AppColors.payablesSectionColor,
-            foregroundColor: Colors.white,
-            child: const Icon(Icons.add),
-          ),
     );
   }
 
@@ -526,32 +511,14 @@ class _PayablesListScreenState extends ConsumerState<PayablesListScreen>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     child: SwipeableListItem(
-                      enableEdit: canEdit,
-                      enableDelete: canEdit,
+                      enableEdit: false,
+                      enableDelete: false,
                       borderRadius: 20,
                       confirmTitle: l10n.deletePayable,
                       confirmMessage: l10n.deletePayableConfirm,
                       deleteLabel: l10n.delete,
-                      onEdit: canEdit
-                          ? () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => EditPayableScreen(
-                                      payableUuid: item.payable.uuid),
-                                ),
-                              );
-                            }
-                          : null,
-                      onDelete: canEdit
-                          ? () async {
-                              await repository.deletePayable(item.payable.uuid);
-                              if (context.mounted) {
-                                ToastUtils.showSuccessToast(
-                                    context, ref, l10n.payableDeleted);
-                              }
-                            }
-                          : null,
+                      onEdit: null,
+                      onDelete: null,
                       child: _PayableCard(item: item, currency: currency),
                     ),
                   );

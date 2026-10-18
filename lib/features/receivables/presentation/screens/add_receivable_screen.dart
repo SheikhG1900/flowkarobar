@@ -423,6 +423,10 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
               whatsAppServiceOverride: capturedWhatsAppService,
               templateServiceOverride: capturedTemplateService,
               languageOverride: capturedLanguage,
+              forceSystemShare: true,
+              categoryName: receivableWithLinkedData.linkedCategory?.name,
+              categoryIcon: receivableWithLinkedData.linkedCategory?.icon,
+              categoryColor: receivableWithLinkedData.linkedCategory?.color,
             ),
             color: activeColor,
           );

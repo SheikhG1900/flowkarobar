@@ -22,7 +22,7 @@ import 'package:flowpaisa/core/utils/tabular_parser.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/tabular_editor_sheet.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
-// import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/categories/domain/category_monthly_hint_key.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
@@ -642,22 +642,13 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             _createLinkedEntry
                 ? l10n.transactionLinkedAdded
                 : l10n.transactionAdded,
-            actionLabel: l10n.share,
+            actionLabel: l10n.open,
             onActionPressed: (snackContext) {
-              ShareHelper.shareTransaction(
-                snackContext,
-                null, // Pass null for ref to avoid unmounted check
-                transactionWithDetails.transaction,
-                transactionWithDetails.contact,
-                transactionWithDetails.category,
-                false, // isMarked
-                currencyOverride: currency,
-                userProfileOverride: userProfile,
-                transactionServiceOverride: transactionService,
-                whatsAppServiceOverride: whatsAppService,
-                templateServiceOverride: capturedTemplateService,
-                languageOverride: capturedLanguage,
-                container: capturedContainer,
+              showDialog(
+                context: snackContext,
+                builder: (dialogContext) => TransactionDetailsDialog(
+                  transactionUuid: transactionUuid,
+                ),
               );
             },
             color: activeColor,

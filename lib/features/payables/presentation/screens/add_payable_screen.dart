@@ -422,6 +422,10 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
               whatsAppServiceOverride: capturedWhatsAppService,
               templateServiceOverride: capturedTemplateService,
               languageOverride: capturedLanguage,
+              forceSystemShare: true,
+              categoryName: payableWithLinkedData.linkedCategory?.name,
+              categoryIcon: payableWithLinkedData.linkedCategory?.icon,
+              categoryColor: payableWithLinkedData.linkedCategory?.color,
             ),
             color: activeColor,
           );

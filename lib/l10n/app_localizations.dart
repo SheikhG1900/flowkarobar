@@ -178,6 +178,12 @@ abstract class AppLocalizations {
   /// **'Bulk Import'**
   String get bulkImport;
 
+  /// No description provided for @open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open;
+
   /// No description provided for @pasteFromClipboard.
   ///
   /// In en, this message translates to:

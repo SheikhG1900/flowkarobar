@@ -121,6 +121,9 @@ class ReceivableShareData extends SharedData {
   final DateTime? dueDate;
   final String? contactName;
   final String? contactPhone;
+  final String? categoryName;
+  final String? categoryColor;
+  final String? categoryIcon;
 
   ReceivableShareData({
     required this.amount,
@@ -129,6 +132,9 @@ class ReceivableShareData extends SharedData {
     this.dueDate,
     this.contactName,
     this.contactPhone,
+    this.categoryName,
+    this.categoryColor,
+    this.categoryIcon,
     String? senderName,
     String? senderPhone,
     String? status,
@@ -154,6 +160,9 @@ class ReceivableShareData extends SharedData {
         'sn': senderName,
         'sp': senderPhone,
         's': status,
+        'cn': categoryName,
+        'cc': categoryColor,
+        'ci': categoryIcon,
       };
 
   factory ReceivableShareData.fromJson(Map<String, dynamic> json) {
@@ -170,6 +179,9 @@ class ReceivableShareData extends SharedData {
       senderPhone: (json['sp'] ?? json['senderPhone']) as String?,
       status: (json['s'] ?? json['status']) as String?,
       externalLinkId: (json['eid'] ?? json['externalLinkId']) as String,
+      categoryName: (json['cn'] ?? json['categoryName']) as String?,
+      categoryColor: (json['cc'] ?? json['categoryColor']) as String?,
+      categoryIcon: (json['ci'] ?? json['categoryIcon']) as String?,
     );
   }
 }
@@ -182,6 +194,9 @@ class PayableShareData extends SharedData {
   final DateTime? dueDate;
   final String? contactName;
   final String? contactPhone;
+  final String? categoryName;
+  final String? categoryColor;
+  final String? categoryIcon;
 
   PayableShareData({
     required this.amount,
@@ -190,6 +205,9 @@ class PayableShareData extends SharedData {
     this.dueDate,
     this.contactName,
     this.contactPhone,
+    this.categoryName,
+    this.categoryColor,
+    this.categoryIcon,
     String? senderName,
     String? senderPhone,
     String? status,
@@ -215,6 +233,9 @@ class PayableShareData extends SharedData {
         'sn': senderName,
         'sp': senderPhone,
         's': status,
+        'cn': categoryName,
+        'cc': categoryColor,
+        'ci': categoryIcon,
       };
 
   factory PayableShareData.fromJson(Map<String, dynamic> json) {
@@ -231,6 +252,9 @@ class PayableShareData extends SharedData {
       senderPhone: (json['sp'] ?? json['senderPhone']) as String?,
       status: (json['s'] ?? json['status']) as String?,
       externalLinkId: (json['eid'] ?? json['externalLinkId']) as String,
+      categoryName: (json['cn'] ?? json['categoryName']) as String?,
+      categoryColor: (json['cc'] ?? json['categoryColor']) as String?,
+      categoryIcon: (json['ci'] ?? json['categoryIcon']) as String?,
     );
   }
 }

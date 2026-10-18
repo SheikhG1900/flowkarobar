@@ -51,6 +51,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get bulkImport => 'बल्क इंपोर्ट';
 
   @override
+  String get open => 'खोलें';
+
+  @override
   String get pasteFromClipboard => 'क्लिपबोर्ड से पेस्ट करें';
 
   @override

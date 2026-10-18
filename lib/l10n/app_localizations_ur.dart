@@ -51,6 +51,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get bulkImport => 'بلک امپورٹ';
 
   @override
+  String get open => 'کھولیں';
+
+  @override
   String get pasteFromClipboard => 'کلپ بورڈ سے پیسٹ کریں';
 
   @override
