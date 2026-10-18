@@ -85,9 +85,15 @@ import 'package:flowpaisa/core/services/update_service.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/features/voice_command/presentation/screens/voice_add_screen.dart';
+import 'package:flowpaisa/core/utils/windows_protocol_helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Register Windows Custom Protocol (flowpaisa://)
+  if (Platform.isWindows) {
+    await WindowsProtocolHelper.registerProtocol();
+  }
 
   // Enable Edge-to-Edge mode
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);

@@ -101,7 +101,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 3. Open Modal Function
     const openModal = (e) => {
-        e.preventDefault();
+        if (e && e.preventDefault) {
+            e.preventDefault();
+        }
         downloadModal.classList.add('active');
         document.body.style.overflow = 'hidden'; // Prevent background scrolling
     };
@@ -132,4 +134,14 @@ document.addEventListener('DOMContentLoaded', () => {
             closeDownloadModal();
         }
     });
+
+    // Automatically check for '#download' hash in URL on load/hashchange
+    const checkHashAndOpen = () => {
+        if (window.location.hash === '#download') {
+            openModal();
+        }
+    };
+
+    checkHashAndOpen();
+    window.addEventListener('hashchange', checkHashAndOpen);
 });

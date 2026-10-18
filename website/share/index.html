@@ -192,7 +192,7 @@
                     <li><a href="../about.html">About</a></li>
                     <li><a href="../index.html#features">Features</a></li>
                 </ul>
-                <a href="https://tamatasoft.github.io/flowpaisa/" class="cta-button" style="padding: 10px 25px; font-size: 14px;">Download</a>
+                <a href="../index.html#download" class="cta-button" style="padding: 10px 25px; font-size: 14px;">Download</a>
             </nav>
         </div>
     </header>
@@ -229,8 +229,6 @@
                 <button class="cta-button import-btn" onclick="openFlowpaisa()">
                     <i class="fas fa-file-import"></i> &nbsp; Import to Flowpaisa
                 </button>
-
-                <a href="../index.html" class="secondary-link">Learn more about Flowpaisa</a>
             </div>
 
             <div id="error-state" class="hidden">
@@ -335,12 +333,53 @@
 
         function openFlowpaisa() {
             if (appLink) {
-                window.location.href = appLink;
-                setTimeout(() => {
-                    if (confirm("Flowpaisa app didn't open. Go to download page?")) {
-                        window.location.href = "../index.html";
-                    }
-                }, 2500);
+                // Check if user is on Windows platform
+                const isWindows = navigator.platform.indexOf('Win') > -1 || navigator.userAgent.indexOf('Windows') > -1;
+                
+                let hasBlurred = false;
+                const onBlur = () => {
+                    hasBlurred = true;
+                };
+
+                // Listen for window blur event which occurs when the external app launches and takes focus
+                window.addEventListener('blur', onBlur);
+                // Also listen for page visibility change
+                document.addEventListener('visibilitychange', onBlur);
+
+                if (isWindows) {
+                    // Create an iframe to initiate protocol launch silently without changing primary navigation state.
+                    // This is the cleanest pattern for Windows browser protocol handling.
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.src = appLink;
+                    document.body.appendChild(iframe);
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(iframe);
+                        window.removeEventListener('blur', onBlur);
+                        document.removeEventListener('visibilitychange', onBlur);
+
+                        // If the page blurred/lost focus, it means the application launched successfully!
+                        if (!hasBlurred) {
+                            if (confirm("Flowpaisa desktop app didn't open. Make sure it is installed and running, or do you want to download Cashbook?")) {
+                                window.location.href = "../index.html#download";
+                            }
+                        }
+                    }, 2500);
+                } else {
+                    // Mobile and standard OS protocol launcher redirect
+                    window.location.href = appLink;
+                    setTimeout(() => {
+                        window.removeEventListener('blur', onBlur);
+                        document.removeEventListener('visibilitychange', onBlur);
+
+                        if (!hasBlurred) {
+                            if (confirm("Flowpaisa app didn't open. Go to download page?")) {
+                                window.location.href = "../index.html#download";
+                            }
+                        }
+                    }, 2500);
+                }
             }
         }
 
