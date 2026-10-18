@@ -511,6 +511,10 @@ class _ShareCardSheetState extends ConsumerState<ShareCardSheet> {
       catIconData = IconHelper.getIconData(finalCategoryIcon);
     }
 
+    final mainColor = cardGradient.colors.last;
+    final hsl = HSLColor.fromColor(mainColor);
+    final frameBgColor = hsl.withLightness((hsl.lightness * 0.45).clamp(0.08, 0.25)).toColor();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
       child: Column(
@@ -543,18 +547,10 @@ class _ShareCardSheetState extends ConsumerState<ShareCardSheet> {
               child: RepaintBoundary(
                 key: _repaintKey,
                 child: Container(
-                  width: 340,
-                  padding: const EdgeInsets.all(20),
+                  width: 360,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 24),
                   decoration: BoxDecoration(
-                    gradient: cardGradient,
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: cardGradient.colors.first.withValues(alpha: 0.35),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
+                    color: frameBgColor,
                   ),
                   child: Directionality(
                     textDirection: textDirection,
@@ -562,65 +558,86 @@ class _ShareCardSheetState extends ConsumerState<ShareCardSheet> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Card Header & App Brand
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Image.asset(
-                                  'assets/images/logo_square.png',
-                                  width: 24,
-                                  height: 24,
-                                  errorBuilder: (_, __, ___) => Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white24,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(Icons.account_balance_wallet, size: 14, color: Colors.white),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  l10n.appTitle,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
+                        // Card Header & App Brand (moved to outer canvas)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
                                 children: [
-                                  Icon(cardIcon, size: 12, color: Colors.white),
-                                  const SizedBox(width: 4),
+                                  Image.asset(
+                                    'assets/images/logo_square.png',
+                                    width: 24,
+                                    height: 24,
+                                    errorBuilder: (_, __, ___) => Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white24,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.account_balance_wallet, size: 14, color: Colors.white),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
                                   Text(
-                                    cardTitle,
+                                    l10n.appTitle,
                                     style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 10,
+                                      fontSize: 16,
+                                      letterSpacing: 0.5,
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(cardIcon, size: 12, color: Colors.white),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      cardTitle,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 18),
 
-                        // PREMIUM ONLY: USER-SPECIFIC BRANDING (Verified Professional Header)
-                        if (isPremium) ...[
+                        // Ticket Card Content
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            gradient: cardGradient,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.35),
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // PREMIUM ONLY: USER-SPECIFIC BRANDING (Verified Professional Header)
+                              if (isPremium) ...[
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                             decoration: BoxDecoration(
@@ -981,17 +998,29 @@ class _ShareCardSheetState extends ConsumerState<ShareCardSheet> {
                           ),
                           const SizedBox(height: 8),
                         ],
+                            ],
+                          ),
+                        ),
 
-                        // Centered High-Contrast Standalone QR Code directly on the main card background (With Modern Circular Eyes)
+                        // Centered High-Contrast Standalone QR Code directly on the outer canvas background (With Modern Circular Eyes and Sleek Minimalist Outline)
                         if (actualShowQr) ...[
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 12.0),
-                            child: Center(
+                          const SizedBox(height: 20),
+                          Center(
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.35),
+                                  width: 1.5,
+                                ),
+                                borderRadius: BorderRadius.circular(8), // Minimal curve
+                                color: Colors.black.withValues(alpha: 0.08),
+                              ),
                               child: QrImageView(
                                 data: widget.deepLink,
                                 version: QrVersions.auto,
                                 errorCorrectionLevel: QrErrorCorrectLevel.L, // Lowest density = much larger dots & instant scanning
-                                size: 190.0, // Increased, clean, highly visible standalone size
+                                size: 160.0, // Sleek, clean, highly visible standalone size
                                 padding: EdgeInsets.zero, // Zero internal padding for maximum space efficiency
                                 gapless: true, // Prevents tiny gaps or scanning glitches
                                 eyeStyle: const QrEyeStyle(
@@ -1007,16 +1036,16 @@ class _ShareCardSheetState extends ConsumerState<ShareCardSheet> {
                           ),
                         ],
 
-                        // Watermark App Branding
+                        // Watermark App Branding on the outer canvas background
                         if (_includeBranding) ...[
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 16),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
                                 Icons.verified_user_rounded,
                                 size: 10,
-                                color: Colors.white.withValues(alpha: 0.8),
+                                color: Colors.white.withValues(alpha: 0.4), // Reduced opacity
                               ),
                               const SizedBox(width: 4),
                               Text(
@@ -1024,7 +1053,7 @@ class _ShareCardSheetState extends ConsumerState<ShareCardSheet> {
                                     ? _getTranslatedText('verifiedVia', locale)
                                     : _getTranslatedText('brandingLine', locale),
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.8),
+                                  color: Colors.white.withValues(alpha: 0.4), // Reduced opacity
                                   fontSize: 9,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 0.2,
