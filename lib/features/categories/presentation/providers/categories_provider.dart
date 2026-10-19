@@ -8,6 +8,9 @@ import 'package:flowpaisa/features/settings/presentation/providers/settings_prov
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/shared/models/date_range_state.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
+import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
+import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:collection/collection.dart';
 import 'package:rxdart/rxdart.dart';
 
@@ -130,26 +133,41 @@ final categoryBudgetDateRangeProvider =
         CategoryBudgetDateRangeNotifier.new);
 
 class CategoryFilterTagsNotifier extends Notifier<List<String>> {
-  @override
-  List<String> build() => const [];
+  late SharedPreferences _prefs;
+  late String _activeCashbookId;
 
-  void toggleTag(String uuid) {
+  String get _prefKey => 'category_filter_tags_$_activeCashbookId';
+
+  @override
+  List<String> build() {
+    _prefs = ref.watch(sharedPreferencesProvider);
+    _activeCashbookId = ref.watch(activeCashbookIdProvider);
+    return _prefs.getStringList(_prefKey) ?? const [];
+  }
+
+  Future<void> toggleTag(String uuid) async {
     debugPrint('CategoryFilterTagsNotifier toggleTag: $uuid');
-    if (state.contains(uuid)) {
-      state = state.where((id) => id != uuid).toList();
+    final current = state;
+    final List<String> updated;
+    if (current.contains(uuid)) {
+      updated = current.where((id) => id != uuid).toList();
     } else {
-      state = [...state, uuid];
+      updated = [...current, uuid];
     }
+    await _prefs.setStringList(_prefKey, updated);
+    state = updated;
     debugPrint('CategoryFilterTagsNotifier state after toggleTag: $state');
   }
 
-  void clear() {
+  Future<void> clear() async {
     debugPrint('CategoryFilterTagsNotifier clear called');
+    await _prefs.remove(_prefKey);
     state = const [];
   }
   
-  void setTags(List<String> tags) {
+  Future<void> setTags(List<String> tags) async {
     debugPrint('CategoryFilterTagsNotifier setTags called: $tags');
+    await _prefs.setStringList(_prefKey, tags);
     state = tags;
   }
 }
