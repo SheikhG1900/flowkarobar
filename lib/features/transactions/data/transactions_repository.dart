@@ -138,13 +138,45 @@ class TransactionsRepository {
   // Get transactions by date range (Stream)
   Stream<List<Transaction>> watchTransactionsByDateRange(
     DateTime start,
-    DateTime end,
-  ) {
-    return (_database.select(_database.transactions)
-          ..where((t) =>
-              t.date.isBetweenValues(start, end) & t.isDeleted.equals(false))
-          ..orderBy([(t) => OrderingTerm.desc(t.date)]))
-        .watch();
+    DateTime end, {
+    List<String>? tagUuids,
+  }) {
+    final query = _database.select(_database.transactions)
+      ..where((t) =>
+          t.date.isBetweenValues(start, end) & t.isDeleted.equals(false))
+      ..orderBy([(t) => OrderingTerm.desc(t.date)]);
+
+    if (tagUuids != null && tagUuids.isNotEmpty) {
+      final containsNoTag = tagUuids.contains('no_tag');
+      final validTagUuids = tagUuids.where((id) => id != 'no_tag').toList();
+
+      final Expression<bool> tagExpr;
+      if (validTagUuids.isNotEmpty) {
+        final subquery = _database.selectOnly(_database.transactionTags)
+          ..addColumns([_database.transactionTags.transactionUuid])
+          ..where(_database.transactionTags.tagUuid.isIn(validTagUuids) &
+              _database.transactionTags.isDeleted.equals(false));
+
+        if (containsNoTag) {
+          final noTagSubquery = _database.selectOnly(_database.transactionTags)
+            ..addColumns([_database.transactionTags.transactionUuid])
+            ..where(_database.transactionTags.isDeleted.equals(false));
+          tagExpr = _database.transactions.uuid.isInQuery(subquery) |
+              _database.transactions.uuid.isNotInQuery(noTagSubquery);
+        } else {
+          tagExpr = _database.transactions.uuid.isInQuery(subquery);
+        }
+      } else {
+        // Only contains 'no_tag'
+        final noTagSubquery = _database.selectOnly(_database.transactionTags)
+          ..addColumns([_database.transactionTags.transactionUuid])
+          ..where(_database.transactionTags.isDeleted.equals(false));
+        tagExpr = _database.transactions.uuid.isNotInQuery(noTagSubquery);
+      }
+      query.where((t) => tagExpr);
+    }
+
+    return query.watch();
   }
 
   // Get transactions by date range (Future)

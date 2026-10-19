@@ -5,7 +5,7 @@ import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Category;
 import 'package:flutter/services.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/tag_selection_sheet.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

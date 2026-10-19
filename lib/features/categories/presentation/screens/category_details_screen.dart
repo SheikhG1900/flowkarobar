@@ -7,6 +7,7 @@ import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_date_range_selector.dart';
+import 'package:flowpaisa/features/categories/presentation/widgets/category_tag_filter_row.dart';
 import 'package:flowpaisa/features/categories/presentation/widgets/set_category_budget_sheet.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
@@ -238,6 +239,8 @@ class CategoryDetailsScreen extends ConsumerWidget {
                               .previousPeriod();
                         },
                       ),
+                      const SizedBox(height: 8),
+                      const CategoryTagFilterRow(),
                       const SizedBox(height: 24),
 
                       // Summary / budget card
@@ -252,11 +255,13 @@ class CategoryDetailsScreen extends ConsumerWidget {
                         isLocked: isLocked,
                         isBudgetLocked: isBudgetLocked,
                         onOpenTransactions: () async {
+                          final tags = ref.read(categoryFilterTagsProvider);
                           ref
                               .read(transactionsPaginatedProvider.notifier)
                               .applyFilters(
                                 TransactionFilters(
                                   categoryUuids: [categoryUuid],
+                                  tagUuids: tags.isNotEmpty ? tags : null,
                                   startDate: selectedDateRange.startDate,
                                   endDate: selectedDateRange.endDate,
                                 ),

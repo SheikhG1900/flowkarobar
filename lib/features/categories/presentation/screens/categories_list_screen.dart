@@ -18,6 +18,7 @@ import 'package:flowpaisa/core/utils/category_budget_utils.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_date_range_selector.dart';
 import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_progress_bar.dart';
+import 'package:flowpaisa/features/categories/presentation/widgets/category_tag_filter_row.dart';
 import 'package:flowpaisa/shared/models/date_range_state.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
@@ -145,20 +146,27 @@ class _CategoryListBody extends ConsumerWidget {
     final netsAsync = ref.watch(categoryNetAmountsForListProvider(type));
     final overallNetsAsync = ref.watch(overallCategoryNetAmountsForListProvider(type));
 
-    final dateHeader = Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: CategoryBudgetDateRangeSelector(
-        selectedDateRange: range,
-        onDateRangeChanged: (dateRange) {
-          ref.read(categoryBudgetDateRangeProvider.notifier).updateRange(dateRange);
-        },
-        onNextPeriod: () {
-          ref.read(categoryBudgetDateRangeProvider.notifier).nextPeriod();
-        },
-        onPreviousPeriod: () {
-          ref.read(categoryBudgetDateRangeProvider.notifier).previousPeriod();
-        },
-      ),
+    final dateHeader = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          child: CategoryBudgetDateRangeSelector(
+            selectedDateRange: range,
+            onDateRangeChanged: (dateRange) {
+              ref.read(categoryBudgetDateRangeProvider.notifier).updateRange(dateRange);
+            },
+            onNextPeriod: () {
+              ref.read(categoryBudgetDateRangeProvider.notifier).nextPeriod();
+            },
+            onPreviousPeriod: () {
+              ref.read(categoryBudgetDateRangeProvider.notifier).previousPeriod();
+            },
+          ),
+        ),
+        const SizedBox(height: 8),
+        const CategoryTagFilterRow(),
+      ],
     );
 
     return netsAsync.when(
@@ -581,11 +589,13 @@ class _CategoriesAggregateSummary extends ConsumerWidget {
                   InkWell(
                     key: ValueKey('categories-aggregate-inkwell-$type'),
                     onTap: () async {
+                      final tags = ref.read(categoryFilterTagsProvider);
                       ref.read(transactionsPaginatedProvider.notifier).applyFilters(
                             TransactionFilters(
                               startDate: range.startDate,
                               endDate: range.endDate,
                               type: type,
+                              tagUuids: tags.isNotEmpty ? tags : null,
                             ),
                           );
                       await Navigator.push(

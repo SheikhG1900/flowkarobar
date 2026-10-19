@@ -1,4 +1,5 @@
-import 'package:drift/drift.dart';
+import 'package:drift/drift.dart' hide Category;
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/utils/category_budget_utils.dart';
 import 'package:flowpaisa/features/categories/domain/category_budget_models.dart';
@@ -63,13 +64,46 @@ class CategoriesRepository {
         .watch();
   }
 
+  Expression<bool>? _buildTagExpression(List<String>? tagUuids) {
+    debugPrint('_buildTagExpression called with tagUuids: $tagUuids');
+    if (tagUuids == null || tagUuids.isEmpty) return null;
+
+    final containsNoTag = tagUuids.contains('no_tag');
+    final validTagUuids = tagUuids.where((id) => id != 'no_tag').toList();
+
+    if (validTagUuids.isNotEmpty) {
+      final subquery = _database.selectOnly(_database.transactionTags)
+        ..addColumns([_database.transactionTags.transactionUuid])
+        ..where(_database.transactionTags.tagUuid.isIn(validTagUuids) &
+            _database.transactionTags.isDeleted.equals(false));
+
+      if (containsNoTag) {
+        final noTagSubquery = _database.selectOnly(_database.transactionTags)
+          ..addColumns([_database.transactionTags.transactionUuid])
+          ..where(_database.transactionTags.isDeleted.equals(false));
+        return _database.transactions.uuid.isInQuery(subquery) |
+            _database.transactions.uuid.isNotInQuery(noTagSubquery);
+      } else {
+        return _database.transactions.uuid.isInQuery(subquery);
+      }
+    } else {
+      // Only contains 'no_tag'
+      final noTagSubquery = _database.selectOnly(_database.transactionTags)
+        ..addColumns([_database.transactionTags.transactionUuid])
+        ..where(_database.transactionTags.isDeleted.equals(false));
+      return _database.transactions.uuid.isNotInQuery(noTagSubquery);
+    }
+  }
+
   /// Watch net amounts for all categories of [type] in range [start] to [end].
   Stream<Map<String, double>> watchCategoryNetAmountsForCategories(
     List<String> categoryUuids,
     DateTime start,
     DateTime end,
-    String type,
-  ) {
+    String type, {
+    List<String>? tagUuids,
+  }) {
+    debugPrint('watchCategoryNetAmountsForCategories called with tagUuids: $tagUuids');
     if (categoryUuids.isEmpty) return Stream.value({});
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
@@ -83,9 +117,15 @@ class CategoriesRepository {
       ..where(_database.transactions.categoryUuid.isIn(categoryUuids))
       ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
       ..where(_database.transactions.isDeleted.equals(false))
-      ..where(_database.transactions.processedDate.isNotNull())
-      ..groupBy(
-          [_database.transactions.categoryUuid, _database.transactions.type]);
+      ..where(_database.transactions.processedDate.isNotNull());
+
+    final tagExpr = _buildTagExpression(tagUuids);
+    if (tagExpr != null) {
+      query.where(tagExpr);
+    }
+
+    query.groupBy(
+        [_database.transactions.categoryUuid, _database.transactions.type]);
 
     return query.watch().map((rows) {
       final expenseBy = <String, double>{};
@@ -114,7 +154,11 @@ class CategoriesRepository {
 
   /// Watch uncategorized total for transactions of [type] in range [start] to [end].
   Stream<double> watchUncategorizedAmountByType(
-      String type, DateTime start, DateTime end) {
+    String type,
+    DateTime start,
+    DateTime end, {
+    List<String>? tagUuids,
+  }) {
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
     final query = _database.selectOnly(_database.transactions)
@@ -124,6 +168,11 @@ class CategoriesRepository {
       ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
       ..where(_database.transactions.isDeleted.equals(false))
       ..where(_database.transactions.processedDate.isNotNull());
+
+    final tagExpr = _buildTagExpression(tagUuids);
+    if (tagExpr != null) {
+      query.where(tagExpr);
+    }
 
     return query
         .watchSingle()
@@ -349,106 +398,132 @@ class CategoriesRepository {
   // ── Category budgets & period net (active = not deleted + processed) ─────
 
   Future<double> getCategoryNetAmount(
-      String categoryUuid, DateTime start, DateTime end, String type) async {
+      String categoryUuid, DateTime start, DateTime end, String type, {List<String>? tagUuids}) async {
+    debugPrint('getCategoryNetAmount called with tagUuids: $tagUuids');
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
-    final expenseSum = await (_database.selectOnly(_database.transactions)
-          ..addColumns([_database.transactions.amount.sum()])
-          ..where(_database.transactions.categoryUuid.equals(categoryUuid))
-          ..where(_database.transactions.type.equals('EXPENSE'))
-          ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-          ..where(_database.transactions.isDeleted.equals(false))
-          ..where(_database.transactions.processedDate.isNotNull()))
-        .getSingle()
-        .then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
-    final incomeSum = await (_database.selectOnly(_database.transactions)
-          ..addColumns([_database.transactions.amount.sum()])
-          ..where(_database.transactions.categoryUuid.equals(categoryUuid))
-          ..where(_database.transactions.type.equals('INCOME'))
-          ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-          ..where(_database.transactions.isDeleted.equals(false))
-          ..where(_database.transactions.processedDate.isNotNull()))
-        .getSingle()
-        .then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
+    
+    final expenseQuery = _database.selectOnly(_database.transactions)
+      ..addColumns([_database.transactions.amount.sum()])
+      ..where(_database.transactions.categoryUuid.equals(categoryUuid))
+      ..where(_database.transactions.type.equals('EXPENSE'))
+      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
+      ..where(_database.transactions.isDeleted.equals(false))
+      ..where(_database.transactions.processedDate.isNotNull());
+
+    final incomeQuery = _database.selectOnly(_database.transactions)
+      ..addColumns([_database.transactions.amount.sum()])
+      ..where(_database.transactions.categoryUuid.equals(categoryUuid))
+      ..where(_database.transactions.type.equals('INCOME'))
+      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
+      ..where(_database.transactions.isDeleted.equals(false))
+      ..where(_database.transactions.processedDate.isNotNull());
+
+    final tagExpr = _buildTagExpression(tagUuids);
+    if (tagExpr != null) {
+      expenseQuery.where(tagExpr);
+      incomeQuery.where(tagExpr);
+    }
+
+    final expenseSum = await expenseQuery.getSingle().then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
+    final incomeSum = await incomeQuery.getSingle().then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
+
     return type == 'INCOME' ? incomeSum - expenseSum : expenseSum - incomeSum;
   }
 
   /// Net for transactions with no category: sum(EXPENSE) − sum(INCOME) in range.
   /// Same sign convention as [getCategoryNetAmount].
   Future<double> getUncategorizedNetAmount(
-      DateTime start, DateTime end, String type) async {
+      DateTime start, DateTime end, String type, {List<String>? tagUuids}) async {
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
-    final expenseSum = await (_database.selectOnly(_database.transactions)
-          ..addColumns([_database.transactions.amount.sum()])
-          ..where(_database.transactions.categoryUuid.isNull())
-          ..where(_database.transactions.type.equals('EXPENSE'))
-          ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-          ..where(_database.transactions.isDeleted.equals(false))
-          ..where(_database.transactions.processedDate.isNotNull()))
-        .getSingle()
-        .then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
-    final incomeSum = await (_database.selectOnly(_database.transactions)
-          ..addColumns([_database.transactions.amount.sum()])
-          ..where(_database.transactions.categoryUuid.isNull())
-          ..where(_database.transactions.type.equals('INCOME'))
-          ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-          ..where(_database.transactions.isDeleted.equals(false))
-          ..where(_database.transactions.processedDate.isNotNull()))
-        .getSingle()
-        .then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
+    
+    final expenseQuery = _database.selectOnly(_database.transactions)
+      ..addColumns([_database.transactions.amount.sum()])
+      ..where(_database.transactions.categoryUuid.isNull())
+      ..where(_database.transactions.type.equals('EXPENSE'))
+      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
+      ..where(_database.transactions.isDeleted.equals(false))
+      ..where(_database.transactions.processedDate.isNotNull());
+
+    final incomeQuery = _database.selectOnly(_database.transactions)
+      ..addColumns([_database.transactions.amount.sum()])
+      ..where(_database.transactions.categoryUuid.isNull())
+      ..where(_database.transactions.type.equals('INCOME'))
+      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
+      ..where(_database.transactions.isDeleted.equals(false))
+      ..where(_database.transactions.processedDate.isNotNull());
+
+    final tagExpr = _buildTagExpression(tagUuids);
+    if (tagExpr != null) {
+      expenseQuery.where(tagExpr);
+      incomeQuery.where(tagExpr);
+    }
+
+    final expenseSum = await expenseQuery.getSingle().then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
+    final incomeSum = await incomeQuery.getSingle().then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
     return type == 'INCOME' ? incomeSum - expenseSum : expenseSum - incomeSum;
   }
 
   /// Total for transactions with no category by type (EXPENSE or INCOME) in range.
   Future<double> getUncategorizedAmountByType(
-      String type, DateTime start, DateTime end) async {
+      String type, DateTime start, DateTime end, {List<String>? tagUuids}) async {
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
-    final sum = await (_database.selectOnly(_database.transactions)
-          ..addColumns([_database.transactions.amount.sum()])
-          ..where(_database.transactions.categoryUuid.isNull())
-          ..where(_database.transactions.type.equals(type))
-          ..where(
-              _database.transactions.date.isBetweenValues(startDate, endDate))
-          ..where(_database.transactions.isDeleted.equals(false))
-          ..where(_database.transactions.processedDate.isNotNull()))
-        .getSingle()
-        .then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
+    final query = _database.selectOnly(_database.transactions)
+      ..addColumns([_database.transactions.amount.sum()])
+      ..where(_database.transactions.categoryUuid.isNull())
+      ..where(_database.transactions.type.equals(type))
+      ..where(
+          _database.transactions.date.isBetweenValues(startDate, endDate))
+      ..where(_database.transactions.isDeleted.equals(false))
+      ..where(_database.transactions.processedDate.isNotNull());
+
+    final tagExpr = _buildTagExpression(tagUuids);
+    if (tagExpr != null) {
+      query.where(tagExpr);
+    }
+
+    final sum = await query.getSingle().then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
     return sum;
   }
 
   Future<int> getCategoryTransactionCount(
-      String categoryUuid, DateTime start, DateTime end) async {
+      String categoryUuid, DateTime start, DateTime end, {List<String>? tagUuids}) async {
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
-    return (_database.selectOnly(_database.transactions)
-          ..addColumns([_database.transactions.uuid.count()])
-          ..where(_database.transactions.categoryUuid.equals(categoryUuid))
-          ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-          ..where(_database.transactions.isDeleted.equals(false))
-          ..where(_database.transactions.processedDate.isNotNull()))
-        .getSingle()
-        .then((r) => r.read(_database.transactions.uuid.count()) ?? 0);
+    final query = _database.selectOnly(_database.transactions)
+      ..addColumns([_database.transactions.uuid.count()])
+      ..where(_database.transactions.categoryUuid.equals(categoryUuid))
+      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
+      ..where(_database.transactions.isDeleted.equals(false))
+      ..where(_database.transactions.processedDate.isNotNull());
+
+    final tagExpr = _buildTagExpression(tagUuids);
+    if (tagExpr != null) {
+      query.where(tagExpr);
+    }
+
+    return query.getSingle().then((r) => r.read(_database.transactions.uuid.count()) ?? 0);
   }
 
   Future<CategoryPeriodStats> getCategoryPeriodStats(
-      String categoryUuid, DateTime start, DateTime end, String type) async {
-    final net = await getCategoryNetAmount(categoryUuid, start, end, type);
-    final count = await getCategoryTransactionCount(categoryUuid, start, end);
+      String categoryUuid, DateTime start, DateTime end, String type, {List<String>? tagUuids}) async {
+    final net = await getCategoryNetAmount(categoryUuid, start, end, type, tagUuids: tagUuids);
+    final count = await getCategoryTransactionCount(categoryUuid, start, end, tagUuids: tagUuids);
     return CategoryPeriodStats(netAmount: net, transactionCount: count);
   }
 
   Future<CategoryBudgetSnapshot> getCategoryBudgetSnapshot(
-      String categoryUuid, DateRangeState range) async {
+      String categoryUuid, DateRangeState range, {List<String>? tagUuids}) async {
     final category = await getCategoryByUuid(categoryUuid);
     if (category == null) {
       throw Exception('Category not found');
     }
     final stats = await getCategoryPeriodStats(
-        categoryUuid, range.startDate, range.endDate, category.type);
+        categoryUuid, range.startDate, range.endDate, category.type, tagUuids: tagUuids);
     final overallNet = await getCategoryNetAmount(
-        categoryUuid, DateTime(1970, 1, 1), DateTime(2100, 12, 31), category.type);
+        categoryUuid, DateTime(1970, 1, 1), DateTime(2100, 12, 31), category.type, tagUuids: tagUuids);
     return CategoryBudgetSnapshot(
       category: category,
       period: range,
@@ -464,19 +539,26 @@ class CategoriesRepository {
   /// transactions change or the category row changes (e.g. budget fields).
   Stream<CategoryBudgetSnapshot> watchCategoryBudgetSnapshot(
     String categoryUuid,
-    DateRangeState range,
-  ) {
+    DateRangeState range, {
+    List<String>? tagUuids,
+  }) {
     final startDate =
         DateTime(range.startDate.year, range.startDate.month, range.startDate.day);
     final endDate = DateTime(
         range.endDate.year, range.endDate.month, range.endDate.day, 23, 59, 59);
 
-    final transactions$ = (_database.select(_database.transactions)
-          ..where((t) => t.categoryUuid.equals(categoryUuid))
-          ..where((t) => t.date.isBetweenValues(startDate, endDate))
-          ..where((t) => t.isDeleted.equals(false))
-          ..where((t) => t.processedDate.isNotNull()))
-        .watch();
+    final transactionsQuery = _database.select(_database.transactions)
+      ..where((t) => t.categoryUuid.equals(categoryUuid))
+      ..where((t) => t.date.isBetweenValues(startDate, endDate))
+      ..where((t) => t.isDeleted.equals(false))
+      ..where((t) => t.processedDate.isNotNull());
+
+    final tagExpr = _buildTagExpression(tagUuids);
+    if (tagExpr != null) {
+      transactionsQuery.where((t) => tagExpr);
+    }
+
+    final transactions$ = transactionsQuery.watch();
 
     final category$ = (_database.select(_database.categories)
           ..where((c) => c.uuid.equals(categoryUuid)))
@@ -490,7 +572,7 @@ class CategoriesRepository {
       if (cat == null) {
         throw Exception('Category not found');
       }
-      return getCategoryBudgetSnapshot(categoryUuid, range);
+      return getCategoryBudgetSnapshot(categoryUuid, range, tagUuids: tagUuids);
     });
   }
 
@@ -499,8 +581,10 @@ class CategoriesRepository {
     List<String> categoryUuids,
     DateTime start,
     DateTime end,
-    String type,
-  ) async {
+    String type, {
+    List<String>? tagUuids,
+  }) async {
+    debugPrint('getCategoryNetAmountsForCategories called with tagUuids: $tagUuids');
     if (categoryUuids.isEmpty) return {};
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
@@ -513,9 +597,15 @@ class CategoriesRepository {
       ..where(_database.transactions.categoryUuid.isIn(categoryUuids))
       ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
       ..where(_database.transactions.isDeleted.equals(false))
-      ..where(_database.transactions.processedDate.isNotNull())
-      ..groupBy(
-          [_database.transactions.categoryUuid, _database.transactions.type]);
+      ..where(_database.transactions.processedDate.isNotNull());
+
+    final tagExpr = _buildTagExpression(tagUuids);
+    if (tagExpr != null) {
+      query.where(tagExpr);
+    }
+
+    query.groupBy(
+        [_database.transactions.categoryUuid, _database.transactions.type]);
 
     final rows = await query.get();
     final expenseBy = <String, double>{};

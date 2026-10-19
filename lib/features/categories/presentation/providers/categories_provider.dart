@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/categories/data/categories_repository.dart';
@@ -119,78 +120,116 @@ final categoryBudgetDateRangeProvider =
     NotifierProvider<CategoryBudgetDateRangeNotifier, DateRangeState>(
         CategoryBudgetDateRangeNotifier.new);
 
+class CategoryFilterTagsNotifier extends Notifier<List<String>> {
+  @override
+  List<String> build() => const [];
+
+  void toggleTag(String uuid) {
+    debugPrint('CategoryFilterTagsNotifier toggleTag: $uuid');
+    if (state.contains(uuid)) {
+      state = state.where((id) => id != uuid).toList();
+    } else {
+      state = [...state, uuid];
+    }
+    debugPrint('CategoryFilterTagsNotifier state after toggleTag: $state');
+  }
+
+  void clear() {
+    debugPrint('CategoryFilterTagsNotifier clear called');
+    state = const [];
+  }
+  
+  void setTags(List<String> tags) {
+    debugPrint('CategoryFilterTagsNotifier setTags called: $tags');
+    state = tags;
+  }
+}
+
+final categoryFilterTagsProvider =
+    NotifierProvider<CategoryFilterTagsNotifier, List<String>>(
+        CategoryFilterTagsNotifier.new);
+
 /// Detail + list: budget snapshot for [categoryUuid] and current [categoryBudgetDateRangeProvider].
 final categoryDetailBudgetProvider = FutureProvider.autoDispose
     .family<CategoryBudgetSnapshot, String>((ref, categoryUuid) async {
   final range = ref.watch(categoryBudgetDateRangeProvider);
+  final tags = ref.watch(categoryFilterTagsProvider);
   final repo = ref.watch(categoriesRepositoryProvider);
-  return repo.getCategoryBudgetSnapshot(categoryUuid, range);
+  return repo.getCategoryBudgetSnapshot(categoryUuid, range, tagUuids: tags);
 });
 
 /// Same data as [categoryDetailBudgetProvider], but updates when transactions or the category row change.
 final categoryDetailBudgetSnapshotStreamProvider = StreamProvider.autoDispose
     .family<CategoryBudgetSnapshot, String>((ref, categoryUuid) {
   final range = ref.watch(categoryBudgetDateRangeProvider);
+  final tags = ref.watch(categoryFilterTagsProvider);
   final repo = ref.watch(categoriesRepositoryProvider);
-  return repo.watchCategoryBudgetSnapshot(categoryUuid, range);
+  return repo.watchCategoryBudgetSnapshot(categoryUuid, range, tagUuids: tags);
 });
 
 /// Net amounts for all categories of [type] in the current category budget period.
 final categoryNetAmountsForListProvider =
     StreamProvider.family<Map<String, double>, String>((ref, type) {
   final range = ref.watch(categoryBudgetDateRangeProvider);
+  final tags = ref.watch(categoryFilterTagsProvider);
+  debugPrint('categoryNetAmountsForListProvider family($type) triggered. tags: $tags');
   final repo = ref.watch(categoriesRepositoryProvider);
   final categoriesAsync = ref.watch(categoriesByTypeProvider(type));
 
-  return categoriesAsync.when(
-    data: (categories) {
-      if (categories.isEmpty) return Stream.value(<String, double>{});
-      return repo
-          .watchCategoryNetAmountsForCategories(
-            categories.map((c) => c.uuid).toList(),
-            range.startDate,
-            range.endDate,
-            type,
-          )
-          .distinct((prev, next) => const MapEquality().equals(prev, next))
-          .debounceTime(const Duration(milliseconds: 100));
-    },
-    loading: () => Stream.value(<String, double>{}),
-    error: (_, __) => Stream.value(<String, double>{}),
-  );
+  final categories = categoriesAsync.value ?? [];
+  if (categories.isEmpty) {
+    debugPrint('categoriesByTypeProvider family($type) is empty. Returning empty Stream.');
+    return Stream.value(<String, double>{});
+  }
+
+  debugPrint('categoriesByTypeProvider family($type) data loaded: ${categories.length} items. Calling repo watchCategoryNetAmountsForCategories...');
+  return repo
+      .watchCategoryNetAmountsForCategories(
+        categories.map((c) => c.uuid).toList(),
+        range.startDate,
+        range.endDate,
+        type,
+        tagUuids: tags,
+      )
+      .distinct((prev, next) => const MapEquality().equals(prev, next))
+      .debounceTime(const Duration(milliseconds: 100));
 });
 
 /// Net amounts for all categories of [type] for all time (overall).
 final overallCategoryNetAmountsForListProvider =
     StreamProvider.family<Map<String, double>, String>((ref, type) {
   final repo = ref.watch(categoriesRepositoryProvider);
+  final tags = ref.watch(categoryFilterTagsProvider);
+  debugPrint('overallCategoryNetAmountsForListProvider family($type) triggered. tags: $tags');
   final categoriesAsync = ref.watch(categoriesByTypeProvider(type));
 
-  return categoriesAsync.when(
-    data: (categories) {
-      if (categories.isEmpty) return Stream.value(<String, double>{});
-      return repo
-          .watchCategoryNetAmountsForCategories(
-            categories.map((c) => c.uuid).toList(),
-            DateTime(1970, 1, 1),
-            DateTime(2100, 12, 31),
-            type,
-          )
-          .distinct((prev, next) => const MapEquality().equals(prev, next))
-          .debounceTime(const Duration(milliseconds: 100));
-    },
-    loading: () => Stream.value(<String, double>{}),
-    error: (_, __) => Stream.value(<String, double>{}),
-  );
+  final categories = categoriesAsync.value ?? [];
+  if (categories.isEmpty) {
+    debugPrint('overallCategoryNetAmountsForListProvider family($type) is empty. Returning empty Stream.');
+    return Stream.value(<String, double>{});
+  }
+
+  debugPrint('overallCategoryNetAmountsForListProvider family($type) calling repo...');
+  return repo
+      .watchCategoryNetAmountsForCategories(
+        categories.map((c) => c.uuid).toList(),
+        DateTime(1970, 1, 1),
+        DateTime(2100, 12, 31),
+        type,
+        tagUuids: tags,
+      )
+      .distinct((prev, next) => const MapEquality().equals(prev, next))
+      .debounceTime(const Duration(milliseconds: 100));
 });
 
 /// Uncategorized total for transactions of [type] for the current category budget period.
 final uncategorizedAmountByTypeProvider =
     StreamProvider.family<double, String>((ref, type) {
   final range = ref.watch(categoryBudgetDateRangeProvider);
+  final tags = ref.watch(categoryFilterTagsProvider);
   final repo = ref.watch(categoriesRepositoryProvider);
   return repo
-      .watchUncategorizedAmountByType(type, range.startDate, range.endDate)
+      .watchUncategorizedAmountByType(type, range.startDate, range.endDate, tagUuids: tags)
       .distinct()
       .debounceTime(const Duration(milliseconds: 100));
 });
@@ -199,8 +238,9 @@ final uncategorizedAmountByTypeProvider =
 final overallUncategorizedAmountByTypeProvider =
     StreamProvider.family<double, String>((ref, type) {
   final repo = ref.watch(categoriesRepositoryProvider);
+  final tags = ref.watch(categoryFilterTagsProvider);
   return repo
-      .watchUncategorizedAmountByType(type, DateTime(1970, 1, 1), DateTime(2100, 12, 31))
+      .watchUncategorizedAmountByType(type, DateTime(1970, 1, 1), DateTime(2100, 12, 31), tagUuids: tags)
       .distinct()
       .debounceTime(const Duration(milliseconds: 100));
 });
@@ -249,13 +289,14 @@ final dailyCumulativeNetAmountsProvider = StreamProvider.family<
     ({String type, DateRangeState range})>((ref, arg) {
   final type = arg.type;
   final range = arg.range;
+  final tags = ref.watch(categoryFilterTagsProvider);
   final txRepo = ref.watch(transactionsRepositoryProvider);
   final categoriesAsync = ref.watch(categoriesByTypeProvider(type));
   final includeUncategorizedAsync =
       ref.watch(includeUncategorizedInCategorySummaryProvider);
 
   return Rx.combineLatest3(
-    txRepo.watchTransactionsByDateRange(range.startDate, range.endDate),
+    txRepo.watchTransactionsByDateRange(range.startDate, range.endDate, tagUuids: tags),
     categoriesAsync.when(
         data: (c) => Stream.value(c),
         loading: () => const Stream.empty(),

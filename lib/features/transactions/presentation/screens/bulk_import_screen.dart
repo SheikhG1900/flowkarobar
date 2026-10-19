@@ -17,7 +17,7 @@ import 'package:flowpaisa/features/transactions/presentation/providers/transacti
 import 'package:flowpaisa/features/transactions/presentation/screens/bulk_import_parse.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart' show compute;
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Category;
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
