@@ -372,8 +372,8 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
                   ElevatedButton(
                     onPressed: _isImporting ? null : _navigateToDetails,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _isSettledUpdate ? Colors.green.shade600 : Colors.white,
-                      foregroundColor: _isSettledUpdate ? Colors.white : themeColor,
+                      backgroundColor: Colors.white,
+                      foregroundColor: themeColor,
                       elevation: 4,
                       shadowColor: Colors.black.withValues(alpha: 0.2),
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
