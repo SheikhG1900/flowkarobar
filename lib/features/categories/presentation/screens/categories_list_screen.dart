@@ -121,9 +121,16 @@ class _CategoryList extends ConsumerWidget {
           categories: categories,
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) =>
-          Center(child: Text(l10n.errorOccurred(error.toString()))),
+      loading: () => _CategoryListBody(
+        key: ValueKey('category-list-body-$type'),
+        type: type,
+        categories: const [],
+      ),
+      error: (error, stack) => _CategoryListBody(
+        key: ValueKey('category-list-body-$type'),
+        type: type,
+        categories: const [],
+      ),
     );
   }
 }
@@ -145,9 +152,16 @@ class _CategoryListBody extends ConsumerWidget {
     final range = ref.watch(categoryBudgetDateRangeProvider);
     final netsAsync = ref.watch(categoryNetAmountsForListProvider(type));
     final overallNetsAsync = ref.watch(overallCategoryNetAmountsForListProvider(type));
+    final categoriesAsync = ref.watch(categoriesByTypeProvider(type));
+
+    final nets = netsAsync.asData?.value;
+    final overallNets = overallNetsAsync.asData?.value;
+    final isLoading = netsAsync.isLoading || overallNetsAsync.isLoading || categoriesAsync.isLoading;
+    final hasError = netsAsync.hasError || overallNetsAsync.hasError || categoriesAsync.hasError;
 
     final dateHeader = Column(
       mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -166,139 +180,37 @@ class _CategoryListBody extends ConsumerWidget {
         ),
         const SizedBox(height: 8),
         const CategoryTagFilterRow(),
+        const SizedBox(height: 4),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: isLoading
+              ? SizedBox(
+                  key: const ValueKey('category-loading-bar-active'),
+                  height: 2,
+                  child: LinearProgressIndicator(
+                    backgroundColor: Colors.transparent,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      type == 'EXPENSE'
+                          ? AppColors.expenseColor
+                          : AppColors.incomeColor,
+                    ),
+                  ),
+                )
+              : const SizedBox(
+                  key: ValueKey('category-loading-bar-inactive'),
+                  height: 2,
+                ),
+        ),
       ],
     );
 
-    return netsAsync.when(
-      skipLoadingOnRefresh: true,
-      data: (nets) {
-        return overallNetsAsync.when(
-          skipLoadingOnRefresh: true,
-          data: (overallNets) {
-            if (categories.isEmpty) {
-              final typeLabel = type == 'EXPENSE' ? l10n.expense : l10n.income;
-              return CustomScrollView(
-                slivers: [
-                  SliverToBoxAdapter(child: dateHeader),
-                  const SliverToBoxAdapter(child: SizedBox(height: 4)),
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Symbols.category,
-                            size: 80,
-                            color: theme.colorScheme.outline.withValues(alpha: 0.5),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            l10n.noTypeCategories(typeLabel),
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }
-            return CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(child: dateHeader),
-                const SliverToBoxAdapter(child: SizedBox(height: 4)),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: _CategoriesAggregateSummary(
-                      type: type,
-                      categories: categories,
-                      nets: nets,
-                      overallNets: overallNets,
-                      range: range,
-                    ),
-                  ),
-                ),
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                      16, 0, 16, 80 + MediaQuery.of(context).padding.bottom),
-                  sliver: SliverList(
-                    key: ValueKey('category-list-$type'),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final category = categories[index];
-                        final net = nets[category.uuid] ?? 0.0;
-                        final overallNet = overallNets[category.uuid] ?? 0.0;
-                        final isPremium = ref.watch(premiumProvider).isPremium;
-                        final isLocked = !isPremium &&
-                            !category.isDefault &&
-                            (category.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
-                        final isBudgetLocked = !isPremium &&
-                            (category.budgetSeq ?? 0) >
-                                PremiumGate.categoryBudgetTotalLimit;
+    // Dynamic body below the static filter header, animated with slide & fade-in transitions
+    Widget bodyContent;
 
-                        return _CategoryCard(
-                          key: ValueKey('category-card-${category.uuid}'),
-                          category: category,
-                          netAmount: net,
-                          overallNetAmount: overallNet,
-                          dateRange: range,
-                          isLocked: isLocked,
-                          isBudgetLocked: isBudgetLocked,
-                        );
-                      },
-                      childCount: categories.length,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-          loading: () => CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(child: dateHeader),
-              const SliverToBoxAdapter(child: SizedBox(height: 4)),
-              const SliverFillRemaining(
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            ],
-          ),
-          error: (e, _) => CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(child: dateHeader),
-              const SliverToBoxAdapter(child: SizedBox(height: 4)),
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      l10n.errorOccurred(e.toString()),
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.error,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-      loading: () => CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(child: dateHeader),
-          const SliverToBoxAdapter(child: SizedBox(height: 4)),
-          const SliverFillRemaining(
-            child: Center(child: CircularProgressIndicator()),
-          ),
-        ],
-      ),
-      error: (e, _) => CustomScrollView(
+    if (hasError && nets == null) {
+      final error = netsAsync.error ?? overallNetsAsync.error;
+      bodyContent = CustomScrollView(
+        key: ValueKey('category-error-$type'),
         slivers: [
           SliverToBoxAdapter(child: dateHeader),
           const SliverToBoxAdapter(child: SizedBox(height: 4)),
@@ -308,7 +220,7 @@ class _CategoryListBody extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  l10n.errorOccurred(e.toString()),
+                  l10n.errorOccurred(error.toString()),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: theme.colorScheme.error,
@@ -318,7 +230,125 @@ class _CategoryListBody extends ConsumerWidget {
             ),
           ),
         ],
-      ),
+      );
+    } else if (nets == null || overallNets == null) {
+      bodyContent = CustomScrollView(
+        key: ValueKey('category-loading-$type'),
+        slivers: [
+          SliverToBoxAdapter(child: dateHeader),
+          const SliverToBoxAdapter(child: SizedBox(height: 4)),
+        ],
+      );
+    } else if (categories.isEmpty) {
+      final typeLabel = type == 'EXPENSE' ? l10n.expense : l10n.income;
+      bodyContent = CustomScrollView(
+        key: ValueKey('category-empty-$type'),
+        slivers: [
+          SliverToBoxAdapter(child: dateHeader),
+          const SliverToBoxAdapter(child: SizedBox(height: 4)),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Symbols.category,
+                    size: 80,
+                    color: theme.colorScheme.outline.withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.noTypeCategories(typeLabel),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    } else {
+      bodyContent = CustomScrollView(
+        key: ValueKey('category-data-$type'),
+        slivers: [
+          SliverToBoxAdapter(child: dateHeader),
+          const SliverToBoxAdapter(child: SizedBox(height: 4)),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 200),
+                opacity: isLoading ? 0.75 : 1.0,
+                child: _CategoriesAggregateSummary(
+                  type: type,
+                  categories: categories,
+                  nets: nets,
+                  overallNets: overallNets,
+                  range: range,
+                ),
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(
+                16, 0, 16, 80 + MediaQuery.of(context).padding.bottom),
+            sliver: SliverList(
+              key: ValueKey('category-list-$type'),
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final category = categories[index];
+                  final net = nets[category.uuid] ?? 0.0;
+                  final overallNet = overallNets[category.uuid] ?? 0.0;
+                  final isPremium = ref.watch(premiumProvider).isPremium;
+                  final isLocked = !isPremium &&
+                      !category.isDefault &&
+                      (category.addSeq ?? 0) > PremiumGate.categoryTotalLimit;
+                  final isBudgetLocked = !isPremium &&
+                      (category.budgetSeq ?? 0) >
+                          PremiumGate.categoryBudgetTotalLimit;
+
+                  return AnimatedOpacity(
+                    duration: const Duration(milliseconds: 200),
+                    opacity: isLoading ? 0.75 : 1.0,
+                    child: _CategoryCard(
+                      key: ValueKey('category-card-${category.uuid}'),
+                      category: category,
+                      netAmount: net,
+                      overallNetAmount: overallNet,
+                      dateRange: range,
+                      isLocked: isLocked,
+                      isBudgetLocked: isBudgetLocked,
+                    ),
+                  );
+                },
+                childCount: categories.length,
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0.0, 0.015),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        );
+      },
+      child: bodyContent,
     );
   }
 }

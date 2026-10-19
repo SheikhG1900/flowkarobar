@@ -26,10 +26,13 @@ class CategoryTagFilterRow extends ConsumerWidget {
 
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 4),
+          alignment: Alignment.center,
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // "All" Chip
                 FilterChip(
