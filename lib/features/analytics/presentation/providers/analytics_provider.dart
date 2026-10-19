@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/analytics/data/analytics_repository.dart';
 import 'package:flowpaisa/features/accounts/data/accounts_repository.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
+import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/shared/models/date_range_state.dart';
@@ -158,8 +159,10 @@ final expensesByCategoryProvider =
     FutureProvider.autoDispose<List<CategoryExpense>>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   final dateRange = ref.watch(selectedDateRangeProvider);
+  final tags = ref.watch(categoryFilterTagsProvider);
   return repository.getExpensesByCategory(
-      dateRange.startDate, dateRange.endDate);
+      dateRange.startDate, dateRange.endDate,
+      tagUuids: tags);
 });
 
 // Monthly Trends Provider (Last 6 months)
@@ -167,8 +170,10 @@ final monthlyTrendsProvider =
     FutureProvider.autoDispose<List<MonthlyFinancials>>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   final dateRange = ref.watch(selectedDateRangeProvider);
+  final tags = ref.watch(categoryFilterTagsProvider);
   return repository.getMonthlyTrendsForRange(
-      dateRange.startDate, dateRange.endDate);
+      dateRange.startDate, dateRange.endDate,
+      tagUuids: tags);
 });
 
 // Contact Summaries Provider for selected range
@@ -191,7 +196,9 @@ final financialSummaryProvider =
     FutureProvider.autoDispose<FinancialSummary>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   final dateRange = ref.watch(selectedDateRangeProvider);
-  return repository.getFinancialSummary(dateRange.startDate, dateRange.endDate);
+  final tags = ref.watch(categoryFilterTagsProvider);
+  return repository.getFinancialSummary(dateRange.startDate, dateRange.endDate,
+      tagUuids: tags);
 });
 
 // All-time Financial Summary Provider
@@ -233,7 +240,9 @@ final incomeByCategoryProvider =
     FutureProvider.autoDispose<List<CategoryIncome>>((ref) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   final dateRange = ref.watch(selectedDateRangeProvider);
-  return repository.getIncomeByCategory(dateRange.startDate, dateRange.endDate);
+  final tags = ref.watch(categoryFilterTagsProvider);
+  return repository.getIncomeByCategory(dateRange.startDate, dateRange.endDate,
+      tagUuids: tags);
 });
 
 // Category Statistics Provider
@@ -241,8 +250,10 @@ final categoryStatisticsProvider = FutureProvider.autoDispose
     .family<CategoryStatistics, String>((ref, categoryUuid) async {
   final repository = ref.watch(analyticsRepositoryProvider);
   final dateRange = ref.watch(selectedDateRangeProvider);
+  final tags = ref.watch(categoryFilterTagsProvider);
   return repository.getCategoryStatistics(
-      categoryUuid, dateRange.startDate, dateRange.endDate);
+      categoryUuid, dateRange.startDate, dateRange.endDate,
+      tagUuids: tags);
 });
 
 /// Financial summary for the transaction list, respecting current filters.

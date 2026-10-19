@@ -39,6 +39,8 @@ import 'package:flowpaisa/features/analytics/presentation/widgets/account_analyt
 import 'package:file_selector/file_selector.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/features/categories/presentation/widgets/category_tag_filter_row.dart';
 
 class AnalyticsScreen extends ConsumerStatefulWidget {
   const AnalyticsScreen({super.key});
@@ -86,6 +88,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
           .where((s) => !hiddenSections.contains(s))
           .map((s) => s.name)
           .toSet();
+      final tags = ref.read(categoryFilterTagsProvider);
 
       // Generate PDF bytes once
       final pdfBytes = await exportService.exportAnalyticsToPDF(
@@ -96,6 +99,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
         l10n: l10n,
         currency: currency,
         visibleSections: visibleSections,
+        tagUuids: tags,
       );
 
       // Save PDF to temporary file for save/share actions
@@ -305,13 +309,49 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                const CategoryTagFilterRow(),
+                                const SizedBox(height: 8),
                                 // Financial Summary (Combined)
                                 if (visible(AnalyticsSection.financialSummary))
                                   RepaintBoundary(
                                     child: _CollapsibleSection(
                                       title: l10n.financialSummary,
                                       sectionIndex: 0,
+                                      showTagFilterIndicator: true,
                                       child: const _FinancialSummaryCard(),
+                                    ),
+                                  ),
+
+                                // Pie Chart Section (Expense by Category)
+                                if (visible(AnalyticsSection.expensesByCategory))
+                                  RepaintBoundary(
+                                    child: _CollapsibleSection(
+                                      title: l10n.expensesByCategory,
+                                      sectionIndex: 1,
+                                      showTagFilterIndicator: true,
+                                      child: const _ExpensesPieChart(),
+                                    ),
+                                  ),
+
+                                // Income by Category
+                                if (visible(AnalyticsSection.incomeByCategory))
+                                  RepaintBoundary(
+                                    child: _CollapsibleSection(
+                                      title: l10n.incomeByCategory,
+                                      sectionIndex: 2,
+                                      showTagFilterIndicator: true,
+                                      child: const _IncomePieChart(),
+                                    ),
+                                  ),
+
+                                // Trend Chart Section (Income vs Expense)
+                                if (visible(AnalyticsSection.incomeVsExpenseTrend))
+                                  RepaintBoundary(
+                                    child: _CollapsibleSection(
+                                      title: l10n.incomeVsExpenseTrend,
+                                      sectionIndex: 3,
+                                      showTagFilterIndicator: true,
+                                      child: const _TrendsBarChart(),
                                     ),
                                   ),
 
@@ -320,28 +360,8 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                   RepaintBoundary(
                                     child: _CollapsibleSection(
                                       title: l10n.contactSummaries,
-                                      sectionIndex: 1,
+                                      sectionIndex: 4,
                                       child: const _ContactSummariesSection(),
-                                    ),
-                                  ),
-
-                                // Pie Chart Section
-                                if (visible(AnalyticsSection.expensesByCategory))
-                                  RepaintBoundary(
-                                    child: _CollapsibleSection(
-                                      title: l10n.expensesByCategory,
-                                      sectionIndex: 2,
-                                      child: const _ExpensesPieChart(),
-                                    ),
-                                  ),
-
-                                // Trend Chart Section
-                                if (visible(AnalyticsSection.incomeVsExpenseTrend))
-                                  RepaintBoundary(
-                                    child: _CollapsibleSection(
-                                      title: l10n.incomeVsExpenseTrend,
-                                      sectionIndex: 3,
-                                      child: const _TrendsBarChart(),
                                     ),
                                   ),
 
@@ -350,7 +370,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                   RepaintBoundary(
                                     child: _CollapsibleSection(
                                       title: l10n.payablesVsReceivablesTrend,
-                                      sectionIndex: 4,
+                                      sectionIndex: 5,
                                       child:
                                           const _PayableReceivableTrendsChart(),
                                     ),
@@ -361,7 +381,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                   RepaintBoundary(
                                     child: _CollapsibleSection(
                                       title: l10n.topContactsByBalance,
-                                      sectionIndex: 5,
+                                      sectionIndex: 6,
                                       child: const _TopContactsChart(),
                                     ),
                                   ),
@@ -371,19 +391,9 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen> {
                                   RepaintBoundary(
                                     child: _CollapsibleSection(
                                       title: l10n.paymentStatusDistribution,
-                                      sectionIndex: 6,
+                                      sectionIndex: 7,
                                       child:
                                           const _PaymentStatusDistributionChart(),
-                                    ),
-                                  ),
-
-                                // Income by Category
-                                if (visible(AnalyticsSection.incomeByCategory))
-                                  RepaintBoundary(
-                                    child: _CollapsibleSection(
-                                      title: l10n.incomeByCategory,
-                                      sectionIndex: 7,
-                                      child: const _IncomePieChart(),
                                     ),
                                   ),
 
@@ -3298,12 +3308,14 @@ class _CollapsibleSection extends StatefulWidget {
   final Widget child;
   final int sectionIndex;
   final bool showAllTimeBadge;
+  final bool showTagFilterIndicator;
 
   const _CollapsibleSection({
     required this.title,
     required this.child,
     required this.sectionIndex,
     this.showAllTimeBadge = false,
+    this.showTagFilterIndicator = false,
   });
 
   @override
@@ -3389,11 +3401,34 @@ class _CollapsibleSectionState extends State<_CollapsibleSection>
                   child: Row(
                     children: [
                       Expanded(
-                        child: Text(
-                          widget.title,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: Consumer(
+                          builder: (context, ref, child) {
+                            final selectedTags = ref.watch(categoryFilterTagsProvider);
+                            final hasActiveTags = selectedTags.isNotEmpty && widget.showTagFilterIndicator;
+
+                            return Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  widget.title,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (hasActiveTags) ...[
+                                  const SizedBox(width: 8),
+                                  Tooltip(
+                                    message: 'Filtered by tags',
+                                    child: Icon(
+                                      Symbols.sell,
+                                      size: 16,
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            );
+                          },
                         ),
                       ),
                       if (widget.showAllTimeBadge) ...[

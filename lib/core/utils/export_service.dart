@@ -975,6 +975,21 @@ class ExportService {
       contactNames = contacts.map((c) => c.name).join(', ');
     }
 
+    String? tagNames;
+    if (filters != null &&
+        filters.tagUuids != null &&
+        filters.tagUuids!.isNotEmpty) {
+      final tags = await (_database.select(_database.tags)
+            ..where((t) => t.uuid.isIn(filters.tagUuids!)))
+          .get();
+      final containsNoTag = filters.tagUuids!.contains('no_tag');
+      final validTagNames = tags.map((t) => t.name).toList();
+      if (containsNoTag) {
+        validTagNames.add(l10n?.filterWithoutTags ?? 'Without tags');
+      }
+      tagNames = validTagNames.join(', ');
+    }
+
     final List<pw.TableRow> filterRows = [];
     final isRtl = l10n?.localeName == 'ur' || l10n?.localeName == 'ar';
 
@@ -1043,6 +1058,32 @@ class ExportService {
                 style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
             _buildText(
               contactNames,
+              style: pw.TextStyle(
+                fontSize: 10,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.black,
+              ),
+              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+            ),
+          ],
+          l10n: l10n,
+        ),
+      );
+    }
+
+    if (tagNames != null) {
+      filterRows.add(
+        _buildLocalizedTableRow(
+          [
+            _buildText(
+              l10n?.tags ?? 'Tags',
+              style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+              align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+            ),
+            _buildText(':',
+                style: pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+            _buildText(
+              tagNames,
               style: pw.TextStyle(
                 fontSize: 10,
                 fontWeight: pw.FontWeight.bold,
@@ -3616,6 +3657,7 @@ class ExportService {
     AppLocalizations? l10n,
     AppCurrency? currency,
     Set<String>? visibleSections,
+    List<String>? tagUuids,
   }) async {
     try {
       // Load Material Icons and Unicode fonts
@@ -3636,6 +3678,7 @@ class ExportService {
         l10n: l10n,
         currencyObj: currency,
         visibleSections: visibleSections,
+        tagUuids: tagUuids,
       );
       return await pdf.save();
     } catch (e) {
@@ -3656,6 +3699,7 @@ class ExportService {
     AppLocalizations? l10n,
     AppCurrency? currencyObj,
     Set<String>? visibleSections,
+    List<String>? tagUuids,
   }) async {
     String? logoSvgString;
     try {
@@ -3669,16 +3713,16 @@ class ExportService {
 
     // Fetch all analytics data
     final financialSummary =
-        await _analyticsRepository.getFinancialSummary(startDate, endDate);
+        await _analyticsRepository.getFinancialSummary(startDate, endDate, tagUuids: tagUuids);
     final allTimeFinancialSummary =
         await _analyticsRepository.getAllTimeFinancialSummary();
     final contactSummaries =
         await _analyticsRepository.getContactSummaries(startDate, endDate);
     final expensesByCategory =
-        await _analyticsRepository.getExpensesByCategory(startDate, endDate);
+        await _analyticsRepository.getExpensesByCategory(startDate, endDate, tagUuids: tagUuids);
     final incomeByCategory =
-        await _analyticsRepository.getIncomeByCategory(startDate, endDate);
-    final monthlyTrends = await _analyticsRepository.getMonthlyTrends(6);
+        await _analyticsRepository.getIncomeByCategory(startDate, endDate, tagUuids: tagUuids);
+    final monthlyTrends = await _analyticsRepository.getMonthlyTrends(6, tagUuids: tagUuids);
     final payableReceivableTrends =
         await _analyticsRepository.getPayableReceivableTrends(6);
     final topContacts = await _analyticsRepository.getTopContactsByBalance(
@@ -3737,6 +3781,19 @@ class ExportService {
 
     final dateFormat = AppDateFormatter.getFormatter(_dateFormat);
     final dateTimeFormat = AppDateFormatter.getFormatter('dd MMM yyyy, HH:mm');
+
+    String? tagNames;
+    if (tagUuids != null && tagUuids.isNotEmpty) {
+      final tags = await (_database.select(_database.tags)
+            ..where((t) => t.uuid.isIn(tagUuids)))
+          .get();
+      final containsNoTag = tagUuids.contains('no_tag');
+      final validTagNames = tags.map((t) => t.name).toList();
+      if (containsNoTag) {
+        validTagNames.add(l10n?.filterWithoutTags ?? 'Without tags');
+      }
+      tagNames = validTagNames.join(', ');
+    }
 
     // Helper function to convert hex color to PdfColor
     PdfColor hexToPdfColor(String hex) {
@@ -4024,6 +4081,32 @@ class ExportService {
                         ],
                         l10n: l10n,
                       ),
+                      if (tagNames != null)
+                        _buildLocalizedTableRow(
+                          [
+                            _buildText(
+                              l10n?.tags ?? 'Tags',
+                              style: pw.TextStyle(
+                                  fontSize: 10, color: PdfColors.grey700),
+                              align:
+                                  isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                            ),
+                            _buildText(':',
+                                style: pw.TextStyle(
+                                    fontSize: 10, color: PdfColors.grey700)),
+                            _buildText(
+                              tagNames,
+                              style: pw.TextStyle(
+                                fontSize: 10,
+                                fontWeight: pw.FontWeight.bold,
+                                color: PdfColors.black,
+                              ),
+                              align:
+                                  isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                            ),
+                          ],
+                          l10n: l10n,
+                        ),
                     ],
                   ),
                 ],

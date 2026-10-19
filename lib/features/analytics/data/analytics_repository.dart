@@ -8,8 +8,38 @@ class AnalyticsRepository {
 
   AnalyticsRepository(this._database);
 
+  Expression<bool>? _buildTagExpression(List<String>? tagUuids) {
+    if (tagUuids == null || tagUuids.isEmpty) return null;
+
+    final containsNoTag = tagUuids.contains('no_tag');
+    final validTagUuids = tagUuids.where((id) => id != 'no_tag').toList();
+
+    if (validTagUuids.isNotEmpty) {
+      final subquery = _database.selectOnly(_database.transactionTags)
+        ..addColumns([_database.transactionTags.transactionUuid])
+        ..where(_database.transactionTags.tagUuid.isIn(validTagUuids) &
+            _database.transactionTags.isDeleted.equals(false));
+
+      if (containsNoTag) {
+        final noTagSubquery = _database.selectOnly(_database.transactionTags)
+          ..addColumns([_database.transactionTags.transactionUuid])
+          ..where(_database.transactionTags.isDeleted.equals(false));
+        return _database.transactions.uuid.isInQuery(subquery) |
+            _database.transactions.uuid.isNotInQuery(noTagSubquery);
+      } else {
+        return _database.transactions.uuid.isInQuery(subquery);
+      }
+    } else {
+      // Only contains 'no_tag'
+      final noTagSubquery = _database.selectOnly(_database.transactionTags)
+        ..addColumns([_database.transactionTags.transactionUuid])
+        ..where(_database.transactionTags.isDeleted.equals(false));
+      return _database.transactions.uuid.isNotInQuery(noTagSubquery);
+    }
+  }
+
   Future<List<CategoryExpense>> getExpensesByCategory(
-      DateTime start, DateTime end) async {
+      DateTime start, DateTime end, {List<String>? tagUuids}) async {
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
 
@@ -20,11 +50,18 @@ class AnalyticsRepository {
       orElse: _database.transactions.amount * const Constant(-1.0),
     ).sum();
 
+    Expression<bool> whereExpr = _database.transactions.date.isBetweenValues(startDate, endDate) &
+        _database.transactions.isDeleted.equals(false) &
+        _database.transactions.processedDate.isNotNull();
+
+    final tagExpr = _buildTagExpression(tagUuids);
+    if (tagExpr != null) {
+      whereExpr = whereExpr & tagExpr;
+    }
+
     final query = _database.selectOnly(_database.transactions)
       ..addColumns([_database.transactions.categoryUuid, netAmount])
-      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-      ..where(_database.transactions.isDeleted.equals(false))
-      ..where(_database.transactions.processedDate.isNotNull())
+      ..where(whereExpr)
       ..groupBy([_database.transactions.categoryUuid]);
 
     final results = await query.get();
@@ -49,15 +86,15 @@ class AnalyticsRepository {
     return categoryExpenses;
   }
 
-  Future<List<MonthlyFinancials>> getMonthlyTrends(int months) async {
+  Future<List<MonthlyFinancials>> getMonthlyTrends(int months, {List<String>? tagUuids}) async {
     final now = DateTime.now();
     final List<MonthlyFinancials> trends = [];
     for (int i = months - 1; i >= 0; i--) {
       final month = DateTime(now.year, now.month - i, 1);
       final start = DateTime(month.year, month.month, 1);
       final end = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
-      final income = await _getTotalByType('INCOME', start, end);
-      final expense = await _getTotalByType('EXPENSE', start, end);
+      final income = await _getTotalByType('INCOME', start, end, tagUuids: tagUuids);
+      final expense = await _getTotalByType('EXPENSE', start, end, tagUuids: tagUuids);
       trends.add(
           MonthlyFinancials(month: start, income: income, expense: expense));
     }
@@ -66,14 +103,14 @@ class AnalyticsRepository {
 
   /// Monthly income/expense trends within [rangeStart]..[rangeEnd].
   Future<List<MonthlyFinancials>> getMonthlyTrendsForRange(
-      DateTime rangeStart, DateTime rangeEnd) async {
+      DateTime rangeStart, DateTime rangeEnd, {List<String>? tagUuids}) async {
     final List<MonthlyFinancials> trends = [];
     DateTime cursor = DateTime(rangeStart.year, rangeStart.month, 1);
     while (!cursor.isAfter(DateTime(rangeEnd.year, rangeEnd.month, 1))) {
       final start = DateTime(cursor.year, cursor.month, 1);
       final end = DateTime(cursor.year, cursor.month + 1, 0, 23, 59, 59);
-      final income = await _getTotalByType('INCOME', start, end);
-      final expense = await _getTotalByType('EXPENSE', start, end);
+      final income = await _getTotalByType('INCOME', start, end, tagUuids: tagUuids);
+      final expense = await _getTotalByType('EXPENSE', start, end, tagUuids: tagUuids);
       trends.add(
           MonthlyFinancials(month: start, income: income, expense: expense));
       cursor = DateTime(cursor.year, cursor.month + 1, 1);
@@ -82,12 +119,18 @@ class AnalyticsRepository {
   }
 
   Future<double> _getTotalByType(
-      String type, DateTime start, DateTime end) async {
+      String type, DateTime start, DateTime end, {List<String>? tagUuids}) async {
     // Only include transactions that have been processed
     Expression<bool> whereExpr = _database.transactions.type.equals(type) &
         _database.transactions.date.isBetweenValues(start, end) &
         _database.transactions.isDeleted.equals(false) &
         _database.transactions.processedDate.isNotNull();
+
+    final tagExpr = _buildTagExpression(tagUuids);
+    if (tagExpr != null) {
+      whereExpr = whereExpr & tagExpr;
+    }
+
     final result = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.amount.sum()])
           ..where(whereExpr))
@@ -616,24 +659,82 @@ class AnalyticsRepository {
   }
 
   Future<FinancialSummary> getFinancialSummary(
-      DateTime start, DateTime end) async {
-    // Financial balance: only outstanding (PENDING). Exclude PAID and RECEIVED.
-    final totalPayable = await (_database.selectOnly(_database.payables)
-          ..addColumns([_database.payables.amount.sum()])
-          ..where(_database.payables.date.isBetweenValues(start, end))
-          ..where(_database.payables.isDeleted.equals(false))
-          ..where(_database.payables.status.equals('PENDING')))
-        .getSingle()
-        .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
-    final totalReceivable = await (_database.selectOnly(_database.receivables)
-          ..addColumns([_database.receivables.amount.sum()])
-          ..where(_database.receivables.date.isBetweenValues(start, end))
-          ..where(_database.receivables.isDeleted.equals(false))
-          ..where(_database.receivables.status.equals('PENDING')))
-        .getSingle()
-        .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
-    final totalExpense = await _getTotalByType('EXPENSE', start, end);
-    final totalIncome = await _getTotalByType('INCOME', start, end);
+      DateTime start, DateTime end, {List<String>? tagUuids}) async {
+    final hasTagFilter = tagUuids != null && tagUuids.isNotEmpty;
+
+    double totalPayable = 0.0;
+    double totalReceivable = 0.0;
+
+    if (hasTagFilter) {
+      final joinExpr =
+          _database.transactions.uuid.equalsExp(_database.payables.linkedExpenseUuid) |
+              _database.transactions.uuid.equalsExp(_database.payables.linkedIncomeUuid);
+      Expression<bool> whereExpr = _database.payables.isDeleted.equals(false) &
+          _database.payables.status.equals('PENDING') &
+          _database.payables.date.isBetweenValues(start, end);
+
+      final tagExpr = _buildTagExpression(tagUuids);
+      if (tagExpr != null) {
+        whereExpr = whereExpr & tagExpr;
+      }
+
+      final query = _database.selectOnly(_database.payables)
+        ..addColumns([_database.payables.amount.sum()])
+        ..join([
+          innerJoin(
+            _database.transactions,
+            joinExpr,
+          ),
+        ])
+        ..where(whereExpr);
+      final row = await query.getSingle();
+      totalPayable = row.read(_database.payables.amount.sum()) ?? 0.0;
+    } else {
+      totalPayable = await (_database.selectOnly(_database.payables)
+            ..addColumns([_database.payables.amount.sum()])
+            ..where(_database.payables.date.isBetweenValues(start, end))
+            ..where(_database.payables.isDeleted.equals(false))
+            ..where(_database.payables.status.equals('PENDING')))
+          .getSingle()
+          .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+    }
+
+    if (hasTagFilter) {
+      final joinExpr =
+          _database.transactions.uuid.equalsExp(_database.receivables.linkedExpenseUuid) |
+              _database.transactions.uuid.equalsExp(_database.receivables.linkedIncomeUuid);
+      Expression<bool> whereExpr = _database.receivables.isDeleted.equals(false) &
+          _database.receivables.status.equals('PENDING') &
+          _database.receivables.date.isBetweenValues(start, end);
+
+      final tagExpr = _buildTagExpression(tagUuids);
+      if (tagExpr != null) {
+        whereExpr = whereExpr & tagExpr;
+      }
+
+      final query = _database.selectOnly(_database.receivables)
+        ..addColumns([_database.receivables.amount.sum()])
+        ..join([
+          innerJoin(
+            _database.transactions,
+            joinExpr,
+          ),
+        ])
+        ..where(whereExpr);
+      final row = await query.getSingle();
+      totalReceivable = row.read(_database.receivables.amount.sum()) ?? 0.0;
+    } else {
+      totalReceivable = await (_database.selectOnly(_database.receivables)
+            ..addColumns([_database.receivables.amount.sum()])
+            ..where(_database.receivables.date.isBetweenValues(start, end))
+            ..where(_database.receivables.isDeleted.equals(false))
+            ..where(_database.receivables.status.equals('PENDING')))
+          .getSingle()
+          .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+    }
+
+    final totalExpense = await _getTotalByType('EXPENSE', start, end, tagUuids: tagUuids);
+    final totalIncome = await _getTotalByType('INCOME', start, end, tagUuids: tagUuids);
     return FinancialSummary(
         totalPayable: totalPayable,
         totalReceivable: totalReceivable,
@@ -818,7 +919,7 @@ class AnalyticsRepository {
   }
 
   Future<List<CategoryIncome>> getIncomeByCategory(
-      DateTime start, DateTime end) async {
+      DateTime start, DateTime end, {List<String>? tagUuids}) async {
     final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
     final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
 
@@ -829,11 +930,18 @@ class AnalyticsRepository {
       orElse: _database.transactions.amount * const Constant(-1.0),
     ).sum();
 
+    Expression<bool> whereExpr = _database.transactions.date.isBetweenValues(startDate, endDate) &
+        _database.transactions.isDeleted.equals(false) &
+        _database.transactions.processedDate.isNotNull();
+
+    final tagExpr = _buildTagExpression(tagUuids);
+    if (tagExpr != null) {
+      whereExpr = whereExpr & tagExpr;
+    }
+
     final query = _database.selectOnly(_database.transactions)
       ..addColumns([_database.transactions.categoryUuid, netAmount])
-      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-      ..where(_database.transactions.isDeleted.equals(false))
-      ..where(_database.transactions.processedDate.isNotNull())
+      ..where(whereExpr)
       ..groupBy([_database.transactions.categoryUuid]);
 
     final results = await query.get();
@@ -858,27 +966,37 @@ class AnalyticsRepository {
   }
 
   Future<CategoryStatistics> getCategoryStatistics(
-      String categoryUuid, DateTime start, DateTime end) async {
+      String categoryUuid, DateTime start, DateTime end, {List<String>? tagUuids}) async {
     final category = await (_database.select(_database.categories)
           ..where((c) => c.uuid.equals(categoryUuid)))
         .getSingleOrNull();
     if (category == null) throw Exception('Category not found');
 
+    Expression<bool> totalAmountWhere = _database.transactions.categoryUuid.equals(categoryUuid) &
+        _database.transactions.date.isBetweenValues(start, end) &
+        _database.transactions.isDeleted.equals(false) &
+        _database.transactions.processedDate.isNotNull();
+
+    Expression<bool> transactionCountWhere = _database.transactions.categoryUuid.equals(categoryUuid) &
+        _database.transactions.date.isBetweenValues(start, end) &
+        _database.transactions.isDeleted.equals(false) &
+        _database.transactions.processedDate.isNotNull();
+
+    final tagExpr = _buildTagExpression(tagUuids);
+    if (tagExpr != null) {
+      totalAmountWhere = totalAmountWhere & tagExpr;
+      transactionCountWhere = transactionCountWhere & tagExpr;
+    }
+
     final totalAmount = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.amount.sum()])
-          ..where(_database.transactions.categoryUuid.equals(categoryUuid))
-          ..where(_database.transactions.date.isBetweenValues(start, end))
-          ..where(_database.transactions.isDeleted.equals(false))
-          ..where(_database.transactions.processedDate.isNotNull()))
+          ..where(totalAmountWhere))
         .getSingle()
         .then((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
 
     final transactionCount = await (_database.selectOnly(_database.transactions)
           ..addColumns([_database.transactions.uuid.count()])
-          ..where(_database.transactions.categoryUuid.equals(categoryUuid))
-          ..where(_database.transactions.date.isBetweenValues(start, end))
-          ..where(_database.transactions.isDeleted.equals(false))
-          ..where(_database.transactions.processedDate.isNotNull()))
+          ..where(transactionCountWhere))
         .getSingle()
         .then((row) => row.read(_database.transactions.uuid.count()) ?? 0);
 
