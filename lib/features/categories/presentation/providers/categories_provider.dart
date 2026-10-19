@@ -17,7 +17,16 @@ final categoriesRepositoryProvider = Provider<CategoriesRepository>((ref) {
   return CategoriesRepository(database);
 });
 
-// Stream providers
+// Notifier to handle showing all categories vs active only (non-zero computed value)
+class CategoryVisibilityNotifier extends Notifier<bool> {
+  @override
+  bool build() => false; // Default: show all categories (false = not active-only)
+
+  void toggle() => state = !state;
+}
+
+final categoryShowActiveOnlyProvider =
+    NotifierProvider<CategoryVisibilityNotifier, bool>(CategoryVisibilityNotifier.new);
 final categoriesListProvider = StreamProvider<List<Category>>((ref) {
   final repository = ref.watch(categoriesRepositoryProvider);
   return repository.watchAllCategories();

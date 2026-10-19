@@ -60,9 +60,27 @@ class _CategoriesListScreenState extends ConsumerState<CategoriesListScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final showActiveOnly = ref.watch(categoryShowActiveOnlyProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.categories),
+        actions: [
+          IconButton(
+            tooltip: showActiveOnly ? l10n.all : l10n.active,
+            icon: Icon(
+              showActiveOnly ? Icons.visibility : Icons.visibility_off,
+              color: showActiveOnly
+                  ? (_tabController.index == 0
+                      ? AppColors.expenseColor
+                      : AppColors.incomeColor)
+                  : null,
+            ),
+            onPressed: () {
+              ref.read(categoryShowActiveOnlyProvider.notifier).toggle();
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: _tabController.index == 0
@@ -158,6 +176,12 @@ class _CategoryListBody extends ConsumerWidget {
     final overallNets = overallNetsAsync.asData?.value;
     final isLoading = netsAsync.isLoading || overallNetsAsync.isLoading || categoriesAsync.isLoading;
     final hasError = netsAsync.hasError || overallNetsAsync.hasError || categoriesAsync.hasError;
+    final showActiveOnly = ref.watch(categoryShowActiveOnlyProvider);
+
+    // Apply active-only filter if toggled on
+    final filteredCategories = showActiveOnly && nets != null
+        ? categories.where((cat) => (nets[cat.uuid] ?? 0.0) != 0.0).toList()
+        : categories;
 
     final dateHeader = Column(
       mainAxisSize: MainAxisSize.min,
@@ -239,7 +263,7 @@ class _CategoryListBody extends ConsumerWidget {
           const SliverToBoxAdapter(child: SizedBox(height: 4)),
         ],
       );
-    } else if (categories.isEmpty) {
+    } else if (filteredCategories.isEmpty) {
       final typeLabel = type == 'EXPENSE' ? l10n.expense : l10n.income;
       bodyContent = CustomScrollView(
         key: ValueKey('category-empty-$type'),
@@ -259,7 +283,7 @@ class _CategoryListBody extends ConsumerWidget {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    l10n.noTypeCategories(typeLabel),
+                    showActiveOnly ? l10n.noCategoriesFound : l10n.noTypeCategories(typeLabel),
                     style: theme.textTheme.titleMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -284,7 +308,7 @@ class _CategoryListBody extends ConsumerWidget {
                 opacity: isLoading ? 0.75 : 1.0,
                 child: _CategoriesAggregateSummary(
                   type: type,
-                  categories: categories,
+                  categories: filteredCategories,
                   nets: nets,
                   overallNets: overallNets,
                   range: range,
@@ -299,7 +323,7 @@ class _CategoryListBody extends ConsumerWidget {
               key: ValueKey('category-list-$type'),
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  final category = categories[index];
+                  final category = filteredCategories[index];
                   final net = nets[category.uuid] ?? 0.0;
                   final overallNet = overallNets[category.uuid] ?? 0.0;
                   final isPremium = ref.watch(premiumProvider).isPremium;
@@ -324,7 +348,7 @@ class _CategoryListBody extends ConsumerWidget {
                     ),
                   );
                 },
-                childCount: categories.length,
+                childCount: filteredCategories.length,
               ),
             ),
           ),
