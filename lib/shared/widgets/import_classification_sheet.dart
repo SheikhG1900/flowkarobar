@@ -32,6 +32,10 @@ class ImportClassificationSheet extends ConsumerWidget {
   bool get _isReceivableGroup =>
       data.relationship != null && _receivableRelationships.contains(data.relationship);
 
+  Color _getGroupColor() {
+    return _isReceivableGroup ? AppColors.receivableColor : AppColors.payableColor;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
@@ -39,11 +43,19 @@ class ImportClassificationSheet extends ConsumerWidget {
     final currencySymbol = ref.watch(currencySymbolProvider);
     final decimalPlaces = ref.watch(currentCurrencyProvider).value?.decimalPlaces ?? 2;
     final contactName = data.contactName ?? data.senderName ?? l10n.someone;
+    final groupColor = _getGroupColor();
+    final isDark = theme.brightness == Brightness.dark;
 
     return Container(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        border: Border(
+          top: BorderSide(
+            color: groupColor.withValues(alpha: isDark ? 0.3 : 0.2),
+            width: 2.0,
+          ),
+        ),
       ),
       child: DraggableScrollableSheet(
         initialChildSize: 0.6,
@@ -59,12 +71,31 @@ class ImportClassificationSheet extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 _buildDragHandle(theme),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.importTransaction,
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: groupColor.withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _isReceivableGroup ? Icons.account_balance_wallet : Icons.payment,
+                        color: groupColor,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        l10n.importTransaction,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 _buildDetailsCard(
@@ -155,11 +186,18 @@ class ImportClassificationSheet extends ConsumerWidget {
     String currencySymbol,
     int decimalPlaces,
   ) {
+    final groupColor = _getGroupColor();
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(color: theme.dividerColor),
+        color: groupColor.withValues(alpha: isDark ? 0.08 : 0.04),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: groupColor.withValues(alpha: isDark ? 0.25 : 0.15),
+          width: 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,22 +215,22 @@ class ImportClassificationSheet extends ConsumerWidget {
               ),
             ),
           _detailRow(l10n.amount, AmountFormatter.formatWithCurrency(
-              data.amount, currencySymbol, decimalPlaces)),
-          _detailRow(l10n.date, AppDateFormatter.formatDate(data.date)),
+              data.amount, currencySymbol, decimalPlaces), groupColor),
+          _detailRow(l10n.date, AppDateFormatter.formatDate(data.date), groupColor),
           if (data.description != null && data.description!.isNotEmpty)
-            _detailRow(l10n.description, data.description!),
+            _detailRow(l10n.description, data.description!, groupColor),
           if (data.categoryName != null)
-            _detailRow(l10n.category, data.categoryName!),
+            _detailRow(l10n.category, data.categoryName!, groupColor),
           if (data.contactName != null)
-            _detailRow(l10n.contact, data.contactName!),
+            _detailRow(l10n.contact, data.contactName!, groupColor),
           if (data.dueDate != null)
-            _detailRow(l10n.dueDate, AppDateFormatter.formatDate(data.dueDate!)),
+            _detailRow(l10n.dueDate, AppDateFormatter.formatDate(data.dueDate!), groupColor),
         ],
       ),
     );
   }
 
-  Widget _detailRow(String label, String value) {
+  Widget _detailRow(String label, String value, Color groupColor) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -202,10 +240,13 @@ class ImportClassificationSheet extends ConsumerWidget {
             width: 100,
             child: Text(
               '$label:',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: groupColor.withValues(alpha: 0.85),
+              ),
             ),
           ),
-          Expanded(child: Text(value)),
+          Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w500))),
         ],
       ),
     );
@@ -220,6 +261,7 @@ class ImportClassificationSheet extends ConsumerWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
+    final isDark = theme.brightness == Brightness.dark;
     return InkWell(
       onTap: () {
         Navigator.of(context).pop();
@@ -229,7 +271,10 @@ class ImportClassificationSheet extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          border: Border.all(color: theme.dividerColor),
+          color: color.withValues(alpha: isDark ? 0.05 : 0.02),
+          border: Border.all(
+            color: color.withValues(alpha: isDark ? 0.25 : 0.15),
+          ),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(

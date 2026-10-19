@@ -1,6 +1,7 @@
 import "package:flowpaisa/l10n/app_localizations.dart";
 import "package:flutter/material.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
+import "package:flowpaisa/core/theme/app_colors.dart";
 import "package:flowpaisa/core/utils/date_formatter.dart";
 import "package:flowpaisa/core/utils/amount_formatter.dart";
 import "package:flowpaisa/features/whatsapp/domain/models/shared_data_models.dart";
@@ -181,102 +182,242 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
     }
   }
 
+  LinearGradient _getThemeGradient() {
+    final status = widget.sharedData.status?.toUpperCase();
+    if (widget.sharedData is TransactionShareData) {
+      final tx = widget.sharedData as TransactionShareData;
+      // Recipient perspective of direct transactions:
+      // Sender's EXPENSE is Recipient's INCOME (Green Gradient)
+      // Sender's INCOME is Recipient's EXPENSE (Orange Gradient)
+      return tx.transactionType == "EXPENSE"
+          ? AppColors.incomeGradient
+          : AppColors.expenseGradient;
+    } else if (widget.sharedData is ReceivableShareData) {
+      // ReceivableShareData is already in recipient's perspective (it's a Receivable for them):
+      // If status is RECEIVED/PAID -> Recipient received (Income - Green)
+      // Otherwise -> Recipient has a RECEIVABLE (Teal/Cyan)
+      return (status == "RECEIVED" || status == "PAID")
+          ? AppColors.incomeGradient
+          : AppColors.receivablesSectionGradient; // or AppColors.receivableGradient
+    } else {
+      // PayableShareData is already in recipient's perspective (it's a Payable for them):
+      // If status is PAID/RECEIVED -> Recipient paid (Expense - Orange)
+      // Otherwise -> Recipient has a PAYABLE (Amber/Yellow)
+      return (status == "PAID" || status == "RECEIVED")
+          ? AppColors.expenseGradient
+          : AppColors.payablesSectionGradient; // or AppColors.payableGradient
+    }
+  }
+
+  Color _getThemeColor() {
+    final status = widget.sharedData.status?.toUpperCase();
+    if (widget.sharedData is TransactionShareData) {
+      final tx = widget.sharedData as TransactionShareData;
+      return tx.transactionType == "EXPENSE"
+          ? AppColors.incomeColor
+          : AppColors.expenseColor;
+    } else if (widget.sharedData is ReceivableShareData) {
+      return (status == "RECEIVED" || status == "PAID")
+          ? AppColors.incomeColor
+          : AppColors.receivableColor;
+    } else {
+      return (status == "PAID" || status == "RECEIVED")
+          ? AppColors.expenseColor
+          : AppColors.payableColor;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final themeColor = _getThemeColor();
+    final themeGradient = _getThemeGradient();
+
     return AlertDialog(
-      title: Row(
-        children: [
-          Icon(
-            _getIcon(),
-            color: Theme.of(context).colorScheme.primary,
+      backgroundColor: Colors.transparent,
+      contentPadding: EdgeInsets.zero,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      content: Container(
+        decoration: BoxDecoration(
+          gradient: themeGradient,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.18),
+            width: 1.5,
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(_getTitle(context)),
-          ),
-        ],
-      ),
-      content: SingleChildScrollView(
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (_alreadyImported)
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: _isSettledUpdate
-                      ? Colors.green.withValues(alpha: 0.1)
-                      : Colors.orange.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: _isSettledUpdate ? Colors.green : Colors.orange),
+            // Title Header with Circle Icon
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    _getIcon(),
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Icon(
-                        _isSettledUpdate
-                            ? Icons.check_circle_outline
-                            : Icons.info_outline,
-                        color: _isSettledUpdate ? Colors.green : Colors.orange),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        _isSettledUpdate
-                            ? l10n.markedAsStatus(
-                                widget.sharedData.senderName ?? l10n.someone,
-                                widget.sharedData.status!)
-                            : l10n.itemAlreadyImported,
-                        style: TextStyle(
-                            color: _isSettledUpdate
-                                ? Colors.green.shade800
-                                : Colors.orange.shade800),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _getTitle(context),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 19,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            
+            // Content Body
+            SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (_alreadyImported)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _isSettledUpdate
+                                ? Icons.check_circle_outline
+                                : Icons.info_outline,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _isSettledUpdate
+                                  ? l10n.markedAsStatus(
+                                      widget.sharedData.senderName ?? l10n.someone,
+                                      widget.sharedData.status!)
+                                  : l10n.itemAlreadyImported,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else ...[
+                    _buildDataPreview(context),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Action Buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: _isImporting ? null : () => Navigator.of(context).pop(),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.white.withValues(alpha: 0.85),
+                  ),
+                  child: Text(l10n.cancel),
+                ),
+                const SizedBox(width: 8),
+                if (!_alreadyImported)
+                  ElevatedButton(
+                    onPressed: _isImporting ? null : _navigateToCreate,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: themeColor,
+                      elevation: 4,
+                      shadowColor: Colors.black.withValues(alpha: 0.2),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                  ],
-                ),
-              )
-            else ...[
-              _buildDataPreview(context),
-            ],
+                    child: Text(
+                      l10n.importDetails,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  )
+                else
+                  ElevatedButton(
+                    onPressed: _isImporting ? null : _navigateToDetails,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _isSettledUpdate ? Colors.green.shade600 : Colors.white,
+                      foregroundColor: _isSettledUpdate ? Colors.white : themeColor,
+                      elevation: 4,
+                      shadowColor: Colors.black.withValues(alpha: 0.2),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: Text(
+                      l10n.viewDetails,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+              ],
+            ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _isImporting ? null : () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
-        ),
-        if (!_alreadyImported)
-          ElevatedButton(
-            onPressed: _isImporting ? null : _navigateToCreate,
-            child: Text(l10n.importDetails),
-          )
-        else
-          ElevatedButton(
-            onPressed: _isImporting ? null : _navigateToDetails,
-            style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  _isSettledUpdate ? Colors.green : Colors.grey.shade400,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(l10n.viewDetails),
-          ),
-      ],
     );
   }
 
   IconData _getIcon() {
+    final status = widget.sharedData.status?.toUpperCase();
     if (widget.sharedData is TransactionShareData) {
       final tx = widget.sharedData as TransactionShareData;
+      // Recipient perspective:
+      // Sender's EXPENSE is Recipient's INCOME (arrow_upward)
+      // Sender's INCOME is Recipient's EXPENSE (arrow_downward)
       return tx.transactionType == "EXPENSE"
-          ? Icons.arrow_downward
-          : Icons.arrow_upward;
+          ? Icons.arrow_upward
+          : Icons.arrow_downward;
     } else if (widget.sharedData is ReceivableShareData) {
-      return Icons.account_balance_wallet;
+      // Recipient perspective:
+      // If status is RECEIVED -> Recipient paid (check_circle)
+      // Otherwise -> Recipient has a PAYABLE (payment)
+      return status == "RECEIVED"
+          ? Icons.check_circle_outline_rounded
+          : Icons.payment;
     } else {
-      return Icons.payment;
+      // Recipient perspective:
+      // If status is PAID -> Recipient received (check_circle)
+      // Otherwise -> Recipient has a RECEIVABLE (account_balance_wallet)
+      return status == "PAID"
+          ? Icons.check_circle_outline_rounded
+          : Icons.account_balance_wallet;
     }
   }
 
@@ -293,16 +434,31 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
 
   Widget _buildDataPreview(BuildContext context) {
     final currencySymbol = ref.watch(currencySymbolProvider);
+
+    Widget previewContent;
     if (widget.sharedData is TransactionShareData) {
-      return _buildTransactionPreview(
+      previewContent = _buildTransactionPreview(
           context, widget.sharedData as TransactionShareData, currencySymbol);
     } else if (widget.sharedData is ReceivableShareData) {
-      return _buildReceivablePreview(
+      previewContent = _buildReceivablePreview(
           context, widget.sharedData as ReceivableShareData, currencySymbol);
     } else {
-      return _buildPayablePreview(
+      previewContent = _buildPayablePreview(
           context, widget.sharedData as PayableShareData, currencySymbol);
     }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.18),
+          width: 1,
+        ),
+      ),
+      child: previewContent,
+    );
   }
 
   Widget _buildTransactionPreview(
@@ -316,7 +472,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
             l10n.sharedBy(data.senderName!),
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey.shade600,
+              color: Colors.white.withValues(alpha: 0.72),
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -355,7 +511,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
             l10n.sharedBy(data.senderName!),
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey.shade600,
+              color: Colors.white.withValues(alpha: 0.72),
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -391,7 +547,7 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
             l10n.sharedBy(data.senderName!),
             style: TextStyle(
               fontSize: 12,
-              color: Colors.grey.shade600,
+              color: Colors.white.withValues(alpha: 0.72),
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -426,13 +582,20 @@ class _ImportDialogState extends ConsumerState<ImportDialog> {
             width: 100,
             child: Text(
               "$label:",
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
+                color: Colors.white.withValues(alpha: 0.75),
               ),
             ),
           ),
           Expanded(
-            child: Text(value),
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
+            ),
           ),
         ],
       ),
