@@ -4321,31 +4321,6 @@ class TransactionDetailsDialog extends ConsumerWidget {
             ref.read(messageTemplateServiceProvider);
         final capturedLanguage = getCurrentLanguageCode(ref);
         final capturedContainer = ProviderScope.containerOf(context);
-
-        ToastUtils.showSuccessToast(
-          context,
-          ref,
-          l10n.informContactSettlementPayable,
-          actionLabel: l10n.share,
-          onActionPressed: (snackContext) {
-            ShareHelper.shareTransaction(
-              snackContext,
-              null, // Pass null for ref to avoid unmounted check
-              transaction,
-              contact,
-              category,
-              true, // isMarked
-              currencyOverride: capturedCurrency,
-              userProfileOverride: capturedUserProfile,
-              transactionServiceOverride: capturedTransactionService,
-              whatsAppServiceOverride: capturedWhatsAppService,
-              templateServiceOverride: capturedTemplateService,
-              languageOverride: capturedLanguage,
-              container: capturedContainer,
-            );
-          },
-          color: activeColor,
-        );
       }
     } catch (e) {
       if (context.mounted) {
@@ -4399,31 +4374,6 @@ class TransactionDetailsDialog extends ConsumerWidget {
             ref.read(messageTemplateServiceProvider);
         final capturedLanguage = getCurrentLanguageCode(ref);
         final capturedContainer = ProviderScope.containerOf(context);
-
-        ToastUtils.showSuccessToast(
-          context,
-          ref,
-          l10n.informContactSettlement,
-          actionLabel: l10n.share,
-          onActionPressed: (snackContext) {
-            ShareHelper.shareTransaction(
-              snackContext,
-              null, // Pass null for ref to avoid unmounted check
-              transaction,
-              contact,
-              category,
-              true, // isMarked
-              currencyOverride: capturedCurrency,
-              userProfileOverride: capturedUserProfile,
-              transactionServiceOverride: capturedTransactionService,
-              whatsAppServiceOverride: capturedWhatsAppService,
-              templateServiceOverride: capturedTemplateService,
-              languageOverride: capturedLanguage,
-              container: capturedContainer,
-            );
-          },
-          color: activeColor,
-        );
       }
     } catch (e) {
       if (context.mounted) {
