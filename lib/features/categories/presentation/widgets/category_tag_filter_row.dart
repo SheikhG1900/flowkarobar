@@ -11,6 +11,7 @@ class CategoryTagFilterRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tagsAsync = ref.watch(allTagsProvider);
+    final usageCountsAsync = ref.watch(tagUsageCountsProvider);
     final selectedTags = ref.watch(categoryFilterTagsProvider);
     debugPrint('CategoryTagFilterRow selectedTags: $selectedTags');
     final theme = Theme.of(context);
@@ -19,7 +20,13 @@ class CategoryTagFilterRow extends ConsumerWidget {
 
     return tagsAsync.when(
       data: (tags) {
-        if (tags.isEmpty) return const SizedBox.shrink();
+        final usageCounts = usageCountsAsync.asData?.value ?? const <String, int>{};
+        final activeTags = tags.where((tag) {
+          final count = usageCounts[tag.uuid] ?? 0;
+          return count > 0;
+        }).toList();
+
+        if (activeTags.isEmpty) return const SizedBox.shrink();
 
         final isAllSelected = selectedTags.isEmpty;
         final isWithoutTagsSelected = selectedTags.contains('no_tag');
@@ -95,7 +102,7 @@ class CategoryTagFilterRow extends ConsumerWidget {
                 ),
 
                 // Render dynamic tags
-                ...tags.map((tag) {
+                ...activeTags.map((tag) {
                   final isSelected = selectedTags.contains(tag.uuid);
                   final tagColor = tag.color != null
                       ? Color(int.parse(tag.color!.replaceAll('#', '0xFF')))

@@ -696,6 +696,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     final type = isIncome ? 'INCOME' : 'EXPENSE';
     final categoriesAsync = ref.watch(categoriesByTypeProvider(type));
     final range = ref.watch(categoryBudgetDateRangeProvider);
+    final selectedTags = ref.watch(categoryFilterTagsProvider);
+    final tagsAsync = ref.watch(allTagsProvider);
     final netsAsync = ref.watch(categoryNetAmountsForListProvider(type));
     final includeAsync =
         ref.watch(includeUncategorizedInCategorySummaryProvider);
@@ -721,6 +723,71 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                 return uncategorizedAsync.when(
                   skipLoadingOnRefresh: true,
                   data: (uncategorizedAmt) {
+                    final tags = tagsAsync.asData?.value ?? const <Tag>[];
+                    Widget buildSingleTagPillLocal(String name, ThemeData theme, {bool isCount = false}) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: isCount ? 0.25 : 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: isCount ? 0.35 : 0.08),
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: Colors.white,
+                            fontWeight: isCount ? FontWeight.bold : FontWeight.w500,
+                            fontSize: 9,
+                          ),
+                        ),
+                      );
+                    }
+
+                    Widget buildSelectedTagsIndicator(List<String> selected, List<Tag> allTags) {
+                      final tagNames = <String>[];
+                      for (final id in selected) {
+                        if (id == 'no_tag') {
+                          tagNames.add(l10n.filterWithoutTags);
+                        } else {
+                          final tag = allTags.firstWhereOrNull((t) => t.uuid == id);
+                          if (tag != null) {
+                            tagNames.add(tag.name);
+                          }
+                        }
+                      }
+
+                      if (tagNames.isEmpty) return const SizedBox.shrink();
+
+                      final List<Widget> children = [];
+                      if (tagNames.length <= 2) {
+                        for (final name in tagNames) {
+                          children.add(buildSingleTagPillLocal(name, theme));
+                        }
+                      } else {
+                        for (final name in tagNames.take(2)) {
+                          children.add(buildSingleTagPillLocal(name, theme));
+                        }
+                        final moreCount = tagNames.length - 2;
+                        children.add(buildSingleTagPillLocal('+$moreCount', theme, isCount: true));
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Wrap(
+                          spacing: 4,
+                          runSpacing: 4,
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: children,
+                        ),
+                      );
+                    }
+
                     double categorizedNet = 0;
                     double totalBudgetCap = 0;
                     for (final c in categories) {
@@ -821,21 +888,42 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                                                   'inc-exp-stack-column-$type-${filter.name}'),
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
-                                                Text(
-                                                  key: ValueKey(
-                                                      'inc-exp-label-$type-${filter.name}'),
-                                                  isIncome
-                                                      ? l10n.totalIncome
-                                                      : l10n.totalExpenses,
-                                                  style: theme
-                                                      .textTheme.labelMedium
-                                                      ?.copyWith(
-                                                    color: Colors.white
-                                                        .withValues(
-                                                            alpha: 0.88),
-                                                    fontWeight: FontWeight.w500,
-                                                    fontSize: 11,
-                                                  ),
+                                                Row(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      key: ValueKey(
+                                                          'inc-exp-label-$type-${filter.name}'),
+                                                      isIncome
+                                                          ? l10n.totalIncome
+                                                          : l10n.totalExpenses,
+                                                      style: theme
+                                                          .textTheme.labelMedium
+                                                          ?.copyWith(
+                                                        color: Colors.white
+                                                            .withValues(
+                                                                alpha: 0.88),
+                                                        fontWeight: FontWeight.w500,
+                                                        fontSize: 11,
+                                                      ),
+                                                    ),
+                                                    if (selectedTags.isNotEmpty) ...[
+                                                      const SizedBox(width: 4),
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.white.withValues(alpha: 0.25),
+                                                          borderRadius: BorderRadius.circular(4),
+                                                        ),
+                                                        child: const Icon(
+                                                          Icons.filter_list,
+                                                          color: Colors.white,
+                                                          size: 10,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ],
                                                 ),
                                                 const SizedBox(height: 1),
                                                 Text(
@@ -867,6 +955,8 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                                                     color: Colors.white,
                                                   ),
                                                 ),
+                                                if (selectedTags.isNotEmpty)
+                                                  buildSelectedTagsIndicator(selectedTags, tags),
                                                 if (hasBudget &&
                                                     viewMode == 'list') ...[
                                                   const SizedBox(height: 6),
