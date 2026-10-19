@@ -4916,6 +4916,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get noTagsUsedYet => 'अभी तक कोई टैग उपयोग नहीं किया गया है।';
 
   @override
+  String get filterWithoutTags => 'बिना टैग';
+
+  @override
   String get deleteTagTitle => 'टैग हटाएं';
 
   @override

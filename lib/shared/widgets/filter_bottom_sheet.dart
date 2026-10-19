@@ -999,98 +999,128 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     final l10n = AppLocalizations.of(context)!;
     return tagsAsync.when(
       data: (tags) {
-        if (tags.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(
-              l10n.noTagsUsedYet,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-              ),
-            ),
-          );
-        }
-
         final usageCounts = tagUsageCountsAsync.value ?? const {};
+        final isWithoutTagsSelected = _selectedTagUuids.contains('no_tag');
 
         return Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: tags.map((tag) {
-            final isSelected = _selectedTagUuids.contains(tag.uuid);
-            final tagColor = tag.color != null
-                ? Color(int.parse(tag.color!))
-                : AppColors.getTagColor(tag.name);
-            final isOrphan = (usageCounts[tag.uuid] ?? 0) == 0;
-
-            return Tooltip(
-              message: isOrphan ? l10n.deleteTagTitle : '',
-              child: GestureDetector(
-                onLongPress: () => _handleTagLongPress(context, tag),
-                child: isOrphan
-                    ? InputChip(
-                        label: Text(tag.name),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          setState(() {
-                            if (selected) {
-                              _selectedTagUuids.add(tag.uuid);
-                            } else {
-                              _selectedTagUuids.remove(tag.uuid);
-                            }
-                          });
-                        },
-                        backgroundColor: theme.colorScheme.surface,
-                        selectedColor: tagColor.withValues(alpha: 0.2),
-                        side: BorderSide(
-                          color: isSelected
-                              ? tagColor
-                              : tagColor.withValues(alpha: 0.3),
-                          width: 1.0,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        labelStyle: theme.textTheme.bodyMedium?.copyWith(
-                          color: isSelected ? tagColor : tagColor.withValues(alpha: 0.7),
-                          fontWeight: isSelected ? FontWeight.bold : null,
-                          fontStyle: FontStyle.italic,
-                          fontSize: 12,
-                        ),
-                        deleteIcon: Icon(Icons.close, size: 14, color: tagColor.withValues(alpha: 0.7)),
-                        onDeleted: () => _handleTagLongPress(context, tag),
-                      )
-                    : FilterChip(
-                        label: Text(tag.name),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          setState(() {
-                            if (selected) {
-                              _selectedTagUuids.add(tag.uuid);
-                            } else {
-                              _selectedTagUuids.remove(tag.uuid);
-                            }
-                          });
-                        },
-                        backgroundColor: theme.colorScheme.surface,
-                        selectedColor: tagColor.withValues(alpha: 0.2),
-                        side: BorderSide(
-                          color: isSelected
-                              ? tagColor
-                              : tagColor.withValues(alpha: 0.35),
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        labelStyle: theme.textTheme.bodyMedium?.copyWith(
-                          color: isSelected ? tagColor : tagColor.withValues(alpha: 0.7),
-                          fontWeight: isSelected ? FontWeight.bold : null,
-                          fontSize: 12,
-                        ),
-                      ),
+          children: [
+            // Custom "Without Tags" Chip
+            FilterChip(
+              avatar: Icon(
+                Icons.block,
+                size: 14,
+                color: isWithoutTagsSelected
+                    ? primaryColor
+                    : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
-            );
-          }).toList(),
+              showCheckmark: false,
+              label: Text(l10n.filterWithoutTags),
+              selected: isWithoutTagsSelected,
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    _selectedTagUuids.add('no_tag');
+                  } else {
+                    _selectedTagUuids.remove('no_tag');
+                  }
+                });
+              },
+              backgroundColor: theme.colorScheme.surface,
+              selectedColor: primaryColor.withValues(alpha: 0.15),
+              side: BorderSide(
+                color: isWithoutTagsSelected
+                    ? primaryColor
+                    : theme.colorScheme.outline.withValues(alpha: 0.4),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                color: isWithoutTagsSelected ? primaryColor : theme.colorScheme.onSurfaceVariant,
+                fontWeight: isWithoutTagsSelected ? FontWeight.bold : null,
+                fontSize: 12,
+              ),
+            ),
+            
+            // Render regular tags
+            ...tags.map((tag) {
+              final isSelected = _selectedTagUuids.contains(tag.uuid);
+              final tagColor = tag.color != null
+                  ? Color(int.parse(tag.color!))
+                  : AppColors.getTagColor(tag.name);
+              final isOrphan = (usageCounts[tag.uuid] ?? 0) == 0;
+
+              return Tooltip(
+                message: isOrphan ? l10n.deleteTagTitle : '',
+                child: GestureDetector(
+                  onLongPress: () => _handleTagLongPress(context, tag),
+                  child: isOrphan
+                      ? InputChip(
+                          label: Text(tag.name),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                _selectedTagUuids.add(tag.uuid);
+                              } else {
+                                _selectedTagUuids.remove(tag.uuid);
+                              }
+                            });
+                          },
+                          backgroundColor: theme.colorScheme.surface,
+                          selectedColor: tagColor.withValues(alpha: 0.2),
+                          side: BorderSide(
+                            color: isSelected
+                                ? tagColor
+                                : tagColor.withValues(alpha: 0.3),
+                            width: 1.0,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                            color: isSelected ? tagColor : tagColor.withValues(alpha: 0.7),
+                            fontWeight: isSelected ? FontWeight.bold : null,
+                            fontStyle: FontStyle.italic,
+                            fontSize: 12,
+                          ),
+                          deleteIcon: Icon(Icons.close, size: 14, color: tagColor.withValues(alpha: 0.7)),
+                          onDeleted: () => _handleTagLongPress(context, tag),
+                        )
+                      : FilterChip(
+                          label: Text(tag.name),
+                          selected: isSelected,
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                _selectedTagUuids.add(tag.uuid);
+                              } else {
+                                _selectedTagUuids.remove(tag.uuid);
+                              }
+                            });
+                          },
+                          backgroundColor: theme.colorScheme.surface,
+                          selectedColor: tagColor.withValues(alpha: 0.2),
+                          side: BorderSide(
+                            color: isSelected
+                                ? tagColor
+                                : tagColor.withValues(alpha: 0.35),
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                            color: isSelected ? tagColor : tagColor.withValues(alpha: 0.7),
+                            fontWeight: isSelected ? FontWeight.bold : null,
+                            fontSize: 12,
+                          ),
+                        ),
+                ),
+              );
+            }),
+          ],
         );
       },
       loading: () => const Center(

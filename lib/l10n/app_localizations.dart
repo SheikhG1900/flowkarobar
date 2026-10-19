@@ -8951,6 +8951,12 @@ abstract class AppLocalizations {
   /// **'No tags used yet.'**
   String get noTagsUsedYet;
 
+  /// No description provided for @filterWithoutTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Without tags'**
+  String get filterWithoutTags;
+
   /// No description provided for @deleteTagTitle.
   ///
   /// In en, this message translates to:

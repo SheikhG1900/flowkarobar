@@ -4922,6 +4922,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get noTagsUsedYet => 'ابھی تک کوئی ٹیگ استعمال نہیں ہوا۔';
 
   @override
+  String get filterWithoutTags => 'بغیر ٹیگ';
+
+  @override
   String get deleteTagTitle => 'ٹیگ حذف کریں';
 
   @override

@@ -638,10 +638,14 @@ class RecentSearch {
     }
 
     if (tagUuids != null && tagUuids!.isNotEmpty) {
-      final names = tagUuids!
-          .map((uuid) => tags.firstWhereOrNull((t) => t.uuid == uuid)?.name)
+      final namesList = tagUuids!
+          .map((uuid) {
+            if (uuid == 'no_tag') return 'Without tags';
+            return tags.firstWhereOrNull((t) => t.uuid == uuid)?.name;
+          })
           .whereNotNull()
-          .join(', ');
+          .toList();
+      final names = namesList.join(', ');
       if (names.isNotEmpty) {
         parts.add('tagged $names');
       }

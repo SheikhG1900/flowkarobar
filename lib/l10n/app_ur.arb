@@ -1891,6 +1891,7 @@
   "suggestedTags": "تجویز کردہ ٹیگز",
   "addTagHint": "ٹیگ شامل کریں...",
   "noTagsUsedYet": "ابھی تک کوئی ٹیگ استعمال نہیں ہوا۔",
+  "filterWithoutTags": "بغیر ٹیگ",
   "deleteTagTitle": "ٹیگ حذف کریں",
   "deleteTagConfirm": "کیا آپ واقعی ٹیگ \"{tagName}\" کو مستقل طور پر حذف کرنا چاہتے ہیں؟ یہ کسی بھی لین دین میں استعمال نہیں ہو رہا ہے۔",
   "@deleteTagConfirm": {

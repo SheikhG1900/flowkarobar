@@ -938,10 +938,31 @@ class TransactionsRepository {
     }
 
     if (filters.tagUuids != null && filters.tagUuids!.isNotEmpty) {
-      final subquery = _database.selectOnly(_database.transactionTags)
-        ..addColumns([_database.transactionTags.transactionUuid])
-        ..where(_database.transactionTags.tagUuid.isIn(filters.tagUuids!) & _database.transactionTags.isDeleted.equals(false));
-      query.where(_database.transactions.uuid.isInQuery(subquery));
+      final containsNoTag = filters.tagUuids!.contains('no_tag');
+      final validTagUuids = filters.tagUuids!.where((id) => id != 'no_tag').toList();
+
+      final Expression<bool> tagExpr;
+      if (validTagUuids.isNotEmpty) {
+        final subquery = _database.selectOnly(_database.transactionTags)
+          ..addColumns([_database.transactionTags.transactionUuid])
+          ..where(_database.transactionTags.tagUuid.isIn(validTagUuids) & _database.transactionTags.isDeleted.equals(false));
+        
+        if (containsNoTag) {
+          final noTagSubquery = _database.selectOnly(_database.transactionTags)
+            ..addColumns([_database.transactionTags.transactionUuid])
+            ..where(_database.transactionTags.isDeleted.equals(false));
+          tagExpr = _database.transactions.uuid.isInQuery(subquery) | _database.transactions.uuid.isNotInQuery(noTagSubquery);
+        } else {
+          tagExpr = _database.transactions.uuid.isInQuery(subquery);
+        }
+      } else {
+        // Only contains 'no_tag'
+        final noTagSubquery = _database.selectOnly(_database.transactionTags)
+          ..addColumns([_database.transactionTags.transactionUuid])
+          ..where(_database.transactionTags.isDeleted.equals(false));
+        tagExpr = _database.transactions.uuid.isNotInQuery(noTagSubquery);
+      }
+      query.where(tagExpr);
     }
 
     // Status-based filters: PAID / RECEIVED / PAYABLE / RECEIVABLE / AUTO /
@@ -1124,10 +1145,31 @@ class TransactionsRepository {
     }
 
     if (filters.tagUuids != null && filters.tagUuids!.isNotEmpty) {
-      final subquery = _database.selectOnly(_database.transactionTags)
-        ..addColumns([_database.transactionTags.transactionUuid])
-        ..where(_database.transactionTags.tagUuid.isIn(filters.tagUuids!) & _database.transactionTags.isDeleted.equals(false));
-      query.where(_database.transactions.uuid.isInQuery(subquery));
+      final containsNoTag = filters.tagUuids!.contains('no_tag');
+      final validTagUuids = filters.tagUuids!.where((id) => id != 'no_tag').toList();
+
+      final Expression<bool> tagExpr;
+      if (validTagUuids.isNotEmpty) {
+        final subquery = _database.selectOnly(_database.transactionTags)
+          ..addColumns([_database.transactionTags.transactionUuid])
+          ..where(_database.transactionTags.tagUuid.isIn(validTagUuids) & _database.transactionTags.isDeleted.equals(false));
+        
+        if (containsNoTag) {
+          final noTagSubquery = _database.selectOnly(_database.transactionTags)
+            ..addColumns([_database.transactionTags.transactionUuid])
+            ..where(_database.transactionTags.isDeleted.equals(false));
+          tagExpr = _database.transactions.uuid.isInQuery(subquery) | _database.transactions.uuid.isNotInQuery(noTagSubquery);
+        } else {
+          tagExpr = _database.transactions.uuid.isInQuery(subquery);
+        }
+      } else {
+        // Only contains 'no_tag'
+        final noTagSubquery = _database.selectOnly(_database.transactionTags)
+          ..addColumns([_database.transactionTags.transactionUuid])
+          ..where(_database.transactionTags.isDeleted.equals(false));
+        tagExpr = _database.transactions.uuid.isNotInQuery(noTagSubquery);
+      }
+      query.where(tagExpr);
     }
 
     // Status-based filters: PAID / RECEIVED / PAYABLE / RECEIVABLE / AUTO /

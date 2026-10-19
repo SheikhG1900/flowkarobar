@@ -2477,6 +2477,7 @@
   "suggestedTags": "Suggested Tags",
   "addTagHint": "Add a tag...",
   "noTagsUsedYet": "No tags used yet.",
+  "filterWithoutTags": "Without tags",
   "deleteTagTitle": "Delete Tag",
   "deleteTagConfirm": "Are you sure you want to permanently delete the tag \"{tagName}\"? It is not used in any transactions.",
   "@deleteTagConfirm": {

@@ -1407,8 +1407,23 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
     // 6. Tag Filters
     if (currentFilters.tagUuids != null && currentFilters.tagUuids!.isNotEmpty) {
       for (final tagUuid in currentFilters.tagUuids!) {
+        final isNoTag = tagUuid == 'no_tag';
         final tag = allTags.firstWhereOrNull((t) => t.uuid == tagUuid);
-        if (tag != null) {
+        if (isNoTag) {
+          chips.add(_buildFilterChip(
+            label: l10n.filterWithoutTags,
+            icon: Icons.local_offer_outlined,
+            theme: theme,
+            color: AppColors.brightCyan,
+            onClear: () {
+              ref.read(transactionsPaginatedProvider.notifier).applyFilters(
+                currentFilters.copyWith(
+                  tagUuids: currentFilters.tagUuids!.where((uuid) => uuid != tagUuid).toList(),
+                ),
+              );
+            },
+          ));
+        } else if (tag != null) {
           final tagColor = tag.color != null
               ? Color(int.parse(tag.color!))
               : AppColors.getTagColor(tag.name);

@@ -1891,6 +1891,7 @@
   "suggestedTags": "सुझाए गए टैग",
   "addTagHint": "एक टैग जोड़ें...",
   "noTagsUsedYet": "अभी तक कोई टैग उपयोग नहीं किया गया है।",
+  "filterWithoutTags": "बिना टैग",
   "deleteTagTitle": "टैग हटाएं",
   "deleteTagConfirm": "क्या आप वाकई टैग \"{tagName}\" को स्थायी रूप से हटाना चाहते हैं? इसका उपयोग किसी भी लेनदेन में नहीं किया गया है।",
   "@deleteTagConfirm": {

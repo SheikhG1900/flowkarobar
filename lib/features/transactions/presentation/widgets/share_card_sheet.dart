@@ -513,7 +513,24 @@ class _ShareCardSheetState extends ConsumerState<ShareCardSheet> {
 
     final mainColor = cardGradient.colors.last;
     final hsl = HSLColor.fromColor(mainColor);
-    final frameBgColor = hsl.withLightness((hsl.lightness * 0.45).clamp(0.08, 0.25)).toColor();
+    // Lower the saturation (dullness) and increase lightness slightly to make the card's drop shadow pop beautifully
+    final dullHsl = hsl
+        .withSaturation((hsl.saturation * 0.40).clamp(0.12, 0.35))
+        .withLightness((hsl.lightness * 0.58).clamp(0.15, 0.28));
+    final frameBgColorColor = dullHsl.toColor();
+    
+    // Create an elegant gradient with a subtle lightness variance (a soft top-to-bottom glow)
+    final topHsl = dullHsl.withLightness((dullHsl.lightness + 0.05).clamp(0.0, 1.0));
+    final bottomHsl = dullHsl.withLightness((dullHsl.lightness - 0.05).clamp(0.0, 1.0));
+    
+    final frameGradient = LinearGradient(
+      colors: [
+        topHsl.toColor(),
+        bottomHsl.toColor(),
+      ],
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+    );
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
@@ -550,7 +567,7 @@ class _ShareCardSheetState extends ConsumerState<ShareCardSheet> {
                   width: 360,
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 24),
                   decoration: BoxDecoration(
-                    color: frameBgColor,
+                    gradient: frameGradient,
                   ),
                   child: Directionality(
                     textDirection: textDirection,

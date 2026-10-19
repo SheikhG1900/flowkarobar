@@ -4902,6 +4902,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noTagsUsedYet => 'No tags used yet.';
 
   @override
+  String get filterWithoutTags => 'Without tags';
+
+  @override
   String get deleteTagTitle => 'Delete Tag';
 
   @override
