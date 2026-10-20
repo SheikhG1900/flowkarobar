@@ -146,33 +146,8 @@ class TransactionsRepository {
           t.date.isBetweenValues(start, end) & t.isDeleted.equals(false))
       ..orderBy([(t) => OrderingTerm.desc(t.date)]);
 
-    if (tagUuids != null && tagUuids.isNotEmpty) {
-      final containsNoTag = tagUuids.contains('no_tag');
-      final validTagUuids = tagUuids.where((id) => id != 'no_tag').toList();
-
-      final Expression<bool> tagExpr;
-      if (validTagUuids.isNotEmpty) {
-        final subquery = _database.selectOnly(_database.transactionTags)
-          ..addColumns([_database.transactionTags.transactionUuid])
-          ..where(_database.transactionTags.tagUuid.isIn(validTagUuids) &
-              _database.transactionTags.isDeleted.equals(false));
-
-        if (containsNoTag) {
-          final noTagSubquery = _database.selectOnly(_database.transactionTags)
-            ..addColumns([_database.transactionTags.transactionUuid])
-            ..where(_database.transactionTags.isDeleted.equals(false));
-          tagExpr = _database.transactions.uuid.isInQuery(subquery) |
-              _database.transactions.uuid.isNotInQuery(noTagSubquery);
-        } else {
-          tagExpr = _database.transactions.uuid.isInQuery(subquery);
-        }
-      } else {
-        // Only contains 'no_tag'
-        final noTagSubquery = _database.selectOnly(_database.transactionTags)
-          ..addColumns([_database.transactionTags.transactionUuid])
-          ..where(_database.transactionTags.isDeleted.equals(false));
-        tagExpr = _database.transactions.uuid.isNotInQuery(noTagSubquery);
-      }
+    final tagExpr = _database.buildTagExpression(tagUuids);
+    if (tagExpr != null) {
       query.where((t) => tagExpr);
     }
 
@@ -201,31 +176,8 @@ class TransactionsRepository {
   // Get transaction with details by UUID
   Future<TransactionWithDetails?> getTransactionWithDetailsByUuid(
       String uuid) async {
-    final query = _database.select(_database.transactions).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ]);
+    final query = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions));
 
     query.where(_database.transactions.uuid.equals(uuid) &
         _database.transactions.isDeleted.equals(false));
@@ -247,31 +199,8 @@ class TransactionsRepository {
   // Watch transaction with details by UUID
   Stream<TransactionWithDetails?> watchTransactionWithDetailsByUuid(
       String uuid) {
-    final query = _database.select(_database.transactions).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ]);
+    final query = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions));
 
     query.where(_database.transactions.uuid.equals(uuid) &
         _database.transactions.isDeleted.equals(false));
@@ -299,31 +228,8 @@ class TransactionsRepository {
     if (linkedGroupId == null || linkedGroupId.isEmpty) {
       return [];
     }
-    final query = _database.select(_database.transactions).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ]);
+    final query = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions));
     query.where(_database.transactions.linkedGroupId.equals(linkedGroupId) &
         _database.transactions.isDeleted.equals(false));
     query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
@@ -348,31 +254,8 @@ class TransactionsRepository {
     if (linkedGroupId == null || linkedGroupId.isEmpty) {
       return Stream.value([]);
     }
-    final query = _database.select(_database.transactions).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ]);
+    final query = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions));
     query.where(_database.transactions.linkedGroupId.equals(linkedGroupId) &
         _database.transactions.isDeleted.equals(false));
     query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
@@ -505,31 +388,8 @@ class TransactionsRepository {
   Future<List<TransactionWithDetails>> getTransactionsWithDetailsByUuidPrefix(
     String prefix,
   ) async {
-    final query = _database.select(_database.transactions).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ]);
+    final query = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions));
 
     query.where(_database.transactions.uuid.like('$prefix%') &
         _database.transactions.isDeleted.equals(false));
@@ -552,31 +412,8 @@ class TransactionsRepository {
   Stream<List<TransactionWithDetails>> watchTransactionsWithDetailsByUuidPrefix(
     String prefix,
   ) {
-    final query = _database.select(_database.transactions).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ]);
+    final query = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions));
 
     query.where(_database.transactions.uuid.like('$prefix%') &
         _database.transactions.isDeleted.equals(false));
@@ -664,31 +501,8 @@ class TransactionsRepository {
   // Watch transactions with ALL details (category + contact)
   // This method uses JOINs to fetch all related data in a single efficient query
   Stream<List<TransactionWithDetails>> watchTransactionsWithDetails() {
-    final query = _database.select(_database.transactions).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ])
+    final query = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions))
       ..where(_database.transactions.isDeleted.equals(false))
       ..orderBy([OrderingTerm.desc(_database.transactions.date)]);
 
@@ -711,31 +525,8 @@ class TransactionsRepository {
     DateTime start,
     DateTime end,
   ) {
-    final query = _database.select(_database.transactions).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ]);
+    final query = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions));
 
     query.where(_database.transactions.date.isBetweenValues(start, end));
     query.where(_database.transactions.isDeleted.equals(false));
@@ -781,31 +572,8 @@ class TransactionsRepository {
     int limit = 50,
     int offset = 0,
   }) {
-    final dbQuery = _database.select(_database.transactions).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ]);
+    final dbQuery = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions));
 
     dbQuery.where(_database.transactions.description.contains(query));
     dbQuery.orderBy([OrderingTerm.desc(_database.transactions.date)]);
@@ -832,31 +600,8 @@ class TransactionsRepository {
     int limit = 50,
     int offset = 0,
   }) {
-    final dbQuery = _database.select(_database.transactions).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ]);
+    final dbQuery = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions));
 
     dbQuery.where(_database.transactions.description.contains(query));
     dbQuery.orderBy([OrderingTerm.desc(_database.transactions.date)]);
@@ -884,31 +629,8 @@ class TransactionsRepository {
     int limit = 50,
     int offset = 0,
   }) {
-    final query = _database.select(_database.transactions).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ]);
+    final query = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions));
 
     if (searchQuery != null && searchQuery.isNotEmpty) {
       query.where(_database.transactions.description.contains(searchQuery));
@@ -970,31 +692,8 @@ class TransactionsRepository {
           .isSmallerOrEqualValue(filters.maxAmount!));
     }
 
-    if (filters.tagUuids != null && filters.tagUuids!.isNotEmpty) {
-      final containsNoTag = filters.tagUuids!.contains('no_tag');
-      final validTagUuids = filters.tagUuids!.where((id) => id != 'no_tag').toList();
-
-      final Expression<bool> tagExpr;
-      if (validTagUuids.isNotEmpty) {
-        final subquery = _database.selectOnly(_database.transactionTags)
-          ..addColumns([_database.transactionTags.transactionUuid])
-          ..where(_database.transactionTags.tagUuid.isIn(validTagUuids) & _database.transactionTags.isDeleted.equals(false));
-        
-        if (containsNoTag) {
-          final noTagSubquery = _database.selectOnly(_database.transactionTags)
-            ..addColumns([_database.transactionTags.transactionUuid])
-            ..where(_database.transactionTags.isDeleted.equals(false));
-          tagExpr = _database.transactions.uuid.isInQuery(subquery) | _database.transactions.uuid.isNotInQuery(noTagSubquery);
-        } else {
-          tagExpr = _database.transactions.uuid.isInQuery(subquery);
-        }
-      } else {
-        // Only contains 'no_tag'
-        final noTagSubquery = _database.selectOnly(_database.transactionTags)
-          ..addColumns([_database.transactionTags.transactionUuid])
-          ..where(_database.transactionTags.isDeleted.equals(false));
-        tagExpr = _database.transactions.uuid.isNotInQuery(noTagSubquery);
-      }
+    final tagExpr = _database.buildTagExpression(filters.tagUuids);
+    if (tagExpr != null) {
       query.where(tagExpr);
     }
 
@@ -1092,31 +791,8 @@ class TransactionsRepository {
     int limit = 50,
     int offset = 0,
   }) {
-    final query = _database.select(_database.transactions).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ]);
+    final query = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions));
 
     if (searchQuery != null && searchQuery.isNotEmpty) {
       query.where(_database.transactions.description.contains(searchQuery));
@@ -1178,31 +854,8 @@ class TransactionsRepository {
           .isSmallerOrEqualValue(filters.maxAmount!));
     }
 
-    if (filters.tagUuids != null && filters.tagUuids!.isNotEmpty) {
-      final containsNoTag = filters.tagUuids!.contains('no_tag');
-      final validTagUuids = filters.tagUuids!.where((id) => id != 'no_tag').toList();
-
-      final Expression<bool> tagExpr;
-      if (validTagUuids.isNotEmpty) {
-        final subquery = _database.selectOnly(_database.transactionTags)
-          ..addColumns([_database.transactionTags.transactionUuid])
-          ..where(_database.transactionTags.tagUuid.isIn(validTagUuids) & _database.transactionTags.isDeleted.equals(false));
-        
-        if (containsNoTag) {
-          final noTagSubquery = _database.selectOnly(_database.transactionTags)
-            ..addColumns([_database.transactionTags.transactionUuid])
-            ..where(_database.transactionTags.isDeleted.equals(false));
-          tagExpr = _database.transactions.uuid.isInQuery(subquery) | _database.transactions.uuid.isNotInQuery(noTagSubquery);
-        } else {
-          tagExpr = _database.transactions.uuid.isInQuery(subquery);
-        }
-      } else {
-        // Only contains 'no_tag'
-        final noTagSubquery = _database.selectOnly(_database.transactionTags)
-          ..addColumns([_database.transactionTags.transactionUuid])
-          ..where(_database.transactionTags.isDeleted.equals(false));
-        tagExpr = _database.transactions.uuid.isNotInQuery(noTagSubquery);
-      }
+    final tagExpr = _database.buildTagExpression(filters.tagUuids);
+    if (tagExpr != null) {
       query.where(tagExpr);
     }
 
@@ -1291,31 +944,8 @@ class TransactionsRepository {
     int limit = 50,
     int offset = 0,
   }) {
-    final query = _database.select(_database.transactions).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ])
+    final query = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions))
       ..where(_database.transactions.isDeleted.equals(false))
       ..orderBy([OrderingTerm.desc(_database.transactions.date)])
       ..limit(limit, offset: offset);
@@ -1340,31 +970,8 @@ class TransactionsRepository {
     int limit = 50,
     int offset = 0,
   }) {
-    final query = _database.select(_database.transactions).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid.equalsExp(_database.transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ])
+    final query = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions))
       ..where(_database.transactions.isDeleted.equals(false))
       ..orderBy([OrderingTerm.desc(_database.transactions.date)])
       ..limit(limit, offset: offset);

@@ -1009,6 +1009,82 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  Expression<bool>? buildTagExpression(List<String>? tagUuids) {
+    if (tagUuids == null || tagUuids.isEmpty) return null;
+
+    final containsNoTag = tagUuids.contains('no_tag');
+    final validTagUuids = tagUuids.where((id) => id != 'no_tag').toList();
+
+    if (validTagUuids.isNotEmpty) {
+      final subquery = selectOnly(transactionTags)
+        ..addColumns([transactionTags.transactionUuid])
+        ..where(transactionTags.tagUuid.isIn(validTagUuids) &
+            transactionTags.isDeleted.equals(false));
+
+      if (containsNoTag) {
+        final noTagSubquery = selectOnly(transactionTags)
+          ..addColumns([transactionTags.transactionUuid])
+          ..where(transactionTags.isDeleted.equals(false));
+        return transactions.uuid.isInQuery(subquery) |
+            transactions.uuid.isNotInQuery(noTagSubquery);
+      } else {
+        return transactions.uuid.isInQuery(subquery);
+      }
+    } else {
+      // Only contains 'no_tag'
+      final noTagSubquery = selectOnly(transactionTags)
+        ..addColumns([transactionTags.transactionUuid])
+        ..where(transactionTags.isDeleted.equals(false));
+      return transactions.uuid.isNotInQuery(noTagSubquery);
+    }
+  }
+
+  JoinedSelectStatement<HasResultSet, dynamic> joinTransactionWithDetails(
+    SimpleSelectStatement<$TransactionsTable, Transaction> stmt,
+  ) {
+    return stmt.join([
+      leftOuterJoin(
+        categories,
+        categories.uuid.equalsExp(transactions.categoryUuid),
+      ),
+      leftOuterJoin(
+        contacts,
+        contacts.uuid.equalsExp(transactions.contactUuid),
+      ),
+      leftOuterJoin(
+        accounts,
+        accounts.uuid.equalsExp(transactions.accountUuid),
+      ),
+      leftOuterJoin(
+        payables,
+        payables.uuid.equalsExp(transactions.linkedPayableUuid),
+      ),
+      leftOuterJoin(
+        receivables,
+        receivables.uuid.equalsExp(transactions.linkedReceivableUuid),
+      ),
+    ]);
+  }
+
+  JoinedSelectStatement<HasResultSet, dynamic> joinScheduleWithDetails(
+    SimpleSelectStatement<$TransactionSchedulesTable, TransactionSchedule> stmt,
+  ) {
+    return stmt.join([
+      leftOuterJoin(
+        categories,
+        categories.uuid.equalsExp(transactionSchedules.categoryUuid),
+      ),
+      leftOuterJoin(
+        contacts,
+        contacts.uuid.equalsExp(transactionSchedules.contactUuid),
+      ),
+      leftOuterJoin(
+        accounts,
+        accounts.uuid.equalsExp(transactionSchedules.accountUuid),
+      ),
+    ]);
+  }
+
   Future<void> clearAllData() async {
     await transaction(() async {
       // Delete from all tables in correct order to respect foreign keys

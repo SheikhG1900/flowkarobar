@@ -66,33 +66,7 @@ class CategoriesRepository {
 
   Expression<bool>? _buildTagExpression(List<String>? tagUuids) {
     debugPrint('_buildTagExpression called with tagUuids: $tagUuids');
-    if (tagUuids == null || tagUuids.isEmpty) return null;
-
-    final containsNoTag = tagUuids.contains('no_tag');
-    final validTagUuids = tagUuids.where((id) => id != 'no_tag').toList();
-
-    if (validTagUuids.isNotEmpty) {
-      final subquery = _database.selectOnly(_database.transactionTags)
-        ..addColumns([_database.transactionTags.transactionUuid])
-        ..where(_database.transactionTags.tagUuid.isIn(validTagUuids) &
-            _database.transactionTags.isDeleted.equals(false));
-
-      if (containsNoTag) {
-        final noTagSubquery = _database.selectOnly(_database.transactionTags)
-          ..addColumns([_database.transactionTags.transactionUuid])
-          ..where(_database.transactionTags.isDeleted.equals(false));
-        return _database.transactions.uuid.isInQuery(subquery) |
-            _database.transactions.uuid.isNotInQuery(noTagSubquery);
-      } else {
-        return _database.transactions.uuid.isInQuery(subquery);
-      }
-    } else {
-      // Only contains 'no_tag'
-      final noTagSubquery = _database.selectOnly(_database.transactionTags)
-        ..addColumns([_database.transactionTags.transactionUuid])
-        ..where(_database.transactionTags.isDeleted.equals(false));
-      return _database.transactions.uuid.isNotInQuery(noTagSubquery);
-    }
+    return _database.buildTagExpression(tagUuids);
   }
 
   /// Watch net amounts for all categories of [type] in range [start] to [end].

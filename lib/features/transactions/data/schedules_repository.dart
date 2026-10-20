@@ -44,23 +44,8 @@ class SchedulesRepository {
 
   // Watch all schedules with category, contact, and account details
   Stream<List<ScheduleWithDetails>> watchAllSchedulesWithDetails() {
-    final query = _database.select(_database.transactionSchedules).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactionSchedules.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid
-            .equalsExp(_database.transactionSchedules.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid
-            .equalsExp(_database.transactionSchedules.accountUuid),
-      ),
-    ]);
+    final query = _database.joinScheduleWithDetails(
+        _database.select(_database.transactionSchedules));
 
     query.where(_database.transactionSchedules.isDeleted.equals(false));
     query
@@ -80,23 +65,8 @@ class SchedulesRepository {
 
   // Watch schedule with details by UUID
   Stream<ScheduleWithDetails?> watchScheduleWithDetailsByUuid(String uuid) {
-    final query = _database.select(_database.transactionSchedules).join([
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactionSchedules.categoryUuid),
-      ),
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid
-            .equalsExp(_database.transactionSchedules.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.accounts,
-        _database.accounts.uuid
-            .equalsExp(_database.transactionSchedules.accountUuid),
-      ),
-    ]);
+    final query = _database.joinScheduleWithDetails(
+        _database.select(_database.transactionSchedules));
 
     query.where(_database.transactionSchedules.uuid.equals(uuid) &
         _database.transactionSchedules.isDeleted.equals(false));
