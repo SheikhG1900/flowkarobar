@@ -1912,6 +1912,15 @@
     }
   },
   "tagDeletedSuccessfully": "टैग सफलतापूर्वक हटा दिया गया",
+  "removeTagConfirm": "क्या आप वाकई इस लेनदेन से इस टैग को हटाना चाहते हैं?",
+  "failedToUpdateTags": "टैग अपडेट करने में विफल: {error}",
+  "@failedToUpdateTags": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "unusedTagIndicator": "अप्रयुक्त",
   "createTagQuery": "टैग \"{tagName}\" बनाएं",
   "@createTagQuery": {

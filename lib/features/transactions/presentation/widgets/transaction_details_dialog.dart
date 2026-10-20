@@ -855,7 +855,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                                       context: context,
                                       builder: (ctx) => AlertDialog(
                                         title: Text(l10n.tags),
-                                        content: Text('Are you sure you want to remove this tag?'),
+                                        content: Text(l10n.removeTagConfirm),
                                         actions: [
                                           TextButton(
                                             onPressed: () => Navigator.pop(ctx, false),
@@ -879,7 +879,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
                                         ref.invalidate(transactionTagsProvider(transaction.uuid));
                                       } catch (e) {
                                         if (context.mounted) {
-                                          ToastUtils.showErrorToast(context, ref, 'Failed to update tags: $e');
+                                          ToastUtils.showErrorToast(context, ref, l10n.failedToUpdateTags(e.toString()));
                                         }
                                       }
                                     }

@@ -106,6 +106,14 @@ class TransactionDocumentsRepository {
 
     await _database.into(_database.transactionDocuments).insert(companion);
 
+    // Touch parent transaction's updatedAt to trigger ui & sync refreshes
+    await (_database.update(_database.transactions)
+          ..where((t) => t.uuid.equals(transactionUuid)))
+        .write(TransactionsCompanion(
+          updatedAt: Value(DateTime.now()),
+          isNotSynced: const Value(true),
+        ));
+
     return TransactionDocument(
       uuid: uuid,
       transactionUuid: transactionUuid,
@@ -141,6 +149,14 @@ class TransactionDocumentsRepository {
         isDeleted: Value(true),
         isNotSynced: Value(true),
       ));
+
+      // 3. Touch parent transaction's updatedAt to trigger ui & sync refreshes
+      await (_database.update(_database.transactions)
+            ..where((t) => t.uuid.equals(doc.transactionUuid)))
+          .write(TransactionsCompanion(
+            updatedAt: Value(DateTime.now()),
+            isNotSynced: const Value(true),
+          ));
     }
   }
 
@@ -219,5 +235,13 @@ class TransactionDocumentsRepository {
         await _database.into(_database.transactionDocuments).insert(companion);
       }
     }
+
+    // Touch parent transaction's updatedAt to trigger ui & sync refreshes
+    await (_database.update(_database.transactions)
+          ..where((t) => t.uuid.equals(transactionUuid)))
+        .write(TransactionsCompanion(
+          updatedAt: Value(DateTime.now()),
+          isNotSynced: const Value(true),
+        ));
   }
 }

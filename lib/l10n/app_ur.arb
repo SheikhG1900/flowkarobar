@@ -1912,6 +1912,15 @@
     }
   },
   "tagDeletedSuccessfully": "ٹیگ کامیابی کے ساتھ حذف ہو گیا",
+  "removeTagConfirm": "کیا آپ واقعی اس لین دین سے اس ٹیگ کو ہٹانا چاہتے ہیں؟",
+  "failedToUpdateTags": "ٹیگز اپ ڈیٹ کرنے میں ناکام: {error}",
+  "@failedToUpdateTags": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "unusedTagIndicator": "غیر استعمال شدہ",
   "createTagQuery": "ٹیگ \"{tagName}\" بنائیں",
   "@createTagQuery": {

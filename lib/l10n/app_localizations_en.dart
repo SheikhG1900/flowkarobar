@@ -4927,6 +4927,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tagDeletedSuccessfully => 'Tag deleted successfully';
 
   @override
+  String get removeTagConfirm =>
+      'Are you sure you want to remove this tag from this transaction?';
+
+  @override
+  String failedToUpdateTags(String error) {
+    return 'Failed to update tags: $error';
+  }
+
+  @override
   String get unusedTagIndicator => 'Unused';
 
   @override

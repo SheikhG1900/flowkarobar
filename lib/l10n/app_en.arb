@@ -2501,6 +2501,15 @@
     }
   },
   "tagDeletedSuccessfully": "Tag deleted successfully",
+  "removeTagConfirm": "Are you sure you want to remove this tag from this transaction?",
+  "failedToUpdateTags": "Failed to update tags: {error}",
+  "@failedToUpdateTags": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "unusedTagIndicator": "Unused",
   "createTagQuery": "Create Tag \"{tagName}\"",
   "@createTagQuery": {

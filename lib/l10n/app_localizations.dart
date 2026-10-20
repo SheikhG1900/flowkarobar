@@ -8993,6 +8993,18 @@ abstract class AppLocalizations {
   /// **'Tag deleted successfully'**
   String get tagDeletedSuccessfully;
 
+  /// No description provided for @removeTagConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to remove this tag from this transaction?'**
+  String get removeTagConfirm;
+
+  /// No description provided for @failedToUpdateTags.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update tags: {error}'**
+  String failedToUpdateTags(String error);
+
   /// No description provided for @unusedTagIndicator.
   ///
   /// In en, this message translates to:

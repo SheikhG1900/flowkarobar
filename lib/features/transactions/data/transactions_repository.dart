@@ -552,7 +552,10 @@ class TransactionsRepository {
       String uuid, TransactionsCompanion companion) async {
     await (_database.update(_database.transactions)
           ..where((t) => t.uuid.equals(uuid)))
-        .write(companion.copyWith(isNotSynced: const Value(true)));
+        .write(companion.copyWith(
+          isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ));
   }
 
   // Mark transaction as reviewed
@@ -1127,6 +1130,14 @@ class TransactionsRepository {
           ));
         }
       }
+
+      // 3. Touch the parent transaction's updatedAt to reflect the tag modifications
+      await updateTransactionWithCompanion(
+        transactionUuid,
+        TransactionsCompanion(
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     });
   }
 

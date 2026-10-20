@@ -4947,6 +4947,15 @@ class AppLocalizationsUr extends AppLocalizations {
   String get tagDeletedSuccessfully => 'ٹیگ کامیابی کے ساتھ حذف ہو گیا';
 
   @override
+  String get removeTagConfirm =>
+      'کیا آپ واقعی اس لین دین سے اس ٹیگ کو ہٹانا چاہتے ہیں؟';
+
+  @override
+  String failedToUpdateTags(String error) {
+    return 'ٹیگز اپ ڈیٹ کرنے میں ناکام: $error';
+  }
+
+  @override
   String get unusedTagIndicator => 'غیر استعمال شدہ';
 
   @override

@@ -4941,6 +4941,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get tagDeletedSuccessfully => 'टैग सफलतापूर्वक हटा दिया गया';
 
   @override
+  String get removeTagConfirm =>
+      'क्या आप वाकई इस लेनदेन से इस टैग को हटाना चाहते हैं?';
+
+  @override
+  String failedToUpdateTags(String error) {
+    return 'टैग अपडेट करने में विफल: $error';
+  }
+
+  @override
   String get unusedTagIndicator => 'अप्रयुक्त';
 
   @override
