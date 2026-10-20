@@ -29,6 +29,9 @@ if ($From -lt 1 -or $From -gt 5) {
 # Force PowerShell to use UTF-8 encoding for console output to display special characters correctly
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
+# Force Node.js / Firebase CLI to prefer IPv4 over broken IPv6 handshakes
+$env:NODE_OPTIONS = "--dns-result-order=ipv4first"
+
 # Define Paths
 $InnoSetupPath = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
 $InstallerScript = ".\windows_installer.iss"
