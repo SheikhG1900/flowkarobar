@@ -165,6 +165,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get transactionUpdated => 'लेनदेन सफलतापूर्वक अपडेट किया गया';
 
   @override
+  String get updated => 'अपडेट किया गया';
+
+  @override
   String get markAsReviewed => 'समीक्षित के रूप में चिह्नित करें';
 
   @override

@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/features/accounts/presentation/widgets/transfer_account_box.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
@@ -1368,7 +1369,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
             label: contact.name,
             icon: Icons.person_outline,
             theme: theme,
-            color: AppColors.receivableColor,
+            color: AppColors.getContactColor(contact.name),
             onClear: () {
               ref.read(transactionsPaginatedProvider.notifier).applyFilters(
                 currentFilters.copyWith(
@@ -1387,12 +1388,18 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
         final isNoAccount = accountUuid == 'no_account';
         final acc = accounts.firstWhereOrNull((a) => a.uuid == accountUuid);
         final label = isNoAccount ? l10n.noAccount : (acc?.name ?? accountUuid);
+        final accColor = isNoAccount
+            ? AppColors.transactionsSectionColor
+            : (acc != null ? TransferAccountBox.accentColorFor(acc, theme) : AppColors.transactionsSectionColor);
+        final accIcon = isNoAccount
+            ? Icons.account_balance_wallet_outlined
+            : (acc != null ? TransferAccountBox.iconForAccount(acc) : Icons.account_balance_wallet_outlined);
 
         chips.add(_buildFilterChip(
           label: label,
-          icon: Icons.account_balance_wallet_outlined,
+          icon: accIcon,
           theme: theme,
-          color: AppColors.transactionsSectionColor,
+          color: accColor,
           onClear: () {
             ref.read(transactionsPaginatedProvider.notifier).applyFilters(
               currentFilters.copyWith(

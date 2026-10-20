@@ -400,6 +400,12 @@ abstract class AppLocalizations {
   /// **'Transaction updated successfully'**
   String get transactionUpdated;
 
+  /// Label for indicating when a record was last updated
+  ///
+  /// In en, this message translates to:
+  /// **'Updated'**
+  String get updated;
+
   /// No description provided for @markAsReviewed.
   ///
   /// In en, this message translates to:

@@ -64,6 +64,7 @@
   "deleteSchedule": "شیڈول حذف کریں",
   "deleteScheduleConfirmation": "کیا آپ واقعی اس شیڈول کو حذف کرنا چاہتے ہیں؟ اس سے اس شیڈول کے تمام مستقبل کے خودکار لین دین بند ہو جائیں گے۔",
   "transactionUpdated": "لین دین کامیابی سے اپ ڈیٹ ہو گیا",
+  "updated": "اپ ڈیٹ کیا گیا",
   "markAsReviewed": "بطور جائزہ نشان زد کریں",
   "transactionMarkedAsReviewed": "لین دین کا جائزہ مکمل ہو گیا",
   "updateTransaction": "لین دین اپ ڈیٹ کریں",

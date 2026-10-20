@@ -165,6 +165,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get transactionUpdated => 'لین دین کامیابی سے اپ ڈیٹ ہو گیا';
 
   @override
+  String get updated => 'اپ ڈیٹ کیا گیا';
+
+  @override
   String get markAsReviewed => 'بطور جائزہ نشان زد کریں';
 
   @override

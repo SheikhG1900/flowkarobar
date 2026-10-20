@@ -164,6 +164,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get transactionUpdated => 'Transaction updated successfully';
 
   @override
+  String get updated => 'Updated';
+
+  @override
   String get markAsReviewed => 'Mark as Reviewed';
 
   @override

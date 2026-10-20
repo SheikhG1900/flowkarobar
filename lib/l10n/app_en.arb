@@ -64,6 +64,10 @@
   "deleteSchedule": "Delete Schedule",
   "deleteScheduleConfirmation": "Are you sure you want to delete this schedule? This will stop all future automatic transactions for this schedule.",
   "transactionUpdated": "Transaction updated successfully",
+  "updated": "Updated",
+  "@updated": {
+    "description": "Label for indicating when a record was last updated"
+  },
   "markAsReviewed": "Mark as Reviewed",
   "transactionMarkedAsReviewed": "Transaction marked as reviewed",
   "updateTransaction": "Update Transaction",

@@ -64,6 +64,7 @@
   "deleteSchedule": "शेड्यूल हटाएं",
   "deleteScheduleConfirmation": "क्या आप वाकई इस शेड्यूल को हटाना चाहते हैं? यह इस शेड्यूल के लिए भविष्य के सभी स्वचालित लेनदेन बंद कर देगा।",
   "transactionUpdated": "लेनदेन सफलतापूर्वक अपडेट किया गया",
+  "updated": "अपडेट किया गया",
   "markAsReviewed": "समीक्षित के रूप में चिह्नित करें",
   "transactionMarkedAsReviewed": "लेन-देन को समीक्षित के रूप में चिह्नित किया गया है",
   "updateTransaction": "लेनदेन अपडेट करें",

@@ -173,6 +173,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
   }) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
     final pr = transaction.paidRelationship as String?;
     String displayDesc = '';
     if (transaction.description != null && (transaction.description as String).isNotEmpty) {
@@ -579,6 +580,41 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       ),
                     ),
                   ),
+                Positioned(
+                  top: 10,
+                  left: isRtl ? 10 : null,
+                  right: isRtl ? null : 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          l10n.updated.toUpperCase(),
+                          style: TextStyle(
+                            color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+                            fontSize: 7.5,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          AppDateFormatter.formatRelativeTime(transaction.updatedAt as DateTime, context),
+                          style: TextStyle(
+                            color: isExpense ? AppColors.expenseColor : AppColors.incomeColor,
+                            fontSize: 9,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
 
