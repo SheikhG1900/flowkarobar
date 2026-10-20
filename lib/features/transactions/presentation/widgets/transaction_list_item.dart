@@ -16,6 +16,7 @@ import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_ic
 import 'package:flowpaisa/features/transactions/presentation/widgets/split_icon_badge.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_account_icon_badge.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_tags_icon_badge.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/contact_solid_pill.dart';
 
 class TransactionListItem extends ConsumerStatefulWidget {
   final TransactionWithDetails item;
@@ -248,27 +249,11 @@ class _TransactionListItemState extends ConsumerState<TransactionListItem> {
                       // Contact tag as a solid gradient pill (avatar format)
                       if (contact != null) ...[
                         SizedBox(height: isCompact ? 4 : 6),
-                        Container(
+                        ContactSolidPill(
                           key: ValueKey('tx-card-contact-${transaction.uuid}'),
-                          padding: EdgeInsets.symmetric(
-                              horizontal: isCompact ? 8 : 10,
-                              vertical: isCompact ? 3 : 4),
-                          decoration: BoxDecoration(
-                            gradient: AppColors.getContactGradient(contact.name),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Text(
-                            key: ValueKey('tx-card-contact-name-${transaction.uuid}'),
-                            contact.name,
-                            style: const TextStyle(
-                              fontSize: 9.5,
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.15,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          contactName: contact.name,
+                          textKey: ValueKey('tx-card-contact-name-${transaction.uuid}'),
+                          isCompact: isCompact,
                         ),
                       ],
                     ],

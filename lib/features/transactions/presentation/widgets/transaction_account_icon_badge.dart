@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/transfer_account_box.dart';
+import 'corner_badge_container.dart';
 
 /// Small account icon on the card corner (bottom, same horizontal side as split badge in LTR).
 class TransactionAccountIconBadge extends StatelessWidget {
@@ -30,38 +31,17 @@ class TransactionAccountIconBadge extends StatelessWidget {
       right: isRtl ? horizontalOffset - 8 : null,
       left: isRtl ? null : horizontalOffset - 8,
       child: Opacity(
-        key:
-            key != null ? ValueKey('${(key as ValueKey).value}-opacity') : null,
+        key: key != null ? ValueKey('${(key as ValueKey).value}-opacity') : null,
         opacity: isInactive ? 0.6 : 1.0,
         child: Tooltip(
-          key: key != null
-              ? ValueKey('${(key as ValueKey).value}-tooltip')
-              : null,
+          key: key != null ? ValueKey('${(key as ValueKey).value}-tooltip') : null,
           message: account.name,
-          child: Container(
-            key: key != null
-                ? ValueKey('${(key as ValueKey).value}-container')
-                : null,
+          child: CornerBadgeContainer(
+            containerKey: key != null ? ValueKey('${(key as ValueKey).value}-container') : null,
+            accentColor: accent,
             padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: theme.cardColor,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-              border: Border.all(
-                color: accent.withValues(alpha: 0.2),
-                width: 1,
-              ),
-            ),
             child: Icon(
-              key: key != null
-                  ? ValueKey('${(key as ValueKey).value}-icon')
-                  : null,
+              key: key != null ? ValueKey('${(key as ValueKey).value}-icon') : null,
               TransferAccountBox.iconForAccount(account),
               size: 14,
               color: accent,

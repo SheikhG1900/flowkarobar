@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
+import 'corner_badge_container.dart';
 
 /// Small colorful tag indicator on the card corner with a soft elevated shadow effect.
 /// Shows [icon + name] if there's only a single tag, or a [row of icons] if there are multiple.
@@ -51,31 +52,13 @@ class TransactionTagsIconBadge extends ConsumerWidget {
       left: isRtl ? -8 : null,
       child: Opacity(
         opacity: isInactive ? 0.6 : 1.0,
-        child: Container(
+        child: CornerBadgeContainer(
+          accentColor: primaryTagColor,
+          borderRadius: 16,
+          hasDoubleShadow: true,
           padding: EdgeInsets.symmetric(
             horizontal: isSingleTag ? 8 : 7,
             vertical: isSingleTag ? 4 : 5,
-          ),
-          decoration: BoxDecoration(
-            color: theme.cardColor,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              // Double shadow to simulate a modern soft elevation 2 effect
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.14),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 3,
-                offset: const Offset(0, 1),
-              ),
-            ],
-            border: Border.all(
-              color: primaryTagColor.withValues(alpha: 0.35),
-              width: 1,
-            ),
           ),
           child: isSingleTag
               ? _buildSingleTag(firstTag, primaryTagColor)

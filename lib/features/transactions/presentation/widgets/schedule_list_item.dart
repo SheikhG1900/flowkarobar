@@ -1,4 +1,5 @@
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_account_icon_badge.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/contact_solid_pill.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
@@ -200,33 +201,15 @@ class _ScheduleListItemState extends ConsumerState<ScheduleListItem> {
                           ),
                           if (contact != null) ...[
                             const SizedBox(height: 8),
-                            // Contact tag as a solid gradient pill (avatar format)
-                            Container(
+                            ContactSolidPill(
                               key: key != null
-                                  ? ValueKey(
-                                      '${(key as ValueKey).value}-contact-tag')
+                                  ? ValueKey('${(key as ValueKey).value}-contact-tag')
                                   : null,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                gradient: AppColors.getContactGradient(contact.name),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                key: key != null
-                                    ? ValueKey(
-                                        '${(key as ValueKey).value}-contact-name')
-                                    : null,
-                                contact.name,
-                                style: const TextStyle(
-                                  fontSize: 9.5,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.15,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                              contactName: contact.name,
+                              textKey: key != null
+                                  ? ValueKey('${(key as ValueKey).value}-contact-name')
+                                  : null,
+                              isCompact: false,
                             ),
                           ],
                         ],

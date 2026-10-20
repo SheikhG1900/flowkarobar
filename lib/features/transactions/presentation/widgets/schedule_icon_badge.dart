@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'corner_badge_container.dart';
 
 /// Small schedule icon on the card corner (top-right corner in LTR, same appearance as account and tag badges).
 class ScheduleIconBadge extends StatelessWidget {
@@ -7,7 +8,6 @@ class ScheduleIconBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isRtl = Directionality.of(context) == TextDirection.rtl;
-    final theme = Theme.of(context);
     final accent = Colors.blue;
 
     return Positioned(
@@ -18,24 +18,10 @@ class ScheduleIconBadge extends StatelessWidget {
       child: Opacity(
         key: key != null ? ValueKey('${(key as ValueKey).value}-opacity') : null,
         opacity: 1.0,
-        child: Container(
-          key: key != null ? ValueKey('${(key as ValueKey).value}-container') : null,
+        child: CornerBadgeContainer(
+          containerKey: key != null ? ValueKey('${(key as ValueKey).value}-container') : null,
+          accentColor: accent,
           padding: const EdgeInsets.all(2),
-          decoration: BoxDecoration(
-            color: theme.cardColor,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.15),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
-            border: Border.all(
-              color: accent.withValues(alpha: 0.2),
-              width: 1,
-            ),
-          ),
           child: Icon(
             key: key != null ? ValueKey('${(key as ValueKey).value}-icon') : null,
             Icons.schedule,
