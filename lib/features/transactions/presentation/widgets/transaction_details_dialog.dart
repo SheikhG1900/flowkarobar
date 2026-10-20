@@ -88,6 +88,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
 
     return itemAsync.when(
       skipLoadingOnRefresh: true,
+      skipLoadingOnReload: true,
       data: (item) {
         if (item == null) {
           return Scaffold(
@@ -111,6 +112,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
 
         return groupAsync.when(
           skipLoadingOnRefresh: true,
+          skipLoadingOnReload: true,
           data: (group) {
             final isSplitGroup = group.length > 1;
             return _buildContent(
@@ -806,6 +808,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
 
             // Tags display section card (unified, real-time reactive)
             ref.watch(transactionTagsProvider(transaction.uuid)).when(
+                  skipLoadingOnRefresh: true,
+                  skipLoadingOnReload: true,
                   data: (assignedTags) {
                     final currentUuids = assignedTags.map((t) => t.uuid).toList();
                     return Column(
@@ -1069,6 +1073,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
 
           // Attachments Section
           ref.watch(transactionDocumentsProvider(transaction.uuid)).when(
+                skipLoadingOnRefresh: true,
+                skipLoadingOnReload: true,
                 data: (docs) {
                   return FutureBuilder<Directory>(
                     future: ref.read(transactionDocumentsRepositoryProvider).getDocumentsDirectory(),
@@ -1219,6 +1225,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
             ],
 
           relatedAsync.when(
+            skipLoadingOnRefresh: true,
+            skipLoadingOnReload: true,
             data: (related) {
               if (related.length <= 1) return const SizedBox.shrink();
               
@@ -1417,6 +1425,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                             pattern: ref.watch(userProfileProvider).dateFormat,
                           ),
                           leadingOverride: scheduleAsync.when(
+                            skipLoadingOnRefresh: true,
+                            skipLoadingOnReload: true,
                             data: (sched) {
                               final isMonthly = sched?.schedule.scheduleType == 'MONTHLY';
                               final text = isMonthly
@@ -2650,6 +2660,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       budgetSnapshotAsync.when(
+                        skipLoadingOnRefresh: true,
+                        skipLoadingOnReload: true,
                         data: (snapshot) {
                           final periodNetText = AmountFormatter.formatWithCurrency(
                             snapshot.netAmount,
@@ -2825,6 +2837,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       accountWithBalanceAsync.when(
+                        skipLoadingOnRefresh: true,
+                        skipLoadingOnReload: true,
                         data: (awb) {
                           if (awb == null) return const SizedBox.shrink();
                           final balanceText = AmountFormatter.formatWithCurrency(
@@ -3466,6 +3480,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                           ),
                           const SizedBox(width: 8),
                           ref.watch(contactStatisticsProvider(contact.uuid)).when(
+                            skipLoadingOnRefresh: true,
+                            skipLoadingOnReload: true,
                             data: (stats) {
                               final formattedBalance = AmountFormatter.formatWithCurrency(
                                 stats.netBalance.abs(),
@@ -3788,6 +3804,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                           ),
                           const SizedBox(width: 8),
                           ref.watch(contactStatisticsProvider(contact.uuid)).when(
+                            skipLoadingOnRefresh: true,
+                            skipLoadingOnReload: true,
                             data: (stats) {
                               final formattedBalance = AmountFormatter.formatWithCurrency(
                                 stats.netBalance.abs(),
@@ -4053,6 +4071,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 ),
                 Expanded(
                   child: categoriesAsync.when(
+                    skipLoadingOnRefresh: true,
+                    skipLoadingOnReload: true,
                     data: (categoriesWithUsage) {
                       if (categoriesWithUsage.isEmpty) {
                         return Center(
