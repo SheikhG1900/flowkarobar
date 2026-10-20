@@ -742,7 +742,7 @@ class TransactionsRepository {
     query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
 
     return query.get().then((rows) {
-      return rows.map((row) {
+      final transactions = rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
           category: row.readTableOrNull(_database.categories),
@@ -752,6 +752,7 @@ class TransactionsRepository {
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );
       }).toList();
+      return _populateTagsForTransactions(transactions);
     });
   }
 
@@ -1069,7 +1070,7 @@ class TransactionsRepository {
     query.limit(limit, offset: offset);
 
     return query.get().then((rows) {
-      return rows.map((row) {
+      final transactions = rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
           category: row.readTableOrNull(_database.categories),
@@ -1079,6 +1080,7 @@ class TransactionsRepository {
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );
       }).toList();
+      return _populateTagsForTransactions(transactions);
     });
   }
 
@@ -1269,8 +1271,8 @@ class TransactionsRepository {
     query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
     query.limit(limit, offset: offset);
 
-    return query.watch().map((rows) {
-      return rows.map((row) {
+    return query.watch().asyncMap((rows) async {
+      final transactions = rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
           category: row.readTableOrNull(_database.categories),
@@ -1280,6 +1282,7 @@ class TransactionsRepository {
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );
       }).toList();
+      return await _populateTagsForTransactions(transactions);
     });
   }
 
@@ -1317,8 +1320,8 @@ class TransactionsRepository {
       ..orderBy([OrderingTerm.desc(_database.transactions.date)])
       ..limit(limit, offset: offset);
 
-    return query.watch().map((rows) {
-      return rows.map((row) {
+    return query.watch().asyncMap((rows) async {
+      final transactions = rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
           category: row.readTableOrNull(_database.categories),
@@ -1328,6 +1331,7 @@ class TransactionsRepository {
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );
       }).toList();
+      return await _populateTagsForTransactions(transactions);
     });
   }
 
@@ -1366,7 +1370,7 @@ class TransactionsRepository {
       ..limit(limit, offset: offset);
 
     return query.get().then((rows) {
-      return rows.map((row) {
+      final transactions = rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
           category: row.readTableOrNull(_database.categories),
@@ -1376,6 +1380,7 @@ class TransactionsRepository {
           linkedReceivable: row.readTableOrNull(_database.receivables),
         );
       }).toList();
+      return _populateTagsForTransactions(transactions);
     });
   }
 
@@ -1543,6 +1548,37 @@ class TransactionsRepository {
             isNotSynced: Value(true),
           ));
     });
+  }
+
+  Future<List<TransactionWithDetails>> _populateTagsForTransactions(
+      List<TransactionWithDetails> transactions) async {
+    if (transactions.isEmpty) return transactions;
+
+    final transactionUuids =
+        transactions.map((t) => t.transaction.uuid).toList();
+
+    final junctionRows = await (_database.select(_database.transactionTags)
+          ..where((tt) =>
+              tt.transactionUuid.isIn(transactionUuids) &
+              tt.isDeleted.equals(false)))
+        .get();
+
+    final Map<String, List<String>> txTagsMap = <String, List<String>>{};
+    for (final row in junctionRows) {
+      final txUuid = row.transactionUuid;
+      final tagUuid = row.tagUuid;
+      var list = txTagsMap[txUuid];
+      if (list == null) {
+        list = <String>[];
+        txTagsMap[txUuid] = list;
+      }
+      list.add(tagUuid);
+    }
+
+    return transactions.map((t) {
+      final tagUuids = txTagsMap[t.transaction.uuid] ?? const <String>[];
+      return t.copyWith(tagUuids: tagUuids);
+    }).toList();
   }
 }
 

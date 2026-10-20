@@ -2,17 +2,20 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
+import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/schedule_icon_badge.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/split_icon_badge.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_account_icon_badge.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_tags_icon_badge.dart';
 
 class TransactionListItem extends ConsumerStatefulWidget {
   final TransactionWithDetails item;
@@ -458,6 +461,13 @@ class _TransactionListItemState extends ConsumerState<TransactionListItem> {
           TransactionAccountIconBadge(
             key: ValueKey('tx-card-acc-badge-${transaction.uuid}'),
             account: account,
+            theme: theme,
+            isInactive: isInactive,
+          ),
+        // Tags icon badge (placed at the other bottom corner)
+        if (item.tagUuids.isNotEmpty)
+          TransactionTagsIconBadge(
+            tagUuids: item.tagUuids,
             theme: theme,
             isInactive: isInactive,
           ),

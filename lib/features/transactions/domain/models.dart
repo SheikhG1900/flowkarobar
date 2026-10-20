@@ -11,6 +11,7 @@ class TransactionWithDetails {
   final Account? account;
   final Payable? linkedPayable;
   final Receivable? linkedReceivable;
+  final List<String> tagUuids;
 
   TransactionWithDetails({
     required this.transaction,
@@ -19,7 +20,28 @@ class TransactionWithDetails {
     this.account,
     this.linkedPayable,
     this.linkedReceivable,
+    this.tagUuids = const <String>[],
   });
+
+  TransactionWithDetails copyWith({
+    Transaction? transaction,
+    Category? category,
+    Contact? contact,
+    Account? account,
+    Payable? linkedPayable,
+    Receivable? linkedReceivable,
+    List<String>? tagUuids,
+  }) {
+    return TransactionWithDetails(
+      transaction: transaction ?? this.transaction,
+      category: category ?? this.category,
+      contact: contact ?? this.contact,
+      account: account ?? this.account,
+      linkedPayable: linkedPayable ?? this.linkedPayable,
+      linkedReceivable: linkedReceivable ?? this.linkedReceivable,
+      tagUuids: tagUuids ?? this.tagUuids,
+    );
+  }
 
   @override
   bool operator ==(Object other) =>
@@ -31,7 +53,8 @@ class TransactionWithDetails {
           contact == other.contact &&
           account == other.account &&
           linkedPayable == other.linkedPayable &&
-          linkedReceivable == other.linkedReceivable;
+          linkedReceivable == other.linkedReceivable &&
+          const ListEquality<String>().equals(tagUuids, other.tagUuids);
 
   @override
   int get hashCode =>
@@ -40,7 +63,8 @@ class TransactionWithDetails {
       contact.hashCode ^
       account.hashCode ^
       linkedPayable.hashCode ^
-      linkedReceivable.hashCode;
+      linkedReceivable.hashCode ^
+      const ListEquality<String>().hash(tagUuids);
 
   /// Returns true if the linked payable/receivable is marked/settled
   bool get isLinkedEntryMarked {

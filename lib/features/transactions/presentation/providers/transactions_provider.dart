@@ -961,6 +961,14 @@ final allTagsProvider = StreamProvider<List<Tag>>((ref) {
   return repository.watchAllTags();
 });
 
+final allTagsMapProvider = Provider.autoDispose<Map<String, Tag>>((ref) {
+  final tagsAsync = ref.watch(allTagsProvider);
+  return tagsAsync.maybeWhen(
+    data: (tags) => {for (final tag in tags) tag.uuid: tag},
+    orElse: () => const <String, Tag>{},
+  );
+});
+
 final tagsByUsageProvider = StreamProvider<List<Tag>>((ref) {
   final repository = ref.watch(transactionsRepositoryProvider);
   return repository.watchTagsByUsage();
