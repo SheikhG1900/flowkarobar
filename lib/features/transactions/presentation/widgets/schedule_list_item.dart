@@ -72,11 +72,13 @@ class _ScheduleListItemState extends ConsumerState<ScheduleListItem> {
 
     final key = widget.key;
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          key: widget.key,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3.0),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            key: widget.key,
           decoration: BoxDecoration(
             color: theme.cardColor.withValues(alpha: isInactive ? 0.6 : 1.0),
             borderRadius: BorderRadius.circular(20),
@@ -377,6 +379,7 @@ class _ScheduleListItemState extends ConsumerState<ScheduleListItem> {
             isInactive: isInactive,
           ),
       ],
+    ),
     );
   }
 

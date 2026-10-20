@@ -105,10 +105,12 @@ class _TransactionListItemState extends ConsumerState<TransactionListItem> {
 
     final bool showActiveBorder = isHighlighted || _isHovered;
 
-    return Stack(
-      key: ValueKey('tx-card-stack-${transaction.uuid}'),
-      clipBehavior: Clip.none,
-      children: [
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: isCompact ? 1.0 : 3.0),
+      child: Stack(
+        key: ValueKey('tx-card-stack-${transaction.uuid}'),
+        clipBehavior: Clip.none,
+        children: [
         Container(
           key: ValueKey('tx-card-container-${transaction.uuid}'),
           decoration: BoxDecoration(
@@ -418,6 +420,7 @@ class _TransactionListItemState extends ConsumerState<TransactionListItem> {
             isInactive: isInactive,
           ),
       ],
+    ),
     );
   }
 
