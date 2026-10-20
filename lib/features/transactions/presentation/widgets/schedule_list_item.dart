@@ -200,73 +200,32 @@ class _ScheduleListItemState extends ConsumerState<ScheduleListItem> {
                           ),
                           if (contact != null) ...[
                             const SizedBox(height: 8),
-                            // Contact tag
+                            // Contact tag as a solid gradient pill (avatar format)
                             Container(
                               key: key != null
                                   ? ValueKey(
                                       '${(key as ValueKey).value}-contact-tag')
                                   : null,
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
+                                  horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: AppColors.getContactColor(contact.name)
-                                    .withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(4),
-                                border: Border.all(
-                                  color: AppColors.getContactColor(contact.name)
-                                      .withValues(alpha: 0.3),
-                                  width: 1,
-                                ),
+                                gradient: AppColors.getContactGradient(contact.name),
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              child: Row(
+                              child: Text(
                                 key: key != null
                                     ? ValueKey(
-                                        '${(key as ValueKey).value}-contact-row')
+                                        '${(key as ValueKey).value}-contact-name')
                                     : null,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    key: key != null
-                                        ? ValueKey(
-                                            '${(key as ValueKey).value}-contact-avatar')
-                                        : null,
-                                    width: 12,
-                                    height: 12,
-                                    decoration: BoxDecoration(
-                                      gradient: AppColors.getContactGradient(
-                                          contact.name),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      contact.name.isNotEmpty
-                                          ? contact.name[0].toUpperCase()
-                                          : '?',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 6,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Flexible(
-                                    child: Text(
-                                      key: key != null
-                                          ? ValueKey(
-                                              '${(key as ValueKey).value}-contact-name')
-                                          : null,
-                                      contact.name,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color:
-                                            theme.colorScheme.onSurfaceVariant,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
+                                contact.name,
+                                style: const TextStyle(
+                                  fontSize: 9.5,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.15,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],

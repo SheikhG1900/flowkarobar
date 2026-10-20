@@ -245,68 +245,29 @@ class _TransactionListItemState extends ConsumerState<TransactionListItem> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      // Contact tag
+                      // Contact tag as a solid gradient pill (avatar format)
                       if (contact != null) ...[
                         SizedBox(height: isCompact ? 4 : 6),
                         Container(
                           key: ValueKey('tx-card-contact-${transaction.uuid}'),
                           padding: EdgeInsets.symmetric(
-                              horizontal: isCompact ? 4 : 6,
-                              vertical: isCompact ? 2 : 3),
+                              horizontal: isCompact ? 8 : 10,
+                              vertical: isCompact ? 3 : 4),
                           decoration: BoxDecoration(
-                            color: AppColors.getContactColor(contact.name)
-                                .withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: AppColors.getContactColor(contact.name)
-                                  .withValues(alpha: 0.3),
-                              width: 1,
-                            ),
+                            gradient: AppColors.getContactGradient(contact.name),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Row(
-                            key: ValueKey(
-                                'tx-card-contact-row-${transaction.uuid}'),
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                key: ValueKey(
-                                    'tx-card-contact-avatar-${transaction.uuid}'),
-                                width: 14,
-                                height: 14,
-                                decoration: BoxDecoration(
-                                  gradient: AppColors.getContactGradient(
-                                      contact.name),
-                                  shape: BoxShape.circle,
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  key: ValueKey(
-                                      'tx-card-contact-initial-${transaction.uuid}'),
-                                  contact.name.isNotEmpty
-                                      ? contact.name[0].toUpperCase()
-                                      : '?',
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 7,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Flexible(
-                                child: Text(
-                                  key: ValueKey(
-                                      'tx-card-contact-name-${transaction.uuid}'),
-                                  contact.name,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
+                          child: Text(
+                            key: ValueKey('tx-card-contact-name-${transaction.uuid}'),
+                            contact.name,
+                            style: const TextStyle(
+                              fontSize: 9.5,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.15,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
