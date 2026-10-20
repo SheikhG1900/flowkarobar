@@ -736,7 +736,14 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                       onTap: () {
                         setState(() {
                           _selectedType = 'EXPENSE';
-                          _paidRelationship = 'PROCESSED';
+                          if (_paidRelationship == 'WILL_RECEIVE') {
+                            _paidRelationship = 'PAID_FOR';
+                          } else if (_paidRelationship == 'RECEIVED_FROM') {
+                            _paidRelationship = 'PAID_BY';
+                          } else {
+                            _paidRelationship = 'PROCESSED';
+                            _dueDate = null;
+                          }
                         });
                       },
                     ),
@@ -751,7 +758,14 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
                       onTap: () {
                         setState(() {
                           _selectedType = 'INCOME';
-                          _paidRelationship = 'PROCESSED';
+                          if (_paidRelationship == 'PAID_FOR') {
+                            _paidRelationship = 'WILL_RECEIVE';
+                          } else if (_paidRelationship == 'PAID_BY') {
+                            _paidRelationship = 'RECEIVED_FROM';
+                          } else {
+                            _paidRelationship = 'PROCESSED';
+                            _dueDate = null;
+                          }
                         });
                       },
                     ),
