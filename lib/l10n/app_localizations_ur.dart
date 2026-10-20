@@ -4962,4 +4962,21 @@ class AppLocalizationsUr extends AppLocalizations {
   String createTagQuery(String tagName) {
     return 'ٹیگ \"$tagName\" بنائیں';
   }
+
+  @override
+  String get renameTagTitle => 'ٹیگ کا نام تبدیل کریں';
+
+  @override
+  String get tagNameLabel => 'ٹیگ کا نام';
+
+  @override
+  String get tagOptions => 'ٹیگ کے اختیارات';
+
+  @override
+  String get longPressTagHint =>
+      'نام تبدیل کرنے یا حذف کرنے کے لیے کسی بھی ٹیگ پر دیر تک دبائیں';
+
+  @override
+  String get tagRenamedSuccessfully =>
+      'ٹیگ کا نام کامیابی کے ساتھ تبدیل ہو گیا';
 }

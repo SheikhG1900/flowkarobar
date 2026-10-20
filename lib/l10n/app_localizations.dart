@@ -9016,6 +9016,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Create Tag \"{tagName}\"'**
   String createTagQuery(String tagName);
+
+  /// No description provided for @renameTagTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Tag'**
+  String get renameTagTitle;
+
+  /// No description provided for @tagNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag Name'**
+  String get tagNameLabel;
+
+  /// No description provided for @tagOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag Options'**
+  String get tagOptions;
+
+  /// No description provided for @longPressTagHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Long press any tag to rename or delete'**
+  String get longPressTagHint;
+
+  /// No description provided for @tagRenamedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Tag renamed successfully'**
+  String get tagRenamedSuccessfully;
 }
 
 class _AppLocalizationsDelegate

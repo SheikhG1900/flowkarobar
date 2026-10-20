@@ -223,6 +223,28 @@ class _TagSelectionSheetState extends ConsumerState<TagSelectionSheet> {
                             ),
                           ),
                         ] else ...[
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline_rounded,
+                                  size: 14,
+                                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    l10n.longPressTagHint,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                           Wrap(
                             spacing: 10,
                             runSpacing: 10,
@@ -233,70 +255,73 @@ class _TagSelectionSheetState extends ConsumerState<TagSelectionSheet> {
                                   : AppColors.getTagColor(tag.name);
                               final isOrphan = (usageCounts[tag.uuid] ?? 0) == 0;
 
-                              return Tooltip(
-                                message: isOrphan ? l10n.deleteTagTitle : '',
-                                child: isOrphan
-                                    ? InputChip(
-                                        label: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(tag.name),
-                                          ],
+                              return GestureDetector(
+                                onLongPress: () => _showTagOptions(tag),
+                                child: Tooltip(
+                                  message: isOrphan ? l10n.deleteTagTitle : '',
+                                  child: isOrphan
+                                      ? InputChip(
+                                          label: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(tag.name),
+                                            ],
+                                          ),
+                                          selected: isSelected,
+                                          onSelected: (selected) {
+                                            setState(() {
+                                              if (selected) {
+                                                _selectedTagUuids.add(tag.uuid);
+                                              } else {
+                                                _selectedTagUuids.remove(tag.uuid);
+                                              }
+                                            });
+                                          },
+                                          backgroundColor: theme.colorScheme.surface,
+                                          selectedColor: tagColor.withValues(alpha: 0.2),
+                                          side: BorderSide(
+                                            color: isSelected ? tagColor : tagColor.withValues(alpha: 0.3),
+                                            width: isSelected ? 1.5 : 1.0,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(16),
+                                          ),
+                                          labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                                            color: isSelected ? tagColor : tagColor.withValues(alpha: 0.7),
+                                            fontWeight: isSelected ? FontWeight.bold : null,
+                                            fontStyle: FontStyle.italic,
+                                            fontSize: 12,
+                                          ),
+                                          deleteIcon: Icon(Icons.close, size: 14, color: tagColor.withValues(alpha: 0.7)),
+                                          onDeleted: () => _handleDeleteTag(tag),
+                                        )
+                                      : FilterChip(
+                                          label: Text(tag.name),
+                                          selected: isSelected,
+                                          onSelected: (selected) {
+                                            setState(() {
+                                              if (selected) {
+                                                _selectedTagUuids.add(tag.uuid);
+                                              } else {
+                                                _selectedTagUuids.remove(tag.uuid);
+                                              }
+                                            });
+                                          },
+                                          backgroundColor: theme.colorScheme.surface,
+                                          selectedColor: tagColor.withValues(alpha: 0.2),
+                                          side: BorderSide(
+                                            color: isSelected ? tagColor : tagColor.withValues(alpha: 0.35),
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(16),
+                                          ),
+                                          labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                                            color: isSelected ? tagColor : tagColor.withValues(alpha: 0.7),
+                                            fontWeight: isSelected ? FontWeight.bold : null,
+                                            fontSize: 12,
+                                          ),
                                         ),
-                                        selected: isSelected,
-                                        onSelected: (selected) {
-                                          setState(() {
-                                            if (selected) {
-                                              _selectedTagUuids.add(tag.uuid);
-                                            } else {
-                                              _selectedTagUuids.remove(tag.uuid);
-                                            }
-                                          });
-                                        },
-                                        backgroundColor: theme.colorScheme.surface,
-                                        selectedColor: tagColor.withValues(alpha: 0.2),
-                                        side: BorderSide(
-                                          color: isSelected ? tagColor : tagColor.withValues(alpha: 0.3),
-                                          width: isSelected ? 1.5 : 1.0,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                        ),
-                                        labelStyle: theme.textTheme.bodyMedium?.copyWith(
-                                          color: isSelected ? tagColor : tagColor.withValues(alpha: 0.7),
-                                          fontWeight: isSelected ? FontWeight.bold : null,
-                                          fontStyle: FontStyle.italic,
-                                          fontSize: 12,
-                                        ),
-                                        deleteIcon: Icon(Icons.close, size: 14, color: tagColor.withValues(alpha: 0.7)),
-                                        onDeleted: () => _handleTagLongPress(context, tag),
-                                      )
-                                    : FilterChip(
-                                        label: Text(tag.name),
-                                        selected: isSelected,
-                                        onSelected: (selected) {
-                                          setState(() {
-                                            if (selected) {
-                                              _selectedTagUuids.add(tag.uuid);
-                                            } else {
-                                              _selectedTagUuids.remove(tag.uuid);
-                                            }
-                                          });
-                                        },
-                                        backgroundColor: theme.colorScheme.surface,
-                                        selectedColor: tagColor.withValues(alpha: 0.2),
-                                        side: BorderSide(
-                                          color: isSelected ? tagColor : tagColor.withValues(alpha: 0.35),
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(16),
-                                        ),
-                                        labelStyle: theme.textTheme.bodyMedium?.copyWith(
-                                          color: isSelected ? tagColor : tagColor.withValues(alpha: 0.7),
-                                          fontWeight: isSelected ? FontWeight.bold : null,
-                                          fontSize: 12,
-                                        ),
-                                      ),
+                                ),
                               );
                             }).toList(),
                           ),
@@ -354,7 +379,157 @@ class _TagSelectionSheetState extends ConsumerState<TagSelectionSheet> {
     }
   }
 
-  Future<void> _handleTagLongPress(BuildContext context, Tag tag) async {
+  void _showTagOptions(Tag tag) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final tagColor = tag.color != null
+        ? Color(int.parse(tag.color!))
+        : AppColors.getTagColor(tag.name);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 32,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: tagColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        tag.name,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Divider(),
+              ListTile(
+                leading: Icon(Icons.edit_outlined, color: theme.colorScheme.onSurface),
+                title: Text(l10n.rename),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _showRenameDialog(tag);
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.delete_outline_rounded, color: theme.colorScheme.error),
+                title: Text(l10n.delete),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _handleDeleteTag(tag);
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showRenameDialog(Tag tag) async {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController(text: tag.name);
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.renameTagTitle),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: controller,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: l10n.tagNameLabel,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            validator: (val) {
+              if (val == null || val.trim().isEmpty) {
+                return l10n.addTagHint;
+              }
+              return null;
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (formKey.currentState?.validate() ?? false) {
+                final newName = controller.text.trim();
+                Navigator.pop(ctx);
+
+                if (newName == tag.name) return;
+
+                try {
+                  final repo = ref.read(transactionsRepositoryProvider);
+                  await repo.updateTag(tag.uuid, newName);
+                  if (mounted) {
+                    ToastUtils.showSuccessToast(
+                      context,
+                      ref,
+                      l10n.tagRenamedSuccessfully,
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    final errorMessage = e is ArgumentError ? e.message : e.toString();
+                    ToastUtils.showErrorToast(
+                      context,
+                      ref,
+                      l10n.failedToUpdateTags(errorMessage),
+                    );
+                  }
+                }
+              }
+            },
+            child: Text(l10n.rename),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleDeleteTag(Tag tag) async {
     final repo = ref.read(transactionsRepositoryProvider);
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);

@@ -2518,5 +2518,10 @@
         "type": "String"
       }
     }
-  }
+  },
+  "renameTagTitle": "Rename Tag",
+  "tagNameLabel": "Tag Name",
+  "tagOptions": "Tag Options",
+  "longPressTagHint": "Long press any tag to rename or delete",
+  "tagRenamedSuccessfully": "Tag renamed successfully"
 }

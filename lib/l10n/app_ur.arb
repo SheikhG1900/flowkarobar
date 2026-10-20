@@ -1929,5 +1929,10 @@
         "type": "String"
       }
     }
-  }
+  },
+  "renameTagTitle": "ٹیگ کا نام تبدیل کریں",
+  "tagNameLabel": "ٹیگ کا نام",
+  "tagOptions": "ٹیگ کے اختیارات",
+  "longPressTagHint": "نام تبدیل کرنے یا حذف کرنے کے لیے کسی بھی ٹیگ پر دیر تک دبائیں",
+  "tagRenamedSuccessfully": "ٹیگ کا نام کامیابی کے ساتھ تبدیل ہو گیا"
 }

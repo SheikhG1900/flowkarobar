@@ -1150,6 +1150,29 @@ class TransactionsRepository {
     return (result.data['count'] as num).toInt();
   }
 
+  // Update tag name and/or color
+  Future<void> updateTag(String uuid, String newName, {String? color}) async {
+    final cleanName = newName.trim();
+    if (cleanName.isEmpty) throw ArgumentError('Tag name cannot be empty');
+
+    // Check if another active tag with the same name already exists
+    final existing = await (_database.select(_database.tags)
+          ..where((t) => t.name.equals(cleanName) & t.isDeleted.equals(false) & t.uuid.equals(uuid).not()))
+        .getSingleOrNull();
+
+    if (existing != null) {
+      throw ArgumentError('A tag with the name "$cleanName" already exists.');
+    }
+
+    await (_database.update(_database.tags)..where((t) => t.uuid.equals(uuid)))
+        .write(TagsCompanion(
+          name: Value(cleanName),
+          color: color != null ? Value(color) : const Value.absent(),
+          updatedAt: Value(DateTime.now()),
+          isNotSynced: const Value(true),
+        ));
+  }
+
   // Soft-delete a tag (and its associations) so it syncs deletion to the cloud
   Future<void> deleteTag(String uuid) async {
     await _database.transaction(() async {

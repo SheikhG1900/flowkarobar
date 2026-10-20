@@ -4942,4 +4942,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String createTagQuery(String tagName) {
     return 'Create Tag \"$tagName\"';
   }
+
+  @override
+  String get renameTagTitle => 'Rename Tag';
+
+  @override
+  String get tagNameLabel => 'Tag Name';
+
+  @override
+  String get tagOptions => 'Tag Options';
+
+  @override
+  String get longPressTagHint => 'Long press any tag to rename or delete';
+
+  @override
+  String get tagRenamedSuccessfully => 'Tag renamed successfully';
 }
