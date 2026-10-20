@@ -1243,7 +1243,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
   }) {
     final chipColor = color;
     return Container(
-      margin: const EdgeInsets.only(right: 8),
+      margin: const EdgeInsetsDirectional.only(end: 8),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: chipColor.withValues(alpha: 0.08),

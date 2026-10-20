@@ -67,37 +67,39 @@ class CategoryTagFilterRow extends ConsumerWidget {
                     fontSize: 12,
                   ),
                 ),
-                const SizedBox(width: 8),
 
                 // "Without Tags" Chip
-                FilterChip(
-                  avatar: Icon(
-                    Icons.block,
-                    size: 14,
-                    color: isWithoutTagsSelected
-                        ? primaryColor
-                        : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
-                  ),
-                  showCheckmark: false,
-                  label: Text(l10n.filterWithoutTags),
-                  selected: isWithoutTagsSelected,
-                  onSelected: (_) {
-                    ref.read(categoryFilterTagsProvider.notifier).toggleTag('no_tag');
-                  },
-                  backgroundColor: theme.colorScheme.surface,
-                  selectedColor: primaryColor.withValues(alpha: 0.15),
-                  side: BorderSide(
-                    color: isWithoutTagsSelected
-                        ? primaryColor
-                        : theme.colorScheme.outline.withValues(alpha: 0.4),
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  labelStyle: theme.textTheme.bodyMedium?.copyWith(
-                    color: isWithoutTagsSelected ? primaryColor : theme.colorScheme.onSurfaceVariant,
-                    fontWeight: isWithoutTagsSelected ? FontWeight.bold : null,
-                    fontSize: 12,
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 8),
+                  child: FilterChip(
+                    avatar: Icon(
+                      Icons.block,
+                      size: 14,
+                      color: isWithoutTagsSelected
+                          ? primaryColor
+                          : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                    ),
+                    showCheckmark: false,
+                    label: Text(l10n.filterWithoutTags),
+                    selected: isWithoutTagsSelected,
+                    onSelected: (_) {
+                      ref.read(categoryFilterTagsProvider.notifier).toggleTag('no_tag');
+                    },
+                    backgroundColor: theme.colorScheme.surface,
+                    selectedColor: primaryColor.withValues(alpha: 0.15),
+                    side: BorderSide(
+                      color: isWithoutTagsSelected
+                          ? primaryColor
+                          : theme.colorScheme.outline.withValues(alpha: 0.4),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    labelStyle: theme.textTheme.bodyMedium?.copyWith(
+                      color: isWithoutTagsSelected ? primaryColor : theme.colorScheme.onSurfaceVariant,
+                      fontWeight: isWithoutTagsSelected ? FontWeight.bold : null,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
 
@@ -109,7 +111,7 @@ class CategoryTagFilterRow extends ConsumerWidget {
                       : AppColors.getTagColor(tag.name);
 
                   return Padding(
-                    padding: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsetsDirectional.only(start: 8),
                     child: FilterChip(
                       showCheckmark: false,
                       label: Text(tag.name),
