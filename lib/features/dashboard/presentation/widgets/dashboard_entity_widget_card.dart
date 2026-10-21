@@ -28,6 +28,7 @@ import 'package:flowpaisa/features/accounts/presentation/screens/account_detail_
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_account_icon_badge.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/recent_update_pill.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
@@ -129,6 +130,9 @@ class _DashboardEntityWidgetCardState
                 ],
               );
             }
+            final diff = DateTime.now().difference(item.transaction.updatedAt);
+            final isRecentlyUpdated = diff.inHours.abs() <= 24;
+
             return Stack(
               clipBehavior: Clip.none,
               children: [
@@ -164,6 +168,19 @@ class _DashboardEntityWidgetCardState
                     theme: theme,
                     bottomOffset: 10.0,
                     horizontalOffset: 0,
+                  ),
+                if (isRecentlyUpdated)
+                  Positioned(
+                    bottom: 8,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: RecentUpdatePill(
+                        key: ValueKey('entity-tx-recent-update-$uuid'),
+                        updatedAt: item.transaction.updatedAt,
+                        isCompact: true,
+                      ),
+                    ),
                   ),
               ],
             );

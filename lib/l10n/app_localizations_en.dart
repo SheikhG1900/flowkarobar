@@ -1663,6 +1663,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recentTransactions => 'Recent Transactions';
 
   @override
+  String get recentUpdates => 'Recent Updates';
+
+  @override
   String get viewAll => 'View All';
 
   @override

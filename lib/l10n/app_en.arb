@@ -912,6 +912,7 @@
   "voiceAdd": "Voice Add",
   "scan": "Scan",
   "recentTransactions": "Recent Transactions",
+  "recentUpdates": "Recent Updates",
   "viewAll": "View All",
   "noTransactionsYet": "No transactions yet",
   "tapToAddFirst": "Tap + to add your first transaction",

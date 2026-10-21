@@ -7,6 +7,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/core/utils/localization_helper.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_details_dialog.dart';
@@ -17,6 +18,7 @@ import 'package:flowpaisa/features/transactions/presentation/widgets/split_icon_
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_account_icon_badge.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_tags_icon_badge.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/contact_solid_pill.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/recent_update_pill.dart';
 
 class TransactionListItem extends ConsumerStatefulWidget {
   final TransactionWithDetails item;
@@ -102,6 +104,9 @@ class _TransactionListItemState extends ConsumerState<TransactionListItem> {
     final linkedGroupId = transaction.linkedGroupId;
     final showSplitBadge = linkedGroupId != null && linkedGroupId.isNotEmpty;
     final account = item.account;
+
+    final diff = DateTime.now().difference(transaction.updatedAt);
+    final isRecentlyUpdated = diff.inHours.abs() <= 24;
 
     final bool showActiveBorder = isHighlighted || _isHovered;
 
@@ -418,6 +423,20 @@ class _TransactionListItemState extends ConsumerState<TransactionListItem> {
             tagUuids: item.tagUuids,
             theme: theme,
             isInactive: isInactive,
+          ),
+        // Conditional Centered Bottom Recent Update Badge
+        if (isRecentlyUpdated)
+          Positioned(
+            bottom: -6,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: RecentUpdatePill(
+                key: ValueKey('tx-card-recent-update-${transaction.uuid}'),
+                updatedAt: transaction.updatedAt,
+                isCompact: isCompact,
+              ),
+            ),
           ),
       ],
     ),

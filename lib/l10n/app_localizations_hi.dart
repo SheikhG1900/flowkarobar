@@ -1670,6 +1670,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get recentTransactions => 'हाल के लेन-देन';
 
   @override
+  String get recentUpdates => 'हाल के अपडेट';
+
+  @override
   String get viewAll => 'सभी देखें';
 
   @override

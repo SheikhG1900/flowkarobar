@@ -609,7 +609,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
                               color: theme.colorScheme.primary, size: 20),
                           const SizedBox(width: 8),
                           Text(
-                            l10n.recentTransactions,
+                            l10n.recentUpdates,
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),

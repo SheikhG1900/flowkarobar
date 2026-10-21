@@ -1673,6 +1673,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get recentTransactions => 'حالیہ لین دین';
 
   @override
+  String get recentUpdates => 'حالیہ اپڈیٹس';
+
+  @override
   String get viewAll => 'تمام دیکھیں';
 
   @override

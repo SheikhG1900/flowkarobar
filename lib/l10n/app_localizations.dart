@@ -3112,6 +3112,12 @@ abstract class AppLocalizations {
   /// **'Recent Transactions'**
   String get recentTransactions;
 
+  /// No description provided for @recentUpdates.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Updates'**
+  String get recentUpdates;
+
   /// No description provided for @viewAll.
   ///
   /// In en, this message translates to:

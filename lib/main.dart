@@ -74,6 +74,7 @@ import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/transaction_account_icon_badge.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/recent_update_pill.dart';
 import 'package:flowpaisa/shared/widgets/entrance_animation.dart';
 import 'package:flowpaisa/shared/widgets/rolling_amount.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
@@ -2373,7 +2374,7 @@ class _DashboardRecentTransactionsHeader extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          l10n.recentTransactions,
+          l10n.recentUpdates,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -2516,6 +2517,9 @@ class _DashboardRecentTransactionTileState
     final category = item.category;
     final isExpense = transaction.type == 'EXPENSE';
 
+    final diff = DateTime.now().difference(transaction.updatedAt);
+    final isRecentlyUpdated = diff.inHours.abs() <= 24;
+
     Color categoryColor =
         isExpense ? AppColors.expenseColor : AppColors.incomeColor;
     if (category?.color != null) {
@@ -2603,8 +2607,14 @@ class _DashboardRecentTransactionTileState
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    subtitle: Text(AppDateFormatter.formatDate(transaction.date,
-                        pattern: dateFormat)),
+                    subtitle: Text(
+                      AppDateFormatter.formatDate(transaction.date,
+                          pattern: dateFormat),
+                      style: TextStyle(
+                        color: theme.hintColor.withValues(alpha: 0.8),
+                        fontSize: 11,
+                      ),
+                    ),
                     trailing: Text(
                       '${isExpense ? '\u200E-' : '\u200E+'} ${AmountFormatter.formatWithCurrency(transaction.amount, currency)}',
                       style: TextStyle(
@@ -2626,6 +2636,19 @@ class _DashboardRecentTransactionTileState
               theme: theme,
               bottomOffset: 8,
               horizontalOffset: 15, // adjusted offset for outer stack
+            ),
+          if (isRecentlyUpdated)
+            Positioned(
+              bottom: 2,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: RecentUpdatePill(
+                  key: ValueKey('dashboard-recent-update-${transaction.uuid}'),
+                  updatedAt: transaction.updatedAt,
+                  isCompact: true,
+                ),
+              ),
             ),
         ],
       ),
