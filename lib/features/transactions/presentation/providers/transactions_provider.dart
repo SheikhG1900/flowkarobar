@@ -260,6 +260,17 @@ final transactionsWithDetailsProvider =
       .debounceTime(const Duration(milliseconds: 100));
 });
 
+// Watch recent updates (transactions with ALL details, sorted by last modified/updated time)
+final recentTransactionsWithDetailsProvider =
+    StreamProvider<List<TransactionWithDetails>>((ref) {
+  final repository = ref.watch(transactionsRepositoryProvider);
+
+  return repository
+      .watchRecentTransactionsWithDetails(limit: 5)
+      .distinct((prev, next) => const ListEquality().equals(prev, next))
+      .debounceTime(const Duration(milliseconds: 100));
+});
+
 // Watch a single transaction with details by UUID
 final transactionWithDetailsProvider =
     StreamProvider.family<TransactionWithDetails?, String>((ref, uuid) {

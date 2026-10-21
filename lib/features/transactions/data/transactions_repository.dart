@@ -44,6 +44,31 @@ class TransactionsRepository {
         .watch();
   }
 
+  // Watch recent updates with ALL details (category + contact), sorted by last modified/updated time
+  Stream<List<TransactionWithDetails>> watchRecentTransactionsWithDetails({int limit = 5}) {
+    final query = _database.joinTransactionWithDetails(
+        _database.select(_database.transactions))
+      ..where(_database.transactions.isDeleted.equals(false))
+      ..orderBy([
+        OrderingTerm.desc(_database.transactions.updatedAt),
+        OrderingTerm.desc(_database.transactions.createdAt),
+      ])
+      ..limit(limit);
+
+    return query.watch().map((rows) {
+      return rows.map((row) {
+        return TransactionWithDetails(
+          transaction: row.readTable(_database.transactions),
+          category: row.readTableOrNull(_database.categories),
+          contact: row.readTableOrNull(_database.contacts),
+          account: row.readTableOrNull(_database.accounts),
+          linkedPayable: row.readTableOrNull(_database.payables),
+          linkedReceivable: row.readTableOrNull(_database.receivables),
+        );
+      }).toList();
+    });
+  }
+
   // Watch transaction statistics for dashboard
   Stream<TransactionStats> watchTransactionStats() {
     final now = DateTime.now();

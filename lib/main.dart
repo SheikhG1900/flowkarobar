@@ -2405,7 +2405,7 @@ class _DashboardRecentTransactionsBody extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final dateFormat =
         ref.watch(userProfileProvider.select((p) => p.dateFormat));
-    final transactionsAsync = ref.watch(transactionsWithDetailsProvider);
+    final transactionsAsync = ref.watch(recentTransactionsWithDetailsProvider);
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value;
 
