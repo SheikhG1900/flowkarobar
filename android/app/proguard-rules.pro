@@ -25,3 +25,11 @@
 # Keep In-App Purchase classes
 -keep class com.android.billingclient.** { *; }
 
+# Keep Kotlin coroutines & stdlib classes used by shared_preferences JNI/Pigeon interop
+-keep class kotlin.Unit { *; }
+-keep class kotlin.Result { *; }
+-keep class kotlin.Result$Failure { *; }
+-keep class kotlin.coroutines.Continuation { *; }
+-keep class kotlin.coroutines.intrinsics.CoroutineSingletons { *; }
+-keep class kotlin.coroutines.intrinsics.IntrinsicsKt { *; }
+
