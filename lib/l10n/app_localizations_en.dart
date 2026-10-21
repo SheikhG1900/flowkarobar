@@ -3625,6 +3625,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get changes => 'Changes';
+
+  @override
   String get updatesAvailable => 'Updates available on cloud';
 
   @override

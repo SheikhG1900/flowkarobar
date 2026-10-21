@@ -755,6 +755,10 @@ class TransactionsRepository {
         final expr = _database.transactions.processedDate.isNull();
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
+      if (has('CHANGES')) {
+        final expr = _database.transactions.isNotSynced.equals(true);
+        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
+      }
 
       // Payable side (payables linked to this transaction)
       // PAID_BY / RECEIVED_FROM => Payable side
@@ -913,6 +917,10 @@ class TransactionsRepository {
       }
       if (has('NOT_PROCESSED')) {
         final expr = _database.transactions.processedDate.isNull();
+        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
+      }
+      if (has('CHANGES')) {
+        final expr = _database.transactions.isNotSynced.equals(true);
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 

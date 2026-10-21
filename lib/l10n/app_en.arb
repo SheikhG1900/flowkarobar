@@ -1926,6 +1926,10 @@
   "categoriesAggregateTitle": "All categories",
   "syncStatusTitle": "Sync Status",
   "changesToPush": "{count, plural, =1{1 change to push} other{{count} changes to push}}",
+  "changes": "Changes",
+  "@changes": {
+    "description": "Chip label for transactions that are not synced"
+  },
   "@changesToPush": {
     "placeholders": {
       "count": {

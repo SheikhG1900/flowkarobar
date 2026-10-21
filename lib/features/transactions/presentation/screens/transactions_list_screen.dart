@@ -60,8 +60,9 @@ import 'package:flowpaisa/shared/widgets/contextual_guide.dart';
 class TransactionsListScreen extends ConsumerStatefulWidget {
   final bool startTour;
   final DateTime? initialDate;
+  final TransactionFilters? initialFilters;
   const TransactionsListScreen(
-      {super.key, this.startTour = false, this.initialDate});
+      {super.key, this.startTour = false, this.initialDate, this.initialFilters});
 
   @override
   ConsumerState<TransactionsListScreen> createState() =>
@@ -94,7 +95,9 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAndShowGuide();
-      if (widget.initialDate != null) {
+      if (widget.initialFilters != null) {
+        ref.read(transactionsPaginatedProvider.notifier).applyFilters(widget.initialFilters!);
+      } else if (widget.initialDate != null) {
         final startOfDay = DateTime(
           widget.initialDate!.year,
           widget.initialDate!.month,
@@ -1540,6 +1543,10 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
           statusLabel = l10n.receivable;
           statusIcon = Icons.pending_actions;
           statusColor = AppColors.receivableColor;
+        } else if (sc == 'CHANGES') {
+          statusLabel = l10n.changes;
+          statusIcon = Icons.sync_problem;
+          statusColor = Colors.orange;
         }
 
         chips.add(_buildFilterChip(
@@ -1941,20 +1948,24 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       Color statusColor = theme.colorScheme.primary;
 
       if (status == 'PAID' || status == 'RECEIVED' || status == 'PROCESSED') {
-        statusLabel = 'Cleared';
+        statusLabel = l10n.paid;
         statusIcon = Icons.check_circle_outline;
         statusColor = Colors.green;
       } else if (status == 'PAYABLE') {
-        statusLabel = 'Payable';
+        statusLabel = l10n.payable;
         statusIcon = Icons.payment_outlined;
         statusColor = AppColors.payableColor;
       } else if (status == 'RECEIVABLE') {
-        statusLabel = 'Receivable';
+        statusLabel = l10n.receivable;
         statusIcon = Icons.account_balance_wallet_outlined;
         statusColor = AppColors.receivableColor;
       } else if (status == 'SCHEDULED') {
-        statusLabel = 'Scheduled';
+        statusLabel = l10n.schedules;
         statusIcon = Icons.schedule_outlined;
+        statusColor = Colors.orange;
+      } else if (status == 'CHANGES') {
+        statusLabel = l10n.changes;
+        statusIcon = Icons.sync_problem;
         statusColor = Colors.orange;
       }
 

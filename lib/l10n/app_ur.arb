@@ -1391,6 +1391,10 @@
   "categoriesAggregateTitle": "تمام زمرے",
   "syncStatusTitle": "سنک کی حالت",
   "changesToPush": "{count, plural, =1{1 تبدیلی پش کرنے کے لیے} other{{count} تبدیلیاں پش کرنے کے لیے}}",
+  "changes": "تبدیلیاں",
+  "@changes": {
+    "description": "Chip label for transactions that are not synced"
+  },
   "@changesToPush": {
     "placeholders": {
       "count": {

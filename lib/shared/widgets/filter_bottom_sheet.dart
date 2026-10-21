@@ -600,6 +600,12 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
           color: theme.colorScheme.outline,
           icon: Icons.pending_outlined,
         ),
+        buildStatusChip(
+          code: 'CHANGES',
+          label: l10n.changes,
+          color: Colors.orange,
+          icon: Icons.sync_problem,
+        ),
       ],
     );
   }

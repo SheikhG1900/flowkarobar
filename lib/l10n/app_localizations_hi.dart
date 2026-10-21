@@ -3638,6 +3638,9 @@ class AppLocalizationsHi extends AppLocalizations {
   }
 
   @override
+  String get changes => 'परिवर्तन';
+
+  @override
   String get updatesAvailable => 'क्लाउड पर अपडेट उपलब्ध हैं';
 
   @override

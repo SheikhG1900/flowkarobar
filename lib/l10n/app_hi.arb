@@ -1391,6 +1391,10 @@
   "categoriesAggregateTitle": "सभी श्रेणियाँ",
   "syncStatusTitle": "सिंक स्थिति",
   "changesToPush": "{count, plural, =1{1 परिवर्तन पुश करने के लिए} other{{count} परिवर्तन पुश करने के लिए}}",
+  "changes": "परिवर्तन",
+  "@changes": {
+    "description": "Chip label for transactions that are not synced"
+  },
   "@changesToPush": {
     "placeholders": {
       "count": {

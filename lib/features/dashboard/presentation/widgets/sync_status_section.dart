@@ -13,6 +13,7 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/documents_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/accounts_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/payables_list_screen.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
@@ -262,7 +263,13 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                               case 'transactions':
                                 return () => Navigator.push(
                                       context,
-                                      MaterialPageRoute(builder: (_) => const TransactionsListScreen()),
+                                      MaterialPageRoute(
+                                        builder: (_) => TransactionsListScreen(
+                                          initialFilters: TransactionFilters(
+                                            statusCodes: ['CHANGES'],
+                                          ),
+                                        ),
+                                      ),
                                     );
                               case 'receivables':
                                 return () => Navigator.push(

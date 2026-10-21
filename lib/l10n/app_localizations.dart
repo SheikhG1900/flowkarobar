@@ -6635,6 +6635,12 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 change to push} other{{count} changes to push}}'**
   String changesToPush(int count);
 
+  /// Chip label for transactions that are not synced
+  ///
+  /// In en, this message translates to:
+  /// **'Changes'**
+  String get changes;
+
   /// No description provided for @updatesAvailable.
   ///
   /// In en, this message translates to:

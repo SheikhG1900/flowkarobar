@@ -3646,6 +3646,9 @@ class AppLocalizationsUr extends AppLocalizations {
   }
 
   @override
+  String get changes => 'تبدیلیاں';
+
+  @override
   String get updatesAvailable => 'کلاؤڈ پر اپ ڈیٹس دستیاب ہیں';
 
   @override
