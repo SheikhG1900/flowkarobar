@@ -561,7 +561,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                 if (transaction.isNotSynced == true)
                   Positioned(
                     top: -6,
-                    right: -6,
+                    left: isRtl ? -6 : null,
+                    right: isRtl ? null : -6,
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: const BoxDecoration(
@@ -584,8 +585,8 @@ class TransactionDetailsDialog extends ConsumerWidget {
                   ),
                 Positioned(
                   top: 10,
-                  left: isRtl ? 10 : null,
-                  right: isRtl ? null : 10,
+                  left: isRtl ? null : 10,
+                  right: isRtl ? 10 : null,
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
