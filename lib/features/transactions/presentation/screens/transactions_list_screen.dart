@@ -937,7 +937,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
       key: const ValueKey('transactions-list-scaffold'),
       appBar: AppBar(
             key: const ValueKey('transactions-list-appbar'),
-            toolbarHeight: hasActiveFilters && !_isSearching ? 100 : null,
+            toolbarHeight: null,
             title: _isSearching
                 ? TextField(
                     key: const ValueKey('tx-search-field'),
@@ -999,7 +999,7 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                       );
 
                       final isAllTx = titleText == 'All Transactions';
-                      final titleWidget = Text(
+                      return Text(
                         key: const ValueKey('tx-title'), 
                         isAllTx ? l10n.transactions : titleText,
                         maxLines: 1,
@@ -1008,45 +1008,55 @@ class _TransactionsListScreenState extends ConsumerState<TransactionsListScreen>
                           fontWeight: FontWeight.bold,
                         ),
                       );
-
-                      if (hasActiveFilters) {
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              titleWidget,
-                              const SizedBox(height: 8),
-                              _buildFilterChipsRow(
-                                ref,
-                                currentFilters,
-                                theme,
-                                l10n,
-                                categories,
-                                contacts,
-                                accounts,
-                                tags,
-                                currency,
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-
-                      return titleWidget;
                     },
                   ),
-            bottom: hasSchedules && !_isSearching
-                ? TabBar(
-                    key: const ValueKey('tx-tab-bar'),
-                    controller: _tabController,
-                    tabs: [
-                      Tab(key: const ValueKey('tx-tab-tx'), text: l10n.transactions),
-                      Tab(key: const ValueKey('tx-tab-sched'), text: l10n.schedules),
-                    ],
-                  )
-                : null,
+            bottom: PreferredSize(
+              preferredSize: Size.fromHeight(
+                (hasSchedules && !_isSearching ? 48.0 : 0.0) +
+                (hasActiveFilters && !_isSearching ? 36.0 : 0.0)
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (hasActiveFilters && !_isSearching)
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final categories = ref.watch(categoriesListProvider).value ?? [];
+                        final contacts = ref.watch(contactsListProvider).value ?? [];
+                        final accounts = ref.watch(accountsStreamProvider).value ?? [];
+                        final tags = ref.watch(allTagsProvider).value ?? [];
+                        final currency = ref.watch(currentCurrencyProvider).value;
+
+                        return Container(
+                          height: 36,
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                          child: _buildFilterChipsRow(
+                            ref,
+                            currentFilters,
+                            theme,
+                            l10n,
+                            categories,
+                            contacts,
+                            accounts,
+                            tags,
+                            currency,
+                          ),
+                        );
+                      },
+                    ),
+                  if (hasSchedules && !_isSearching)
+                    TabBar(
+                      key: const ValueKey('tx-tab-bar'),
+                      controller: _tabController,
+                      tabs: [
+                        Tab(key: const ValueKey('tx-tab-tx'), text: l10n.transactions),
+                        Tab(key: const ValueKey('tx-tab-sched'), text: l10n.schedules),
+                      ],
+                    ),
+                ],
+              ),
+            ),
             actions: [
               IconButton(
                 key: const ValueKey('tx-filter-btn'),
