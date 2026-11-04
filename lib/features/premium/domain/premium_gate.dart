@@ -7,9 +7,10 @@ import 'package:flowpaisa/features/premium/data/usage_tracker_repository.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart' show Category;
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/categories/data/categories_repository.dart';
 import 'package:flowpaisa/features/transactions/data/schedules_repository.dart';
@@ -127,7 +128,7 @@ final cashbookLimitsProvider = Provider.autoDispose<TotalLimits>((ref) {
   final isPremium = ref.watch(premiumProvider).isPremium;
   if (isPremium) return TotalLimits.unlimited();
 
-  final cashbooks = ref.watch(cashbooksProvider);
+  final cashbooks = ref.watch(businessesProvider);
   final used = cashbooks.length;
 
   final config = PremiumGate.featureRegistry['cashbooks']!;
@@ -211,7 +212,7 @@ class PremiumGate {
       seqFieldName: 'addSeq',
     ),
     'cashbooks': PremiumFeatureConfig(
-      name: 'Cashbooks',
+      name: 'Businesss',
       limitType: LimitType.total,
       totalLimit: 2,
       seqFieldName: 'addSeq',
@@ -361,12 +362,12 @@ class PremiumGate {
     );
   }
 
-  static TotalLimits getCashbookLimits(WidgetRef ref) {
+  static TotalLimits getBusinessLimits(WidgetRef ref) {
     if (isPremium(ref)) {
       return TotalLimits.unlimited();
     }
 
-    final cashbooks = ref.read(cashbooksProvider);
+    final cashbooks = ref.read(businessesProvider);
     final used = cashbooks.where((c) => (c.addSeq ?? 0) <= cashbookTotalLimit).length;
 
     return TotalLimits(

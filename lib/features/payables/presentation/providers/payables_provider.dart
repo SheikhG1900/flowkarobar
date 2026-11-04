@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/core/database/database.dart' hide Payable;
+import 'package:flowpaisa/features/transactions/domain/models.dart' show Payable;
 import 'package:flowpaisa/features/payables/data/payables_repository.dart';
 import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';

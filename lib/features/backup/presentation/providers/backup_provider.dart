@@ -7,8 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
 import 'package:flowpaisa/features/backup/data/backup_repository.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
-import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
+import 'package:flowpaisa/features/businesses/domain/models/business.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/features/backup/domain/models/sync_manifest.dart';
@@ -204,7 +204,7 @@ class BackupNotifier extends Notifier<BackupState> {
     });
 
     // Watch for cashbook changes to refresh state
-    ref.listen(activeCashbookProvider, (previous, next) {
+    ref.listen(activeBusinessProvider, (previous, next) {
       if (previous?.id != next.id) {
         _init();
       }
@@ -219,7 +219,7 @@ class BackupNotifier extends Notifier<BackupState> {
   Future<void> _init() async {
     // Reset state to initial (except user) to avoid showing data from previous cashbook
     final currentUser = state.currentUser;
-    final activeCashbook = ref.read(activeCashbookProvider);
+    final activeCashbook = ref.read(activeBusinessProvider);
     state = BackupState.initial().copyWith(
       currentUser: currentUser,
       selectedCloudCashbookId: activeCashbook.id,
@@ -303,12 +303,12 @@ class BackupNotifier extends Notifier<BackupState> {
       final cashbooksJson = prefs.getStringList('cashbooks_list');
       if (cashbooksJson == null || cashbooksJson.isEmpty) return;
 
-      final activeCashbook = ref.read(activeCashbookProvider);
+      final activeCashbook = ref.read(activeBusinessProvider);
       final isPremium = ref.read(premiumProvider).isPremiumActive;
       
-      final cashbooks = cashbooksJson.map((j) => Cashbook.fromJson(j)).toList();
+      final businesses = cashbooksJson.map((j) => Business.fromJson(j)).toList();
       
-      for (final cashbook in cashbooks) {
+      for (final cashbook in businesses) {
         // Skip the active cashbook (already handled by triggerSync)
         if (cashbook.id == activeCashbook.id) continue;
 
@@ -391,7 +391,7 @@ class BackupNotifier extends Notifier<BackupState> {
       }
 
       // Ensure the active cashbook ID is in the list and has its current metadata
-      final activeCashbook = ref.read(activeCashbookProvider);
+      final activeCashbook = ref.read(activeBusinessProvider);
       if (!ids.contains(activeCashbook.id)) {
         ids.insert(0, activeCashbook.id);
       }
@@ -422,7 +422,7 @@ class BackupNotifier extends Notifier<BackupState> {
 
       state = state.copyWith(isLoading: true, error: null, syncStatus: 'Syncing...');
 
-      final activeCashbook = ref.read(activeCashbookProvider);
+      final activeCashbook = ref.read(activeBusinessProvider);
       final db = ref.read(databaseProvider);
       
       final syncEngine = SyncEngine(
@@ -482,7 +482,7 @@ class BackupNotifier extends Notifier<BackupState> {
 
   Future<void> _refreshSyncProgress() async {
     final db = ref.read(databaseProvider);
-    final activeCashbook = ref.read(activeCashbookProvider);
+    final activeCashbook = ref.read(activeBusinessProvider);
     final prefs = await SharedPreferences.getInstance();
 
     try {
@@ -568,7 +568,7 @@ class BackupNotifier extends Notifier<BackupState> {
   }
 
   Future<void> _checkFinalStatus() async {
-    final activeCashbook = ref.read(activeCashbookProvider);
+    final activeCashbook = ref.read(activeBusinessProvider);
     final prefs = await SharedPreferences.getInstance();
     await prefs.reload();
     final status =
@@ -634,18 +634,13 @@ class BackupNotifier extends Notifier<BackupState> {
       // We watch the tables using their specific generated classes to satisfy Drift's type system.
       // This is the most reliable way to get updates whenever any row in the table changes.
       final streams = [
-        db.select(db.categories).watch(),
+        db.select(db.productCategories).watch(),
         db.select(db.contacts).watch(),
         db.select(db.accounts).watch(),
         db.select(db.transactions).watch(),
         db.select(db.accountTransfers).watch(),
-        db.select(db.receivables).watch(),
-        db.select(db.payables).watch(),
-        db.select(db.reminders).watch(),
         db.select(db.appCurrencies).watch(),
-        db.select(db.transactionSchedules).watch(),
         db.select(db.userPreferences).watch(),
-        db.select(db.transactionDocuments).watch(),
       ];
 
       for (final stream in streams) {
@@ -669,7 +664,7 @@ class BackupNotifier extends Notifier<BackupState> {
     if (!_driveService.isSignedIn || !_driveService.isDriveApiInitialized)
       return;
 
-    final activeCashbook = ref.read(activeCashbookProvider);
+    final activeCashbook = ref.read(activeBusinessProvider);
     try {
       final folderId = await _driveService.getOrCreateCashbookFolder(
         activeCashbook.id,
@@ -947,18 +942,12 @@ class BackupNotifier extends Notifier<BackupState> {
           // Stream-based providers (dashboard, recent transactions) will re-query and
           // emit new data without invalidating Riverpod state, avoiding dashboard flicker.
     db.markTablesUpdated({
-      db.categories,
+      db.productCategories,
       db.contacts,
       db.accounts,
       db.transactions,
       db.accountTransfers,
-      db.receivables,
-      db.payables,
-      db.reminders,
       db.appCurrencies,
-      db.transactionSchedules,
-      db.tags,
-      db.transactionTags,
     });
 
           // If we just finished a sync (transitioned from syncing to success), trigger refresh
@@ -1035,18 +1024,12 @@ class BackupNotifier extends Notifier<BackupState> {
           'BackupNotifier: Notifying main isolate about background updates...');
     }
     db.markTablesUpdated({
-      db.categories,
+      db.productCategories,
       db.contacts,
       db.accounts,
       db.transactions,
       db.accountTransfers,
-      db.receivables,
-      db.payables,
-      db.reminders,
       db.appCurrencies,
-      db.transactionSchedules,
-      db.tags,
-      db.transactionTags,
     });
 
     // Do NOT invalidate StreamProviders or paginated Notifiers here: Drift streams
@@ -1127,7 +1110,7 @@ class BackupNotifier extends Notifier<BackupState> {
       await _driveService.signIn();
     }
 
-    final activeCashbook = ref.read(activeCashbookProvider);
+    final activeCashbook = ref.read(activeBusinessProvider);
     try {
       final folderId = await _driveService.getOrCreateCashbookFolder(
         activeCashbook.id,
@@ -1287,7 +1270,7 @@ class BackupNotifier extends Notifier<BackupState> {
   }
 
   Future<void> loadBackups() async {
-    final activeCashbook = ref.read(activeCashbookProvider);
+    final activeCashbook = ref.read(activeBusinessProvider);
     await loadBackupsForCashbook(activeCashbook.id);
   }
 
@@ -1335,7 +1318,7 @@ class BackupNotifier extends Notifier<BackupState> {
       }
 
       // 2. Find if we already have this cashbook locally
-      final cashbooks = ref.read(cashbooksProvider);
+      final cashbooks = ref.read(businessesProvider);
       final existing = cashbooks.where((c) => c.id == cashbookId).toList();
 
       String dbPath;
@@ -1345,7 +1328,7 @@ class BackupNotifier extends Notifier<BackupState> {
       } else {
         // Create a NEW cashbook entry locally if it doesn't exist
         dbPath = 'cashbook_$cashbookId';
-        final newCashbook = Cashbook(
+        final newCashbook = Business(
           id: cashbookId,
           name: cloudName,
           colorCode: cloudColor,
@@ -1354,13 +1337,13 @@ class BackupNotifier extends Notifier<BackupState> {
           createdAt: DateTime.now(),
         );
         await ref
-            .read(cashbooksProvider.notifier)
-            .addCashbookFromCloud(newCashbook);
+            .read(businessesProvider.notifier)
+            .addBusinessFromCloud(newCashbook);
         if (kDebugMode) print('[BackupNotifier] Created new local cashbook entry for ID: $cashbookId');
       }
 
       // 3. If active, we MUST close the database before repository.restore overwrites it
-      final isActive = ref.read(activeCashbookIdProvider) == cashbookId;
+      final isActive = ref.read(activeBusinessIdProvider) == cashbookId;
       if (isActive) {
         if (kDebugMode) print('[BackupNotifier] Active cashbook. Closing database connection...');
         try {
@@ -1383,7 +1366,7 @@ class BackupNotifier extends Notifier<BackupState> {
       if (isActive) {
         if (kDebugMode) print('[BackupNotifier] Invalidating providers to refresh UI...');
         ref.invalidate(databaseProvider);
-        ref.invalidate(activeCashbookProvider);
+        ref.invalidate(activeBusinessProvider);
       }
 
       state = state.copyWith(
@@ -1402,7 +1385,7 @@ class BackupNotifier extends Notifier<BackupState> {
     }
   }
 
-  Future<void> backup(AppLocalizations l10n, {Cashbook? targetCashbook}) async {
+  Future<void> backup(AppLocalizations l10n, {Business? targetCashbook}) async {
     if (state.isBackingUp) return; // Prevent concurrent backups
 
     try {
@@ -1416,7 +1399,7 @@ class BackupNotifier extends Notifier<BackupState> {
         await _driveService.signIn(); // This triggers initialization
       }
 
-      final Cashbook cashbook = targetCashbook ?? ref.read(activeCashbookProvider);
+      final Business cashbook = targetCashbook ?? ref.read(activeBusinessProvider);
       if (kDebugMode) {
         print(
             'Starting backup for cashbook: ${cashbook.name}, path: ${cashbook.dbPath}');
@@ -1462,7 +1445,7 @@ class BackupNotifier extends Notifier<BackupState> {
       final time = await _repository.getLastBackupTime(cashbookId: cashbook.id);
 
       // Only update state if the current view is for this cashbook
-      final activeCashbook = ref.read(activeCashbookProvider);
+      final activeCashbook = ref.read(activeBusinessProvider);
       if (activeCashbook.id == cashbook.id) {
         state = state.copyWith(
           isBackingUp: false,
@@ -1662,7 +1645,7 @@ class BackupNotifier extends Notifier<BackupState> {
   Future<void> restore(String fileId) async {
     try {
       state = state.copyWith(isLoading: true, error: null);
-      final activeCashbook = ref.read(activeCashbookProvider);
+      final activeCashbook = ref.read(activeBusinessProvider);
       await _repository.restore(fileId, fileName: activeCashbook.dbPath);
       state = state.copyWith(isLoading: false);
     } catch (e) {
@@ -1675,7 +1658,7 @@ class BackupNotifier extends Notifier<BackupState> {
     try {
       state = state.copyWith(isLoading: true, error: null);
 
-      final activeCashbook = ref.read(activeCashbookProvider);
+      final activeCashbook = ref.read(activeBusinessProvider);
 
       // 1. Get local version from restored DB
       final db = ref.read(databaseProvider);
@@ -1757,7 +1740,7 @@ class BackupNotifier extends Notifier<BackupState> {
       // If we cleared sync history, we should also reset local sync state for this cashbook
       // to avoid version mismatches next time we sync.
       if (clearSync) {
-        final activeCashbook = ref.read(activeCashbookProvider);
+        final activeCashbook = ref.read(activeBusinessProvider);
         if (activeCashbook.id == cashbookId) {
           await resetLocalSyncState();
         }

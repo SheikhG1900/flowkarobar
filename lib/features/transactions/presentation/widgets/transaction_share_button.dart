@@ -125,7 +125,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
       // Ensure external ID is persisted before sharing
       final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        transactionUuid: widget.transaction.uuid,
+        widget.transaction.uuid,
       );
 
       // Generate reciprocal link
@@ -187,7 +187,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
       // Ensure external ID is persisted before sharing
       final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        transactionUuid: widget.transaction.uuid,
+        widget.transaction.uuid,
       );
 
       // Generate reciprocal link

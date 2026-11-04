@@ -4,7 +4,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
 import 'package:flowpaisa/features/backup/domain/models/sync_manifest.dart';
 import 'package:flowpaisa/features/backup/domain/models/sync_version_file.dart';
-import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
+import 'package:flowpaisa/features/businesses/domain/models/business.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
@@ -46,12 +46,12 @@ Future<void> _runWithRetryOnBusy(Future<void> Function() fn) async {
 class SyncEngine {
   final AppDatabase _db;
   final GoogleDriveService _driveService;
-  final Cashbook _cashbook;
+  final Business _cashbook;
 
   SyncEngine({
     required AppDatabase db,
     required GoogleDriveService driveService,
-    required Cashbook cashbook,
+    required Business cashbook,
   })  : _db = db,
         _driveService = driveService,
         _cashbook = cashbook;
@@ -158,10 +158,9 @@ class SyncEngine {
           _db.contacts,
           _db.accounts,
           _db.accountTransfers,
-          _db.receivables,
-          _db.payables,
-          _db.tags,
-          _db.transactionTags,
+          _db.orders,
+          _db.orderItems,
+          _db.products,
         });
       }
 
@@ -688,14 +687,11 @@ class SyncEngine {
       _db.contacts,
       _db.accounts,
       _db.accountTransfers,
-      _db.receivables,
-      _db.payables,
-      _db.reminders,
+      _db.orders,
+      _db.orderItems,
+      _db.products,
       _db.appCurrencies,
-      _db.transactionSchedules,
       _db.userPreferences,
-      _db.tags,
-      _db.transactionTags,
     });
   }
 
@@ -719,15 +715,18 @@ class SyncEngine {
         'contacts',
         'app_currencies',
         'accounts',
-        'tags',
         'transactions',
-        'transaction_tags',
         'account_transfers',
-        'receivables',
-        'payables',
-        'reminders',
-        'transaction_schedules',
-        'transaction_documents',
+        'products',
+        'product_batches',
+        'catalogs',
+        'catalog_items',
+        'catalog_assignments',
+        'catalog_tiered_discounts',
+        'orders',
+        'order_items',
+        'order_returns',
+        'order_return_items',
         'user_preferences',
       ];
 
@@ -801,26 +800,32 @@ class SyncEngine {
                 return _db.contacts;
               case 'accounts':
                 return _db.accounts;
-              case 'tags':
-                return _db.tags;
-              case 'transaction_tags':
-                return _db.transactionTags;
               case 'transactions':
                 return _db.transactions;
               case 'account_transfers':
                 return _db.accountTransfers;
-              case 'receivables':
-                return _db.receivables;
-              case 'payables':
-                return _db.payables;
-              case 'reminders':
-                return _db.reminders;
+              case 'products':
+                return _db.products;
+              case 'product_batches':
+                return _db.productBatches;
+              case 'catalogs':
+                return _db.catalogs;
+              case 'catalog_items':
+                return _db.catalogItems;
+              case 'catalog_assignments':
+                return _db.catalogAssignments;
+              case 'catalog_tiered_discounts':
+                return _db.catalogTieredDiscounts;
+              case 'orders':
+                return _db.orders;
+              case 'order_items':
+                return _db.orderItems;
+              case 'order_returns':
+                return _db.orderReturns;
+              case 'order_return_items':
+                return _db.orderReturnItems;
               case 'app_currencies':
                 return _db.appCurrencies;
-              case 'transaction_schedules':
-                return _db.transactionSchedules;
-              case 'transaction_documents':
-                return _db.transactionDocuments;
               case 'user_preferences':
                 return _db.userPreferences;
               default:
@@ -980,26 +985,32 @@ class SyncEngine {
                 return _db.contacts;
               case 'accounts':
                 return _db.accounts;
-              case 'tags':
-                return _db.tags;
-              case 'transaction_tags':
-                return _db.transactionTags;
               case 'transactions':
                 return _db.transactions;
               case 'account_transfers':
                 return _db.accountTransfers;
-              case 'receivables':
-                return _db.receivables;
-              case 'payables':
-                return _db.payables;
-              case 'reminders':
-                return _db.reminders;
+              case 'products':
+                return _db.products;
+              case 'product_batches':
+                return _db.productBatches;
+              case 'catalogs':
+                return _db.catalogs;
+              case 'catalog_items':
+                return _db.catalogItems;
+              case 'catalog_assignments':
+                return _db.catalogAssignments;
+              case 'catalog_tiered_discounts':
+                return _db.catalogTieredDiscounts;
+              case 'orders':
+                return _db.orders;
+              case 'order_items':
+                return _db.orderItems;
+              case 'order_returns':
+                return _db.orderReturns;
+              case 'order_return_items':
+                return _db.orderReturnItems;
               case 'app_currencies':
                 return _db.appCurrencies;
-              case 'transaction_schedules':
-                return _db.transactionSchedules;
-              case 'transaction_documents':
-                return _db.transactionDocuments;
               case 'user_preferences':
                 return _db.userPreferences;
               default:

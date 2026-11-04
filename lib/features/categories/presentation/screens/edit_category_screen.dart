@@ -121,9 +121,8 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
       // Create updated category
       final updatedCategory = widget.category.copyWith(
         name: _nameController.text.trim(),
-        icon: drift.Value(_selectedIcon),
-        color: drift.Value(
-            '#${(_selectedColor.r * 255).toInt().toRadixString(16).padLeft(2, '0')}${(_selectedColor.g * 255).toInt().toRadixString(16).padLeft(2, '0')}${(_selectedColor.b * 255).toInt().toRadixString(16).padLeft(2, '0')}'),
+        icon: _selectedIcon,
+        color: '#${(_selectedColor.r * 255).toInt().toRadixString(16).padLeft(2, '0')}${(_selectedColor.g * 255).toInt().toRadixString(16).padLeft(2, '0')}${(_selectedColor.b * 255).toInt().toRadixString(16).padLeft(2, '0')}',
       );
 
       final success = await repository.updateCategory(updatedCategory);

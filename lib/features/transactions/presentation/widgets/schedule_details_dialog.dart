@@ -359,7 +359,7 @@ class ScheduleDetailsDialog extends ConsumerWidget {
                   children: [
                     _buildDebugInfo(context, "Schedule UUID", schedule.uuid),
                     _buildDebugInfo(
-                        context, "Schedule Type", schedule.scheduleType),
+                        context, "Schedule Type", schedule.scheduleType ?? 'DAILY'),
                     _buildDebugInfo(
                         context, "Is Paused", schedule.isPaused.toString()),
                     const SizedBox(height: 16),
@@ -459,13 +459,13 @@ class ScheduleDetailsDialog extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      _getFrequencyIcon(schedule.scheduleType),
+                      _getFrequencyIcon(schedule.scheduleType ?? 'DAILY'),
                       size: 18,
                       color: theme.colorScheme.onPrimaryContainer,
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      _getFrequencyLabel(l10n, schedule.scheduleType),
+                      _getFrequencyLabel(l10n, schedule.scheduleType ?? 'DAILY'),
                       style: theme.textTheme.labelLarge?.copyWith(
                         fontWeight: FontWeight.w600,
                         color: theme.colorScheme.onPrimaryContainer,

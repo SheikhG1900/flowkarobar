@@ -100,6 +100,576 @@ abstract class AppLocalizations {
     Locale('ur')
   ];
 
+  /// No description provided for @businesses.
+  ///
+  /// In en, this message translates to:
+  /// **'Businesses'**
+  String get businesses;
+
+  /// No description provided for @business.
+  ///
+  /// In en, this message translates to:
+  /// **'Business'**
+  String get business;
+
+  /// No description provided for @products.
+  ///
+  /// In en, this message translates to:
+  /// **'Products'**
+  String get products;
+
+  /// No description provided for @product.
+  ///
+  /// In en, this message translates to:
+  /// **'Product'**
+  String get product;
+
+  /// No description provided for @batches.
+  ///
+  /// In en, this message translates to:
+  /// **'Batches'**
+  String get batches;
+
+  /// No description provided for @batch.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch'**
+  String get batch;
+
+  /// No description provided for @expiryDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry Date'**
+  String get expiryDate;
+
+  /// No description provided for @orders.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders'**
+  String get orders;
+
+  /// No description provided for @order.
+  ///
+  /// In en, this message translates to:
+  /// **'Order'**
+  String get order;
+
+  /// No description provided for @sale.
+  ///
+  /// In en, this message translates to:
+  /// **'Sale'**
+  String get sale;
+
+  /// No description provided for @purchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase'**
+  String get purchase;
+
+  /// No description provided for @customers.
+  ///
+  /// In en, this message translates to:
+  /// **'Customers'**
+  String get customers;
+
+  /// No description provided for @customer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get customer;
+
+  /// No description provided for @suppliers.
+  ///
+  /// In en, this message translates to:
+  /// **'Suppliers'**
+  String get suppliers;
+
+  /// No description provided for @supplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Supplier'**
+  String get supplier;
+
+  /// No description provided for @taxInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax Invoice'**
+  String get taxInvoice;
+
+  /// No description provided for @purchaseReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase Receipt'**
+  String get purchaseReceipt;
+
+  /// No description provided for @reconcileInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconcile Inventory'**
+  String get reconcileInventory;
+
+  /// No description provided for @reconciliation.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconciliation'**
+  String get reconciliation;
+
+  /// No description provided for @catalogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalogs'**
+  String get catalogs;
+
+  /// No description provided for @catalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog'**
+  String get catalog;
+
+  /// No description provided for @sales.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales'**
+  String get sales;
+
+  /// No description provided for @purchases.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchases'**
+  String get purchases;
+
+  /// No description provided for @returns.
+  ///
+  /// In en, this message translates to:
+  /// **'Returns'**
+  String get returns;
+
+  /// No description provided for @more.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get more;
+
+  /// No description provided for @stock.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get stock;
+
+  /// No description provided for @toCollect.
+  ///
+  /// In en, this message translates to:
+  /// **'To Collect'**
+  String get toCollect;
+
+  /// No description provided for @toPay.
+  ///
+  /// In en, this message translates to:
+  /// **'To Pay'**
+  String get toPay;
+
+  /// No description provided for @sectionDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get sectionDetails;
+
+  /// No description provided for @sectionPricing.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing'**
+  String get sectionPricing;
+
+  /// No description provided for @sectionPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment'**
+  String get sectionPayment;
+
+  /// No description provided for @sectionDelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery'**
+  String get sectionDelivery;
+
+  /// No description provided for @sectionStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get sectionStock;
+
+  /// No description provided for @sectionSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary'**
+  String get sectionSummary;
+
+  /// No description provided for @sectionActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Actions'**
+  String get sectionActions;
+
+  /// No description provided for @noResultsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found'**
+  String get noResultsFound;
+
+  /// No description provided for @manage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get manage;
+
+  /// No description provided for @noSalesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No sales yet'**
+  String get noSalesYet;
+
+  /// No description provided for @noPurchasesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No purchases yet'**
+  String get noPurchasesYet;
+
+  /// No description provided for @noReturnsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No returns yet'**
+  String get noReturnsYet;
+
+  /// No description provided for @newSale.
+  ///
+  /// In en, this message translates to:
+  /// **'New Sale'**
+  String get newSale;
+
+  /// No description provided for @newPurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'New Purchase'**
+  String get newPurchase;
+
+  /// No description provided for @newReturn.
+  ///
+  /// In en, this message translates to:
+  /// **'New Return'**
+  String get newReturn;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Coming soon'**
+  String get comingSoon;
+
+  /// No description provided for @walkInCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk-in'**
+  String get walkInCustomer;
+
+  /// No description provided for @unpaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid'**
+  String get unpaid;
+
+  /// No description provided for @partiallyPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Partially Paid'**
+  String get partiallyPaid;
+
+  /// No description provided for @delivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get delivered;
+
+  /// No description provided for @shipped.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipped'**
+  String get shipped;
+
+  /// No description provided for @deliveryPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Pending'**
+  String get deliveryPending;
+
+  /// No description provided for @deliveryStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Status'**
+  String get deliveryStatus;
+
+  /// No description provided for @orderDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Order Details'**
+  String get orderDetails;
+
+  /// No description provided for @orderNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Order not found'**
+  String get orderNotFound;
+
+  /// No description provided for @addItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Item'**
+  String get addItem;
+
+  /// No description provided for @selectProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Product'**
+  String get selectProduct;
+
+  /// No description provided for @noProductsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No products available. Add a product first.'**
+  String get noProductsAvailable;
+
+  /// No description provided for @items.
+  ///
+  /// In en, this message translates to:
+  /// **'Items'**
+  String get items;
+
+  /// No description provided for @quantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get quantity;
+
+  /// No description provided for @discount.
+  ///
+  /// In en, this message translates to:
+  /// **'Discount'**
+  String get discount;
+
+  /// No description provided for @subtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get subtotal;
+
+  /// No description provided for @paymentNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Now'**
+  String get paymentNow;
+
+  /// No description provided for @balanceDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance Due'**
+  String get balanceDue;
+
+  /// No description provided for @showAllContacts.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all contacts'**
+  String get showAllContacts;
+
+  /// No description provided for @addAtLeastOneItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one item'**
+  String get addAtLeastOneItem;
+
+  /// No description provided for @selectAccountForPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an account to record the payment'**
+  String get selectAccountForPayment;
+
+  /// No description provided for @orderCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Order created successfully'**
+  String get orderCreated;
+
+  /// No description provided for @markDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark as Delivered'**
+  String get markDelivered;
+
+  /// No description provided for @orderMarkedDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Order marked as delivered'**
+  String get orderMarkedDelivered;
+
+  /// No description provided for @shareInvoice.
+  ///
+  /// In en, this message translates to:
+  /// **'Share Invoice'**
+  String get shareInvoice;
+
+  /// No description provided for @paymentRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment recorded successfully'**
+  String get paymentRecorded;
+
+  /// No description provided for @collectPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect Payment'**
+  String get collectPayment;
+
+  /// No description provided for @payToSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay Supplier'**
+  String get payToSupplier;
+
+  /// No description provided for @fieldRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get fieldRequired;
+
+  /// No description provided for @invalidNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid number'**
+  String get invalidNumber;
+
+  /// No description provided for @addProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Product'**
+  String get addProduct;
+
+  /// No description provided for @editProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Product'**
+  String get editProduct;
+
+  /// No description provided for @productName.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Name'**
+  String get productName;
+
+  /// No description provided for @noProductsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No products yet'**
+  String get noProductsYet;
+
+  /// No description provided for @lowStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Low stock'**
+  String get lowStock;
+
+  /// No description provided for @stockLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock: {quantity}'**
+  String stockLabel(String quantity);
+
+  /// No description provided for @deleteProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Product'**
+  String get deleteProduct;
+
+  /// No description provided for @deleteProductConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete {name}?'**
+  String deleteProductConfirm(String name);
+
+  /// No description provided for @productDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Product deleted successfully'**
+  String get productDeleted;
+
+  /// No description provided for @productSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Product saved successfully'**
+  String get productSaved;
+
+  /// No description provided for @sku.
+  ///
+  /// In en, this message translates to:
+  /// **'SKU'**
+  String get sku;
+
+  /// No description provided for @unit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get unit;
+
+  /// No description provided for @purchasePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase Price'**
+  String get purchasePrice;
+
+  /// No description provided for @retailPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Retail Price'**
+  String get retailPrice;
+
+  /// No description provided for @wholesalePrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Wholesale Price'**
+  String get wholesalePrice;
+
+  /// No description provided for @stockQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock Quantity'**
+  String get stockQuantity;
+
+  /// No description provided for @openingStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening Stock'**
+  String get openingStock;
+
+  /// No description provided for @currentStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Stock'**
+  String get currentStock;
+
+  /// No description provided for @currentStockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Managed by purchases, sales, and stock adjustments'**
+  String get currentStockHint;
+
+  /// No description provided for @minStockAlert.
+  ///
+  /// In en, this message translates to:
+  /// **'Min Stock Alert'**
+  String get minStockAlert;
+
+  /// No description provided for @isServiceProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a service (no stock tracking)'**
+  String get isServiceProduct;
+
   /// No description provided for @refresh.
   ///
   /// In en, this message translates to:
@@ -109,7 +679,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Flowpaisa'**
+  /// **'FlowKarobar'**
   String get appTitle;
 
   /// No description provided for @backgroundActivityStarted.
@@ -2023,7 +2593,7 @@ abstract class AppLocalizations {
   /// No description provided for @premiumTitle.
   ///
   /// In en, this message translates to:
-  /// **'Flowpaisa Premium'**
+  /// **'FlowKarobar Premium'**
   String get premiumTitle;
 
   /// No description provided for @unlockAllFeatures.
@@ -2719,7 +3289,7 @@ abstract class AppLocalizations {
   /// No description provided for @rateUs.
   ///
   /// In en, this message translates to:
-  /// **'Rate Flowpaisa'**
+  /// **'Rate FlowKarobar'**
   String get rateUs;
 
   /// No description provided for @tagline.
@@ -2737,7 +3307,7 @@ abstract class AppLocalizations {
   /// No description provided for @appDescription.
   ///
   /// In en, this message translates to:
-  /// **'Flowpaisa is a comprehensive personal finance and cash flow manager. Track your expenses, incomes, receivables, and payables all in one place. Features include receipt scanning, WhatsApp integration, cloud backup, and beautiful analytics.'**
+  /// **'FlowKarobar is a comprehensive business and cash flow manager. Track your sales, purchases, products, orders, receivables, and payables all in one place. Features include receipt scanning, WhatsApp integration, cloud backup, and beautiful analytics.'**
   String get appDescription;
 
   /// No description provided for @openSourceLicenses.
@@ -2911,7 +3481,7 @@ abstract class AppLocalizations {
   /// No description provided for @guideDeepLinksStep.
   ///
   /// In en, this message translates to:
-  /// **'Tap the \'Share\' icon on any transaction or receivable. This generates a unique link. When the recipient clicks the link on their device, Flowpaisa will open and allow them to import that transaction into their own cashbook.'**
+  /// **'Tap the \'Share\' icon on any transaction or receivable. This generates a unique link. When the recipient clicks the link on their device, FlowKarobar will open and allow them to import that transaction into their own cashbook.'**
   String get guideDeepLinksStep;
 
   /// No description provided for @guideImportDeepLink.
@@ -2923,7 +3493,7 @@ abstract class AppLocalizations {
   /// No description provided for @guideImportDeepLinkStep.
   ///
   /// In en, this message translates to:
-  /// **'When you receive a Flowpaisa link via WhatsApp or message, simply tap it. The app will open a preview screen showing the details. Tap \'Import\' to add it to your records. If it\'s a settlement, it will update your existing pending record.'**
+  /// **'When you receive a FlowKarobar link via WhatsApp or message, simply tap it. The app will open a preview screen showing the details. Tap \'Import\' to add it to your records. If it\'s a settlement, it will update your existing pending record.'**
   String get guideImportDeepLinkStep;
 
   /// No description provided for @guideSyncDevices.
@@ -3193,7 +3763,7 @@ abstract class AppLocalizations {
   /// No description provided for @tourWelcome.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Flowpaisa!'**
+  /// **'Welcome to FlowKarobar!'**
   String get tourWelcome;
 
   /// No description provided for @tourWelcomeDesc.
@@ -3457,7 +4027,7 @@ abstract class AppLocalizations {
   /// No description provided for @tourSettingsPremiumDesc.
   ///
   /// In en, this message translates to:
-  /// **'Unlock advanced analytics, custom message templates, and more with Flowpaisa Premium.'**
+  /// **'Unlock advanced analytics, custom message templates, and more with FlowKarobar Premium.'**
   String get tourSettingsPremiumDesc;
 
   /// No description provided for @tourAddTxAmountTitle.
@@ -4477,31 +5047,31 @@ abstract class AppLocalizations {
   /// No description provided for @sharePayableCompleted.
   ///
   /// In en, this message translates to:
-  /// **'Greetings!\n\nThe payment of {amount} on {date} has been completed.\n\nSync in Flowpaisa:\n{link}'**
+  /// **'Greetings!\n\nThe payment of {amount} on {date} has been completed.\n\nSync in FlowKarobar:\n{link}'**
   String sharePayableCompleted(String amount, String date, String link);
 
   /// No description provided for @sharePayablePending.
   ///
   /// In en, this message translates to:
-  /// **'I owe you {amount}\nDate: {date}\n\nView in Flowpaisa:\n{link}'**
+  /// **'I owe you {amount}\nDate: {date}\n\nView in FlowKarobar:\n{link}'**
   String sharePayablePending(String amount, String date, String link);
 
   /// No description provided for @shareReceivableReceived.
   ///
   /// In en, this message translates to:
-  /// **'Greetings!\n\nThe payment of {amount} on {date} has been received.\n\nSync in Flowpaisa:\n{link}'**
+  /// **'Greetings!\n\nThe payment of {amount} on {date} has been received.\n\nSync in FlowKarobar:\n{link}'**
   String shareReceivableReceived(String amount, String date, String link);
 
   /// No description provided for @shareReceivablePending.
   ///
   /// In en, this message translates to:
-  /// **'Amount to receive: {amount}\nDate: {date}\n\nView in Flowpaisa:\n{link}'**
+  /// **'Amount to receive: {amount}\nDate: {date}\n\nView in FlowKarobar:\n{link}'**
   String shareReceivablePending(String amount, String date, String link);
 
   /// No description provided for @shareTransactionMessage.
   ///
   /// In en, this message translates to:
-  /// **'Recorded a transaction of {amount} on {date}.\n\nView in Flowpaisa:\n{link}'**
+  /// **'Recorded a transaction of {amount} on {date}.\n\nView in FlowKarobar:\n{link}'**
   String shareTransactionMessage(String amount, String date, String link);
 
   /// No description provided for @shareViaWhatsApp.
@@ -6284,7 +6854,7 @@ abstract class AppLocalizations {
   /// No description provided for @clearAllCloudDataMessage.
   ///
   /// In en, this message translates to:
-  /// **'This will permanently delete ALL your Flowpaisa backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?'**
+  /// **'This will permanently delete ALL your FlowKarobar backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?'**
   String get clearAllCloudDataMessage;
 
   /// No description provided for @cloudDataClearedSuccess.
@@ -8018,13 +8588,13 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingWelcomeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Flowpaisa'**
+  /// **'Welcome to FlowKarobar'**
   String get onboardingWelcomeTitle;
 
   /// No description provided for @onboardingWelcomeBody.
   ///
   /// In en, this message translates to:
-  /// **'Your complete personal finance and cash flow manager. Take control of your money with ease, precision, and the peace of mind that your data is fully secured and private.'**
+  /// **'Your complete business and cash flow manager. Take control of your sales, purchases, and orders with ease, precision, and the peace of mind that your data is fully secured and private.'**
   String get onboardingWelcomeBody;
 
   /// No description provided for @onboardingScanTitle.
@@ -8096,7 +8666,7 @@ abstract class AppLocalizations {
   /// No description provided for @guideCreditCardsBody.
   ///
   /// In en, this message translates to:
-  /// **'Set credit limits and billing cycles. Flowpaisa will notify you before your due date so you never miss a payment.'**
+  /// **'Set credit limits and billing cycles. FlowKarobar will notify you before your due date so you never miss a payment.'**
   String get guideCreditCardsBody;
 
   /// No description provided for @guideBulkImportTitle.
@@ -8420,7 +8990,7 @@ abstract class AppLocalizations {
   /// No description provided for @updateAvailableMessage.
   ///
   /// In en, this message translates to:
-  /// **'A new version ({version}) of Flowpaisa is available. Update now to get the latest features and improvements!'**
+  /// **'A new version ({version}) of FlowKarobar is available. Update now to get the latest features and improvements!'**
   String updateAvailableMessage(String version);
 
   /// No description provided for @whatsNew.
@@ -9058,6 +9628,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tag renamed successfully'**
   String get tagRenamedSuccessfully;
+
+  /// No description provided for @todaySales.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Sales'**
+  String get todaySales;
+
+  /// No description provided for @lowStockAlert.
+  ///
+  /// In en, this message translates to:
+  /// **'Low Stock Alert'**
+  String get lowStockAlert;
 }
 
 class _AppLocalizationsDelegate

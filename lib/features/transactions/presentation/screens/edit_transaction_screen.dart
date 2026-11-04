@@ -1,5 +1,6 @@
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
@@ -268,7 +269,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
       ref.invalidate(scheduleLimitsProvider);
 
       if (mounted) {
-        final capturedActiveColor = ref.read(activeCashbookProvider).color;
+        final capturedActiveColor = ref.read(activeBusinessProvider).color;
         Navigator.pop(context);
         ToastUtils.showSuccessToast(
           context,
@@ -393,7 +394,7 @@ class _EditTransactionScreenState extends ConsumerState<EditTransactionScreen> {
         final capturedUserProfile = ref.read(userProfileProvider);
         final capturedWhatsAppService = ref.read(whatsAppServiceProvider);
         final capturedTransactionService = ref.read(transactionServiceProvider);
-        final capturedActiveColor = ref.read(activeCashbookProvider).color;
+        final capturedActiveColor = ref.read(activeBusinessProvider).color;
 
         Navigator.pop(context, true); // Return true to indicate success
 

@@ -1,4 +1,4 @@
-import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
+import 'package:flowpaisa/features/businesses/domain/models/business.dart';
 import 'package:google_mlkit_document_scanner/google_mlkit_document_scanner.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/receipt_scan/domain/receipt_ai_parser.dart';
@@ -6,7 +6,7 @@ import 'package:flowpaisa/features/currencies/presentation/providers/currencies_
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
 import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction_input.dart';
 import 'dart:io' if (dart.library.html) 'dart:html';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart'
     show InputImage, TextRecognizer;
@@ -20,10 +20,11 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/core/database/database.dart' as db;
+import 'package:flowpaisa/features/transactions/domain/models.dart' show Category;
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
@@ -257,7 +258,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     final currencySymbol = ref.watch(currencySymbolProvider);
     final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
     final l10n = AppLocalizations.of(context)!;
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
     final activeCashbookBackColor = activeCashbook.backColor(context);
     final activeCashbookForeColor = activeCashbook.foreColor(context);
 
@@ -853,8 +854,8 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
 
   /// Categories that match the current description or the receipt's parsed category.
   /// Uses fuzzy matching so OCR/voice misreads (e.g. "Afsar" vs "Absar") still suggest correctly.
-  List<db.Category> _getSuggestedCategories(
-      List<db.Category> expenseCategories) {
+  List<Category> _getSuggestedCategories(
+      List<Category> expenseCategories) {
     if (_receiptData == null || expenseCategories.isEmpty) return [];
     final descriptionLower = (_merchantController.text +
             ' ' +
@@ -862,7 +863,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
         .toLowerCase();
     final receiptCategoryLower = _receiptData!.categoryName?.toLowerCase();
     final descriptionWords = descriptionLower.split(RegExp(r'\s+'));
-    final matched = expenseCategories.where((db.Category c) {
+    final matched = expenseCategories.where((Category c) {
       final nameLower = c.name.toLowerCase();
       if (descriptionLower.contains(nameLower)) return true;
       if (receiptCategoryLower != null && nameLower == receiptCategoryLower)
@@ -890,7 +891,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
   Widget _buildCategorySuggestions(
     ThemeData theme,
     bool isDark,
-    Cashbook activeCashbook,
+    Business activeCashbook,
     AppLocalizations l10n,
   ) {
     final categoriesAsync = ref.watch(categoriesByTypeProvider('EXPENSE'));
@@ -902,7 +903,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
         if (suggested.isEmpty) return const SizedBox.shrink();
         // Auto-select first suggested category if current selection is not in the list
         final selectedInList =
-            suggested.any((db.Category c) => c.name == _selectedCategoryName);
+            suggested.any((Category c) => c.name == _selectedCategoryName);
         if (!selectedInList) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
@@ -1058,7 +1059,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     List<AmountCandidate> candidates,
     String currencySymbol,
     int decimalPlaces,
-    Cashbook activeCashbook,
+    Business activeCashbook,
     bool isDark,
     AppLocalizations l10n,
   ) {
@@ -1157,7 +1158,7 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     String currencySymbol,
     int decimalPlaces,
     bool isDark,
-    Cashbook activeCashbook,
+    Business activeCashbook,
     AppLocalizations l10n,
   ) {
     final activeCashbookBackColor = activeCashbook.backColor(context);

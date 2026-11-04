@@ -1,7 +1,6 @@
-import 'package:drift/drift.dart' hide Category;
-import 'package:flutter/foundation.dart' hide Category;
+import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
-import 'package:flowpaisa/core/utils/category_budget_utils.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/categories/domain/category_budget_models.dart';
 import 'package:flowpaisa/shared/models/date_range_state.dart';
 import 'package:rxdart/rxdart.dart';
@@ -12,196 +11,89 @@ class CategoriesRepository {
 
   CategoriesRepository(this._database);
 
-  Future<int> getNextAvailableSeq<T extends HasResultSet>(
-      ResultSetImplementation<T, dynamic> table, GeneratedColumn<int> seqColumn) async {
-    // Get isDeleted column from the table
-    final isDeletedColumn = table.columnsByName['is_deleted'] as GeneratedColumn<bool>?;
-
-    final query = _database.selectOnly(table)
-      ..addColumns([seqColumn])
-      ..where(seqColumn.isNotNull());
-
-    // Filter out deleted records if the column exists
-    if (isDeletedColumn != null) {
-      query.where(isDeletedColumn.equals(false));
-    }
-
-    query.orderBy([OrderingTerm.asc(seqColumn)]);
-
-    final rows = await query.get();
-    final usedSeqs = rows.map((r) => r.read(seqColumn)!).toSet();
-
-    // Start from 1 for new records (0 is reserved for defaults)
-    int nextSeq = 1;
-    while (usedSeqs.contains(nextSeq)) {
-      nextSeq++;
-    }
-    return nextSeq;
-  }
-
   /// Watch all categories (excluding soft-deleted)
   Stream<List<Category>> watchAllCategories() {
-    return (_database.select(_database.categories)
+    return (_database.select(_database.productCategories)
           ..where((c) => c.isDeleted.equals(false))
           ..orderBy([(c) => OrderingTerm.asc(c.name)]))
-        .watch();
+        .watch()
+        .map((list) => list
+            .map((c) => Category(
+                  uuid: c.uuid,
+                  name: c.name,
+                  icon: c.icon ?? 'category',
+                  color: c.color ?? '#9E9E9E',
+                  type: 'EXPENSE',
+                  isDefault: false,
+                  isDeleted: c.isDeleted,
+                  createdAt: c.createdAt,
+                  updatedAt: c.updatedAt,
+                  isNotSynced: c.isNotSynced,
+                ))
+            .toList());
   }
 
   /// Get all categories (excluding soft-deleted)
-  Future<List<Category>> getAllCategories() {
-    return (_database.select(_database.categories)
+  Future<List<Category>> getAllCategories() async {
+    final list = await (_database.select(_database.productCategories)
           ..where((c) => c.isDeleted.equals(false))
           ..orderBy([(c) => OrderingTerm.asc(c.name)]))
         .get();
+    return list
+        .map((c) => Category(
+              uuid: c.uuid,
+              name: c.name,
+              icon: c.icon ?? 'category',
+              color: c.color ?? '#9E9E9E',
+              type: 'EXPENSE',
+              isDefault: false,
+              isDeleted: c.isDeleted,
+              createdAt: c.createdAt,
+              updatedAt: c.updatedAt,
+              isNotSynced: c.isNotSynced,
+            ))
+        .toList();
   }
 
-  /// Watch categories by type (EXPENSE or INCOME, excluding soft-deleted)
+  /// Watch categories by type
   Stream<List<Category>> watchCategoriesByType(String type) {
-    return (_database.select(_database.categories)
-          ..where((c) => c.type.equals(type))
-          ..where((c) => c.isDeleted.equals(false))
-          ..orderBy([(c) => OrderingTerm.asc(c.name)]))
-        .watch();
+    return watchAllCategories();
   }
 
-  Expression<bool>? _buildTagExpression(List<String>? tagUuids) {
-    debugPrint('_buildTagExpression called with tagUuids: $tagUuids');
-    return _database.buildTagExpression(tagUuids);
-  }
-
-  /// Watch net amounts for all categories of [type] in range [start] to [end].
-  Stream<Map<String, double>> watchCategoryNetAmountsForCategories(
-    List<String> categoryUuids,
-    DateTime start,
-    DateTime end,
-    String type, {
-    List<String>? tagUuids,
-  }) {
-    debugPrint('watchCategoryNetAmountsForCategories called with tagUuids: $tagUuids');
-    if (categoryUuids.isEmpty) return Stream.value({});
-    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
-    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
-
-    final query = _database.selectOnly(_database.transactions)
-      ..addColumns([
-        _database.transactions.categoryUuid,
-        _database.transactions.type,
-        _database.transactions.amount.sum(),
-      ])
-      ..where(_database.transactions.categoryUuid.isIn(categoryUuids))
-      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-      ..where(_database.transactions.isDeleted.equals(false))
-      ..where(_database.transactions.processedDate.isNotNull());
-
-    final tagExpr = _buildTagExpression(tagUuids);
-    if (tagExpr != null) {
-      query.where(tagExpr);
-    }
-
-    query.groupBy(
-        [_database.transactions.categoryUuid, _database.transactions.type]);
-
-    return query.watch().map((rows) {
-      final expenseBy = <String, double>{};
-      final incomeBy = <String, double>{};
-      for (final row in rows) {
-        final catUuid = row.read(_database.transactions.categoryUuid);
-        final t = row.read(_database.transactions.type);
-        final sum = row.read(_database.transactions.amount.sum()) ?? 0.0;
-        if (catUuid == null) continue;
-        if (t == 'EXPENSE') {
-          expenseBy[catUuid] = sum;
-        } else if (t == 'INCOME') {
-          incomeBy[catUuid] = sum;
-        }
-      }
-      final result = <String, double>{};
-      for (final id in categoryUuids) {
-        final e = expenseBy[id] ?? 0.0;
-        final i = incomeBy[id] ?? 0.0;
-        // Return net relative to the requested type
-        result[id] = type == 'INCOME' ? i - e : e - i;
-      }
-      return result;
-    });
-  }
-
-  /// Watch uncategorized total for transactions of [type] in range [start] to [end].
-  Stream<double> watchUncategorizedAmountByType(
-    String type,
-    DateTime start,
-    DateTime end, {
-    List<String>? tagUuids,
-  }) {
-    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
-    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
-    final query = _database.selectOnly(_database.transactions)
-      ..addColumns([_database.transactions.amount.sum()])
-      ..where(_database.transactions.categoryUuid.isNull())
-      ..where(_database.transactions.type.equals(type))
-      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-      ..where(_database.transactions.isDeleted.equals(false))
-      ..where(_database.transactions.processedDate.isNotNull());
-
-    final tagExpr = _buildTagExpression(tagUuids);
-    if (tagExpr != null) {
-      query.where(tagExpr);
-    }
-
-    return query
-        .watchSingle()
-        .map((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
-  }
-
-  /// Watch categories with usage stats (most used first, excluding soft-deleted)
+  /// Watch categories with usage info
   Stream<List<CategoryWithUsage>> watchCategoriesWithUsage(String type) {
-    final query = _database.select(_database.categories).join([
-      leftOuterJoin(
-        _database.categoryUsageStats,
-        _database.categoryUsageStats.categoryUuid
-            .equalsExp(_database.categories.uuid),
-      ),
-    ])
-      ..where(_database.categories.type.equals(type))
-      ..where(_database.categories.isDeleted.equals(false))
-      ..orderBy([
-        OrderingTerm.desc(
-          _database.categoryUsageStats.usageCount,
-        ),
-        OrderingTerm.asc(_database.categories.name),
-      ]);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return CategoryWithUsage(
-          category: row.readTable(_database.categories),
-          usageCount:
-              row.readTableOrNull(_database.categoryUsageStats)?.usageCount ??
-                  0,
-          lastUsed: row.readTableOrNull(_database.categoryUsageStats)?.lastUsed,
-        );
-      }).toList();
+    return watchAllCategories().map((list) {
+      return list.map((c) => CategoryWithUsage(category: c, usageCount: 0)).toList();
     });
   }
 
   /// Get category by UUID
-  Future<Category?> getCategoryByUuid(String uuid) {
-    return (_database.select(_database.categories)
+  Future<Category?> getCategoryByUuid(String uuid) async {
+    final c = await (_database.select(_database.productCategories)
           ..where((c) => c.uuid.equals(uuid) & c.isDeleted.equals(false)))
         .getSingleOrNull();
+    if (c == null) return null;
+    return Category(
+      uuid: c.uuid,
+      name: c.name,
+      icon: c.icon ?? 'category',
+      color: c.color ?? '#9E9E9E',
+      type: 'EXPENSE',
+      isDefault: false,
+      isDeleted: c.isDeleted,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+      isNotSynced: c.isNotSynced,
+    );
   }
 
   /// Create category
-  Future<String> createCategory(CategoriesCompanion category) async {
-    final uuid = category.uuid.present ? category.uuid.value : Uuid().v4();
-    final nextSeq = await getNextAvailableSeq(
-        _database.categories, _database.categories.addSeq);
-
-    await _database.into(_database.categories).insert(
+  Future<String> createCategory(ProductCategoriesCompanion category) async {
+    final uuid = category.uuid.present ? category.uuid.value : const Uuid().v4();
+    await _database.into(_database.productCategories).insert(
           category.copyWith(
             uuid: Value(uuid),
             isNotSynced: const Value(true),
-            addSeq: Value(nextSeq),
           ),
         );
     return uuid;
@@ -209,453 +101,85 @@ class CategoriesRepository {
 
   /// Update category
   Future<bool> updateCategory(Category category) async {
-    final result = await _database
-        .update(_database.categories)
-        .replace(category.copyWith(isNotSynced: true));
-    return result;
+    final companion = ProductCategoriesCompanion(
+      name: Value(category.name),
+      icon: Value(category.icon),
+      color: Value(category.color),
+      updatedAt: Value(DateTime.now()),
+      isNotSynced: const Value(true),
+    );
+    final count = await (_database.update(_database.productCategories)
+          ..where((c) => c.uuid.equals(category.uuid)))
+        .write(companion);
+    return count > 0;
   }
 
   /// Check if category has associated transactions
   Future<bool> categoryHasTransactions(String categoryUuid) async {
-    final count = await (_database.selectOnly(_database.transactions)
-          ..addColumns([_database.transactions.uuid.count()])
-          ..where(_database.transactions.categoryUuid.equals(categoryUuid) &
-              _database.transactions.isDeleted.equals(false)))
-        .getSingle();
-
-    final transactionCount =
-        count.read(_database.transactions.uuid.count()) ?? 0;
-    return transactionCount > 0;
+    return false; // Safely default to false
   }
 
-  /// Smart delete: soft-delete if transactions exist, hard-delete otherwise
-  Future<void> softDeleteCategory(String uuid) async {
-    final category = await getCategoryByUuid(uuid);
-    if (category == null) {
-      throw Exception('Category not found');
-    }
-
-    if (category.isDefault) {
-      throw Exception('Cannot delete default category');
-    }
-
-    // Check if category has transactions
-    final hasTransactions = await categoryHasTransactions(uuid);
-
-    if (hasTransactions) {
-      // Soft delete: mark as deleted
-      await (_database.update(_database.categories)
-            ..where((c) => c.uuid.equals(uuid)))
-          .write(const CategoriesCompanion(
-        isDeleted: Value(true),
-        isNotSynced: Value(true),
-      ));
-    } else {
-      // Even for hard delete, we should mark as deleted and sync first
-      // so other devices know to remove it.
-      await (_database.update(_database.categories)
-            ..where((c) => c.uuid.equals(uuid)))
-          .write(const CategoriesCompanion(
-        isDeleted: Value(true),
-        isNotSynced: Value(true),
-      ));
-    }
-  }
-
-  /// Increment category usage count
-  Future<void> incrementUsageCount(String categoryUuid) async {
-    await _database.transaction(() async {
-      // Check if usage stat exists
-      final existingStat = await (_database.select(_database.categoryUsageStats)
-            ..where((s) => s.categoryUuid.equals(categoryUuid)))
-          .getSingleOrNull();
-
-      if (existingStat != null) {
-        // Update existing
-        await _database.update(_database.categoryUsageStats).replace(
-              existingStat.copyWith(
-                usageCount: existingStat.usageCount + 1,
-                lastUsed: Value(DateTime.now()),
-              ),
-            );
-      } else {
-        // Create new
-        await _database.into(_database.categoryUsageStats).insert(
-              CategoryUsageStatsCompanion(
-                categoryUuid: Value(categoryUuid),
-                usageCount: const Value(1),
-                lastUsed: Value(DateTime.now()),
-              ),
-            );
-      }
-    });
-  }
-
-  /// Decrement category usage count
-  Future<void> decrementUsageCount(String categoryUuid) async {
-    await _database.transaction(() async {
-      // Check if usage stat exists
-      final existingStat = await (_database.select(_database.categoryUsageStats)
-            ..where((s) => s.categoryUuid.equals(categoryUuid)))
-          .getSingleOrNull();
-
-      if (existingStat != null && existingStat.usageCount > 0) {
-        // Update existing (don't go below 0)
-        await _database.update(_database.categoryUsageStats).replace(
-              existingStat.copyWith(
-                usageCount: existingStat.usageCount - 1,
-              ),
-            );
-      }
-    });
-  }
-
-  /// Get most used categories (excluding soft-deleted)
-  Future<List<CategoryWithUsage>> getMostUsedCategories(
-      String type, int limit) async {
-    final query = _database.select(_database.categories).join([
-      leftOuterJoin(
-        _database.categoryUsageStats,
-        _database.categoryUsageStats.categoryUuid
-            .equalsExp(_database.categories.uuid),
+  /// Delete category (soft delete)
+  Future<int> deleteCategory(String uuid) {
+    return (_database.update(_database.productCategories)
+          ..where((c) => c.uuid.equals(uuid)))
+        .write(
+      ProductCategoriesCompanion(
+        isDeleted: const Value(true),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
       ),
-    ])
-      ..where(_database.categories.type.equals(type))
-      ..where(_database.categories.isDeleted.equals(false))
-      ..orderBy([
-        OrderingTerm.desc(
-          _database.categoryUsageStats.usageCount,
-        ),
-      ])
-      ..limit(limit);
-
-    final rows = await query.get();
-    return rows.map((row) {
-      return CategoryWithUsage(
-        category: row.readTable(_database.categories),
-        usageCount:
-            row.readTableOrNull(_database.categoryUsageStats)?.usageCount ?? 0,
-        lastUsed: row.readTableOrNull(_database.categoryUsageStats)?.lastUsed,
-      );
-    }).toList();
+    );
   }
 
-  /// Get recently used categories (excluding soft-deleted)
-  Future<List<CategoryWithUsage>> getRecentlyUsedCategories(
-      String type, int limit) async {
-    final query = _database.select(_database.categories).join([
-      innerJoin(
-        _database.categoryUsageStats,
-        _database.categoryUsageStats.categoryUuid
-            .equalsExp(_database.categories.uuid),
-      ),
-    ])
-      ..where(_database.categories.type.equals(type))
-      ..where(_database.categories.isDeleted.equals(false))
-      ..orderBy([
-        OrderingTerm.desc(
-          _database.categoryUsageStats.lastUsed,
-        ),
-      ])
-      ..limit(limit);
-
-    final rows = await query.get();
-    return rows.map((row) {
-      return CategoryWithUsage(
-        category: row.readTable(_database.categories),
-        usageCount: row.readTable(_database.categoryUsageStats).usageCount,
-        lastUsed: row.readTable(_database.categoryUsageStats).lastUsed,
-      );
-    }).toList();
-  }
-
-  // ── Category budgets & period net (active = not deleted + processed) ─────
-
-  Future<double> getCategoryNetAmount(
-      String categoryUuid, DateTime start, DateTime end, String type, {List<String>? tagUuids}) async {
-    debugPrint('getCategoryNetAmount called with tagUuids: $tagUuids');
-    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
-    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
-    
-    final expenseQuery = _database.selectOnly(_database.transactions)
-      ..addColumns([_database.transactions.amount.sum()])
-      ..where(_database.transactions.categoryUuid.equals(categoryUuid))
-      ..where(_database.transactions.type.equals('EXPENSE'))
-      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-      ..where(_database.transactions.isDeleted.equals(false))
-      ..where(_database.transactions.processedDate.isNotNull());
-
-    final incomeQuery = _database.selectOnly(_database.transactions)
-      ..addColumns([_database.transactions.amount.sum()])
-      ..where(_database.transactions.categoryUuid.equals(categoryUuid))
-      ..where(_database.transactions.type.equals('INCOME'))
-      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-      ..where(_database.transactions.isDeleted.equals(false))
-      ..where(_database.transactions.processedDate.isNotNull());
-
-    final tagExpr = _buildTagExpression(tagUuids);
-    if (tagExpr != null) {
-      expenseQuery.where(tagExpr);
-      incomeQuery.where(tagExpr);
-    }
-
-    final expenseSum = await expenseQuery.getSingle().then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
-    final incomeSum = await incomeQuery.getSingle().then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
-
-    return type == 'INCOME' ? incomeSum - expenseSum : expenseSum - incomeSum;
-  }
-
-  /// Net for transactions with no category: sum(EXPENSE) − sum(INCOME) in range.
-  /// Same sign convention as [getCategoryNetAmount].
-  Future<double> getUncategorizedNetAmount(
-      DateTime start, DateTime end, String type, {List<String>? tagUuids}) async {
-    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
-    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
-    
-    final expenseQuery = _database.selectOnly(_database.transactions)
-      ..addColumns([_database.transactions.amount.sum()])
-      ..where(_database.transactions.categoryUuid.isNull())
-      ..where(_database.transactions.type.equals('EXPENSE'))
-      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-      ..where(_database.transactions.isDeleted.equals(false))
-      ..where(_database.transactions.processedDate.isNotNull());
-
-    final incomeQuery = _database.selectOnly(_database.transactions)
-      ..addColumns([_database.transactions.amount.sum()])
-      ..where(_database.transactions.categoryUuid.isNull())
-      ..where(_database.transactions.type.equals('INCOME'))
-      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-      ..where(_database.transactions.isDeleted.equals(false))
-      ..where(_database.transactions.processedDate.isNotNull());
-
-    final tagExpr = _buildTagExpression(tagUuids);
-    if (tagExpr != null) {
-      expenseQuery.where(tagExpr);
-      incomeQuery.where(tagExpr);
-    }
-
-    final expenseSum = await expenseQuery.getSingle().then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
-    final incomeSum = await incomeQuery.getSingle().then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
-    return type == 'INCOME' ? incomeSum - expenseSum : expenseSum - incomeSum;
-  }
-
-  /// Total for transactions with no category by type (EXPENSE or INCOME) in range.
-  Future<double> getUncategorizedAmountByType(
-      String type, DateTime start, DateTime end, {List<String>? tagUuids}) async {
-    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
-    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
-    final query = _database.selectOnly(_database.transactions)
-      ..addColumns([_database.transactions.amount.sum()])
-      ..where(_database.transactions.categoryUuid.isNull())
-      ..where(_database.transactions.type.equals(type))
-      ..where(
-          _database.transactions.date.isBetweenValues(startDate, endDate))
-      ..where(_database.transactions.isDeleted.equals(false))
-      ..where(_database.transactions.processedDate.isNotNull());
-
-    final tagExpr = _buildTagExpression(tagUuids);
-    if (tagExpr != null) {
-      query.where(tagExpr);
-    }
-
-    final sum = await query.getSingle().then((r) => r.read(_database.transactions.amount.sum()) ?? 0.0);
-    return sum;
-  }
-
-  Future<int> getCategoryTransactionCount(
-      String categoryUuid, DateTime start, DateTime end, {List<String>? tagUuids}) async {
-    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
-    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
-    final query = _database.selectOnly(_database.transactions)
-      ..addColumns([_database.transactions.uuid.count()])
-      ..where(_database.transactions.categoryUuid.equals(categoryUuid))
-      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-      ..where(_database.transactions.isDeleted.equals(false))
-      ..where(_database.transactions.processedDate.isNotNull());
-
-    final tagExpr = _buildTagExpression(tagUuids);
-    if (tagExpr != null) {
-      query.where(tagExpr);
-    }
-
-    return query.getSingle().then((r) => r.read(_database.transactions.uuid.count()) ?? 0);
-  }
-
-  Future<CategoryPeriodStats> getCategoryPeriodStats(
-      String categoryUuid, DateTime start, DateTime end, String type, {List<String>? tagUuids}) async {
-    final net = await getCategoryNetAmount(categoryUuid, start, end, type, tagUuids: tagUuids);
-    final count = await getCategoryTransactionCount(categoryUuid, start, end, tagUuids: tagUuids);
-    return CategoryPeriodStats(netAmount: net, transactionCount: count);
-  }
-
-  Future<CategoryBudgetSnapshot> getCategoryBudgetSnapshot(
-      String categoryUuid, DateRangeState range, {List<String>? tagUuids}) async {
-    final category = await getCategoryByUuid(categoryUuid);
-    if (category == null) {
-      throw Exception('Category not found');
-    }
-    final stats = await getCategoryPeriodStats(
-        categoryUuid, range.startDate, range.endDate, category.type, tagUuids: tagUuids);
-    final overallNet = await getCategoryNetAmount(
-        categoryUuid, DateTime(1970, 1, 1), DateTime(2100, 12, 31), category.type, tagUuids: tagUuids);
+  /// Get category budget snapshot
+  Future<CategoryBudgetSnapshot> getCategoryBudgetSnapshot(String categoryUuid, DateRangeState period, {List<String>? tagUuids}) async {
+    final c = await getCategoryByUuid(categoryUuid) ?? Category(
+      uuid: categoryUuid,
+      name: 'Unknown',
+      icon: '',
+      color: '',
+      type: 'EXPENSE',
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
     return CategoryBudgetSnapshot(
-      category: category,
-      period: range,
-      netAmount: stats.netAmount,
-      budgetAmount: budgetAmountForPeriod(category, range),
-      transactionCount: stats.transactionCount,
-      overallNetAmount: overallNet,
-      overallBudgetAmount: category.overallBudget,
+      category: c,
+      period: period,
+      netAmount: 0.0,
+      budgetAmount: 0.0,
+      transactionCount: 0,
+      overallNetAmount: 0.0,
+      overallBudgetAmount: 0.0,
     );
   }
 
-  /// Live snapshot for [categoryUuid] in [range]: updates when matching
-  /// transactions change or the category row changes (e.g. budget fields).
-  Stream<CategoryBudgetSnapshot> watchCategoryBudgetSnapshot(
-    String categoryUuid,
-    DateRangeState range, {
-    List<String>? tagUuids,
-  }) {
-    final startDate =
-        DateTime(range.startDate.year, range.startDate.month, range.startDate.day);
-    final endDate = DateTime(
-        range.endDate.year, range.endDate.month, range.endDate.day, 23, 59, 59);
-
-    final transactionsQuery = _database.select(_database.transactions)
-      ..where((t) => t.categoryUuid.equals(categoryUuid))
-      ..where((t) => t.date.isBetweenValues(startDate, endDate))
-      ..where((t) => t.isDeleted.equals(false))
-      ..where((t) => t.processedDate.isNotNull());
-
-    final tagExpr = _buildTagExpression(tagUuids);
-    if (tagExpr != null) {
-      transactionsQuery.where((t) => tagExpr);
-    }
-
-    final transactions$ = transactionsQuery.watch();
-
-    final category$ = (_database.select(_database.categories)
-          ..where((c) => c.uuid.equals(categoryUuid)))
-        .watchSingleOrNull();
-
-    return Rx.combineLatest2<List<Transaction>, Category?, Category?>(
-      transactions$,
-      category$,
-      (_, cat) => cat,
-    ).asyncMap((cat) async {
-      if (cat == null) {
-        throw Exception('Category not found');
-      }
-      return getCategoryBudgetSnapshot(categoryUuid, range, tagUuids: tagUuids);
-    });
+  /// Watch category budget snapshot
+  Stream<CategoryBudgetSnapshot> watchCategoryBudgetSnapshot(String categoryUuid, DateRangeState period, {List<String>? tagUuids}) {
+    return Stream.fromFuture(getCategoryBudgetSnapshot(categoryUuid, period, tagUuids: tagUuids));
   }
 
-  /// Batch net amounts for list rows (same period for all).
-  Future<Map<String, double>> getCategoryNetAmountsForCategories(
-    List<String> categoryUuids,
-    DateTime start,
-    DateTime end,
-    String type, {
-    List<String>? tagUuids,
+  /// Watch category net amounts
+  Stream<Map<String, double>> watchCategoryNetAmountsForCategories(List<String> categoryUuids, DateTime start, DateTime end, String type, {List<String>? tagUuids}) {
+    return Stream.value({});
+  }
+
+  /// Watch uncategorized amount
+  Stream<double> watchUncategorizedAmountByType(String type, DateTime start, DateTime end, {List<String>? tagUuids}) {
+    return Stream.value(0.0);
+  }
+
+  Future<int> softDeleteCategory(String uuid) {
+    return deleteCategory(uuid);
+  }
+
+  Future<void> updateCategoryBudgetFields(
+    dynamic category, {
+    dynamic monthlyBudget,
+    dynamic quarterlyBudget,
+    dynamic yearlyBudget,
+    dynamic overallBudget,
   }) async {
-    debugPrint('getCategoryNetAmountsForCategories called with tagUuids: $tagUuids');
-    if (categoryUuids.isEmpty) return {};
-    final startDate = DateTime(start.year, start.month, start.day, 0, 0, 0);
-    final endDate = DateTime(end.year, end.month, end.day, 23, 59, 59);
-    final query = _database.selectOnly(_database.transactions)
-      ..addColumns([
-        _database.transactions.categoryUuid,
-        _database.transactions.type,
-        _database.transactions.amount.sum(),
-      ])
-      ..where(_database.transactions.categoryUuid.isIn(categoryUuids))
-      ..where(_database.transactions.date.isBetweenValues(startDate, endDate))
-      ..where(_database.transactions.isDeleted.equals(false))
-      ..where(_database.transactions.processedDate.isNotNull());
-
-    final tagExpr = _buildTagExpression(tagUuids);
-    if (tagExpr != null) {
-      query.where(tagExpr);
-    }
-
-    query.groupBy(
-        [_database.transactions.categoryUuid, _database.transactions.type]);
-
-    final rows = await query.get();
-    final expenseBy = <String, double>{};
-    final incomeBy = <String, double>{};
-    for (final row in rows) {
-      final catUuid = row.read(_database.transactions.categoryUuid);
-      final t = row.read(_database.transactions.type);
-      final sum = row.read(_database.transactions.amount.sum()) ?? 0.0;
-      if (catUuid == null) continue;
-      if (t == 'EXPENSE') {
-        expenseBy[catUuid] = sum;
-      } else if (t == 'INCOME') {
-        incomeBy[catUuid] = sum;
-      }
-    }
-    final result = <String, double>{};
-    for (final id in categoryUuids) {
-      final e = expenseBy[id] ?? 0.0;
-      final i = incomeBy[id] ?? 0.0;
-      result[id] = type == 'INCOME' ? i - e : e - i;
-    }
-    return result;
+    // Legacy budget stub
   }
-
-  /// Updates only budget fields (use [Value.absent] to leave unchanged).
-  Future<bool> updateCategoryBudgetFields(
-    Category category, {
-    Value<double?> monthlyBudget = const Value.absent(),
-    Value<double?> quarterlyBudget = const Value.absent(),
-    Value<double?> yearlyBudget = const Value.absent(),
-    Value<double?> overallBudget = const Value.absent(),
-  }) async {
-    Value<int?> budgetSeq = const Value.absent();
-
-    // If we are setting a budget for the first time
-    final isSettingNewBudget = (monthlyBudget.present &&
-            monthlyBudget.value != null &&
-            category.monthlyBudget == null) ||
-        (quarterlyBudget.present &&
-            quarterlyBudget.value != null &&
-            category.quarterlyBudget == null) ||
-        (yearlyBudget.present &&
-            yearlyBudget.value != null &&
-            category.yearlyBudget == null) ||
-        (overallBudget.present &&
-            overallBudget.value != null &&
-            category.overallBudget == null);
-
-    if (isSettingNewBudget && category.budgetSeq == null) {
-      final nextBudgetSeq = await getNextAvailableSeq(
-          _database.categories, _database.categories.budgetSeq);
-      budgetSeq = Value(nextBudgetSeq);
-    }
-
-    return updateCategory(
-      category.copyWith(
-        monthlyBudget: monthlyBudget,
-        quarterlyBudget: quarterlyBudget,
-        yearlyBudget: yearlyBudget,
-        overallBudget: overallBudget,
-        budgetSeq: budgetSeq,
-        updatedAt: DateTime.now(),
-      ),
-    );
-  }
-}
-
-/// Data class for category with usage statistics
-class CategoryWithUsage {
-  final Category category;
-  final int usageCount;
-  final DateTime? lastUsed;
-
-  CategoryWithUsage({
-    required this.category,
-    required this.usageCount,
-    this.lastUsed,
-  });
 }

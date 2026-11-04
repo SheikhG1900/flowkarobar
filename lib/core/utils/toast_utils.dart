@@ -1,7 +1,7 @@
-import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
+import 'package:flowpaisa/features/businesses/domain/models/business.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../features/cashbooks/presentation/providers/cashbook_provider.dart';
+import '../../features/businesses/presentation/providers/business_provider.dart';
 
 class ToastUtils {
   static void showSuccessToast(
@@ -9,7 +9,7 @@ class ToastUtils {
       {String? actionLabel,
       void Function(BuildContext)? onActionPressed,
       Color? color}) {
-    final activeCahbook = ref.read(activeCashbookProvider);
+    final activeCahbook = ref.read(activeBusinessProvider);
     final toastColor = color ?? activeCahbook.color;
 
     _showToast(
@@ -17,7 +17,7 @@ class ToastUtils {
       message,
       icon: Icons.check_circle_outline_rounded,
       toastColor: toastColor,
-      activeCashbook: activeCahbook,
+      activeBusiness: activeCahbook,
       actionLabel: actionLabel,
       onActionPressed: onActionPressed,
     );
@@ -28,7 +28,7 @@ class ToastUtils {
       {String? actionLabel,
       void Function(BuildContext)? onActionPressed,
       Color? color}) {
-    final activeCahbook = ref.read(activeCashbookProvider);
+    final activeCahbook = ref.read(activeBusinessProvider);
     final toastColor = color ?? activeCahbook.color;
 
     _showToast(
@@ -36,7 +36,7 @@ class ToastUtils {
       message,
       icon: Icons.error_outline_rounded,
       toastColor: toastColor,
-      activeCashbook: activeCahbook,
+      activeBusiness: activeCahbook,
       actionLabel: actionLabel,
       onActionPressed: onActionPressed,
     );
@@ -46,7 +46,7 @@ class ToastUtils {
       {String? actionLabel,
       void Function(BuildContext)? onActionPressed,
       Color? color}) {
-    final activeCahbook = ref.read(activeCashbookProvider);
+    final activeCahbook = ref.read(activeBusinessProvider);
     final toastColor = color ?? activeCahbook.color;
 
     _showToast(
@@ -54,7 +54,7 @@ class ToastUtils {
       message,
       icon: Icons.info_outline_rounded,
       toastColor: toastColor,
-      activeCashbook: activeCahbook,
+      activeBusiness: activeCahbook,
       actionLabel: actionLabel,
       onActionPressed: onActionPressed,
     );
@@ -65,14 +65,14 @@ class ToastUtils {
       {String? actionLabel,
       void Function(BuildContext)? onActionPressed,
       Color? color}) {
-    final activeCahbook = ref.read(activeCashbookProvider);
+    final activeCahbook = ref.read(activeBusinessProvider);
     final toastColor = color ?? activeCahbook.color;
     _showToast(
       context,
       message,
       icon: Icons.warning_amber_rounded,
       toastColor: toastColor,
-      activeCashbook: activeCahbook,
+      activeBusiness: activeCahbook,
       actionLabel: actionLabel,
       onActionPressed: onActionPressed,
     );
@@ -83,7 +83,7 @@ class ToastUtils {
     String message, {
     required IconData icon,
     required Color toastColor,
-    required Cashbook activeCashbook,
+    required Business activeBusiness,
     String? actionLabel,
     void Function(BuildContext)? onActionPressed,
   }) {
@@ -91,8 +91,8 @@ class ToastUtils {
     final theme = Theme.of(context);
     final textColor = theme.colorScheme.onSurface;
     final backgroundColor = theme.scaffoldBackgroundColor;
-    final activeForeColor = activeCashbook.foreColor(context);
-    final activeBackColor = activeCashbook.backColor(context);
+    final activeForeColor = activeBusiness.foreColor(context);
+    final activeBackColor = activeBusiness.backColor(context);
 
     scaffoldMessenger.hideCurrentSnackBar();
     scaffoldMessenger.showSnackBar(

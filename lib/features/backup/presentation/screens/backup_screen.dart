@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 import 'package:flowpaisa/shared/widgets/user_avatar.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
@@ -44,7 +44,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     final notifier = ref.read(backupProvider.notifier);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
     final isPremium = ref.watch(premiumProvider).isPremium;
 
     // Listen for background operation messages
@@ -317,7 +317,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   }
 
   Widget _buildCashbookHeader(BuildContext context, ThemeData theme) {
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
     final l10n = AppLocalizations.of(context)!;
 
     return Container(
@@ -1013,7 +1013,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
     }
 
     final theme = Theme.of(context);
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1219,8 +1219,8 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
   void _showRestoreDialog(BuildContext context, drive.File backup) {
     final l10n = AppLocalizations.of(context)!;
     final state = ref.read(backupProvider);
-    final activeCashbook = ref.read(activeCashbookProvider);
-    final cashbooks = ref.read(cashbooksProvider);
+    final activeCashbook = ref.read(activeBusinessProvider);
+    final cashbooks = ref.read(businessesProvider);
 
     // Logic to determine restore options
     final cloudCashbookId = state.selectedCloudCashbookId ?? 'default';
@@ -1309,7 +1309,7 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
         ToastUtils.showSuccessToast(
             context,
             ref,
-            targetCashbookId == ref.read(activeCashbookIdProvider)
+            targetCashbookId == ref.read(activeBusinessIdProvider)
                 ? l10n.restoreSuccessful
                 : l10n.restoreSuccessNew(name));
       }

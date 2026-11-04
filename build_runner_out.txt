@@ -1,0 +1,113 @@
+  1s compiling builders/aot
+  2s compiling builders/aot
+  3s compiling builders/aot
+  4s compiling builders/aot
+  5s compiling builders/aot
+  6s compiling builders/aot
+  7s compiling builders/aot
+  8s compiling builders/aot
+  9s compiling builders/aot
+  10s compiling builders/aot
+  11s compiling builders/aot
+  12s compiling builders/aot
+  13s compiling builders/aot
+  14s compiling builders/aot
+  15s compiling builders/aot
+  17s compiling builders/aot
+  18s compiling builders/aot
+  19s compiling builders/aot
+  20s compiling builders/aot
+  21s compiling builders/aot
+  22s compiling builders/aot
+  23s compiling builders/aot
+  24s compiling builders/aot
+  25s compiling builders/aot
+  26s compiling builders/aot
+  27s compiling builders/aot
+  28s compiling builders/aot
+  29s compiling builders/aot
+  30s compiling builders/aot
+  31s compiling builders/aot
+  32s compiling builders/aot
+  33s compiling builders/aot
+  35s compiling builders/aot
+  36s compiling builders/aot
+  37s compiling builders/aot
+  38s compiling builders/aot
+  39s compiling builders/aot
+  40s compiling builders/aot
+  41s compiling builders/aot
+  42s compiling builders/aot
+  43s compiling builders/aot
+  44s compiling builders/aot
+  45s compiling builders/aot
+  46s compiling builders/aot
+  47s compiling builders/aot
+  48s compiling builders/aot
+  49s compiling builders/aot
+  50s compiling builders/aot
+  51s compiling builders/aot
+  52s compiling builders/aot
+  54s compiling builders/aot
+  55s compiling builders/aot
+  56s compiling builders/aot
+  57s compiling builders/aot
+  58s compiling builders/aot
+  59s compiling builders/aot
+  60s compiling builders/aot
+  61s compiling builders/aot
+  62s compiling builders/aot
+  63s compiling builders/aot
+  64s compiling builders/aot
+  65s compiling builders/aot
+  66s compiling builders/aot
+  67s compiling builders/aot
+  68s compiling builders/aot
+  69s compiling builders/aot
+  70s compiling builders/aot
+  72s compiling builders/aot
+  73s compiling builders/aot
+  74s compiling builders/aot
+  75s compiling builders/aot
+  76s compiling builders/aot
+  77s compiling builders/aot
+  78s compiling builders/aot
+  79s compiling builders/aot
+  80s compiling builders/aot
+  81s compiling builders/aot
+  82s compiling builders/aot
+  83s compiling builders/aot
+  84s compiling builders/aot
+  85s compiling builders/aot
+  86s compiling builders/aot
+  87s compiling builders/aot
+  88s compiling builders/aot
+  89s compiling builders/aot
+  90s compiling builders/aot
+  92s compiling builders/aot
+  93s compiling builders/aot
+  94s compiling builders/aot
+  96s compiling builders/aot
+  0s riverpod_generator on 266 inputs; lib/core/constants/app_constants.dart
+W SDK language version 3.13.0 is newer than `analyzer` language version 3.11.0. Run `flutter packages upgrade`.
+  0s riverpod_generator on 266 inputs: 1 no-op; lib/core/database/connection/connection.dart
+  12s riverpod_generator on 266 inputs: 5 no-op; spent 11s analyzing, 1s resolving; lib/core/entity_extraction/entity_extraction_base.dart
+  13s riverpod_generator on 266 inputs: 206 no-op; spent 12s analyzing, 1s resolving; lib/features/transactions/presentation/widgets/split_icon_badge.dart
+  14s riverpod_generator on 266 inputs: 266 no-op; spent 13s analyzing, 1s resolving
+  0s drift_dev on 1064 inputs; lib/core/constants/app_constants.dart
+  1s drift_dev on 1064 inputs: 9 output; lib/core/services/document_backup_service.dart
+  11s drift_dev on 1064 inputs: 10 output; spent 9s analyzing, 2s resolving; lib/core/services/in_app_review_service.dart
+  43s drift_dev on 1064 inputs: 11 output; spent 34s analyzing, 7s resolving, 2s reading; lib/core/services/update_service.dart
+  48s drift_dev on 1064 inputs: 20 output; spent 38s analyzing, 8s resolving, 2s reading; lib/core/utils/export_service.dart
+  49s drift_dev on 1064 inputs: 104 output; spent 38s analyzing, 8s resolving, 2s reading; lib/features/currencies/presentation/screens/edit_currency_screen.dart
+  50s drift_dev on 1064 inputs: 113 output; spent 39s analyzing, 8s resolving, 2s reading; lib/features/dashboard/presentation/widgets/sync_status_section.dart
+  69s drift_dev on 1064 inputs: 270 output, 1 no-op; spent 58s analyzing, 8s resolving, 2s reading, 1s building; lib/core/entity_extraction/entity_extraction_base.dart
+  70s drift_dev on 1064 inputs: 438 output, 12 no-op; spent 58s analyzing, 8s resolving, 2s reading, 2s building; lib/features/transactions/presentation/screens/add_transaction_screen.dart
+  71s drift_dev on 1064 inputs: 1 skipped, 516 output, 18 no-op; spent 59s analyzing, 8s resolving, 2s reading, 2s building; lib/core/database/connection/connection.dart.types.temp.dart
+  73s drift_dev on 1064 inputs: 4 skipped, 517 output, 20 no-op; spent 59s analyzing, 8s resolving, 4s building, 2s reading; lib/core/database/database.dart.types.temp.dart
+  74s drift_dev on 1064 inputs: 127 skipped, 517 output, 143 no-op; spent 59s analyzing, 8s resolving, 4s building, 2s reading; lib/features/notifications/presentation/screens/notifications_screen.dart.types.temp.dart
+  75s drift_dev on 1064 inputs: 228 skipped, 517 output, 244 no-op; spent 59s analyzing, 8s resolving, 5s building, 2s reading; lib/l10n/app_localizations_en.dart.types.temp.dart
+  75s drift_dev on 1064 inputs: 266 skipped, 517 output, 281 no-op; spent 59s analyzing, 8s resolving, 5s building, 2s reading
+  0s source_gen:combining_builder on 532 inputs; lib/core/constants/app_constants.dart
+  0s source_gen:combining_builder on 532 inputs: 266 skipped, 1 output, 265 no-op
+  Built with build_runner/aot in 189s; wrote 518 outputs.

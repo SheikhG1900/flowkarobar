@@ -195,7 +195,6 @@ class ContactBulkSettlementService {
           contactUuid: Value(contactUuid),
           description: const Value('bulk adjustment'),
           date: Value(now),
-          paidRelationship: const Value('RECEIVED_FROM'),
           accountUuid: incomingAccountUuid != null
               ? Value(incomingAccountUuid)
               : const Value.absent(),
@@ -211,16 +210,11 @@ class ContactBulkSettlementService {
           description: const Value('bulk adjustment'),
           date: Value(now),
           status: const Value('PENDING'),
-          linkedIncomeUuid: Value(txUuid),
-          // Explicitly enable auto expense creation so that when this payable
-          // is later marked as PAID, the usual auto EXPENSE is generated.
-          autoCreateExpense: const Value(true),
         ),
       );
       await transactionsRepository.updateTransactionWithCompanion(
         txUuid,
         TransactionsCompanion(
-          linkedPayableUuid: Value(payableUuid),
           updatedAt: Value(DateTime.now()),
         ),
       );
@@ -295,7 +289,6 @@ class ContactBulkSettlementService {
           contactUuid: Value(contactUuid),
           description: const Value('bulk adjustment'),
           date: Value(now),
-          paidRelationship: const Value('PAID_FOR'),
           accountUuid: outgoingAccountUuid != null
               ? Value(outgoingAccountUuid)
               : const Value.absent(),
@@ -311,15 +304,11 @@ class ContactBulkSettlementService {
           description: const Value('bulk adjustment'),
           date: Value(now),
           status: const Value('PENDING'),
-          linkedExpenseUuid: Value(txUuid),
-          // Keep autoCreateIncome as default (true) so that when this receivable
-          // is later marked as RECEIVED, the usual auto income transaction is generated.
         ),
       );
       await transactionsRepository.updateTransactionWithCompanion(
         txUuid,
         TransactionsCompanion(
-          linkedReceivableUuid: Value(receivableUuid),
           updatedAt: Value(DateTime.now()),
         ),
       );

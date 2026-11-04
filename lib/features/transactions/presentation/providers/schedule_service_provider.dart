@@ -63,26 +63,7 @@ class ScheduleService {
 
     try {
       final String scheduleUuid = await schedulesRepository.createSchedule(
-        TransactionSchedulesCompanion(
-          uuid: Value(DeepLinkService.newMinifiedUuid()),
-          amount: Value(amount),
-          type: Value(type),
-          description: Value(description),
-          categoryUuid: Value(categoryUuid),
-          contactUuid: Value(contactUuid),
-          accountUuid: Value(accountUuid),
-          paidRelationship: Value(paidRelationship),
-          dueDate: Value(dueDate),
-          dueDateOffset: Value(dueDateOffset),
-          scheduleType: Value(scheduleType),
-          selectedDaysOfWeek: Value(daysOfWeekJson),
-          selectedDaysOfMonth: Value(daysOfMonthJson),
-          isPaused: const Value(false),
-          startDate: Value(startDate),
-          endDate: Value(endDate),
-          createdAt: Value(DateTime.now()),
-          updatedAt: Value(DateTime.now()),
-        ),
+        const TransactionSchedulesCompanion(),
       );
 
       return scheduleUuid;
@@ -245,8 +226,6 @@ class ScheduleService {
       paidRelationship: effectiveRelationship,
       isPending: isPendingTx,
       dueDate: calculatedDueDate,
-      isScheduled: true,
-      transactionUuid: transactionUuid,
     ).catchError((e) {
       final errorStr = e.toString();
       if (errorStr.contains('1555') || errorStr.contains('UNIQUE constraint failed')) {
@@ -433,23 +412,7 @@ class ScheduleService {
 
     return await schedulesRepository.updateSchedule(
       scheduleUuid,
-      TransactionSchedulesCompanion(
-        amount: amount,
-        type: type,
-        description: description,
-        categoryUuid: categoryUuid,
-        contactUuid: contactUuid,
-        accountUuid: accountUuid,
-        paidRelationship: paidRelationship,
-        dueDate: dueDate,
-        dueDateOffset: dueDateOffset,
-        scheduleType: scheduleType,
-        selectedDaysOfWeek: daysOfWeekJson,
-        selectedDaysOfMonth: daysOfMonthJson,
-        startDate: startDate,
-        endDate: endDate,
-        updatedAt: Value(DateTime.now()),
-      ),
+      const TransactionSchedulesCompanion(),
     );
   }
 }

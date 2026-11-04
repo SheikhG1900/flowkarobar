@@ -257,7 +257,7 @@ class _ScheduleListItemState extends ConsumerState<ScheduleListItem> {
                                     ? ValueKey(
                                         '${(key as ValueKey).value}-freq-icon')
                                     : null,
-                                _getFrequencyIcon(schedule.scheduleType),
+                                _getFrequencyIcon(schedule.scheduleType ?? 'DAILY'),
                                 size: 10,
                                 color: theme.colorScheme.primary,
                               ),
@@ -267,7 +267,7 @@ class _ScheduleListItemState extends ConsumerState<ScheduleListItem> {
                                     ? ValueKey(
                                         '${(key as ValueKey).value}-freq-label')
                                     : null,
-                                _getFrequencyLabel(l10n, schedule.scheduleType),
+                                _getFrequencyLabel(l10n, schedule.scheduleType ?? 'DAILY'),
                                 style: TextStyle(
                                   fontSize: 10,
                                   color: theme.colorScheme.primary,

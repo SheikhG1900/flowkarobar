@@ -146,8 +146,6 @@ class _AddCategoryScreenState extends ConsumerState<AddCategoryScreen> {
           icon: drift.Value(_selectedIcon),
           color: drift.Value(
               '#${(_selectedColor.r * 255).toInt().toRadixString(16).padLeft(2, '0')}${(_selectedColor.g * 255).toInt().toRadixString(16).padLeft(2, '0')}${(_selectedColor.b * 255).toInt().toRadixString(16).padLeft(2, '0')}'),
-          type: drift.Value(_selectedType),
-          isDefault: const drift.Value(false),
         ),
       );
 

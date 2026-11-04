@@ -1,4 +1,5 @@
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 
 /// Enhanced receivable model with pre-fetched related data
 /// Includes linked transaction and its category to avoid N+1 query problems
@@ -19,6 +20,16 @@ class ReceivableWithLinkedData {
   String toString() {
     return 'ReceivableWithLinkedData(receivable: ${receivable.uuid}, contact: ${contact?.name}, linkedCategory: ${linkedCategory?.name})';
   }
+}
+
+class ReceivableWithContact {
+  final Receivable receivable;
+  final Contact? contact;
+
+  ReceivableWithContact({
+    required this.receivable,
+    this.contact,
+  });
 }
 
 class ReceivableFilters {

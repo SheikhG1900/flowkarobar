@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/core/database/database.dart' hide Category;
+import 'package:flowpaisa/features/transactions/domain/models.dart' show Category;
 import 'package:flowpaisa/features/categories/data/categories_repository.dart';
 import 'package:flowpaisa/features/categories/domain/category_budget_models.dart';
 import 'package:flowpaisa/features/categories/domain/category_monthly_hint_key.dart';
@@ -9,7 +10,7 @@ import 'package:flowpaisa/features/transactions/presentation/providers/transacti
 import 'package:flowpaisa/shared/models/date_range_state.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:collection/collection.dart';
 import 'package:rxdart/rxdart.dart';
@@ -141,7 +142,7 @@ class CategoryFilterTagsNotifier extends Notifier<List<String>> {
   @override
   List<String> build() {
     _prefs = ref.watch(sharedPreferencesProvider);
-    _activeCashbookId = ref.watch(activeCashbookIdProvider);
+    _activeCashbookId = ref.watch(activeBusinessIdProvider);
     return _prefs.getStringList(_prefKey) ?? const [];
   }
 

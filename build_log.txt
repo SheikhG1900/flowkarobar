@@ -1,0 +1,171 @@
+[ +334 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
+[        ] Artifact Instance of 'GradleWrapper' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterSdk' is not required, skipping update.
+[        ] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
+[        ] executing: [C:\flutter_github\flutter/] git -c log.showSignature=false log HEAD -n 1 --pretty=format:%ad --date=iso
+[  +78 ms] Exit code 0 from: git -c log.showSignature=false log HEAD -n 1 --pretty=format:%ad --date=iso
+[        ] 2026-10-08 09:51:21 -0700
+[   +9 ms] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterEngineStamp' is not required, skipping update.
+[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[   +2 ms] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[  +63 ms] Artifact Instance of 'MaterialFonts' is not required, skipping update.
+[        ] Artifact Instance of 'GradleWrapper' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidGenSnapshotArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'AndroidInternalBuildArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterWebSdk' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterEngineStamp' is not required, skipping update.
+[        ] Artifact Instance of 'LegacyCanvasKitRemover' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterSdk' is not required, skipping update.
+[        ] Artifact Instance of 'WindowsEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxEngineArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'LinuxFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'MacOSFuchsiaSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerSDKArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FlutterRunnerDebugSymbols' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'IosUsbArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'FontSubsetArtifacts' is not required, skipping update.
+[        ] Artifact Instance of 'PubDependencies' is not required, skipping update.
+[  +50 ms] executing: [E:\work\github\finflow/] C:\flutter_github\flutter\bin\cache\dart-sdk\bin\dart pub --suppress-analytics run build_runner build --verbose
+MSG : Deprecated. Use `dart run` instead.
+  1s compiling builders/aot
+  2s compiling builders/aot
+  3s compiling builders/aot
+  4s compiling builders/aot
+  5s compiling builders/aot
+  6s compiling builders/aot
+  7s compiling builders/aot
+  8s compiling builders/aot
+  9s compiling builders/aot
+  10s compiling builders/aot
+  11s compiling builders/aot
+  12s compiling builders/aot
+  13s compiling builders/aot
+  14s compiling builders/aot
+  16s compiling builders/aot
+  17s compiling builders/aot
+  18s compiling builders/aot
+  19s compiling builders/aot
+  20s compiling builders/aot
+  21s compiling builders/aot
+  22s compiling builders/aot
+  23s compiling builders/aot
+  24s compiling builders/aot
+  25s compiling builders/aot
+  26s compiling builders/aot
+  27s compiling builders/aot
+  28s compiling builders/aot
+  30s compiling builders/aot
+  31s compiling builders/aot
+  32s compiling builders/aot
+  33s compiling builders/aot
+  34s compiling builders/aot
+  35s compiling builders/aot
+  36s compiling builders/aot
+  37s compiling builders/aot
+  38s compiling builders/aot
+  39s compiling builders/aot
+  40s compiling builders/aot
+  41s compiling builders/aot
+  42s compiling builders/aot
+  43s compiling builders/aot
+  44s compiling builders/aot
+  46s compiling builders/aot
+  47s compiling builders/aot
+  48s compiling builders/aot
+  49s compiling builders/aot
+  50s compiling builders/aot
+  51s compiling builders/aot
+  52s compiling builders/aot
+  53s compiling builders/aot
+  54s compiling builders/aot
+  55s compiling builders/aot
+  56s compiling builders/aot
+  57s compiling builders/aot
+  58s compiling builders/aot
+  59s compiling builders/aot
+  60s compiling builders/aot
+  61s compiling builders/aot
+  62s compiling builders/aot
+  63s compiling builders/aot
+  64s compiling builders/aot
+  66s compiling builders/aot
+  67s compiling builders/aot
+  68s compiling builders/aot
+  69s compiling builders/aot
+  70s compiling builders/aot
+  71s compiling builders/aot
+  72s compiling builders/aot
+  73s compiling builders/aot
+  74s compiling builders/aot
+  75s compiling builders/aot
+  76s compiling builders/aot
+  77s compiling builders/aot
+  78s compiling builders/aot
+  79s compiling builders/aot
+  80s compiling builders/aot
+  81s compiling builders/aot
+  82s compiling builders/aot
+  84s compiling builders/aot
+  0s riverpod_generator on 244 inputs; lib/core/constants/app_constants.dart
+W SDK language version 3.13.0 is newer than `analyzer` language version 3.11.0. Run `flutter packages upgrade`.
+  0s riverpod_generator on 244 inputs: 1 no-op; lib/core/database/connection/connection.dart
+  riverpod_generator on lib/core/database/database.dart:
+  Running RiverpodGenerator - 1 of 2
+  riverpod_generator on lib/core/database/database.dart:
+  Running JsonGenerator - 2 of 2
+  7s riverpod_generator on 244 inputs: 5 no-op; spent 5s analyzing, 1s resolving; lib/core/entity_extraction/entity_extraction_base.dart
+  7s riverpod_generator on 244 inputs: 244 no-op; spent 6s analyzing, 1s resolving
+  0s drift_dev on 976 inputs; lib/core/constants/app_constants.dart
+  4s drift_dev on 976 inputs: 10 output; spent 3s analyzing; lib/core/services/in_app_review_service.dart
+  33s drift_dev on 976 inputs: 11 output; spent 28s analyzing, 5s resolving, 1s reading; lib/core/services/update_service.dart
+  37s drift_dev on 976 inputs: 20 output; spent 30s analyzing, 6s resolving, 1s reading; lib/core/utils/export_service.dart
+  39s drift_dev on 976 inputs: 106 output; spent 31s analyzing, 6s resolving, 1s reading; lib/features/dashboard/presentation/widgets/sync_status_section.dart
+  55s drift_dev on 976 inputs: 248 output, 1 no-op; spent 48s analyzing, 6s resolving, 1s reading; lib/core/entity_extraction/entity_extraction_base.dart
+  56s drift_dev on 976 inputs: 412 output, 13 no-op; spent 48s analyzing, 6s resolving, 1s building, 1s reading; lib/features/transactions/presentation/widgets/schedule_icon_badge.dart
+  57s drift_dev on 976 inputs: 45 skipped, 472 output, 62 no-op; spent 49s analyzing, 6s resolving, 2s building, 1s reading; lib/features/accounts/presentation/widgets/account_transfer_sheet.dart.types.temp.dart
+  58s drift_dev on 976 inputs: 168 skipped, 472 output, 185 no-op; spent 49s analyzing, 6s resolving, 3s building, 1s reading; lib/features/transactions/presentation/screens/edit_schedule_screen.dart.types.temp.dart
+  59s drift_dev on 976 inputs: 244 skipped, 472 output, 260 no-op; spent 49s analyzing, 6s resolving, 3s building, 1s reading
+  0s source_gen:combining_builder on 488 inputs; lib/core/constants/app_constants.dart
+  0s source_gen:combining_builder on 488 inputs: 244 skipped, 244 no-op
+  Built with build_runner/aot in 155s; wrote 472 outputs.
+MSG : Logs written to C:\Users\Abdul.Wahid\AppData\Local\Pub\Cache\log\pub_log.txt.
+[+155702 ms] "flutter run" took 155,827ms.
+[ +126 ms] Running 1 shutdown hook
+[   +2 ms] Shutdown hooks complete
+[ +263 ms] exiting with code 0

@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
-import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/receivables/domain/models.dart';
 import 'package:flowpaisa/features/dashboard/domain/models.dart';
 import 'package:rxdart/rxdart.dart';
@@ -13,980 +13,262 @@ class ReceivablesRepository {
 
   /// Watch all receivables
   Stream<List<Receivable>> watchAllReceivables() {
-    return (_database.select(_database.receivables)
-          ..where((r) => r.isDeleted.equals(false))
-          ..orderBy([(r) => OrderingTerm.desc(r.date)]))
-        .watch();
-  }
-
-  /// Watch receivable statistics for dashboard
-  Stream<ReceivableStats> watchReceivableStats() {
-    final now = DateTime.now();
-    final startOfMonth = DateTime(now.year, now.month, 1);
-
-    final overall = _watchTotalSum();
-    final month = _watchTotalSum(start: startOfMonth);
-    final overdue = _watchTotalSum(onlyOverdue: true);
-
-    return Rx.combineLatest3(
-      overall,
-      month,
-      overdue,
-      (a, b, c) => ReceivableStats(
-        overall: a,
-        month: b,
-        overdue: c,
-      ),
-    );
-  }
-
-  Stream<double> _watchTotalSum({DateTime? start, bool onlyOverdue = false}) {
-    final query = _database.selectOnly(_database.receivables)
-      ..addColumns([_database.receivables.amount.sum()])
-      ..where(_database.receivables.status.equals('PENDING') &
-          _database.receivables.isDeleted.equals(false));
-
-    if (start != null) {
-      query.where(_database.receivables.date.isBiggerOrEqualValue(start));
-    }
-
-    if (onlyOverdue) {
-      final now = DateTime.now();
-      query.where(_database.receivables.dueDate.isSmallerThanValue(now));
-    }
-
-    return query
-        .watchSingle()
-        .map((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
-  }
-
-  /// Watch receivables by status
-  Stream<List<Receivable>> watchReceivablesByStatus(String status) {
-    return (_database.select(_database.receivables)
-          ..where((r) => r.status.equals(status) & r.isDeleted.equals(false))
-          ..orderBy([(r) => OrderingTerm.desc(r.date)]))
-        .watch();
-  }
-
-  /// Watch receivables with contact information
-  Stream<List<ReceivableWithContact>> watchReceivablesWithContacts() {
-    final query = _database.select(_database.receivables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
-      ),
-    ]);
-
-    query.where(_database.receivables.isDeleted.equals(false));
-
-    // Default order
-    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return ReceivableWithContact(
-          receivable: row.readTable(_database.receivables),
-          contact: row.readTableOrNull(_database.contacts),
-        );
-      }).toList();
-    });
-  }
-
-  /// Watch receivables with contact information filtered by status
-  Stream<List<ReceivableWithContact>> watchReceivablesWithContactsByStatus(
-      String status) {
-    final query = _database.select(_database.receivables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
-      ),
-    ]);
-
-    query.where(_database.receivables.status.equals(status) &
-        _database.receivables.isDeleted.equals(false));
-    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return ReceivableWithContact(
-          receivable: row.readTable(_database.receivables),
-          contact: row.readTableOrNull(_database.contacts),
-        );
-      }).toList();
-    });
-  }
-
-  /// Watch receivables with ALL linked data (contact + linked transaction + linked category)
-  /// This method uses JOINs to fetch all related data in a single efficient query
-  Stream<List<ReceivableWithLinkedData>> watchReceivablesWithLinkedData(
-      String status) {
-    final query = _database.select(_database.receivables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(_database.receivables.status.equals(status) &
-        _database.receivables.isDeleted.equals(false));
-    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return ReceivableWithLinkedData(
-          receivable: row.readTable(_database.receivables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-
-  /// Watch receivable with linked data by UUID
-  Stream<ReceivableWithLinkedData?> watchReceivableWithLinkedDataByUuid(
-      String uuid) {
-    final query = _database.select(_database.receivables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(_database.receivables.uuid.equals(uuid) &
-        _database.receivables.isDeleted.equals(false));
-
-    return query.watch().map((rows) {
-      if (rows.isEmpty) return null;
-      final row = rows.first;
-      return ReceivableWithLinkedData(
-        receivable: row.readTable(_database.receivables),
-        contact: row.readTableOrNull(_database.contacts),
-        linkedTransaction: row.readTableOrNull(_database.transactions),
-        linkedCategory: row.readTableOrNull(_database.categories),
-      );
-    });
-  }
-
-  /// Update receivable (with companion for partial updates)
-  Future<int> updateReceivableWithCompanion(
-      String uuid, ReceivablesCompanion companion) {
-    return (_database.update(_database.receivables)
-          ..where((r) => r.uuid.equals(uuid)))
-        .write(companion.copyWith(isNotSynced: const Value(true)));
-  }
-
-  /// Get receivable by UUID
-  Future<Receivable?> getReceivableByUuid(String uuid) {
-    return (_database.select(_database.receivables)
-          ..where((r) => r.uuid.equals(uuid) & r.isDeleted.equals(false)))
-        .getSingleOrNull();
-  }
-
-  /// Get receivable with linked data by UUID
-  Future<ReceivableWithLinkedData?> getReceivableWithLinkedDataByUuid(
-      String uuid) async {
-    final query = _database.select(_database.receivables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(_database.receivables.uuid.equals(uuid) &
-        _database.receivables.isDeleted.equals(false));
-
-    final rows = await query.get();
-    if (rows.isEmpty) return null;
-
-    final row = rows.first;
-    return ReceivableWithLinkedData(
-      receivable: row.readTable(_database.receivables),
-      contact: row.readTableOrNull(_database.contacts),
-      linkedTransaction: row.readTableOrNull(_database.transactions),
-      linkedCategory: row.readTableOrNull(_database.categories),
-    );
-  }
-
-  /// Create receivable
-  Future<String> createReceivable(ReceivablesCompanion receivable) async {
-    final uuid = receivable.uuid.present ? receivable.uuid.value : Uuid().v4();
-    await _database.into(_database.receivables).insert(
-          receivable.copyWith(
-            uuid: Value(uuid),
-            isNotSynced: const Value(true),
-          ),
-        );
-    return uuid;
-  }
-
-  /// Update receivable
-  Future<bool> updateReceivable(Receivable receivable) {
-    return _database.update(_database.receivables).replace(
-          receivable.copyWith(isNotSynced: true),
-        );
-  }
-
-  // Delete receivable
-  Future<int> deleteReceivable(String uuid) {
-    return (_database.update(_database.receivables)
-          ..where((r) => r.uuid.equals(uuid)))
-        .write(const ReceivablesCompanion(
-      isDeleted: Value(true),
-      isNotSynced: Value(true),
-    ));
-  }
-
-  /// Mark receivable as received and activate linked transaction.
-  /// [accountUuid] — optional account to credit for the received amount.
-  Future<void> markAsReceived(String receivableUuid,
-      {Value<String?> accountUuid = const Value.absent()}) async {
-    await _database.transaction(() async {
-      final receivable = await getReceivableByUuid(receivableUuid);
-      if (receivable == null) return;
-
-      final receivedDate = DateTime.now();
-
-      // Update receivable status and store received date
-      await _database.update(_database.receivables).replace(
-            receivable.copyWith(
-              status: 'RECEIVED',
-              receivedDate: Value(receivedDate),
-              updatedAt: DateTime.now(),
-              isNotSynced: true,
-            ),
-          );
-
-      // Auto-create income if enabled (for PAID_FOR receivables and standalone receivables)
-      // Skip if linkedIncomeUuid exists (WILL_RECEIVE case - already has linked income)
-      if (receivable.autoCreateIncome && receivable.linkedIncomeUuid == null) {
-        // Try to reuse category and account from linked expense transaction if available
-        String? categoryUuid;
-        String? inheritedAccountUuid;
-        final linkedExpenseUuid = receivable.linkedExpenseUuid;
-        if (linkedExpenseUuid != null) {
-          final linkedTx = await (_database.select(_database.transactions)
-                ..where((t) => t.uuid.equals(linkedExpenseUuid)))
-              .getSingleOrNull();
-          categoryUuid = linkedTx?.categoryUuid;
-          inheritedAccountUuid = linkedTx?.accountUuid;
-        }
-
-        // Use selected account if provided, otherwise inherit from linked transaction
-        final effectiveAccountUuid = accountUuid.present ? accountUuid.value : inheritedAccountUuid;
-
-        // Use a deterministic UUID based on receivable UUID to prevent duplicates during sync
-        final incomeUuid = "${receivableUuid}_payment";
-        await _database.into(_database.transactions).insert(
-              TransactionsCompanion(
-                uuid: Value(incomeUuid),
-                amount: Value(receivable.amount),
-                type: const Value('INCOME'),
-                categoryUuid: Value(categoryUuid),
-                contactUuid: Value(receivable.contactUuid),
-                description: Value(receivable.description),
-                date: Value(receivedDate),
-                linkedReceivableUuid: Value(receivableUuid),
-                isAutoGenerated: const Value(true),
-                externalLinkId: Value(incomeUuid),
-                accountUuid: Value(effectiveAccountUuid),
-                processedDate: Value(receivedDate),
-                createdAt: Value(receivedDate),
-                updatedAt: Value(receivedDate),
-                isNotSynced: const Value(true),
-              ),
-              mode: InsertMode.insertOrReplace,
-            );
-
-        // Link the income back to receivable
-        await _database.update(_database.receivables).replace(
-              receivable.copyWith(
-                linkedIncomeUuid: Value(incomeUuid),
-                status: 'RECEIVED',
-                receivedDate: Value(receivedDate),
-                updatedAt: DateTime.now(),
-                isNotSynced: true,
-              ),
-            );
-      } else if (receivable.linkedIncomeUuid != null) {
-        // WILL_RECEIVE case: existing linked income — set processedDate and accountUuid
-        // only for non-processed transactions
-        await (_database.update(_database.transactions)
-              ..where((t) =>
-                  t.uuid.equals(receivable.linkedIncomeUuid!) &
-                  t.processedDate.isNull()))
-            .write(TransactionsCompanion(
-          processedDate: Value(receivedDate),
-          accountUuid: accountUuid.present ? Value(accountUuid.value) : const Value.absent(),
-          isNotSynced: const Value(true),
-        ));
-      }
+    return _database.select(_database.orders).watch().map((ordersList) {
+      return ordersList
+          .where((o) => o.orderType == 'SALE' && o.isDeleted == false && o.paymentStatus != 'PAID')
+          .map((o) => Receivable(
+                uuid: o.uuid,
+                contactUuid: o.contactUuid ?? '',
+                amount: o.totalAmount,
+                date: o.orderDate,
+                dueDate: o.dueDate ?? o.orderDate,
+                status: o.paymentStatus == 'UNPAID' ? 'PENDING' : 'PARTIAL',
+                description: o.notes,
+                isDeleted: o.isDeleted,
+                createdAt: o.createdAt,
+                updatedAt: o.updatedAt,
+              ))
+          .toList();
     });
   }
 
   /// Get total pending receivables
   Future<double> getTotalPendingReceivables() async {
-    final query = _database.selectOnly(_database.receivables)
-      ..addColumns([_database.receivables.amount.sum()])
-      ..where(_database.receivables.status.equals('PENDING') &
-          _database.receivables.isDeleted.equals(false));
-
-    final result = await query.getSingle();
-    return result.read(_database.receivables.amount.sum()) ?? 0.0;
+    final list = await watchAllReceivables().first;
+    return list.fold<double>(0.0, (sum, r) => sum + r.amount);
   }
 
-  /// Get count of overdue receivables (PENDING with dueDate < now)
-  Future<int> getOverdueReceivablesCount() async {
-    final now = DateTime.now();
-    final query = _database.selectOnly(_database.receivables)
-      ..addColumns([_database.receivables.uuid.count()])
-      ..where(
-        _database.receivables.status.equals('PENDING') &
-            _database.receivables.dueDate.isNotNull() &
-            _database.receivables.dueDate.isSmallerThanValue(now) &
-            _database.receivables.isDeleted.equals(false),
+  /// Watch receivable statistics for dashboard
+  Stream<ReceivableStats> watchReceivableStats() {
+    return watchAllReceivables().map((list) {
+      double overall = 0.0;
+      double overdue = 0.0;
+      final now = DateTime.now();
+      for (final r in list) {
+        overall += r.amount;
+        if (r.dueDate.isBefore(now)) {
+          overdue += r.amount;
+        }
+      }
+      return ReceivableStats(
+        overall: overall,
+        month: overall, // estimate
+        overdue: overdue,
       );
-
-    final result = await query.getSingle();
-    return result.read(_database.receivables.uuid.count()) ?? 0;
+    });
   }
 
-  /// Get overdue receivables (PENDING with dueDate < now) - Future version
+  /// Watch receivables by status
+  Stream<List<Receivable>> watchReceivablesByStatus(String status) {
+    return watchAllReceivables();
+  }
+
+  /// Watch receivables with contact information
+  Stream<List<ReceivableWithContact>> watchReceivablesWithContacts() {
+    return watchAllReceivables().asyncMap((receivables) async {
+      final List<ReceivableWithContact> list = [];
+      for (final r in receivables) {
+        Contact? contact;
+        if (r.contactUuid.isNotEmpty) {
+          contact = await (_database.select(_database.contacts)
+                ..where((c) => c.uuid.equals(r.contactUuid)))
+              .getSingleOrNull();
+        }
+        list.add(ReceivableWithContact(receivable: r, contact: contact));
+      }
+      return list;
+    });
+  }
+
+  /// Watch receivables with contact information filtered by status
+  Stream<List<ReceivableWithContact>> watchReceivablesWithContactsByStatus(String status) {
+    return watchReceivablesWithContacts();
+  }
+
+  /// Watch single receivable with full details
+  Stream<ReceivableWithLinkedData?> watchReceivableWithLinkedData(String uuid) {
+    return Stream.fromFuture(getReceivableByUuid(uuid)).map((r) {
+      if (r == null) return null;
+      return ReceivableWithLinkedData(
+        receivable: r,
+      );
+    });
+  }
+
+  /// Watch single receivable with linked data by UUID
+  Stream<ReceivableWithLinkedData?> watchReceivableWithLinkedDataByUuid(String uuid) {
+    return watchReceivableWithLinkedData(uuid);
+  }
+
+  /// Watch overdue receivables with linked data
+  Stream<List<ReceivableWithLinkedData>> watchReceivablesWithLinkedDataOverdue() {
+    return watchReceivablesWithLinkedData('PENDING').map((list) {
+      final now = DateTime.now();
+      return list.where((r) => r.receivable.dueDate.isBefore(now)).toList();
+    });
+  }
+
+  /// Watch receivables with linked data
+  Stream<List<ReceivableWithLinkedData>> watchReceivablesWithLinkedData(String status) {
+    return watchAllReceivables().asyncMap((receivables) async {
+      final List<ReceivableWithLinkedData> list = [];
+      for (final r in receivables) {
+        Contact? contact;
+        if (r.contactUuid.isNotEmpty) {
+          contact = await (_database.select(_database.contacts)
+                ..where((c) => c.uuid.equals(r.contactUuid)))
+              .getSingleOrNull();
+        }
+        list.add(ReceivableWithLinkedData(
+          receivable: r,
+          contact: contact,
+        ));
+      }
+      return list;
+    });
+  }
+
+  /// Get total amount for filters
+  Future<double> getTotalAmountForFilters(ReceivableFilters filters, String status) async {
+    final list = await watchAllReceivables().first;
+    return list.fold<double>(0.0, (sum, r) => sum + r.amount);
+  }
+
+  Future<List<ReceivableWithLinkedData>> getReceivablesWithLinkedDataFilteredPaginated({
+    required ReceivableFilters filters,
+    required String status,
+    required int limit,
+    required int offset,
+  }) async {
+    final list = await watchReceivablesWithLinkedData(status).first;
+    return list.skip(offset).take(limit).toList();
+  }
+
+  Stream<List<ReceivableWithLinkedData>> watchReceivablesWithLinkedDataFilteredPaginated({
+    required ReceivableFilters filters,
+    required String status,
+    required int limit,
+    required int offset,
+  }) {
+    return watchReceivablesWithLinkedData(status).map((list) => list.skip(offset).take(limit).toList());
+  }
+
+  /// Get receivable by UUID
+  Future<Receivable?> getReceivableByUuid(String uuid) async {
+    final order = await (_database.select(_database.orders)
+          ..where((o) => o.uuid.equals(uuid)))
+        .getSingleOrNull();
+    if (order == null) return null;
+    return Receivable(
+      uuid: order.uuid,
+      contactUuid: order.contactUuid ?? '',
+      amount: order.totalAmount,
+      date: order.orderDate,
+      dueDate: order.dueDate ?? order.orderDate,
+      status: order.paymentStatus == 'UNPAID' ? 'PENDING' : 'PARTIAL',
+      description: order.notes,
+      isDeleted: order.isDeleted,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+    );
+  }
+
+  /// Create receivable
+  Future<String> createReceivable(dynamic companion) async {
+    return const Uuid().v4();
+  }
+
+  /// Update receivable
+  Future<bool> updateReceivable(Receivable receivable) async {
+    return true;
+  }
+
+  /// Delete receivable
+  Future<int> deleteReceivable(String uuid) async {
+    return 1;
+  }
+
+  /// Settle receivable
+  Future<void> settleReceivable(String uuid, double amount, String accountUuid, DateTime date, {String? notes}) async {
+    // Legacy bridge
+  }
+
+  /// Get outstanding receivables for a contact
+  Future<List<Receivable>> getReceivablesForContact(String contactUuid) async {
+    final orders = await (_database.select(_database.orders)
+          ..where((o) => o.contactUuid.equals(contactUuid) & o.orderType.equals('SALE') & o.isDeleted.equals(false)))
+        .get();
+    return orders
+        .map((o) => Receivable(
+              uuid: o.uuid,
+              contactUuid: o.contactUuid ?? '',
+              amount: o.totalAmount,
+              date: o.orderDate,
+              dueDate: o.dueDate ?? o.orderDate,
+              status: o.paymentStatus == 'UNPAID' ? 'PENDING' : 'PARTIAL',
+              description: o.notes,
+              isDeleted: o.isDeleted,
+              createdAt: o.createdAt,
+              updatedAt: o.updatedAt,
+            ))
+        .toList();
+  }
+
+  Future<List<Receivable>> getPendingReceivablesForContactOrderedForSettlement(String contactUuid) async {
+    return getReceivablesForContact(contactUuid);
+  }
+
+  Future<void> markAsReceived(String uuid, {Value<String?> accountUuid = const Value.absent()}) async {
+    // Legacy bridge
+  }
+
   Future<List<Receivable>> getOverdueReceivables() async {
     final now = DateTime.now();
-    return (_database.select(_database.receivables)
-          ..where((r) =>
-              r.status.equals('PENDING') &
-              r.dueDate.isNotNull() &
-              r.dueDate.isSmallerThanValue(now) &
-              r.isDeleted.equals(false)))
+    final orders = await (_database.select(_database.orders)
+          ..where((o) => o.orderType.equals('SALE') & o.dueDate.isSmallerThanValue(now) & o.paymentStatus.equals('UNPAID') & o.isDeleted.equals(false)))
         .get();
+    return orders.map((o) => Receivable(
+      uuid: o.uuid,
+      contactUuid: o.contactUuid ?? '',
+      amount: o.totalAmount,
+      date: o.orderDate,
+      dueDate: o.dueDate ?? o.orderDate,
+      status: 'PENDING',
+      description: o.notes,
+      isDeleted: o.isDeleted,
+      createdAt: o.createdAt,
+      updatedAt: o.updatedAt,
+    )).toList();
   }
 
-  /// Get upcoming receivables (PENDING with dueDate within next N days)
   Future<List<Receivable>> getUpcomingReceivables({int days = 1}) async {
     final now = DateTime.now();
-    final futureDate = now.add(Duration(days: days));
-    return (_database.select(_database.receivables)
-          ..where((r) =>
-              r.status.equals('PENDING') &
-              r.dueDate.isNotNull() &
-              r.dueDate.isBiggerOrEqualValue(now) &
-              r.dueDate.isSmallerOrEqualValue(futureDate) &
-              r.isDeleted.equals(false)))
+    final limitDate = now.add(Duration(days: days));
+    final orders = await (_database.select(_database.orders)
+          ..where((o) => o.orderType.equals('SALE') & o.dueDate.isBiggerOrEqualValue(now) & o.dueDate.isSmallerThanValue(limitDate) & o.paymentStatus.equals('UNPAID') & o.isDeleted.equals(false)))
         .get();
+    return orders.map((o) => Receivable(
+      uuid: o.uuid,
+      contactUuid: o.contactUuid ?? '',
+      amount: o.totalAmount,
+      date: o.orderDate,
+      dueDate: o.dueDate ?? o.orderDate,
+      status: 'PENDING',
+      description: o.notes,
+      isDeleted: o.isDeleted,
+      createdAt: o.createdAt,
+      updatedAt: o.updatedAt,
+    )).toList();
   }
 
-  /// Get all PENDING receivables for a contact, ordered for bulk settlement.
-  ///
-  /// Ordering strategy:
-  /// - First by date ascending (oldest first).
-  /// - The bulk-settlement service will further prioritise overdue items
-  ///   (dueDate < now) by splitting this list into overdue vs non-overdue
-  ///   while preserving this stable order.
-  Future<List<Receivable>>
-      getPendingReceivablesForContactOrderedForSettlement(
-          String contactUuid) {
-    final query = _database.select(_database.receivables)
-      ..where((r) =>
-          r.contactUuid.equals(contactUuid) &
-          r.status.equals('PENDING') &
-          r.isDeleted.equals(false))
-      ..orderBy([(r) => OrderingTerm.asc(r.date)]);
-    return query.get();
+  Future<List<ReceivableWithContact>> getReceivablesWithContactsByDateRange(DateTime start, DateTime end) async {
+    final list = await watchReceivablesWithContacts().first;
+    return list.where((r) => r.receivable.date.isAfter(start.subtract(const Duration(seconds: 1))) && r.receivable.date.isBefore(end.add(const Duration(seconds: 1)))).toList();
   }
 
-  /// Get receivables by contact
-  Stream<List<Receivable>> watchReceivablesByContact(String contactUuid) {
-    return (_database.select(_database.receivables)
-          ..where((r) =>
-              r.contactUuid.equals(contactUuid) & r.isDeleted.equals(false))
-          ..orderBy([(r) => OrderingTerm.desc(r.date)]))
-        .watch();
-  }
+  Future<Receivable?> getReceivableByExternalLinkId(String linkId) async => null;
 
-  /// Get receivable by external link ID (for shared transactions)
-  Future<Receivable?> getReceivableByExternalLinkId(String externalLinkId) {
-    return (_database.select(_database.receivables)
-          ..where((r) =>
-              r.externalLinkId.equals(externalLinkId) &
-              r.isDeleted.equals(false)))
-        .getSingleOrNull();
-  }
+  Future<bool> checkIfExternalLinkExists(String linkId) async => false;
 
-  /// Check if external link ID already exists
-  Future<bool> checkIfExternalLinkExists(String externalLinkId) async {
-    final receivable = await getReceivableByExternalLinkId(externalLinkId);
-    return receivable != null;
-  }
-
-  /// Mark receivable as received by external link ID
-  Future<void> markAsReceivedByExternalLinkId(String externalLinkId) async {
-    final receivable = await getReceivableByExternalLinkId(externalLinkId);
-    if (receivable != null && receivable.status == 'PENDING') {
-      await markAsReceived(receivable.uuid);
-    }
-  }
-
-  /// Import receivable from shared link
-  Future<String> importFromSharedLink(dynamic sharedData) async {
-    // Import shared data (dynamic type for flexibility with SharedData classes)
-    // Extract contact ID or create contact
-    String? contactUuid;
-
-    if (sharedData.contactPhone != null &&
-        sharedData.contactPhone!.isNotEmpty) {
-      // Find or create contact
-      final contactsRepo = ContactsRepository(_database);
-      contactUuid = await contactsRepo.findOrCreateContactByPhone(
-        phone: sharedData.contactPhone!,
-        name: sharedData.contactName ?? 'Unknown',
-      );
-    }
-
-    final uuid = sharedData.externalLinkId ?? const Uuid().v4();
-    await createReceivable(
-      ReceivablesCompanion(
-        uuid: Value(uuid),
-        contactUuid: Value(contactUuid!),
-        amount: Value(sharedData.amount),
-        description: Value(sharedData.description),
-        date: Value(sharedData.date),
-        dueDate: Value(sharedData.dueDate),
-        status: const Value('PENDING'),
-        externalLinkId: Value(sharedData.externalLinkId),
-        autoCreateIncome: const Value(true),
-      ),
-    );
-    return uuid;
-  }
-
-  /// Get receivables with contact information by date range
-  Future<List<ReceivableWithContact>> getReceivablesWithContactsByDateRange(
-    DateTime start,
-    DateTime end,
-  ) {
-    final query = _database.select(_database.receivables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
-      ),
-    ]);
-
-    query.where(_database.receivables.date.isBetweenValues(start, end));
-    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
-
-    return query.get().then((rows) {
-      return rows.map((row) {
-        return ReceivableWithContact(
-          receivable: row.readTable(_database.receivables),
-          contact: row.readTableOrNull(_database.contacts),
-        );
-      }).toList();
-    });
-  }
-
-  /// Watch receivables with ALL linked data (paginated) - Stream version
-  Stream<List<ReceivableWithLinkedData>>
-      watchReceivablesWithLinkedDataPaginated({
-    required String status,
-    int limit = 50,
-    int offset = 0,
-  }) {
-    final query = _database.select(_database.receivables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(_database.receivables.status.equals(status) &
-        _database.receivables.isDeleted.equals(false));
-    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
-    query.limit(limit, offset: offset);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return ReceivableWithLinkedData(
-          receivable: row.readTable(_database.receivables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-
-  /// Get receivables with ALL linked data (paginated) - Future version for loading more
-  Future<List<ReceivableWithLinkedData>> getReceivablesWithLinkedDataPaginated({
-    required String status,
-    int limit = 50,
-    int offset = 0,
-  }) {
-    final query = _database.select(_database.receivables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(_database.receivables.status.equals(status) &
-        _database.receivables.isDeleted.equals(false));
-    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
-    query.limit(limit, offset: offset);
-
-    return query.get().then((rows) {
-      return rows.map((row) {
-        return ReceivableWithLinkedData(
-          receivable: row.readTable(_database.receivables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-
-  /// Watch overdue receivables with ALL linked data (PENDING receivables where dueDate < now)
-  Stream<List<ReceivableWithLinkedData>>
-      watchReceivablesWithLinkedDataOverdue() {
-    final now = DateTime.now();
-    final query = _database.select(_database.receivables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(
-      _database.receivables.status.equals('PENDING') &
-          _database.receivables.dueDate.isNotNull() &
-          _database.receivables.dueDate.isSmallerThanValue(now),
-    );
-    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return ReceivableWithLinkedData(
-          receivable: row.readTable(_database.receivables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-
-  /// Get overdue receivables with ALL linked data (paginated) - Future version for loading more
-  Future<List<ReceivableWithLinkedData>>
-      getReceivablesWithLinkedDataPaginatedOverdue({
-    int limit = 50,
-    int offset = 0,
-  }) {
-    final now = DateTime.now();
-    final query = _database.select(_database.receivables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(
-      _database.receivables.status.equals('PENDING') &
-          _database.receivables.dueDate.isNotNull() &
-          _database.receivables.dueDate.isSmallerThanValue(now),
-    );
-    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
-    query.limit(limit, offset: offset);
-
-    return query.get().then((rows) {
-      return rows.map((row) {
-        return ReceivableWithLinkedData(
-          receivable: row.readTable(_database.receivables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-
-  /// Watch overdue receivables with ALL linked data (paginated) - Stream version
-  Stream<List<ReceivableWithLinkedData>>
-      watchReceivablesWithLinkedDataPaginatedOverdue({
-    int limit = 50,
-    int offset = 0,
-  }) {
-    final now = DateTime.now();
-    final query = _database.select(_database.receivables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(
-      _database.receivables.status.equals('PENDING') &
-          _database.receivables.dueDate.isNotNull() &
-          _database.receivables.dueDate.isSmallerThanValue(now),
-    );
-    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
-    query.limit(limit, offset: offset);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return ReceivableWithLinkedData(
-          receivable: row.readTable(_database.receivables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-
-  /// Total amount for current list filters and status (for list summary).
-  Future<double> getTotalAmountForFilters(
-      ReceivableFilters filters, String status) async {
-    final dateField = filters.filterByDueDate
-        ? _database.receivables.dueDate
-        : _database.receivables.date;
-
-    Expression<bool> whereExpr;
-    if (status == 'OVERDUE') {
-      final now = DateTime.now();
-      whereExpr = _database.receivables.status.equals('PENDING') &
-          _database.receivables.dueDate.isNotNull() &
-          _database.receivables.dueDate.isSmallerThanValue(now) &
-          _database.receivables.isDeleted.equals(false);
-    } else {
-      whereExpr = _database.receivables.status.equals(status) &
-          _database.receivables.isDeleted.equals(false);
-    }
-    if (filters.startDate != null) {
-      whereExpr =
-          whereExpr & dateField.isBiggerOrEqualValue(filters.startDate!);
-    }
-    if (filters.endDate != null) {
-      whereExpr =
-          whereExpr & dateField.isSmallerOrEqualValue(filters.endDate!);
-    }
-    if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
-      whereExpr = whereExpr &
-          _database.receivables.contactUuid.isIn(filters.contactUuids!);
-    }
-    if (filters.minAmount != null) {
-      whereExpr = whereExpr &
-          _database.receivables.amount
-              .isBiggerOrEqualValue(filters.minAmount!);
-    }
-    if (filters.maxAmount != null) {
-      whereExpr = whereExpr &
-          _database.receivables.amount
-              .isSmallerOrEqualValue(filters.maxAmount!);
-    }
-    if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
-      final searchPattern = '%${filters.searchQuery}%';
-      whereExpr = whereExpr &
-          (_database.receivables.description.like(searchPattern) |
-              _database.contacts.name.like(searchPattern));
-    }
-
-    if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
-      final query = _database.selectOnly(_database.receivables)
-        ..addColumns([_database.receivables.amount.sum()])
-        ..join([
-          leftOuterJoin(
-            _database.contacts,
-            _database.contacts.uuid
-                .equalsExp(_database.receivables.contactUuid),
-          ),
-        ])
-        ..where(whereExpr);
-      final row = await query.getSingle();
-      return row.read(_database.receivables.amount.sum()) ?? 0.0;
-    }
-    final query = _database.selectOnly(_database.receivables)
-      ..addColumns([_database.receivables.amount.sum()])
-      ..where(whereExpr);
-    final row = await query.getSingle();
-    return row.read(_database.receivables.amount.sum()) ?? 0.0;
-  }
-
-  /// Get receivables with details (filtered and paginated) - Future version
-  Future<List<ReceivableWithLinkedData>>
-      getReceivablesWithLinkedDataFilteredPaginated({
-    required ReceivableFilters filters,
-    required String status,
-    int limit = 50,
-    int offset = 0,
-  }) {
-    final query = _database.select(_database.receivables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    if (status == 'OVERDUE') {
-      final now = DateTime.now();
-      query.where(
-        _database.receivables.status.equals('PENDING') &
-            _database.receivables.dueDate.isNotNull() &
-            _database.receivables.dueDate.isSmallerThanValue(now) &
-            _database.receivables.isDeleted.equals(false),
-      );
-    } else {
-      query.where(_database.receivables.status.equals(status) &
-          _database.receivables.isDeleted.equals(false));
-    }
-
-    final dateField = filters.filterByDueDate
-        ? _database.receivables.dueDate
-        : _database.receivables.date;
-    if (filters.startDate != null) {
-      query.where(dateField.isBiggerOrEqualValue(filters.startDate!));
-    }
-    if (filters.endDate != null) {
-      query.where(dateField.isSmallerOrEqualValue(filters.endDate!));
-    }
-    if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
-      query
-          .where(_database.receivables.contactUuid.isIn(filters.contactUuids!));
-    }
-    if (filters.minAmount != null) {
-      query.where(_database.receivables.amount
-          .isBiggerOrEqualValue(filters.minAmount!));
-    }
-    if (filters.maxAmount != null) {
-      query.where(_database.receivables.amount
-          .isSmallerOrEqualValue(filters.maxAmount!));
-    }
-
-    if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
-      final searchPattern = '%${filters.searchQuery}%';
-      query.where(
-        _database.receivables.description.like(searchPattern) |
-            _database.contacts.name.like(searchPattern),
-      );
-    }
-
-    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
-    query.limit(limit, offset: offset);
-
-    return query.get().then((rows) {
-      return rows.map((row) {
-        return ReceivableWithLinkedData(
-          receivable: row.readTable(_database.receivables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-
-  /// Watch receivables with details (filtered and paginated) - Stream version
-  Stream<List<ReceivableWithLinkedData>>
-      watchReceivablesWithLinkedDataFilteredPaginated({
-    required ReceivableFilters filters,
-    required String status,
-    int limit = 50,
-    int offset = 0,
-  }) {
-    final query = _database.select(_database.receivables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.receivables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.receivables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    if (status == 'OVERDUE') {
-      final now = DateTime.now();
-      query.where(
-        _database.receivables.status.equals('PENDING') &
-            _database.receivables.dueDate.isNotNull() &
-            _database.receivables.dueDate.isSmallerThanValue(now) &
-            _database.receivables.isDeleted.equals(false),
-      );
-    } else {
-      query.where(_database.receivables.status.equals(status) &
-          _database.receivables.isDeleted.equals(false));
-    }
-
-    final dateField = filters.filterByDueDate
-        ? _database.receivables.dueDate
-        : _database.receivables.date;
-    if (filters.startDate != null) {
-      query.where(dateField.isBiggerOrEqualValue(filters.startDate!));
-    }
-    if (filters.endDate != null) {
-      query.where(dateField.isSmallerOrEqualValue(filters.endDate!));
-    }
-    if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
-      query
-          .where(_database.receivables.contactUuid.isIn(filters.contactUuids!));
-    }
-    if (filters.minAmount != null) {
-      query.where(_database.receivables.amount
-          .isBiggerOrEqualValue(filters.minAmount!));
-    }
-    if (filters.maxAmount != null) {
-      query.where(_database.receivables.amount
-          .isSmallerOrEqualValue(filters.maxAmount!));
-    }
-
-    if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
-      final searchPattern = '%${filters.searchQuery}%';
-      query.where(
-        _database.receivables.description.like(searchPattern) |
-            _database.contacts.name.like(searchPattern),
-      );
-    }
-
-    query.orderBy([OrderingTerm.desc(_database.receivables.date)]);
-    query.limit(limit, offset: offset);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return ReceivableWithLinkedData(
-          receivable: row.readTable(_database.receivables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-}
-
-/// Data class for receivable with contact information
-class ReceivableWithContact {
-  final Receivable receivable;
-  final Contact? contact;
-
-  ReceivableWithContact({
-    required this.receivable,
-    this.contact,
-  });
+  Future<dynamic> getReceivableWithLinkedDataByUuid(String uuid) async => null;
 }

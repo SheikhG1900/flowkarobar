@@ -6,29 +6,19 @@ import 'connection/connection.dart'
     if (dart.library.html) 'connection/web.dart'
     if (dart.library.js_interop) 'connection/web.dart';
 
+export 'package:flowpaisa/features/transactions/domain/models.dart' show Category, Payable, Receivable, Tag, TransactionSchedule, TransactionSchedulesCompanion, TransactionDocument, WhatsAppQueueData, CategoryExpense, MonthlyFinancials, ContactSummary, PayableReceivableTrend, SplitShare, PayablesCompanion, ReceivablesCompanion;
+
 part 'database.g.dart';
 
-// Tables
-class Categories extends Table {
+class ProductCategories extends Table {
   TextColumn get uuid => text()();
   TextColumn get name => text().withLength(min: 1, max: 100)();
   TextColumn get icon => text().nullable()();
   TextColumn get color => text().nullable()();
-  TextColumn get type => text()(); // 'EXPENSE' or 'INCOME'
-  BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
-  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
-
-  /// Spending cap (expense) or savings target (income); null = not set.
-  RealColumn get monthlyBudget => real().nullable()();
-  RealColumn get quarterlyBudget => real().nullable()();
-  RealColumn get yearlyBudget => real().nullable()();
-  RealColumn get overallBudget => real().nullable()();
-
-  IntColumn get addSeq => integer().nullable()();
-  IntColumn get budgetSeq => integer().nullable()();
 
   @override
   Set<Column> get primaryKey => {uuid};
@@ -40,87 +30,113 @@ class Contacts extends Table {
   TextColumn get phone => text().nullable()();
   TextColumn get email => text().nullable()();
   TextColumn get notes => text().nullable()();
+  TextColumn get address => text().nullable()();
+
+  // Dual Role Flags
+  BoolColumn get isCustomer => boolean().withDefault(const Constant(true))();
+  BoolColumn get isSupplier => boolean().withDefault(const Constant(false))();
+
+  // Credit/Limit
+  RealColumn get creditLimit => real().nullable()(); 
+
+  // Supplier Tax & Bank details
+  TextColumn get taxNumber => text().nullable()();
+  TextColumn get bankName => text().nullable()();
+  TextColumn get bankAccount => text().nullable()();
+  TextColumn get bankIfsc => text().nullable()();
+
+  // Sync columns
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
-
   IntColumn get addSeq => integer().nullable()();
 
   @override
   Set<Column> get primaryKey => {uuid};
 }
 
-class Transactions extends Table {
+class Products extends Table {
   TextColumn get uuid => text()();
-  RealColumn get amount => real()();
-  TextColumn get type => text()(); // 'EXPENSE' or 'INCOME'
-  TextColumn get categoryUuid =>
-      text().nullable().references(Categories, #uuid)();
+  TextColumn get categoryUuid => text().nullable().references(ProductCategories, #uuid)();
+  TextColumn get name => text().withLength(min: 1, max: 200)();
+  TextColumn get sku => text().nullable()();
+  TextColumn get description => text().nullable()();
+  TextColumn get unit => text().withDefault(const Constant('Pcs'))();
+
+  RealColumn get purchasePrice => real().withDefault(const Constant(0.0))();
+  RealColumn get retailPrice => real().withDefault(const Constant(0.0))();
+  RealColumn get wholesalePrice => real().withDefault(const Constant(0.0))();
+
+  RealColumn get stockQuantity => real().withDefault(const Constant(0.0))();
+  RealColumn get minStockAlert => real().nullable()();
+  BoolColumn get isService => boolean().withDefault(const Constant(false))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+/// Inventory lots. Remaining qty = [totalQuantity] - [consumedQuantity].
+/// Purchase lots: [isManual]=false. Manual lots: [isManual]=true + [manualType].
+class ProductBatches extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get productUuid => text().references(Products, #uuid)();
+  TextColumn get batchNumber => text().withLength(min: 1, max: 100)();
+
+  /// Qty received into this lot (purchase / opening / production / adjustment).
+  RealColumn get totalQuantity => real().withDefault(const Constant(0.0))();
+
+  /// Qty consumed from this lot (sales, purchase returns, write-offs).
+  RealColumn get consumedQuantity => real().withDefault(const Constant(0.0))();
+
+  /// Per-unit cost stamped at receive time; sales use this for COGS.
+  RealColumn get effectiveCost => real().withDefault(const Constant(0.0))();
+
+  BoolColumn get isManual => boolean().withDefault(const Constant(false))();
+
+  /// When [isManual]: OPENING | PRODUCTION | ADJUSTMENT. Null for purchase lots.
+  TextColumn get manualType => text().nullable()();
+
+  RealColumn get retailPriceOverride => real().nullable()();
+  RealColumn get wholesalePriceOverride => real().nullable()();
+
+  DateTimeColumn get manufactureDate => dateTime().nullable()();
+  DateTimeColumn get expiryDate => dateTime().nullable()();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+class Orders extends Table {
+  TextColumn get uuid => text()();
   TextColumn get contactUuid => text().nullable().references(Contacts, #uuid)();
-  TextColumn get description => text().nullable()();
-  DateTimeColumn get date => dateTime()();
-
-  // Linked transaction fields
-  // Note: removing .references() to avoid circular dependency with Receivables/Payables tables
-  TextColumn get linkedReceivableUuid => text().nullable()();
-  TextColumn get linkedPayableUuid => text().nullable()();
-  TextColumn get paidRelationship =>
-      text().nullable()(); // 'PAID_FOR' or 'PAID_BY' or null
-  BoolColumn get isAutoGenerated => boolean().withDefault(const Constant(
-      false))(); // true if auto-created when marking payable/receivable
-  BoolColumn get isScheduled => boolean().withDefault(
-      const Constant(false))(); // true if generated from a schedule
-
-  // Account tracking
-  TextColumn get accountUuid => text().nullable()(); // references Accounts.uuid
-
-  // processedDate: null = pending (excluded from balance/analytics)
-  // not null = processed on this date (use for account balance ordering)
-  // For regular transactions: set to transaction date at creation
-  // For linked/scheduled: set when user marks as paid/received
-  DateTimeColumn get processedDate => dateTime().nullable()();
-
-  // Grouping identifier for split bills
-  // All transactions that are part of the same split share the same linkedGroupId
-  TextColumn get linkedGroupId => text().nullable()();
-
-  // Offline shared transaction
-  TextColumn get externalLinkId => text().nullable().unique()(); // "tx_8f7a3b"
-
-  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
-  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
-  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
-
-  @override
-  Set<Column> get primaryKey => {uuid};
-}
-
-class Receivables extends Table {
-  TextColumn get uuid => text()();
-  TextColumn get contactUuid => text().references(Contacts, #uuid)();
-  RealColumn get amount => real()();
-  TextColumn get description => text().nullable()();
-  DateTimeColumn get date => dateTime()();
+  TextColumn get orderNumber => text()();
+  TextColumn get orderType => text()(); // 'SALE' or 'PURCHASE'
+  DateTimeColumn get orderDate => dateTime()();
   DateTimeColumn get dueDate => dateTime().nullable()();
-  TextColumn get status => text().withDefault(
-      const Constant('PENDING'))(); // 'PENDING', 'RECEIVED', 'CANCELLED'
-  DateTimeColumn get receivedDate =>
-      dateTime().nullable()(); // When it was actually received
 
-  // Linked transaction fields
-  TextColumn get linkedExpenseUuid =>
-      text().nullable().references(Transactions, #uuid)();
-  TextColumn get linkedIncomeUuid =>
-      text().nullable().references(Transactions, #uuid)();
-  BoolColumn get autoCreateIncome =>
-      boolean().withDefault(const Constant(true))();
-  BoolColumn get isScheduled => boolean().withDefault(
-      const Constant(false))(); // true if generated from a schedule
+  RealColumn get subtotal => real()();
+  RealColumn get discountAmount => real().withDefault(const Constant(0.0))();
+  RealColumn get taxAmount => real().withDefault(const Constant(0.0))();
+  RealColumn get totalAmount => real()();
 
-  // Offline shared transaction
-  TextColumn get externalLinkId => text().nullable().unique()(); // "tx_8f7a3b"
+  TextColumn get paymentStatus => text().withDefault(const Constant('UNPAID'))(); // 'UNPAID', 'PARTIALLY_PAID', 'PAID'
+  TextColumn get deliveryStatus => text().withDefault(const Constant('PENDING'))(); // 'PENDING', 'SHIPPED', 'DELIVERED', 'CANCELLED'
+  
+  TextColumn get shippingProvider => text().nullable()();
+  TextColumn get trackingNumber => text().nullable()();
+  DateTimeColumn get deliveredDate => dateTime().nullable()();
+  TextColumn get notes => text().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -131,30 +147,39 @@ class Receivables extends Table {
   Set<Column> get primaryKey => {uuid};
 }
 
-class Payables extends Table {
+class OrderItems extends Table {
   TextColumn get uuid => text()();
-  TextColumn get contactUuid => text().references(Contacts, #uuid)();
-  RealColumn get amount => real()();
-  TextColumn get description => text().nullable()();
+  TextColumn get orderUuid => text().references(Orders, #uuid)();
+  TextColumn get productUuid => text().references(Products, #uuid)();
+  TextColumn get productNameSnapshot => text()();
+
+  RealColumn get quantity => real()();
+  RealColumn get unitPrice => real()();
+  RealColumn get discountAmount => real().withDefault(const Constant(0.0))();
+  RealColumn get taxRate => real().withDefault(const Constant(0.0))();
+
+  TextColumn get batchUuid => text().nullable().references(ProductBatches, #uuid)();
+  RealColumn get purchasePriceSnapshot => real().withDefault(const Constant(0.0))();
+  TextColumn get unit => text().withDefault(const Constant('Pcs'))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+class OrderReturns extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get orderUuid => text().references(Orders, #uuid)();
+  TextColumn get returnNumber => text()();
+  TextColumn get orderType => text()(); // 'SALE' or 'PURCHASE'
+  TextColumn get contactUuid => text().nullable().references(Contacts, #uuid)();
   DateTimeColumn get date => dateTime()();
-  DateTimeColumn get dueDate => dateTime().nullable()();
-  TextColumn get status => text().withDefault(
-      const Constant('PENDING'))(); // 'PENDING', 'PAID', 'CANCELLED'
-  DateTimeColumn get paidDate =>
-      dateTime().nullable()(); // When it was actually paid
-
-  // Linked transaction fields
-  TextColumn get linkedExpenseUuid =>
-      text().nullable().references(Transactions, #uuid)();
-  TextColumn get linkedIncomeUuid =>
-      text().nullable().references(Transactions, #uuid)();
-  BoolColumn get autoCreateExpense =>
-      boolean().withDefault(const Constant(false))();
-  BoolColumn get isScheduled => boolean().withDefault(
-      const Constant(false))(); // true if generated from a schedule
-
-  // Offline shared transaction
-  TextColumn get externalLinkId => text().nullable().unique()(); // "tx_8f7a3b"
+  RealColumn get totalRefundAmount => real().withDefault(const Constant(0.0))();
+  TextColumn get notes => text().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -165,12 +190,14 @@ class Payables extends Table {
   Set<Column> get primaryKey => {uuid};
 }
 
-class Reminders extends Table {
+class OrderReturnItems extends Table {
   TextColumn get uuid => text()();
-  TextColumn get type => text()(); // 'RECEIVABLE' or 'PAYABLE'
-  TextColumn get referenceUuid => text()(); // UUID of receivable or payable
-  DateTimeColumn get reminderDate => dateTime()();
-  BoolColumn get isTriggered => boolean().withDefault(const Constant(false))();
+  TextColumn get returnUuid => text().references(OrderReturns, #uuid)();
+  TextColumn get productUuid => text().references(Products, #uuid)();
+  RealColumn get quantity => real()();
+  RealColumn get refundUnitPrice => real()();
+  TextColumn get batchUuid => text().nullable().references(ProductBatches, #uuid)();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
@@ -180,124 +207,68 @@ class Reminders extends Table {
   Set<Column> get primaryKey => {uuid};
 }
 
-class WhatsAppQueue extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get contactUuid => text().references(Contacts, #uuid)();
-  TextColumn get message => text()();
-  TextColumn get deepLink => text().nullable()();
-  TextColumn get status => text()
-      .withDefault(const Constant('PENDING'))(); // 'PENDING', 'SENT', 'FAILED'
-  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-}
-
-class CategoryUsageStats extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get categoryUuid => text().references(Categories, #uuid)();
-  IntColumn get usageCount => integer().withDefault(const Constant(0))();
-  DateTimeColumn get lastUsed => dateTime().nullable()();
-}
-
-class ContactUsageStats extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get contactUuid => text().references(Contacts, #uuid)();
-  IntColumn get usageCount => integer().withDefault(const Constant(0))();
-  DateTimeColumn get lastUsed => dateTime().nullable()();
-}
-
-class UserPreferences extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get key => text().unique()();
-  TextColumn get value => text()();
-  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
-  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
-  /// Default false so first-install / default data stays clean; set true when user changes a preference.
-  BoolColumn get isNotSynced => boolean().withDefault(const Constant(false))();
-}
-
-class SyncLog extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  DateTimeColumn get lastBackup => dateTime().nullable()();
-  DateTimeColumn get lastRestore => dateTime().nullable()();
-  TextColumn get driveFileId => text().nullable()();
-  TextColumn get status => text().nullable()();
-  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-}
-
-class AppCurrencies extends Table {
+class Catalogs extends Table {
   TextColumn get uuid => text()();
   TextColumn get name => text().withLength(min: 1, max: 100)();
-  TextColumn get symbol => text().withLength(min: 0, max: 10)();
-  TextColumn get code => text().withLength(min: 3, max: 3)();
-  IntColumn get decimalPlaces => integer().withDefault(const Constant(2))();
-  RealColumn get scaleFactor => real().withDefault(const Constant(1.0))();
-  BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
-  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
-  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
-  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
-  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
-
-  @override
-  Set<Column> get primaryKey => {uuid};
-}
-
-class TransactionSchedules extends Table {
-  TextColumn get uuid => text()();
-
-  // Transaction template fields
-  RealColumn get amount => real()();
-  TextColumn get type => text()(); // 'EXPENSE' or 'INCOME'
-  TextColumn get categoryUuid =>
-      text().nullable().references(Categories, #uuid)();
-  TextColumn get contactUuid => text().nullable().references(Contacts, #uuid)();
-  TextColumn get accountUuid =>
-      text().nullable().references(Accounts, #uuid)();
   TextColumn get description => text().nullable()();
-  TextColumn get paidRelationship => text()
-      .nullable()(); // 'PAID_FOR', 'PAID_BY', 'RECEIVED_FROM', 'WILL_RECEIVE' or null
-  DateTimeColumn get dueDate => dateTime().nullable()();
-
-  // Schedule configuration
-  TextColumn get scheduleType => text()(); // 'DAILY', 'WEEKLY', 'MONTHLY'
-  TextColumn get selectedDaysOfWeek => text()
-      .nullable()(); // JSON array of weekday numbers (0=Sunday, 6=Saturday)
-  TextColumn get selectedDaysOfMonth =>
-      text().nullable()(); // JSON array of day numbers (1-31)
-
-  IntColumn get dueDateOffset => integer().nullable()();
-
-  // Schedule state
-  BoolColumn get isPaused => boolean().withDefault(const Constant(false))();
-  DateTimeColumn get lastGeneratedDate =>
-      dateTime().nullable()(); // Last date for which transaction was generated
-  DateTimeColumn get startDate =>
-      dateTime().nullable()(); // Optional start date
-  DateTimeColumn get endDate => dateTime().nullable()(); // Optional end date
+  DateTimeColumn get validUntil => dateTime().nullable()();
+  BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
   BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
 
-  IntColumn get addSeq => integer().nullable()();
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+class CatalogItems extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get catalogUuid => text().references(Catalogs, #uuid)();
+  TextColumn get productUuid => text().references(Products, #uuid)();
+  RealColumn get customPrice => real().nullable()();
+  TextColumn get batchUuid => text().nullable().references(ProductBatches, #uuid)();
+  DateTimeColumn get validUntil => dateTime().nullable()();
+  TextColumn get batchSelectionStrategy => text().withDefault(const Constant('FEFO_AUTO'))(); // 'FEFO_AUTO' | 'FIFO_AUTO' | 'MANUAL_BATCH'
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
 
   @override
   Set<Column> get primaryKey => {uuid};
 }
 
-class SyncMetadata extends Table {
-  TextColumn get deviceId => text()();
-  IntColumn get version => integer().withDefault(const Constant(0))();
-  IntColumn get cloudVersion => integer().withDefault(const Constant(0))();
-  DateTimeColumn get lastSyncAt => dateTime().nullable()();
-  TextColumn get syncStatus => text().withDefault(const Constant('Idle'))();
-  DateTimeColumn get syncStartedAt => dateTime().nullable()();
+class CatalogAssignments extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get catalogUuid => text().references(Catalogs, #uuid)();
+  TextColumn get contactUuid => text().references(Contacts, #uuid)();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
 
   @override
-  Set<Column> get primaryKey => {deviceId};
+  Set<Column> get primaryKey => {uuid};
 }
 
-/// Account types: CASH, BANK, SAVINGS, CREDIT_CARD
+class CatalogTieredDiscounts extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get catalogItemUuid => text().references(CatalogItems, #uuid)();
+  RealColumn get minQuantity => real()();
+  RealColumn get discountPercentage => real()();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
 class Accounts extends Table {
   TextColumn get uuid => text()();
   TextColumn get name => text().withLength(min: 1, max: 100)();
@@ -308,7 +279,6 @@ class Accounts extends Table {
   DateTimeColumn get openingDate => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
 
-  // Credit card specific fields (null for non-credit-card accounts)
   RealColumn get creditLimit => real().nullable()();
   IntColumn get billingCycleDay => integer().nullable()(); // Day of month 1-31
   IntColumn get paymentDueDays => integer().nullable()(); // Days after billing cycle
@@ -343,13 +313,27 @@ class AccountTransfers extends Table {
   Set<Column> get primaryKey => {uuid};
 }
 
-class TransactionDocuments extends Table {
+class Transactions extends Table {
   TextColumn get uuid => text()();
-  TextColumn get transactionUuid => text().references(Transactions, #uuid)();
-  TextColumn get fileName => text()(); // Unique local file name: doc_uuid.ext
-  TextColumn get originalName => text()(); // Original file name: receipt.jpg
-  IntColumn get fileSize => integer()(); // File size in bytes
-  TextColumn get mimeType => text().nullable()(); // MIME type or extension
+  RealColumn get amount => real()();
+  TextColumn get type => text()(); // 'CASH_IN' or 'CASH_OUT'
+  TextColumn get contactUuid => text().nullable().references(Contacts, #uuid)();
+  TextColumn get orderUuid => text().nullable().references(Orders, #uuid)();
+  TextColumn get categoryUuid => text().nullable()();
+  TextColumn get description => text().nullable()();
+  DateTimeColumn get date => dateTime()();
+
+  TextColumn get accountUuid => text().nullable().references(Accounts, #uuid)();
+  DateTimeColumn get processedDate => dateTime().nullable()();
+  TextColumn get paymentMethod => text().withDefault(const Constant('CASH'))(); // 'CASH', 'BANK_TRANSFER', 'UPI', 'CARD'
+
+  // Linked transaction fields
+  TextColumn get linkedReceivableUuid => text().nullable()();
+  TextColumn get linkedPayableUuid => text().nullable()();
+  TextColumn get paidRelationship => text().nullable()(); // 'PAID_FOR', 'PAID_BY', 'RECEIVED_FROM', 'WILL_RECEIVE' or null
+  BoolColumn get isAutoGenerated => boolean().withDefault(const Constant(false))();
+  BoolColumn get isScheduled => boolean().withDefault(const Constant(false))();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
@@ -359,10 +343,33 @@ class TransactionDocuments extends Table {
   Set<Column> get primaryKey => {uuid};
 }
 
-class Tags extends Table {
+class UserPreferences extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get key => text().unique()();
+  TextColumn get value => text()();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(false))();
+}
+
+class SyncLog extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  DateTimeColumn get lastBackup => dateTime().nullable()();
+  DateTimeColumn get lastRestore => dateTime().nullable()();
+  TextColumn get driveFileId => text().nullable()();
+  TextColumn get status => text().nullable()();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+class AppCurrencies extends Table {
   TextColumn get uuid => text()();
-  TextColumn get name => text().withLength(min: 1, max: 100).unique()();
-  TextColumn get color => text().nullable()();
+  TextColumn get name => text().withLength(min: 1, max: 100)();
+  TextColumn get symbol => text().withLength(min: 0, max: 10)();
+  TextColumn get code => text().withLength(min: 3, max: 3)();
+  IntColumn get decimalPlaces => integer().withDefault(const Constant(2))();
+  RealColumn get scaleFactor => real().withDefault(const Constant(1.0))();
+  BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
@@ -372,618 +379,168 @@ class Tags extends Table {
   Set<Column> get primaryKey => {uuid};
 }
 
-class TransactionTags extends Table {
-  TextColumn get transactionUuid => text().references(Transactions, #uuid)();
-  TextColumn get tagUuid => text().references(Tags, #uuid)();
-  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
-  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+class SyncMetadata extends Table {
+  TextColumn get deviceId => text()();
+  IntColumn get version => integer().withDefault(const Constant(0))();
+  IntColumn get cloudVersion => integer().withDefault(const Constant(0))();
+  DateTimeColumn get lastSyncAt => dateTime().nullable()();
+  TextColumn get syncStatus => text().withDefault(const Constant('Idle'))();
+  DateTimeColumn get syncStartedAt => dateTime().nullable()();
 
   @override
-  Set<Column> get primaryKey => {transactionUuid, tagUuid};
+  Set<Column> get primaryKey => {deviceId};
 }
+
+/// Compatibility alias: older UI still uses CategoriesCompanion naming.
+typedef CategoriesCompanion = ProductCategoriesCompanion;
 
 @DriftDatabase(tables: [
-  Categories,
+  ProductCategories,
   Contacts,
   Accounts,
   Transactions,
   AccountTransfers,
-  TransactionDocuments,
-  Tags,
-  TransactionTags,
-  Receivables,
-  Payables,
-  Reminders,
-  WhatsAppQueue,
-  CategoryUsageStats,
-  ContactUsageStats,
   UserPreferences,
   SyncLog,
   AppCurrencies,
-  TransactionSchedules,
   SyncMetadata,
+  Products,
+  ProductBatches,
+  Orders,
+  OrderItems,
+  OrderReturns,
+  OrderReturnItems,
+  Catalogs,
+  CatalogItems,
+  CatalogAssignments,
+  CatalogTieredDiscounts,
 ])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase({String fileName = 'flowpaisa.db', QueryExecutor? executor})
+  AppDatabase({String fileName = 'flowkarobar.db', QueryExecutor? executor})
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 28;
+  int get schemaVersion => 2;
+
+  // Compatibility getters and helpers for deprecated tables
+  $ProductCategoriesTable get categories => productCategories;
+  Expression<bool>? buildTagExpression(List<String> tagUuids) => null;
+  dynamic joinScheduleWithDetails(dynamic select) => select;
+
+  JoinedSelectStatement<HasResultSet, dynamic> joinTransactionWithDetails(
+      SimpleSelectStatement<$TransactionsTable, Transaction> select) {
+    return select.join([
+      leftOuterJoin(
+        productCategories,
+        productCategories.uuid.equalsExp(transactions.categoryUuid),
+      ),
+      leftOuterJoin(
+        contacts,
+        contacts.uuid.equalsExp(transactions.contactUuid),
+      ),
+      leftOuterJoin(
+        accounts,
+        accounts.uuid.equalsExp(transactions.accountUuid),
+      ),
+    ]);
+  }
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         beforeOpen: (details) async {
-          // Enable WAL mode for better concurrency
           try {
             await customStatement('PRAGMA journal_mode=WAL;');
             await customStatement('PRAGMA synchronous=NORMAL;');
-            // Set busy timeout to 5 seconds to wait for locks to clear
             await customStatement('PRAGMA busy_timeout=5000;');
           } catch (e) {
             if (kDebugMode) {
-              print('Database: Warning - Failed to set WAL mode (database likely locked): $e');
+              print('Database: Warning - Failed to set WAL mode: $e');
             }
           }
-
-          // Ensure default data exists every time the database is opened
-          // This handles cases where data was cleared via raw SQL
-          if (details.wasCreated) {
-            // Data is already inserted in onCreate
-            return;
-          }
-
-          // Heal any NULL scale_factor values in app_currencies
-          try {
-            await customStatement('UPDATE app_currencies SET scale_factor = 1.0 WHERE scale_factor IS NULL;');
-          } catch (e) {
-            if (kDebugMode) {
-              print('Database: Warning - Failed to heal NULL scale_factor: $e');
-            }
-          }
-
           await insertDefaultData();
-          await _backfillSequenceNumbers();
         },
         onCreate: (Migrator m) async {
           await m.createAll();
-          await _insertDefaultCategories();
+          await _insertDefaultProductCategories();
           await _insertDefaultCurrencies();
         },
         onUpgrade: (Migrator m, int from, int to) async {
-          // Migration from version 10 to 11: Add dueDateOffset to TransactionSchedules
-          if (from <= 10) {
-            await m.addColumn(
-                transactionSchedules, transactionSchedules.dueDateOffset);
-          }
-          // Migration from version 11 to 12: Add isScheduled to Receivables and Payables
-          if (from <= 11) {
-            await m.addColumn(receivables, receivables.isScheduled);
-            await m.addColumn(payables, payables.isScheduled);
-          }
-          // Migration from version 11 to 12: Add isScheduled to Receivables and Payables
-          if (from <= 11) {
-            await m.addColumn(receivables, receivables.isScheduled);
-            await m.addColumn(payables, payables.isScheduled);
-          }
-          // Migration from version 12 to 13: Add syncStatus and syncStartedAt to SyncMetadata
-          if (from <= 12) {
-            await m.addColumn(syncMetadata, syncMetadata.syncStatus);
-            await m.addColumn(syncMetadata, syncMetadata.syncStartedAt);
-          }
-          // Migration from version 13 to 14: Add cloudVersion to SyncMetadata
-          if (from <= 13) {
-            try {
-              await m.addColumn(syncMetadata, syncMetadata.cloudVersion);
-            } catch (e) {
-              // Column might already exist if migration was partially successful
-              if (kDebugMode) {
-                print('Migration: Column cloudVersion might already exist: $e');
-              }
-            }
-          }
-
-          // Migration from version 14 to 15: Add linkedGroupId to Transactions
-          if (from <= 14) {
-            try {
-              // Drift's addColumn expects a GeneratedColumn, but our table
-              // definition only exposes a generic Column here, so we use
-              // raw SQL to add the column in migrations.
-              await customStatement(
-                  'ALTER TABLE transactions ADD COLUMN linked_group_id TEXT;');
-            } catch (e) {
-              // Column might already exist if migration was partially successful
-              if (kDebugMode) {
-                print(
-                    'Migration: Column linked_group_id might already exist on Transactions: $e');
-              }
-            }
-          }
-
-          // Migration from version 15 to 16: Add is_not_synced to UserPreferences (for sync)
-          if (from <= 15) {
-            try {
-              await m.addColumn(userPreferences, userPreferences.isNotSynced);
-            } catch (e) {
-              if (kDebugMode) {
-                print(
-                    'Migration: Column is_not_synced might already exist on user_preferences: $e');
-              }
-            }
-          }
-
-          // Migration from version 16 to 17: Add is_deleted to UserPreferences (soft delete for sync)
-          if (from <= 16) {
-            try {
-              await m.addColumn(userPreferences, userPreferences.isDeleted);
-            } catch (e) {
-              if (kDebugMode) {
-                print(
-                    'Migration: Column is_deleted might already exist on user_preferences: $e');
-              }
-            }
-          }
-
-          // Migration from version 17 to 18: Add Accounts, AccountTransfers tables
-          // and accountUuid + processedDate columns to Transactions
-          // Migration from version 18 to 19: Add accountUuid to TransactionSchedules
-          if (from <= 18) {
-            try {
-              await customStatement(
-                  'ALTER TABLE transaction_schedules ADD COLUMN account_uuid TEXT REFERENCES accounts (uuid);');
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: transaction_schedules account_uuid might already exist: $e');
-              }
-            }
-          }
-
-          if (from <= 17) {
-            try {
-              await m.createTable(accounts);
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: accounts table might already exist: $e');
-              }
-            }
-            try {
-              await m.createTable(accountTransfers);
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: account_transfers table might already exist: $e');
-              }
-            }
-            try {
-              await customStatement(
-                  'ALTER TABLE transactions ADD COLUMN account_uuid TEXT;');
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: Column account_uuid might already exist on transactions: $e');
-              }
-            }
-            try {
-              await customStatement(
-                  'ALTER TABLE transactions ADD COLUMN processed_date INTEGER;');
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: Column processed_date might already exist on transactions: $e');
-              }
-            }
-            // Backfill processedDate for all existing non-scheduled, non-pending transactions
-            // Regular transactions and auto-generated ones are already processed
-            try {
-              await customStatement(
-                'UPDATE transactions SET processed_date = date WHERE processed_date IS NULL AND is_scheduled = 0;'
-              );
-              // Auto-generated transactions (from payable/receivable marking) are also processed
-              await customStatement(
-                'UPDATE transactions SET processed_date = date WHERE processed_date IS NULL AND is_auto_generated = 1;'
-              );
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: processedDate backfill failed: $e');
-              }
-            }
-          }
-
-          // Migration from version 19 to 20: ensure default Refund category has icon
-          if (from <= 19) {
-            try {
-              final replayCode = Symbols.replay.codePoint.toString();
-              await customStatement(
-                "UPDATE categories SET icon = '$replayCode' WHERE uuid = 'default_cat_refund' AND (icon IS NULL OR icon = '');",
-              );
-            } catch (e) {
-              if (kDebugMode) {
-                print(
-                    'Migration: default_cat_refund icon backfill failed: $e');
-              }
-            }
-          }
-
-          // Migration from version 20 to 21: category budgets (spending / savings targets)
-          if (from <= 20) {
-            try {
-              await m.addColumn(categories, categories.monthlyBudget);
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: monthly_budget might already exist: $e');
-              }
-            }
-            try {
-              await m.addColumn(categories, categories.quarterlyBudget);
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: quarterly_budget might already exist: $e');
-              }
-            }
-            try {
-              await m.addColumn(categories, categories.yearlyBudget);
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: yearly_budget might already exist: $e');
-              }
-            }
-          }
-
-          // Migration from version 21 to 22: sequence numbers for premium limits
-          if (from <= 21) {
-            try {
-              await m.addColumn(categories, categories.addSeq);
-              await m.addColumn(categories, categories.budgetSeq);
-              await m.addColumn(accounts, accounts.addSeq);
-              await m.addColumn(transactionSchedules, transactionSchedules.addSeq);
-              await m.addColumn(contacts, contacts.addSeq);
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: sequence columns might already exist: $e');
-              }
-            }
-          }
-
-          // Migration from version 22 to 23: Remove add_seq from Receivables if it was added
-          if (from <= 22) {
-            try {
-              // SQLite doesn't support DROP COLUMN easily in older versions, 
-              // but we can try it for newer versions or just ignore if it fails.
-              // Since we're using Drift, we'll use a raw statement.
-              await customStatement('ALTER TABLE receivables DROP COLUMN add_seq;');
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: Failed to drop add_seq from receivables (likely not supported or column missing): $e');
-              }
-            }
-          }
-
-          // Migration from version 23 to 24: overall budget for categories
-          if (from <= 23) {
-            try {
-              await m.addColumn(categories, categories.overallBudget);
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: overall_budget might already exist: $e');
-              }
-            }
-          }
-
-          // Migration from version 24 to 25: Migrate existing sync metadata to local_db
-          if (from <= 24) {
-            try {
-              // Check if 'local_db' row already exists
-              final existingLocalDb = await (select(syncMetadata)
-                    ..where((t) => t.deviceId.equals('local_db')))
-                  .getSingleOrNull();
-
-              if (existingLocalDb == null) {
-                final allMetadata = await select(syncMetadata).get();
-                if (allMetadata.isNotEmpty) {
-                  // Find the row with the highest version number
-                  allMetadata.sort((a, b) => b.version.compareTo(a.version));
-                  final bestMatch = allMetadata.first;
-
-                  await into(syncMetadata).insert(SyncMetadataCompanion(
-                    deviceId: const Value('local_db'),
-                    version: Value(bestMatch.version),
-                    cloudVersion: Value(bestMatch.cloudVersion),
-                    lastSyncAt: Value(bestMatch.lastSyncAt),
-                    syncStatus: Value(bestMatch.syncStatus),
-                    syncStartedAt: Value(bestMatch.syncStartedAt),
-                  ));
-
-                  if (kDebugMode) {
-                    print(
-                        'Migration: Successfully migrated sync metadata from ${bestMatch.deviceId} to local_db. Version: ${bestMatch.version}');
-                  }
-                }
-              }
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: Sync metadata migration to local_db failed: $e');
-              }
-            }
-          }
-
-          // Migration from version 25 to 26: Add scaleFactor to AppCurrencies
-          if (from <= 25) {
-            try {
-              await m.addColumn(appCurrencies, appCurrencies.scaleFactor);
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: scale_factor might already exist on AppCurrencies: $e');
-              }
-            }
-            try {
-              await customStatement('UPDATE app_currencies SET scale_factor = 1.0 WHERE scale_factor IS NULL;');
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: Failed to backfill scale_factor: $e');
-              }
-            }
-          }
-
-          // Migration from version 26 to 27: Add TransactionDocuments table
-          if (from <= 26) {
-            try {
-              await m.createTable(transactionDocuments);
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: transaction_documents table might already exist: $e');
-              }
-            }
-          }
-
-          // Migration from version 27 to 28: Add Tags and TransactionTags tables
-          if (from <= 27) {
-            try {
-              await m.createTable(tags);
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: tags table might already exist: $e');
-              }
-            }
-            try {
-              await m.createTable(transactionTags);
-            } catch (e) {
-              if (kDebugMode) {
-                print('Migration: transaction_tags table might already exist: $e');
-              }
-            }
+          if (from < 2) {
+            await _migrateProductBatchesToV2();
           }
         },
       );
 
-  Future<void> _backfillSequenceNumbers() async {
+  /// Adds lot inventory columns and migrates legacy [stock_quantity] → total/consumed.
+  Future<void> _migrateProductBatchesToV2() async {
+    Future<void> tryAlter(String sql) async {
+      try {
+        await customStatement(sql);
+      } catch (e) {
+        if (kDebugMode) {
+          print('Database migrate v2 alter skipped: $e');
+        }
+      }
+    }
+
+    await tryAlter(
+        'ALTER TABLE product_batches ADD COLUMN total_quantity REAL NOT NULL DEFAULT 0.0');
+    await tryAlter(
+        'ALTER TABLE product_batches ADD COLUMN consumed_quantity REAL NOT NULL DEFAULT 0.0');
+    await tryAlter(
+        'ALTER TABLE product_batches ADD COLUMN effective_cost REAL NOT NULL DEFAULT 0.0');
+    await tryAlter(
+        'ALTER TABLE product_batches ADD COLUMN is_manual INTEGER NOT NULL DEFAULT 0');
+    await tryAlter('ALTER TABLE product_batches ADD COLUMN manual_type TEXT');
+
+    // Legacy stock_quantity → opening remaining as total, consumed 0
     try {
-      // Check if backfill is already done
-      final backfillDone = await (select(userPreferences)
-            ..where((u) => u.key.equals('sequence_backfill_done')))
-          .getSingleOrNull();
-      if (backfillDone?.value == 'true') return;
-
-      await transaction(() async {
-        // 1. Categories addSeq: Default categories = 0, Custom categories = 1, 2, 3...
-        // First, set all default categories to 0
-        await (update(categories)..where((c) => c.isDefault.equals(true)))
-            .write(const CategoriesCompanion(addSeq: Value(0)));
-
-        // Then, assign sequence to non-deleted custom categories
-        final cats = await (select(categories)
-              ..where((c) => c.isDefault.equals(false) & c.isDeleted.equals(false))
-              ..orderBy([(c) => OrderingTerm.asc(c.createdAt)]))
-            .get();
-        for (int i = 0; i < cats.length; i++) {
-          await (update(categories)..where((c) => c.uuid.equals(cats[i].uuid)))
-              .write(CategoriesCompanion(addSeq: Value(i + 1)));
-        }
-
-        // 2. Categories budgetSeq: 1, 2, 3... (only for non-deleted with budget)
-        final budgetCats = await (select(categories)
-              ..where((c) =>
-                  c.isDeleted.equals(false) &
-                  (c.monthlyBudget.isNotNull() |
-                      c.quarterlyBudget.isNotNull() |
-                      c.yearlyBudget.isNotNull()))
-              ..orderBy([(c) => OrderingTerm.asc(c.createdAt)]))
-            .get();
-        // First, reset all budgetSeq to null to avoid conflicts during reassignment
-        await (update(categories)).write(const CategoriesCompanion(budgetSeq: Value(null)));
-        
-        for (int i = 0; i < budgetCats.length; i++) {
-          await (update(categories)
-                ..where((c) => c.uuid.equals(budgetCats[i].uuid)))
-              .write(CategoriesCompanion(budgetSeq: Value(i + 1)));
-        }
-
-        // 3. Accounts addSeq: 1, 2, 3... (only for non-deleted)
-        final accs = await (select(accounts)
-              ..where((a) => a.isDeleted.equals(false))
-              ..orderBy([(a) => OrderingTerm.asc(a.createdAt)]))
-            .get();
-        for (int i = 0; i < accs.length; i++) {
-          await (update(accounts)..where((a) => a.uuid.equals(accs[i].uuid)))
-              .write(AccountsCompanion(addSeq: Value(i + 1)));
-        }
-
-        // 4. Schedules addSeq: 1, 2, 3... (only for non-deleted)
-        final scheds = await (select(transactionSchedules)
-              ..where((s) => s.isDeleted.equals(false))
-              ..orderBy([(s) => OrderingTerm.asc(s.createdAt)]))
-            .get();
-        for (int i = 0; i < scheds.length; i++) {
-          await (update(transactionSchedules)
-                ..where((s) => s.uuid.equals(scheds[i].uuid)))
-              .write(TransactionSchedulesCompanion(addSeq: Value(i + 1)));
-        }
-
-        // 5. Contacts addSeq: 1, 2, 3... (only for non-deleted)
-        final conts = await (select(contacts)
-              ..where((c) => c.isDeleted.equals(false))
-              ..orderBy([(c) => OrderingTerm.asc(c.createdAt)]))
-            .get();
-        for (int i = 0; i < conts.length; i++) {
-          await (update(contacts)..where((c) => c.uuid.equals(conts[i].uuid)))
-              .write(ContactsCompanion(addSeq: Value(i + 1)));
-        }
-
-        // Mark backfill as done (though we are ignoring the check for now)
-        await into(userPreferences).insert(
-          UserPreferencesCompanion.insert(
-            key: 'sequence_backfill_done',
-            value: 'true',
-            updatedAt: Value(DateTime.now()),
-          ),
-          mode: InsertMode.insertOrReplace,
-        );
-      });
+      await customStatement('''
+        UPDATE product_batches
+        SET total_quantity = COALESCE(stock_quantity, 0),
+            consumed_quantity = 0
+        WHERE (total_quantity IS NULL OR total_quantity = 0)
+          AND COALESCE(stock_quantity, 0) > 0
+      ''');
     } catch (e) {
       if (kDebugMode) {
-        print('Database: _backfillSequenceNumbers failed: $e');
+        print('Database migrate v2 stock copy skipped: $e');
+      }
+    }
+
+    // Stamp effective_cost from product purchase_price where still 0
+    try {
+      await customStatement('''
+        UPDATE product_batches
+        SET effective_cost = COALESCE((
+          SELECT purchase_price FROM products WHERE products.uuid = product_batches.product_uuid
+        ), 0)
+        WHERE effective_cost = 0 OR effective_cost IS NULL
+      ''');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v2 cost stamp skipped: $e');
       }
     }
   }
 
-  Future<void> _insertDefaultCategories() async {
-    // Fixed UUIDs for default categories to prevent duplicates during sync
-    final expenseCategories = [
-      (
-        'Food',
-        Symbols.restaurant.codePoint.toString(),
-        '#FF5252',
-        'EXPENSE',
-        'default_cat_food'
-      ),
-      (
-        'Transport',
-        Symbols.directions_car.codePoint.toString(),
-        '#FF6F00',
-        'EXPENSE',
-        'default_cat_transport'
-      ),
-      (
-        'Shopping',
-        Symbols.shopping_cart.codePoint.toString(),
-        '#E91E63',
-        'EXPENSE',
-        'default_cat_shopping'
-      ),
-      (
-        'Bills',
-        Symbols.receipt_long.codePoint.toString(),
-        '#9C27B0',
-        'EXPENSE',
-        'default_cat_bills'
-      ),
-      (
-        'Entertainment',
-        Symbols.movie.codePoint.toString(),
-        '#3F51B5',
-        'EXPENSE',
-        'default_cat_entertainment'
-      ),
-      (
-        'Health',
-        Symbols.local_hospital.codePoint.toString(),
-        '#00BCD4',
-        'EXPENSE',
-        'default_cat_health'
-      ),
-      (
-        'Education',
-        Symbols.school.codePoint.toString(),
-        '#4CAF50',
-        'EXPENSE',
-        'default_cat_education'
-      ),
-      (
-        'Other',
-        Symbols.category.codePoint.toString(),
-        '#757575',
-        'EXPENSE',
-        'default_cat_other_exp'
-      ),
-    ];
-
-    final incomeCategories = [
-      (
-        'Salary',
-        Symbols.account_balance_wallet.codePoint.toString(),
-        '#4CAF50',
-        'INCOME',
-        'default_cat_salary'
-      ),
-      (
-        'Business',
-        Symbols.business_center.codePoint.toString(),
-        '#2196F3',
-        'INCOME',
-        'default_cat_business'
-      ),
-      (
-        'Investment',
-        Symbols.trending_up.codePoint.toString(),
-        '#00BCD4',
-        'INCOME',
-        'default_cat_investment'
-      ),
-      (
-        'Gift',
-        Symbols.card_giftcard.codePoint.toString(),
-        '#E91E63',
-        'INCOME',
-        'default_cat_gift'
-      ),
-      (
-        'Refund',
-        Symbols.replay.codePoint.toString(),
-        '#FF9800',
-        'INCOME',
-        'default_cat_refund'
-      ),
-      (
-        'Other',
-        Symbols.category.codePoint.toString(),
-        '#757575',
-        'INCOME',
-        'default_cat_other_inc'
-      ),
-    ];
-
+  Future<void> _insertDefaultProductCategories() async {
     await batch((batch) {
-      for (final cat in expenseCategories) {
-        batch.insert(
-          categories,
-          CategoriesCompanion.insert(
-            uuid: cat.$5,
-            name: cat.$1,
-            icon: Value(cat.$2),
-            color: Value(cat.$3),
-            type: cat.$4,
-            isDefault: const Value(true),
-            isNotSynced: const Value(false),
-          ),
-          mode: InsertMode.insertOrIgnore,
-        );
-      }
-
-      for (final cat in incomeCategories) {
-        batch.insert(
-          categories,
-          CategoriesCompanion.insert(
-            uuid: cat.$5,
-            name: cat.$1,
-            icon: Value(cat.$2),
-            color: Value(cat.$3),
-            type: cat.$4,
-            isDefault: const Value(true),
-            isNotSynced: const Value(false),
-          ),
-          mode: InsertMode.insertOrIgnore,
-        );
-      }
+      batch.insert(
+        productCategories,
+        ProductCategoriesCompanion.insert(
+          uuid: 'default_cat_general',
+          name: 'General',
+          icon: Value(Symbols.category.codePoint.toString()),
+          color: const Value('#757575'),
+          isNotSynced: const Value(false),
+        ),
+        mode: InsertMode.insertOrIgnore,
+      );
     });
   }
 
   Future<void> _insertDefaultCurrencies() async {
-    // Fixed UUIDs for default currencies to prevent duplicates during sync
     final defaultCurrencies = [
       ('US Dollar', '\$', 'USD', 2, 'default_curr_usd'),
       ('Indian Rupee', '₹', 'INR', 0, 'default_curr_inr'),
@@ -1000,7 +557,7 @@ class AppDatabase extends _$AppDatabase {
             symbol: curr.$2,
             code: curr.$3,
             decimalPlaces: Value(curr.$4),
-            isDefault: const Value(true),
+            isDefault: Value(curr.$3 == 'INR'),
             isNotSynced: const Value(false),
           ),
           mode: InsertMode.insertOrIgnore,
@@ -1009,116 +566,38 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
-  Expression<bool>? buildTagExpression(List<String>? tagUuids) {
-    if (tagUuids == null || tagUuids.isEmpty) return null;
-
-    final containsNoTag = tagUuids.contains('no_tag');
-    final validTagUuids = tagUuids.where((id) => id != 'no_tag').toList();
-
-    if (validTagUuids.isNotEmpty) {
-      final subquery = selectOnly(transactionTags)
-        ..addColumns([transactionTags.transactionUuid])
-        ..where(transactionTags.tagUuid.isIn(validTagUuids) &
-            transactionTags.isDeleted.equals(false));
-
-      if (containsNoTag) {
-        final noTagSubquery = selectOnly(transactionTags)
-          ..addColumns([transactionTags.transactionUuid])
-          ..where(transactionTags.isDeleted.equals(false));
-        return transactions.uuid.isInQuery(subquery) |
-            transactions.uuid.isNotInQuery(noTagSubquery);
-      } else {
-        return transactions.uuid.isInQuery(subquery);
+  Future<void> insertDefaultData() async {
+    try {
+      await _insertDefaultProductCategories();
+      await _insertDefaultCurrencies();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database: Warning - Failed to insert default data: $e');
       }
-    } else {
-      // Only contains 'no_tag'
-      final noTagSubquery = selectOnly(transactionTags)
-        ..addColumns([transactionTags.transactionUuid])
-        ..where(transactionTags.isDeleted.equals(false));
-      return transactions.uuid.isNotInQuery(noTagSubquery);
     }
-  }
-
-  JoinedSelectStatement<HasResultSet, dynamic> joinTransactionWithDetails(
-    SimpleSelectStatement<$TransactionsTable, Transaction> stmt,
-  ) {
-    return stmt.join([
-      leftOuterJoin(
-        categories,
-        categories.uuid.equalsExp(transactions.categoryUuid),
-      ),
-      leftOuterJoin(
-        contacts,
-        contacts.uuid.equalsExp(transactions.contactUuid),
-      ),
-      leftOuterJoin(
-        accounts,
-        accounts.uuid.equalsExp(transactions.accountUuid),
-      ),
-      leftOuterJoin(
-        payables,
-        payables.uuid.equalsExp(transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        receivables,
-        receivables.uuid.equalsExp(transactions.linkedReceivableUuid),
-      ),
-    ]);
-  }
-
-  JoinedSelectStatement<HasResultSet, dynamic> joinScheduleWithDetails(
-    SimpleSelectStatement<$TransactionSchedulesTable, TransactionSchedule> stmt,
-  ) {
-    return stmt.join([
-      leftOuterJoin(
-        categories,
-        categories.uuid.equalsExp(transactionSchedules.categoryUuid),
-      ),
-      leftOuterJoin(
-        contacts,
-        contacts.uuid.equalsExp(transactionSchedules.contactUuid),
-      ),
-      leftOuterJoin(
-        accounts,
-        accounts.uuid.equalsExp(transactionSchedules.accountUuid),
-      ),
-    ]);
   }
 
   Future<void> clearAllData() async {
     await transaction(() async {
-      // Delete from all tables in correct order to respect foreign keys
-      await delete(transactionSchedules).go();
-      await delete(reminders).go();
-      await delete(whatsAppQueue).go();
-      await delete(receivables).go();
-      await delete(payables).go();
-      await delete(accountTransfers).go();
+      await delete(catalogTieredDiscounts).go();
+      await delete(catalogAssignments).go();
+      await delete(catalogItems).go();
+      await delete(catalogs).go();
+      await delete(orderReturnItems).go();
+      await delete(orderReturns).go();
+      await delete(orderItems).go();
+      await delete(orders).go();
+      await delete(productBatches).go();
+      await delete(products).go();
       await delete(transactions).go();
-      await delete(categoryUsageStats).go();
-      await delete(contactUsageStats).go();
+      await delete(accountTransfers).go();
       await delete(contacts).go();
       await delete(accounts).go();
       await delete(syncLog).go();
-
-      // Reset sync metadata instead of deleting it, or delete it to start fresh
       await delete(syncMetadata).go();
-
-      // Delete ALL categories and currencies, then re-insert defaults with fixed UUIDs
-      await delete(categories).go();
+      await delete(productCategories).go();
       await delete(appCurrencies).go();
       await insertDefaultData();
     });
-  }
-
-  Future<void> insertDefaultData() async {
-    try {
-      await _insertDefaultCategories();
-      await _insertDefaultCurrencies();
-    } catch (e) {
-      if (kDebugMode) {
-        print('Database: Warning - Failed to insert default data (likely already being inserted): $e');
-      }
-    }
   }
 }

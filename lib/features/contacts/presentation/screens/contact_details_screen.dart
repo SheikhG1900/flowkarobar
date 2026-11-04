@@ -27,6 +27,12 @@ import 'package:flowpaisa/features/transactions/presentation/providers/transacti
 import 'package:flowpaisa/core/database/database.dart' show Account;
 import 'package:flowpaisa/features/accounts/presentation/widgets/account_picker.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/transactions_list_screen.dart';
+import 'package:flowpaisa/features/orders/presentation/providers/orders_provider.dart';
+import 'package:flowpaisa/features/orders/presentation/screens/order_detail_screen.dart';
+import 'package:flowpaisa/features/orders/presentation/screens/add_order_screen.dart';
+import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dart';
+import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 
 // Provider to get transactions for a contact
 // Note: We'll fetch this from the database directly in a future iteration
@@ -439,35 +445,13 @@ class ContactDetailsScreen extends ConsumerWidget {
                               Expanded(
                                 child: _buildStatCard(
                                   context,
-                                  title: l10n.receivable,
+                                  title: l10n.toCollect,
                                   amount: stats.totalReceivable,
                                   count: stats.receivablesCount,
                                   color: AppColors.receivableColor,
                                   icon: Icons.arrow_downward,
                                   currency: currency,
-                                  onTap: () => showContactNavigationSheet(
-                                    title: l10n.receivable,
-                                    color: AppColors.receivableColor,
-                                    icon: Icons.arrow_downward,
-                                    specificLabel: l10n.receivables,
-                                    specificIcon: Icons.arrow_downward,
-                                    transactionStatusCode: 'RECEIVABLE',
-                                    onSpecific: () {
-                                      ref
-                                          .read(receivablesPaginatedProvider(
-                                                  'PENDING')
-                                              .notifier)
-                                          .applyFilters(ReceivableFilters(
-                                              contactUuids: [contactUuid]));
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const ReceivablesListScreen(),
-                                        ),
-                                      );
-                                    },
-                                  ),
+                                  onTap: () {},
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -475,39 +459,19 @@ class ContactDetailsScreen extends ConsumerWidget {
                               Expanded(
                                 child: _buildStatCard(
                                   context,
-                                  title: l10n.payable,
+                                  title: l10n.toPay,
                                   amount: stats.totalPayable,
                                   count: stats.payablesCount,
                                   color: AppColors.payableColor,
                                   icon: Icons.arrow_upward,
                                   currency: currency,
-                                  onTap: () => showContactNavigationSheet(
-                                    title: l10n.payable,
-                                    color: AppColors.payableColor,
-                                    icon: Icons.arrow_upward,
-                                    specificLabel: l10n.payables,
-                                    specificIcon: Icons.arrow_upward,
-                                    transactionStatusCode: 'PAYABLE',
-                                    onSpecific: () {
-                                      ref
-                                          .read(payablesPaginatedProvider(
-                                                  'PENDING')
-                                              .notifier)
-                                          .applyFilters(PayableFilters(
-                                              contactUuids: [contactUuid]));
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const PayablesListScreen(),
-                                        ),
-                                      );
-                                    },
-                                  ),
+                                  onTap: () {},
                                 ),
                               ),
                             ],
                           ),
+                          const SizedBox(height: 24),
+                          _ContactOrdersSection(contactUuid: contactUuid),
                           const SizedBox(height: 24),
 
                           // Progress Bars
@@ -1300,3 +1264,145 @@ class _ContactNavTile extends StatelessWidget {
     );
   }
 }
+
+class _ContactOrdersSection extends ConsumerWidget {
+  final String contactUuid;
+
+  const _ContactOrdersSection({required this.contactUuid});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final ordersAsync = ref.watch(ordersForContactStreamProvider(contactUuid));
+    final currency = ref.watch(currentCurrencyProvider).value;
+    final dateFormat = ref.watch(userProfileProvider).dateFormat;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                l10n.orders,
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () {
+                showModalBottomSheet<void>(
+                  context: context,
+                  builder: (ctx) => SafeArea(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        ListTile(
+                          leading: Icon(Icons.point_of_sale_rounded,
+                              color: AppColors.incomeColor),
+                          title: Text(l10n.newSale),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AddOrderScreen(
+                                    orderType: orderTypeSale),
+                              ),
+                            );
+                          },
+                        ),
+                        ListTile(
+                          leading: Icon(Icons.shopping_cart_outlined,
+                              color: AppColors.expenseColor),
+                          title: Text(l10n.newPurchase),
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const AddOrderScreen(
+                                    orderType: orderTypePurchase),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.add, size: 18),
+              label: Text(l10n.add),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ordersAsync.when(
+          data: (orders) {
+            if (orders.isEmpty) {
+              return Text(
+                l10n.noSalesYet,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              );
+            }
+            return Column(
+              children: orders.take(10).map((order) {
+                final isSale = order.orderType == orderTypeSale;
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: (isSale
+                              ? AppColors.incomeColor
+                              : AppColors.expenseColor)
+                          .withValues(alpha: 0.15),
+                      child: Icon(
+                        isSale
+                            ? Icons.point_of_sale_rounded
+                            : Icons.shopping_cart_outlined,
+                        color: isSale
+                            ? AppColors.incomeColor
+                            : AppColors.expenseColor,
+                        size: 20,
+                      ),
+                    ),
+                    title: Text(order.orderNumber),
+                    subtitle: Text(
+                      '${isSale ? l10n.sale : l10n.purchase} · ${AppDateFormatter.formatDate(order.orderDate, pattern: dateFormat)}',
+                    ),
+                    trailing: Text(
+                      currency != null
+                          ? AmountFormatter.formatWithCurrency(
+                              order.totalAmount, currency)
+                          : order.totalAmount.toStringAsFixed(2),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isSale
+                            ? AppColors.incomeColor
+                            : AppColors.expenseColor,
+                      ),
+                    ),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            OrderDetailScreen(orderUuid: order.uuid),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (_, __) => const SizedBox.shrink(),
+        ),
+      ],
+    );
+  }
+}
+

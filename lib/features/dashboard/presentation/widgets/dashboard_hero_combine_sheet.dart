@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
-import 'package:flowpaisa/features/cashbooks/domain/models/cashbook_summary.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/domain/models/business_summary.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_hero_combine_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
@@ -19,12 +19,12 @@ Future<void> showDashboardHeroCombineSheet(
         builder: (context, ref, _) {
           final l10n = AppLocalizations.of(context)!;
           final theme = Theme.of(ctx);
-          final activeId = ref.watch(activeCashbookIdProvider);
-          final cashbooks = ref.watch(cashbooksProvider);
+          final activeId = ref.watch(activeBusinessIdProvider);
+          final cashbooks = ref.watch(businessesProvider);
           final selected =
               ref.watch(dashboardHeroCombinedCashbookIdsProvider);
           final prefs = ref.watch(sharedPreferencesProvider);
-          final summaries = CashbookSummaryService.readAllSummariesSync(prefs);
+          final summaries = BusinessSummaryService.readAllSummariesSync(prefs);
 
           final others =
               cashbooks.where((c) => c.id != activeId).toList()
@@ -211,7 +211,7 @@ class _CombineCashbookBalances extends ConsumerWidget {
     required this.theme,
   });
 
-  final CashbookSummary? summary;
+  final BusinessSummary? summary;
   final AppLocalizations l10n;
   final ThemeData theme;
 
@@ -257,7 +257,7 @@ class _CombineCashbookBalances extends ConsumerWidget {
     );
   }
 
-  Widget _metricsRow(CashbookSummary s, String symbol, int decimals) {
+  Widget _metricsRow(BusinessSummary s, String symbol, int decimals) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

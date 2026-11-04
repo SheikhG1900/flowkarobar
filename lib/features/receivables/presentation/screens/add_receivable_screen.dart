@@ -12,7 +12,7 @@ import 'package:flowpaisa/features/transactions/presentation/providers/transacti
 import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:flowpaisa/core/utils/share_helper.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
@@ -393,7 +393,7 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
             await repository.getReceivableWithLinkedDataByUuid(receivableUuid);
 
         if (receivableWithLinkedData != null) {
-          final activeColor = ref.read(activeCashbookProvider).color;
+          final activeColor = ref.read(activeBusinessProvider).color;
           final currency = ref.read(currentCurrencyProvider).value!;
           final userProfile = ref.read(userProfileProvider);
           final transactionService = ref.read(transactionServiceProvider);

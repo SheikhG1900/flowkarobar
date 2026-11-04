@@ -1,15 +1,15 @@
 class AppConstants {
   // App Info
-  static const String appName = 'Flowpaisa';
-  static const String packageName = 'com.flowpaisa.app';
-  static const String deepLinkScheme = 'flowpaisa';
+  static const String appName = 'FlowKarobar';
+  static const String packageName = 'com.flowkarobar.app';
+  static const String deepLinkScheme = 'flowkarobar';
 
   // URLs
-  static const String appWebsite = 'https://tamatasoft.github.io/flowpaisa';
+  static const String appWebsite = 'https://tamatasoft.github.io/flowkarobar';
   static const String privacyPolicy =
-      'https://tamatasoft.github.io/flowpaisa/privacy';
+      'https://tamatasoft.github.io/flowkarobar/privacy';
   static const String termsOfService =
-      'https://tamatasoft.github.io/flowpaisa/terms';
+      'https://tamatasoft.github.io/flowkarobar/terms';
 
   // Firebase Collections
   static const String languageRequestsCollection = 'language_requests';
@@ -45,15 +45,15 @@ class AppConstants {
   static const String whatsappMessageTemplate = '''
 {message}
 
-📱 Track with Flowpaisa
+📱 Track with FlowKarobar
 👉 {deepLink}''';
 
   // Premium Features
-  static const String premiumProductId = 'flowpaisa_premium_monthly';
+  static const String premiumProductId = 'flowkarobar_premium_monthly';
 
   // Google Drive
   static const String driveBackupFolder = 'appDataFolder';
-  static const String driveBackupFilename = 'flowpaisa_backup';
+  static const String driveBackupFilename = 'flowkarobar_backup';
 
   // Limits
   static const int maxCategoryNameLength = 100;

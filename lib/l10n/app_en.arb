@@ -1,7 +1,116 @@
 {
+  "businesses": "Businesses",
+  "business": "Business",
+  "products": "Products",
+  "product": "Product",
+  "batches": "Batches",
+  "batch": "Batch",
+  "expiryDate": "Expiry Date",
+  "orders": "Orders",
+  "order": "Order",
+  "sale": "Sale",
+  "purchase": "Purchase",
+  "customers": "Customers",
+  "customer": "Customer",
+  "suppliers": "Suppliers",
+  "supplier": "Supplier",
+  "taxInvoice": "Tax Invoice",
+  "purchaseReceipt": "Purchase Receipt",
+  "reconcileInventory": "Reconcile Inventory",
+  "reconciliation": "Reconciliation",
+  "catalogs": "Catalogs",
+  "catalog": "Catalog",
+  "sales": "Sales",
+  "purchases": "Purchases",
+  "returns": "Returns",
+  "more": "More",
+  "stock": "Stock",
+  "toCollect": "To Collect",
+  "toPay": "To Pay",
+  "sectionDetails": "Details",
+  "sectionPricing": "Pricing",
+  "sectionPayment": "Payment",
+  "sectionDelivery": "Delivery",
+  "sectionStock": "Stock",
+  "sectionSummary": "Summary",
+  "sectionActions": "Actions",
+  "noResultsFound": "No results found",
+  "manage": "Manage",
+  "noSalesYet": "No sales yet",
+  "noPurchasesYet": "No purchases yet",
+  "noReturnsYet": "No returns yet",
+  "newSale": "New Sale",
+  "newPurchase": "New Purchase",
+  "newReturn": "New Return",
+  "comingSoon": "Coming soon",
+  "walkInCustomer": "Walk-in",
+  "unpaid": "Unpaid",
+  "partiallyPaid": "Partially Paid",
+  "delivered": "Delivered",
+  "shipped": "Shipped",
+  "deliveryPending": "Delivery Pending",
+  "deliveryStatus": "Delivery Status",
+  "orderDetails": "Order Details",
+  "orderNotFound": "Order not found",
+  "addItem": "Add Item",
+  "selectProduct": "Select Product",
+  "noProductsAvailable": "No products available. Add a product first.",
+  "items": "Items",
+  "quantity": "Quantity",
+  "discount": "Discount",
+  "subtotal": "Subtotal",
+  "paymentNow": "Payment Now",
+  "balanceDue": "Balance Due",
+  "showAllContacts": "Show all contacts",
+  "addAtLeastOneItem": "Add at least one item",
+  "selectAccountForPayment": "Select an account to record the payment",
+  "orderCreated": "Order created successfully",
+  "markDelivered": "Mark as Delivered",
+  "orderMarkedDelivered": "Order marked as delivered",
+  "shareInvoice": "Share Invoice",
+  "paymentRecorded": "Payment recorded successfully",
+  "collectPayment": "Collect Payment",
+  "payToSupplier": "Pay Supplier",
+  "fieldRequired": "This field is required",
+  "invalidNumber": "Enter a valid number",
+  "addProduct": "Add Product",
+  "editProduct": "Edit Product",
+  "productName": "Product Name",
+  "noProductsYet": "No products yet",
+  "lowStock": "Low stock",
+  "stockLabel": "Stock: {quantity}",
+  "@stockLabel": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteProduct": "Delete Product",
+  "deleteProductConfirm": "Are you sure you want to delete {name}?",
+  "@deleteProductConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "productDeleted": "Product deleted successfully",
+  "productSaved": "Product saved successfully",
+  "sku": "SKU",
+  "unit": "Unit",
+  "purchasePrice": "Purchase Price",
+  "retailPrice": "Retail Price",
+  "wholesalePrice": "Wholesale Price",
+  "stockQuantity": "Stock Quantity",
+  "openingStock": "Opening Stock",
+  "currentStock": "Current Stock",
+  "currentStockHint": "Managed by purchases, sales, and stock adjustments",
+  "minStockAlert": "Min Stock Alert",
+  "isServiceProduct": "This is a service (no stock tracking)",
   "@@locale": "en",
   "refresh": "Refresh",
-  "appTitle": "Flowpaisa",
+  "appTitle": "FlowKarobar",
   "backgroundActivityStarted": "Activity started in background",
   "backgroundBackupStarted": "Backup started in background",
   "backgroundCloudClearStarted": "Cloud clear started in background",
@@ -650,7 +759,7 @@
   },
   "toggledDebugMode": "Toggled Debug Mode",
   "debugToggleMode": "DEBUG: Toggle Mode",
-  "premiumTitle": "Flowpaisa Premium",
+  "premiumTitle": "FlowKarobar Premium",
   "unlockAllFeatures": "Unlock all features",
   "premiumMemberStatus": "You are a Premium Member",
   "premiumFeaturesActive": "All premium features are active",
@@ -811,7 +920,7 @@
   "downloadDataCsvPdf": "Download your data as CSV or PDF",
   "premiumActive": "Premium Active",
   "about": "About",
-  "rateUs": "Rate Flowpaisa",
+  "rateUs": "Rate FlowKarobar",
   "tagline": "Track every paisa",
   "versionInfo": "Version {version} (Build {buildNumber})",
   "@versionInfo": {
@@ -824,7 +933,7 @@
       }
     }
   },
-  "appDescription": "Flowpaisa is a comprehensive personal finance and cash flow manager. Track your expenses, incomes, receivables, and payables all in one place. Features include receipt scanning, WhatsApp integration, cloud backup, and beautiful analytics.",
+  "appDescription": "FlowKarobar is a comprehensive business and cash flow manager. Track your sales, purchases, products, orders, receivables, and payables all in one place. Features include receipt scanning, WhatsApp integration, cloud backup, and beautiful analytics.",
   "openSourceLicenses": "Open Source Licenses",
   "developedBy": "Developed by",
   "developerName": "TamataSoft",
@@ -853,9 +962,9 @@
   "guideSplitBill": "How to use Split Bill?",
   "guideSplitBillStep": "When adding an expense, tap 'Split Bill'. You can divide the total amount among multiple contacts equally or by percentage. The app will create individual receivables for each person's share.",
   "guideDeepLinks": "Sharing via Deep Links",
-  "guideDeepLinksStep": "Tap the 'Share' icon on any transaction or receivable. This generates a unique link. When the recipient clicks the link on their device, Flowpaisa will open and allow them to import that transaction into their own cashbook.",
+  "guideDeepLinksStep": "Tap the 'Share' icon on any transaction or receivable. This generates a unique link. When the recipient clicks the link on their device, FlowKarobar will open and allow them to import that transaction into their own cashbook.",
   "guideImportDeepLink": "How to import a shared transaction?",
-  "guideImportDeepLinkStep": "When you receive a Flowpaisa link via WhatsApp or message, simply tap it. The app will open a preview screen showing the details. Tap 'Import' to add it to your records. If it's a settlement, it will update your existing pending record.",
+  "guideImportDeepLinkStep": "When you receive a FlowKarobar link via WhatsApp or message, simply tap it. The app will open a preview screen showing the details. Tap 'Import' to add it to your records. If it's a settlement, it will update your existing pending record.",
   "guideSyncDevices": "How to share cashbook to another device?",
   "guideSyncDevicesStep": "1. Enable 'Google Drive Backup' in Settings on your first device.\n2. On the second device, sign in with the SAME Google account.\n3. Go to Backup settings and tap 'Restore' to download your cashbook data. Use 'Sync Now' for ongoing real-time updates.",
   "guideCloudBackup": "Cloud Backup & Sync",
@@ -925,7 +1034,7 @@
   "resetOnboardingSubtitle": "Reset the app tour to see it again",
   "resetOnboardingConfirmation": "Are you sure you want to reset the app tour? You will see the onboarding screens again on next restart.",
   "onboardingResetSuccess": "App tour reset successfully",
-  "tourWelcome": "Welcome to Flowpaisa!",
+  "tourWelcome": "Welcome to FlowKarobar!",
   "tourWelcomeDesc": "Let's take a quick tour to help you get started",
   "tourDashboardHeaderTitle": "Cashbook Selector",
   "tourDashboardHeaderDesc": "Tap here to switch between your cashbooks or create a new one",
@@ -969,7 +1078,7 @@
   "tourSettingsBackupTitle": "Data Security",
   "tourSettingsBackupDesc": "Keep your data safe by setting up Google Drive backup and restore.",
   "tourSettingsPremiumTitle": "Premium Features",
-  "tourSettingsPremiumDesc": "Unlock advanced analytics, custom message templates, and more with Flowpaisa Premium.",
+  "tourSettingsPremiumDesc": "Unlock advanced analytics, custom message templates, and more with FlowKarobar Premium.",
   "tourAddTxAmountTitle": "Enter Amount",
   "tourAddTxAmountDesc": "Type the transaction amount here. Use the calculator if needed.",
   "tourAddTxCategoryTitle": "Select Category",
@@ -1223,7 +1332,7 @@
   "proLabel": "PRO",
   "deleteItem": "Delete Item",
   "confirmDeleteItem": "Are you sure you want to delete this item?",
-  "sharePayableCompleted": "Greetings!\n\nThe payment of {amount} on {date} has been completed.\n\nSync in Flowpaisa:\n{link}",
+  "sharePayableCompleted": "Greetings!\n\nThe payment of {amount} on {date} has been completed.\n\nSync in FlowKarobar:\n{link}",
   "@sharePayableCompleted": {
     "placeholders": {
       "amount": {
@@ -1237,7 +1346,7 @@
       }
     }
   },
-  "sharePayablePending": "I owe you {amount}\nDate: {date}\n\nView in Flowpaisa:\n{link}",
+  "sharePayablePending": "I owe you {amount}\nDate: {date}\n\nView in FlowKarobar:\n{link}",
   "@sharePayablePending": {
     "placeholders": {
       "amount": {
@@ -1251,7 +1360,7 @@
       }
     }
   },
-  "shareReceivableReceived": "Greetings!\n\nThe payment of {amount} on {date} has been received.\n\nSync in Flowpaisa:\n{link}",
+  "shareReceivableReceived": "Greetings!\n\nThe payment of {amount} on {date} has been received.\n\nSync in FlowKarobar:\n{link}",
   "@shareReceivableReceived": {
     "placeholders": {
       "amount": {
@@ -1265,7 +1374,7 @@
       }
     }
   },
-  "shareReceivablePending": "Amount to receive: {amount}\nDate: {date}\n\nView in Flowpaisa:\n{link}",
+  "shareReceivablePending": "Amount to receive: {amount}\nDate: {date}\n\nView in FlowKarobar:\n{link}",
   "@shareReceivablePending": {
     "placeholders": {
       "amount": {
@@ -1279,7 +1388,7 @@
       }
     }
   },
-  "shareTransactionMessage": "Recorded a transaction of {amount} on {date}.\n\nView in Flowpaisa:\n{link}",
+  "shareTransactionMessage": "Recorded a transaction of {amount} on {date}.\n\nView in FlowKarobar:\n{link}",
   "@shareTransactionMessage": {
     "placeholders": {
       "amount": {
@@ -1787,7 +1896,7 @@
   "resetLocalSyncMessage": "This will mark all your local records as \"unsynced\" and reset your local version to 0. Tapping \"Sync Now\" after this will re-upload all your data to the cloud.\n\nUse this if you want to force a full re-sync of your local data.",
   "localSyncResetSuccess": "Local sync state reset successfully",
   "clearAllCloudData": "Clear All Cloud Data",
-  "clearAllCloudDataMessage": "This will permanently delete ALL your Flowpaisa backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?",
+  "clearAllCloudDataMessage": "This will permanently delete ALL your FlowKarobar backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?",
   "cloudDataClearedSuccess": "All cloud data cleared successfully",
   "clearNow": "Clear Now",
   "upcomingSyncDeltas": "Upcoming Sync Deltas",
@@ -2262,8 +2371,8 @@
   "onDashboard": "On Dashboard",
   "widgets": "Widgets",
   "others": "Others",
-  "onboardingWelcomeTitle": "Welcome to Flowpaisa",
-  "onboardingWelcomeBody": "Your complete personal finance and cash flow manager. Take control of your money with ease, precision, and the peace of mind that your data is fully secured and private.",
+  "onboardingWelcomeTitle": "Welcome to FlowKarobar",
+  "onboardingWelcomeBody": "Your complete business and cash flow manager. Take control of your sales, purchases, and orders with ease, precision, and the peace of mind that your data is fully secured and private.",
   "onboardingScanTitle": "Scan or Speak",
   "onboardingScanBody": "Save time with Smart Scanning and Voice commands. Just snap a photo of your receipt or tell the app what you spent—it handles the details for you.",
   "onboardingTransactionsTitle": "Smart Linked Transactions",
@@ -2275,7 +2384,7 @@
   "guideAccountsTitle": "Manage All Your Accounts",
   "guideAccountsBody": "Track Cash, Bank, and Savings accounts in one place. See your total Net Worth automatically calculated from your assets and liabilities.",
   "guideCreditCardsTitle": "Credit Card Management",
-  "guideCreditCardsBody": "Set credit limits and billing cycles. Flowpaisa will notify you before your due date so you never miss a payment.",
+  "guideCreditCardsBody": "Set credit limits and billing cycles. FlowKarobar will notify you before your due date so you never miss a payment.",
   "guideBulkImportTitle": "Bulk Import Transactions",
   "guideBulkImportBody": "Save time by importing hundreds of transactions instantly from CSV files or your clipboard (Google Sheets).",
   "guideBudgetsTitle": "Smart Category Budgets",
@@ -2334,7 +2443,7 @@
   "premiumTokenDescription": "This token allows you to use your Premium purchase on Windows and other platforms. Log in with the same Google account to sync your Premium status automatically.",
   "googleDriveNotConnected": "Google Drive not connected. Cloud verification will not be available.",
   "updateAvailable": "Update Available",
-  "updateAvailableMessage": "A new version ({version}) of Flowpaisa is available. Update now to get the latest features and improvements!",
+  "updateAvailableMessage": "A new version ({version}) of FlowKarobar is available. Update now to get the latest features and improvements!",
   "@updateAvailableMessage": {
     "placeholders": {
       "version": {
@@ -2528,5 +2637,7 @@
   "tagNameLabel": "Tag Name",
   "tagOptions": "Tag Options",
   "longPressTagHint": "Long press any tag to rename or delete",
-  "tagRenamedSuccessfully": "Tag renamed successfully"
+  "tagRenamedSuccessfully": "Tag renamed successfully",
+  "todaySales": "Today's Sales",
+  "lowStockAlert": "Low Stock Alert"
 }

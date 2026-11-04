@@ -19,6 +19,8 @@ enum DashboardWidgetKind {
   financialSummary,
   accountsSlider,
   cashbooksSlider,
+  todaySales,
+  lowStockAlert,
   // Entity widgets
   transaction,
   category,

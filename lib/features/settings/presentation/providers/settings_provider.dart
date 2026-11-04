@@ -287,7 +287,7 @@ class BottomBarQuickActionNotifier extends Notifier<String> {
   String build() {
     _repository = ref.watch(userPreferencesRepositoryProvider);
     _loadAction();
-    return 'add_transaction'; // Default initial state
+    return 'order_actions'; // Default: Sale / Purchase / Payment sheet
   }
 
   Future<void> _loadAction() async {

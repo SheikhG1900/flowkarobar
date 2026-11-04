@@ -122,7 +122,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
       // Ensure external ID is persisted before sharing
       final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        receivableUuid: widget.receivable.uuid,
+        widget.receivable.uuid,
       );
 
       // Create share data for recipient (Payable)
@@ -191,7 +191,7 @@ class _ShareOptionsSheetState extends State<_ShareOptionsSheet> {
 
       // Ensure external ID is persisted before sharing
       final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        receivableUuid: widget.receivable.uuid,
+        widget.receivable.uuid,
       );
 
       // Create share data for recipient (Payable)

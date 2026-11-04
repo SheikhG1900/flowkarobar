@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Category;
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/core/database/database.dart' hide Category;
+import 'package:flowpaisa/features/transactions/domain/models.dart' show Category;
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
 class CategoryHelper {

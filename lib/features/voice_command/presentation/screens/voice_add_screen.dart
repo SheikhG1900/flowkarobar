@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
+import 'package:flowpaisa/features/businesses/domain/models/business.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
@@ -15,7 +15,7 @@ import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/voice_command/domain/voice_command_parser.dart';
 import 'package:flowpaisa/features/transactions/domain/models/parsed_transaction_input.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/features/currencies/presentation/providers/currencies_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
@@ -430,7 +430,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   Widget _buildHintSection(
       BuildContext context, String title, List<String> examples,
       {required VoidCallback Function(String example) onTest}) {
-    final activeCashbookColor = ref.read(activeCashbookProvider).color;
+    final activeCashbookColor = ref.read(activeBusinessProvider).color;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -487,7 +487,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
     final activeCashbookBackColor = activeCashbook.backColor(context);
     final activeCashbookForeColor = activeCashbook.foreColor(context);
 
@@ -807,7 +807,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
     );
   }
 
-  Widget _buildExtractedResultCard(ThemeData theme, AppLocalizations l10n, Cashbook activeCashbook) {
+  Widget _buildExtractedResultCard(ThemeData theme, AppLocalizations l10n, Business activeCashbook) {
     final isIncome = _parsedResult?.type == 'INCOME';
     final hasContact = _selectedContactName != null && _selectedContactName!.isNotEmpty;
     final rel = _parsedResult?.paidRelationship;
@@ -1121,7 +1121,7 @@ class _VoiceAddScreenState extends ConsumerState<VoiceAddScreen> {
   }
 
   Widget _buildCategorySuggestions(
-      ThemeData theme, Cashbook activeCashbook, AppLocalizations l10n) {
+      ThemeData theme, Business activeCashbook, AppLocalizations l10n) {
     final activeCashbookForeColor = activeCashbook.foreColor(context);
 
     final type = _parsedResult?.type ?? 'EXPENSE';

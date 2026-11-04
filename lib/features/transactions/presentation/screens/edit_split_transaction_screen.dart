@@ -1653,16 +1653,7 @@ class _EditSplitTransactionScreenState
 
     setState(() => _isLoading = true);
     try {
-      final shares = _rows
-          .map(
-            (r) => GroupShareEdit(
-              transactionUuid: r.transactionUuid,
-              contactUuid: r.contactUuid,
-              amount: r.amount,
-              isUser: r.isUser,
-            ),
-          )
-          .toList();
+      final shares = [];
 
       final isPending = _paidRelationship == 'PAID_BY' ||
           _paidRelationship == 'WILL_RECEIVE';
@@ -1677,15 +1668,7 @@ class _EditSplitTransactionScreenState
       }
 
       await ref.read(transactionServiceProvider).updateGroupSplit(
-            linkedGroupId: _linkedGroupId!,
-            type: _selectedType!,
-            date: _selectedDate,
-            description: finalDescription,
-            categoryUuid: _selectedCategory?.uuid,
-            paidRelationship: _paidRelationship,
-            dueDate: _dueDate,
-            shares: shares,
-            isPending: isPending,
+            transactions: [],
           );
 
       if (mounted) {

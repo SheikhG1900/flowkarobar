@@ -21,7 +21,7 @@ import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/core/utils/share_helper.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/add_payable_screen.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/edit_payable_screen.dart';
 import 'package:flowpaisa/features/messages/presentation/providers/message_template_provider.dart';
@@ -1010,7 +1010,7 @@ class PayableDetailsDialog extends ConsumerWidget {
       );
 
       if (context.mounted) {
-        final activeColor = ref.read(activeCashbookProvider).color;
+        final activeColor = ref.read(activeBusinessProvider).color;
         ToastUtils.showSuccessToast(context, ref, l10n.markedAsPaid,
             color: activeColor);
         Navigator.pop(context);

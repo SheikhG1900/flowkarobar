@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:drift/drift.dart';
 
 // Database instance cache to prevent multiple instances during Phoenix restart
@@ -14,12 +14,12 @@ void clearDatabaseCache() {
   _cachedDbPath = null;
 }
 
-// Database provider - reactive to active cashbook
+// Database provider - reactive to active business
 final databaseProvider = Provider<AppDatabase>((ref) {
-  // Watch active cashbook to recreate database on switch
-  final activeCashbook = ref.watch(activeCashbookProvider);
+  // Watch active business to recreate database on switch
+  final activeBusiness = ref.watch(activeBusinessProvider);
 
-  if (_cachedDatabase != null && _cachedDbPath == activeCashbook.dbPath) {
+  if (_cachedDatabase != null && _cachedDbPath == activeBusiness.dbPath) {
     return _cachedDatabase!;
   }
 
@@ -27,10 +27,10 @@ final databaseProvider = Provider<AppDatabase>((ref) {
   // temporary connections for summary calculations during switches/syncs.
   driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
   
-  _cachedDatabase = AppDatabase(fileName: activeCashbook.dbPath);
-  _cachedDbPath = activeCashbook.dbPath;
+  _cachedDatabase = AppDatabase(fileName: '${activeBusiness.dbPath}.db');
+  _cachedDbPath = activeBusiness.dbPath;
 
-  // Dispose when provider is destroyed or active cashbook changes
+  // Dispose when provider is destroyed or active business changes
   ref.onDispose(() {
     // We DON'T close the database here because Phoenix.rebirth() will immediately
     // re-request this provider. If we close it, the next request might fail

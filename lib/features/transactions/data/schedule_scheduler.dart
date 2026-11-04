@@ -13,8 +13,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
-import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/domain/models/business.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 
 import 'package:flowpaisa/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
@@ -33,7 +33,7 @@ void scheduleTransactionTask() {
 /// This is used when the app is in foreground
 Future<void> processSchedulesFromContext(WidgetRef ref) async {
   try {
-    final cashbooks = ref.read(cashbooksProvider);
+    final cashbooks = ref.read(businessesProvider);
     final isPremium = PremiumGate.isPremium(ref);
     
     // Load localizations for notifications
@@ -50,7 +50,7 @@ Future<void> processSchedulesFromContext(WidgetRef ref) async {
       }
 
       // For each cashbook, we need a separate database instance and services
-      final isActive = cashbook.id == ref.read(activeCashbookIdProvider);
+      final isActive = cashbook.id == ref.read(activeBusinessIdProvider);
 
       final database = isActive
           ? ref.read(databaseProvider)

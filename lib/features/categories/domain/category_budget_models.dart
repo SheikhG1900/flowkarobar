@@ -1,4 +1,5 @@
-import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/core/database/database.dart' hide Category;
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/shared/models/date_range_state.dart';
 
 /// Net activity for a category in [start]..[end]: sum(EXPENSE amounts) − sum(INCOME amounts),
@@ -90,5 +91,15 @@ class DailyNetAmount {
     required this.dailyNet,
     required this.transactionCount,
     required this.hasData,
+  });
+}
+
+class CategoryWithUsage {
+  final Category category;
+  final int usageCount;
+
+  CategoryWithUsage({
+    required this.category,
+    this.usageCount = 0,
   });
 }

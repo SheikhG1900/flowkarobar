@@ -46,6 +46,12 @@ import 'package:flowpaisa/features/messages/presentation/screens/message_templat
 import 'package:flowpaisa/features/transactions/presentation/screens/export_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/documents_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/user_guide_screen.dart';
+import 'package:flowpaisa/features/orders/presentation/screens/orders_list_screen.dart';
+import 'package:flowpaisa/features/orders/presentation/screens/add_order_screen.dart';
+import 'package:flowpaisa/features/orders/presentation/widgets/order_action_sheet.dart';
+import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dart';
+import 'package:flowpaisa/features/inventory/presentation/screens/products_list_screen.dart';
+import 'package:flowpaisa/features/more/presentation/screens/more_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flowpaisa/core/services/in_app_review_service.dart';
@@ -54,10 +60,10 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/premium_badge.dart';
 import 'package:flowpaisa/shared/widgets/user_avatar.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/screens/cashbooks_screen.dart';
+import 'package:flowpaisa/features/businesses/presentation/screens/businesses_screen.dart';
 import 'package:flowpaisa/features/onboarding/presentation/providers/onboarding_provider.dart';
 import 'package:flowpaisa/features/onboarding/presentation/screens/onboarding_screen.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/screens/accounts_screen.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/data/credit_card_notification_service.dart';
@@ -210,7 +216,7 @@ class _FlowpaisaAppState extends ConsumerState<FlowpaisaApp>
     final currentLocale = ref.watch(languageProvider);
     final currentFont = ref.watch(currentFontProvider);
     final currentThemeMode = ref.watch(themeModeProvider);
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
     final activeColor = activeCashbook.color;
     final onboardingCompleted = ref.watch(onboardingCompletedProvider);
     final textScale = ref.watch(textScaleProvider);
@@ -363,6 +369,11 @@ class HomeScreen extends ConsumerStatefulWidget {
       ThemeData theme,
       AppLocalizations l10n) async {
     final actions = [
+      ('order_actions', l10n.orders, Icons.add),
+      ('new_sale', l10n.newSale, Icons.point_of_sale_rounded),
+      ('new_purchase', l10n.newPurchase, Icons.shopping_cart_outlined),
+      ('orders', l10n.orders, Icons.receipt_long),
+      ('stock', l10n.stock, Icons.inventory_2_outlined),
       ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
       ('add_transaction', l10n.add, Icons.add),
       if (!Platform.isWindows)
@@ -373,14 +384,6 @@ class HomeScreen extends ConsumerStatefulWidget {
         Platform.isWindows ? Icons.account_balance : Icons.account_balance
       ),
       ('contacts', l10n.contacts, Icons.people_outline_rounded),
-      (
-        'receivables',
-        l10n.receivableTag,
-        Platform.isWindows
-            ? Icons.account_balance_wallet
-            : Icons.account_balance_wallet
-      ),
-      ('payables', l10n.payables, Icons.payment_outlined),
       ('categories', l10n.categories, Icons.category_outlined),
       ('analytics', l10n.analytics, Icons.bar_chart_rounded),
       ('user_guide', l10n.userGuide, Icons.help_outline_rounded),
@@ -436,14 +439,14 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  bool _isSwitchingCashbook = false;
-  Timer? _cashbookSwitchRevealTimer;
+  bool _isSwitchingBusiness = false;
+  Timer? _businessSwitchRevealTimer;
 
   /// Hold dimmed UI while the new cashbook DB and dashboard providers repopulate.
-  static const Duration _cashbookSwitchHold = Duration(milliseconds: 1200);
+  static const Duration _businessSwitchHold = Duration(milliseconds: 1200);
 
   /// Fade between full brightness and the dimmed “switching” state.
-  static const Duration _cashbookSwitchFade = Duration(milliseconds: 700);
+  static const Duration _businessSwitchFade = Duration(milliseconds: 700);
 
   @override
   void initState() {
@@ -468,7 +471,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   void dispose() {
-    _cashbookSwitchRevealTimer?.cancel();
+    _businessSwitchRevealTimer?.cancel();
     super.dispose();
   }
 
@@ -479,7 +482,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final currencySymbol = ref.read(currencySymbolProvider);
       final decimals = ref.read(currencyDecimalPlacesProvider);
 
-      final activeCashbook = ref.read(activeCashbookProvider);
+      final activeCashbook = ref.read(activeBusinessProvider);
       final service = CreditCardNotificationService(accountsRepo);
       await service.checkAndNotify(
         currencySymbol: currencySymbol,
@@ -514,15 +517,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Color _getSectionColor(int index) {
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
     switch (index) {
-      case 0: // Dashboard
+      case 0: // Home
         return activeCashbook.foreColor(context);
-      case 1: // Transactions
-        return AppColors.transactionsSectionColor;
-      case 2: // Analytics
-        return AppColors.analyticsSectionColor;
-      case 3: // Settings
+      case 1: // Orders
+        return AppColors.incomeColor;
+      case 2: // Stock
+        return AppColors.expenseColor;
+      case 3: // More
         return AppColors.settingsSectionColor;
       default:
         return activeCashbook.color;
@@ -535,19 +538,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     // Listen to active cashbook changes: dull UI briefly, then reveal
-    ref.listen(activeCashbookIdProvider, (_, __) {
+    ref.listen(activeBusinessIdProvider, (_, __) {
       if (!mounted) return;
-      _cashbookSwitchRevealTimer?.cancel();
+      _businessSwitchRevealTimer?.cancel();
       setState(() {
-        _isSwitchingCashbook = true;
+        _isSwitchingBusiness = true;
       });
-      _cashbookSwitchRevealTimer = Timer(_cashbookSwitchHold, () {
+      _businessSwitchRevealTimer = Timer(_businessSwitchHold, () {
         if (!mounted) return;
         // One frame after hold: let the new cashbook tree paint with fresh data, then fade in.
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
           setState(() {
-            _isSwitchingCashbook = false;
+            _isSwitchingBusiness = false;
           });
         });
       });
@@ -594,9 +597,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     // Different screens for each tab
     final List<Widget> screens = [
       _DashboardTab(),
-      const TransactionsListScreen(),
-      const AnalyticsScreen(),
-      _SettingsTab(),
+      const OrdersListScreen(),
+      const ProductsListScreen(),
+      const MoreScreen(),
     ];
 
     return Scaffold(
@@ -608,10 +611,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             return Stack(
               children: [
                 AnimatedOpacity(
-                  duration: _cashbookSwitchFade,
-                  opacity: _isSwitchingCashbook ? 0.3 : 1.0,
+                  duration: _businessSwitchFade,
+                  opacity: _isSwitchingBusiness ? 0.3 : 1.0,
                   child: IgnorePointer(
-                    ignoring: _isSwitchingCashbook,
+                    ignoring: _isSwitchingBusiness,
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 400),
                       switchInCurve: Curves.easeOutCubic,
@@ -636,7 +639,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ),
-                if (_isSwitchingCashbook)
+                if (_isSwitchingBusiness)
                   const Center(
                     child: AppLoadingIndicator(size: 60),
                   ),
@@ -649,14 +652,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 NavigationRail(
                   selectedIndex: _selectedIndex,
                   onDestinationSelected: (index) {
-                    if (index == 1) {
-                      // Clear transactions filters and search when navigating via navigation rail
-                      final notifier =
-                          ref.read(transactionsPaginatedProvider.notifier);
-                      notifier.search('');
-                      notifier.applyFilters(TransactionFilters());
-                    }
-                    // Unfocus before tab switch to avoid FocusScope assertion
                     FocusManager.instance.primaryFocus?.unfocus();
                     ref.read(homeTabProvider.notifier).setTab(index);
                   },
@@ -667,7 +662,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ref.watch(showBottomBarQuickButtonProvider);
                       if (!showQuickButton) return const SizedBox.shrink();
 
-                      final activeCashbook = ref.watch(activeCashbookProvider);
+                      final activeCashbook = ref.watch(activeBusinessProvider);
                       final activeColor = activeCashbook.color;
                       final quickActionCode =
                           ref.watch(bottomBarQuickActionProvider);
@@ -693,15 +688,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     NavigationRailDestination(
                       icon: const Icon(Icons.receipt_long),
-                      label: Text(l10n.transactions),
+                      label: Text(l10n.orders),
                     ),
                     NavigationRailDestination(
-                      icon: const Icon(Icons.analytics),
-                      label: Text(l10n.analytics),
+                      icon: const Icon(Icons.inventory_2_outlined),
+                      label: Text(l10n.stock),
                     ),
                     NavigationRailDestination(
-                      icon: const Icon(Icons.settings),
-                      label: Text(l10n.settings),
+                      icon: const Icon(Icons.more_horiz),
+                      label: Text(l10n.more),
                     ),
                   ],
                 ),
@@ -711,10 +706,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     alignment: Alignment.center,
                     children: [
                       AnimatedOpacity(
-                        duration: _cashbookSwitchFade,
-                        opacity: _isSwitchingCashbook ? 0.3 : 1.0,
+                        duration: _businessSwitchFade,
+                        opacity: _isSwitchingBusiness ? 0.3 : 1.0,
                         child: IgnorePointer(
-                          ignoring: _isSwitchingCashbook,
+                          ignoring: _isSwitchingBusiness,
                           child: AnimatedSwitcher(
                             duration: const Duration(milliseconds: 400),
                             transitionBuilder:
@@ -729,7 +724,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                       ),
-                      if (_isSwitchingCashbook)
+                      if (_isSwitchingBusiness)
                         const AppLoadingIndicator(size: 60),
                     ],
                   ),
@@ -742,7 +737,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       bottomNavigationBar: MediaQuery.of(context).size.width < 600
           ? Consumer(
               builder: (context, ref, child) {
-                final activeCashbook = ref.watch(activeCashbookProvider);
+                final activeCashbook = ref.watch(activeBusinessProvider);
                 final activeColor = activeCashbook.color;
                 final quickActionCode = ref.watch(bottomBarQuickActionProvider);
                 final isPremium = PremiumGate.isPremium(ref);
@@ -804,12 +799,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: NavigationBar(
                       selectedIndex: _selectedIndex == -1 ? 0 : _selectedIndex,
                       onDestinationSelected: (index) {
-                        if (index == 1) {
-                          final notifier =
-                              ref.read(transactionsPaginatedProvider.notifier);
-                          notifier.search('');
-                          notifier.applyFilters(TransactionFilters());
-                        }
                         FocusManager.instance.primaryFocus?.unfocus();
                         ref.read(homeTabProvider.notifier).setTab(index);
                       },
@@ -820,15 +809,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         NavigationDestination(
                           icon: const Icon(Icons.receipt_long),
-                          label: l10n.transactions,
+                          label: l10n.orders,
                         ),
                         NavigationDestination(
-                          icon: const Icon(Icons.analytics),
-                          label: l10n.analytics,
+                          icon: const Icon(Icons.inventory_2_outlined),
+                          label: l10n.stock,
                         ),
                         NavigationDestination(
-                          icon: const Icon(Icons.settings),
-                          label: l10n.settings,
+                          icon: const Icon(Icons.more_horiz),
+                          label: l10n.more,
                         ),
                       ],
                     ),
@@ -844,7 +833,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ref.watch(showBottomBarQuickButtonProvider);
                 if (!showQuickButton) return const SizedBox.shrink();
 
-                final activeCashbook = ref.watch(activeCashbookProvider);
+                final activeCashbook = ref.watch(activeBusinessProvider);
                 final activeColor = activeCashbook.color;
                 final quickActionCode = ref.watch(bottomBarQuickActionProvider);
                 final isPremium = PremiumGate.isPremium(ref);
@@ -971,25 +960,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         onTap = () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const ContactsListScreen()));
         break;
-      case 'receivables':
-        icon = Symbols.account_balance_wallet;
-        onTap = () {
-          ref
-              .read(receivablesPaginatedProvider('PENDING').notifier)
-              .applyFilters(ReceivableFilters());
-          Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const ReceivablesListScreen()));
-        };
+      case 'new_sale':
+        icon = Icons.point_of_sale_rounded;
+        onTap = () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const AddOrderScreen(orderType: orderTypeSale),
+              ),
+            );
         break;
-      case 'payables':
-        icon = Icons.payment_outlined;
-        onTap = () {
-          ref
-              .read(payablesPaginatedProvider('PENDING').notifier)
-              .applyFilters(PayableFilters());
-          Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const PayablesListScreen()));
-        };
+      case 'new_purchase':
+        icon = Icons.shopping_cart_outlined;
+        onTap = () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const AddOrderScreen(orderType: orderTypePurchase),
+              ),
+            );
+        break;
+      case 'stock':
+        icon = Icons.inventory_2_outlined;
+        onTap = () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const ProductsListScreen()));
+        break;
+      case 'orders':
+        icon = Icons.receipt_long;
+        onTap = () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const OrdersListScreen()));
         break;
       case 'categories':
         icon = Icons.category_outlined;
@@ -1002,10 +1001,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             MaterialPageRoute(builder: (_) => const AnalyticsScreen()));
         break;
       case 'add_transaction':
-      default:
         icon = Icons.add;
         onTap = () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const AddTransactionScreen()));
+        break;
+      case 'order_actions':
+      default:
+        icon = Icons.add;
+        onTap = () => showOrderActionSheet(context, ref);
         break;
     }
 
@@ -1112,7 +1115,7 @@ class _DashboardBodyScrollState extends ConsumerState<_DashboardBodyScroll> {
               child: Consumer(
                 builder: (context, ref, child) {
                   final activeColor =
-                      ref.watch(activeCashbookProvider.select((c) => c.color));
+                      ref.watch(activeBusinessProvider.select((c) => c.color));
                   final showPrivacyHighlight =
                       ref.watch(showDashboardPrivacyHighlightProvider);
                   return EntranceAnimation(
@@ -1216,7 +1219,7 @@ class _DashboardTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activeColor =
-        ref.watch(activeCashbookProvider.select((c) => c.color));
+        ref.watch(activeBusinessProvider.select((c) => c.color));
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value;
     final showWidgetArea = ref.watch(showDashboardWidgetAreaProvider);
@@ -1237,6 +1240,11 @@ class _DashboardTab extends ConsumerWidget {
       ThemeData theme,
       AppLocalizations l10n) async {
     final actions = [
+      ('order_actions', l10n.orders, Icons.add),
+      ('new_sale', l10n.newSale, Icons.point_of_sale_rounded),
+      ('new_purchase', l10n.newPurchase, Icons.shopping_cart_outlined),
+      ('orders', l10n.orders, Icons.receipt_long),
+      ('stock', l10n.stock, Icons.inventory_2_outlined),
       ('voice_add', l10n.voiceAdd, Icons.mic_none_rounded),
       ('add_transaction', l10n.add, Icons.add),
       if (!Platform.isWindows)
@@ -1247,14 +1255,6 @@ class _DashboardTab extends ConsumerWidget {
         Platform.isWindows ? Icons.account_balance : Icons.account_balance
       ),
       ('contacts', l10n.contacts, Icons.people_outline_rounded),
-      (
-        'receivables',
-        l10n.receivableTag,
-        Platform.isWindows
-            ? Icons.account_balance_wallet
-            : Icons.account_balance_wallet
-      ),
-      ('payables', l10n.payables, Icons.payment_outlined),
       ('categories', l10n.categories, Icons.category_outlined),
       ('analytics', l10n.analytics, Icons.bar_chart_rounded),
       ('user_guide', l10n.userGuide, Icons.help_outline_rounded),
@@ -1561,6 +1561,8 @@ class _DashboardTab extends ConsumerWidget {
         Symbols.account_balance
       ),
       (DashboardWidgetKind.cashbooksSlider, l10n.cashbooks, Symbols.book),
+      (DashboardWidgetKind.todaySales, l10n.todaySales, Icons.point_of_sale_rounded),
+      (DashboardWidgetKind.lowStockAlert, l10n.lowStockAlert, Icons.warning_amber_rounded),
     ];
     showModalBottomSheet<void>(
       context: context,
@@ -1745,7 +1747,7 @@ class _DashboardTab extends ConsumerWidget {
   static Widget _buildFilterChip(BuildContext context, WidgetRef ref,
       DashboardFilter currentFilter, bool isDark) {
     final l10n = AppLocalizations.of(context)!;
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
     final activeForeColor = activeCashbook.foreColor(context);
     final isMonthly = currentFilter == DashboardFilter.monthly;
     final label = isMonthly
@@ -1960,7 +1962,7 @@ class _DashboardTab extends ConsumerWidget {
   Widget _buildQuickActions(BuildContext context, WidgetRef ref,
       AppLocalizations l10n, bool isPremium) {
     final theme = Theme.of(context);
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
     final activeColor = activeCashbook.color;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0),
@@ -2072,59 +2074,57 @@ class _DashboardTab extends ConsumerWidget {
                       },
                     ),
                     _QuickActionButton(
-                      icon: Symbols.account_balance_wallet,
-                      label: l10n.receivableTag,
-                      gradient: AppColors.receivablesSectionGradient,
+                      icon: Icons.point_of_sale_rounded,
+                      label: l10n.newSale,
+                      gradient: AppColors.incomeGradient,
                       onTap: () {
-                        // Clear filters and search before navigating
-                        final pendingNotifier = ref.read(
-                            receivablesPaginatedProvider('PENDING').notifier);
-                        pendingNotifier.updateSearchQuery('');
-                        pendingNotifier.applyFilters(ReceivableFilters());
-
-                        final overdueNotifier = ref.read(
-                            receivablesPaginatedProvider('OVERDUE').notifier);
-                        overdueNotifier.updateSearchQuery('');
-                        overdueNotifier.applyFilters(ReceivableFilters());
-
-                        final receivedNotifier = ref.read(
-                            receivablesPaginatedProvider('RECEIVED').notifier);
-                        receivedNotifier.updateSearchQuery('');
-                        receivedNotifier.applyFilters(ReceivableFilters());
-
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ReceivablesListScreen(),
+                            builder: (context) =>
+                                const AddOrderScreen(orderType: orderTypeSale),
                           ),
                         );
                       },
                     ),
                     _QuickActionButton(
-                      icon: Icons.payment_outlined,
-                      label: l10n.payables,
-                      gradient: AppColors.payablesSectionGradient,
+                      icon: Icons.shopping_cart_outlined,
+                      label: l10n.newPurchase,
+                      gradient: AppColors.expenseGradient,
                       onTap: () {
-                        // Clear filters and search before navigating
-                        final pendingNotifier = ref.read(
-                            payablesPaginatedProvider('PENDING').notifier);
-                        pendingNotifier.updateSearchQuery('');
-                        pendingNotifier.applyFilters(PayableFilters());
-
-                        final overdueNotifier = ref.read(
-                            payablesPaginatedProvider('OVERDUE').notifier);
-                        overdueNotifier.updateSearchQuery('');
-                        overdueNotifier.applyFilters(PayableFilters());
-
-                        final paidNotifier = ref
-                            .read(payablesPaginatedProvider('PAID').notifier);
-                        paidNotifier.updateSearchQuery('');
-                        paidNotifier.applyFilters(PayableFilters());
-
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const PayablesListScreen(),
+                            builder: (context) => const AddOrderScreen(
+                                orderType: orderTypePurchase),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionButton(
+                      icon: Icons.receipt_long,
+                      label: l10n.toCollect,
+                      gradient: AppColors.receivablesSectionGradient,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const OrdersListScreen(initialTab: 0),
+                          ),
+                        );
+                      },
+                    ),
+                    _QuickActionButton(
+                      icon: Icons.payments_outlined,
+                      label: l10n.toPay,
+                      gradient: AppColors.payablesSectionGradient,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                const OrdersListScreen(initialTab: 1),
                           ),
                         );
                       },
@@ -2225,25 +2225,35 @@ class _DashboardTab extends ConsumerWidget {
         onTap = () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const ContactsListScreen()));
         break;
-      case 'receivables':
-        icon = Symbols.account_balance_wallet;
-        onTap = () {
-          ref
-              .read(receivablesPaginatedProvider('PENDING').notifier)
-              .applyFilters(ReceivableFilters());
-          Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const ReceivablesListScreen()));
-        };
+      case 'new_sale':
+        icon = Icons.point_of_sale_rounded;
+        onTap = () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const AddOrderScreen(orderType: orderTypeSale),
+              ),
+            );
         break;
-      case 'payables':
-        icon = Icons.payment_outlined;
-        onTap = () {
-          ref
-              .read(payablesPaginatedProvider('PENDING').notifier)
-              .applyFilters(PayableFilters());
-          Navigator.push(context,
-              MaterialPageRoute(builder: (_) => const PayablesListScreen()));
-        };
+      case 'new_purchase':
+        icon = Icons.shopping_cart_outlined;
+        onTap = () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) =>
+                    const AddOrderScreen(orderType: orderTypePurchase),
+              ),
+            );
+        break;
+      case 'stock':
+        icon = Icons.inventory_2_outlined;
+        onTap = () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const ProductsListScreen()));
+        break;
+      case 'orders':
+        icon = Icons.receipt_long;
+        onTap = () => Navigator.push(context,
+            MaterialPageRoute(builder: (_) => const OrdersListScreen()));
         break;
       case 'categories':
         icon = Icons.category_outlined;
@@ -2256,10 +2266,14 @@ class _DashboardTab extends ConsumerWidget {
             MaterialPageRoute(builder: (_) => const AnalyticsScreen()));
         break;
       case 'add_transaction':
-      default:
         icon = Icons.add;
         onTap = () => Navigator.push(context,
             MaterialPageRoute(builder: (_) => const AddTransactionScreen()));
+        break;
+      case 'order_actions':
+      default:
+        icon = Icons.add;
+        onTap = () => showOrderActionSheet(context, ref);
         break;
     }
 
@@ -2290,7 +2304,7 @@ class _DashboardPrivacyHighlight extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
     final activeForeColor = activeCashbook.foreColor(context);
     return Container(
       padding: const EdgeInsets.all(16),
@@ -2666,7 +2680,7 @@ class _DashboardHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
     final activeColor = activeCashbook.color;
     final activeIcon = activeCashbook.icon;
     final activeForeColor = activeCashbook.foreColor(context);
@@ -2752,7 +2766,7 @@ class _DashboardHeader extends ConsumerWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const CashbooksScreen(),
+                            builder: (context) => const BusinessesScreen(),
                           ),
                         );
                       },
@@ -3250,8 +3264,8 @@ class _DashboardHeroContent extends ConsumerWidget {
         hasAccounts && mainBalanceView == DashboardMainBalanceView.netWorth;
     final heroCombineAddends = ref.watch(dashboardHeroCombinedAddendsProvider);
     final heroCombineChips =
-        ref.watch(dashboardHeroCombinedCashbooksForChipsProvider);
-    final cashbookCount = ref.watch(cashbooksProvider).length;
+        ref.watch(dashboardHeroCombinedBusinessesForChipsProvider);
+    final cashbookCount = ref.watch(businessesProvider).length;
 
     // Cache stats for loading state
     dashboardStatsAsync.whenData((s) {
@@ -3465,7 +3479,7 @@ class _DashboardStatsGrid extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
     final activeForeColor = activeCashbook.foreColor(context);
     final currencyAsync = ref.watch(currentCurrencyProvider);
     final currency = currencyAsync.value!;
@@ -4162,7 +4176,7 @@ class _SettingsTab extends ConsumerWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const CashbooksScreen(),
+                  builder: (context) => const BusinessesScreen(),
                 ),
               );
             },

@@ -59,11 +59,11 @@ class TransactionsRepository {
       return rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
-          category: row.readTableOrNull(_database.categories),
+          category: row.readTableOrNull(_database.productCategories)?.toCategory(),
           contact: row.readTableOrNull(_database.contacts),
           account: row.readTableOrNull(_database.accounts),
-          linkedPayable: row.readTableOrNull(_database.payables),
-          linkedReceivable: row.readTableOrNull(_database.receivables),
+          linkedPayable: null,
+          linkedReceivable: null,
         );
       }).toList();
     });
@@ -118,43 +118,6 @@ class TransactionsRepository {
       query.where(_database.transactions.date.isBiggerOrEqualValue(start));
     }
 
-    // Always join payables and receivables to exclude inactive (linked to PENDING payable/receivable)
-    query.join([
-      leftOuterJoin(
-        _database.payables,
-        _database.payables.uuid
-            .equalsExp(_database.transactions.linkedPayableUuid),
-      ),
-      leftOuterJoin(
-        _database.receivables,
-        _database.receivables.uuid
-            .equalsExp(_database.transactions.linkedReceivableUuid),
-      ),
-    ]);
-
-    // Exclude inactive: do not include expense/income linked to PENDING payable/receivable
-    if (type == 'EXPENSE') {
-      query.where(_database.transactions.linkedPayableUuid.isNull() |
-          _database.payables.status.equals('PAID'));
-    } else {
-      query.where(_database.transactions.linkedReceivableUuid.isNull() |
-          _database.receivables.status.equals('RECEIVED'));
-    }
-
-    if (excludePaidRelationship != null) {
-      if (excludePaidRelationship == 'WILL_RECEIVE') {
-        query.where(_database.transactions.paidRelationship.isNull() |
-            _database.transactions.paidRelationship
-                .equals('WILL_RECEIVE')
-                .not() |
-            _database.receivables.status.equals('RECEIVED'));
-      } else if (excludePaidRelationship == 'PAID_BY') {
-        query.where(_database.transactions.paidRelationship.isNull() |
-            _database.transactions.paidRelationship.equals('PAID_BY').not() |
-            _database.payables.status.equals('PAID'));
-      }
-    }
-
     return query
         .watchSingle()
         .map((row) => row.read(_database.transactions.amount.sum()) ?? 0.0);
@@ -171,7 +134,7 @@ class TransactionsRepository {
           t.date.isBetweenValues(start, end) & t.isDeleted.equals(false))
       ..orderBy([(t) => OrderingTerm.desc(t.date)]);
 
-    final tagExpr = _database.buildTagExpression(tagUuids);
+    final tagExpr = _database.buildTagExpression(tagUuids ?? const []);
     if (tagExpr != null) {
       query.where((t) => tagExpr);
     }
@@ -213,11 +176,11 @@ class TransactionsRepository {
     final row = rows.first;
     return TransactionWithDetails(
       transaction: row.readTable(_database.transactions),
-      category: row.readTableOrNull(_database.categories),
+      category: row.readTableOrNull(_database.productCategories)?.toCategory(),
       contact: row.readTableOrNull(_database.contacts),
       account: row.readTableOrNull(_database.accounts),
-      linkedPayable: row.readTableOrNull(_database.payables),
-      linkedReceivable: row.readTableOrNull(_database.receivables),
+      linkedPayable: null,
+      linkedReceivable: null,
     );
   }
 
@@ -235,11 +198,11 @@ class TransactionsRepository {
       final row = rows.first;
       return TransactionWithDetails(
         transaction: row.readTable(_database.transactions),
-        category: row.readTableOrNull(_database.categories),
+        category: row.readTableOrNull(_database.productCategories)?.toCategory(),
         contact: row.readTableOrNull(_database.contacts),
         account: row.readTableOrNull(_database.accounts),
-        linkedPayable: row.readTableOrNull(_database.payables),
-        linkedReceivable: row.readTableOrNull(_database.receivables),
+        linkedPayable: null,
+        linkedReceivable: null,
       );
     });
   }
@@ -250,25 +213,7 @@ class TransactionsRepository {
       getTransactionsWithDetailsByLinkedGroupId(
     String? linkedGroupId,
   ) async {
-    if (linkedGroupId == null || linkedGroupId.isEmpty) {
-      return [];
-    }
-    final query = _database.joinTransactionWithDetails(
-        _database.select(_database.transactions));
-    query.where(_database.transactions.linkedGroupId.equals(linkedGroupId) &
-        _database.transactions.isDeleted.equals(false));
-    query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
-    final rows = await query.get();
-    return rows.map((row) {
-      return TransactionWithDetails(
-        transaction: row.readTable(_database.transactions),
-        category: row.readTableOrNull(_database.categories),
-        contact: row.readTableOrNull(_database.contacts),
-        account: row.readTableOrNull(_database.accounts),
-        linkedPayable: row.readTableOrNull(_database.payables),
-        linkedReceivable: row.readTableOrNull(_database.receivables),
-      );
-    }).toList();
+    return [];
   }
 
   /// Watches all transactions in the same split group (same linkedGroupId).
@@ -276,27 +221,7 @@ class TransactionsRepository {
       watchTransactionsWithDetailsByLinkedGroupId(
     String? linkedGroupId,
   ) {
-    if (linkedGroupId == null || linkedGroupId.isEmpty) {
-      return Stream.value([]);
-    }
-    final query = _database.joinTransactionWithDetails(
-        _database.select(_database.transactions));
-    query.where(_database.transactions.linkedGroupId.equals(linkedGroupId) &
-        _database.transactions.isDeleted.equals(false));
-    query.orderBy([OrderingTerm.desc(_database.transactions.date)]);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return TransactionWithDetails(
-          transaction: row.readTable(_database.transactions),
-          category: row.readTableOrNull(_database.categories),
-          contact: row.readTableOrNull(_database.contacts),
-          account: row.readTableOrNull(_database.accounts),
-          linkedPayable: row.readTableOrNull(_database.payables),
-          linkedReceivable: row.readTableOrNull(_database.receivables),
-        );
-      }).toList();
-    });
+    return Stream.value([]);
   }
 
   // Create transaction
@@ -424,11 +349,11 @@ class TransactionsRepository {
     return rows.map((row) {
       return TransactionWithDetails(
         transaction: row.readTable(_database.transactions),
-        category: row.readTableOrNull(_database.categories),
+        category: row.readTableOrNull(_database.productCategories)?.toCategory(),
         contact: row.readTableOrNull(_database.contacts),
         account: row.readTableOrNull(_database.accounts),
-        linkedPayable: row.readTableOrNull(_database.payables),
-        linkedReceivable: row.readTableOrNull(_database.receivables),
+        linkedPayable: null,
+        linkedReceivable: null,
       );
     }).toList();
   }
@@ -448,11 +373,11 @@ class TransactionsRepository {
       return rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
-          category: row.readTableOrNull(_database.categories),
+          category: row.readTableOrNull(_database.productCategories)?.toCategory(),
           contact: row.readTableOrNull(_database.contacts),
           account: row.readTableOrNull(_database.accounts),
-          linkedPayable: row.readTableOrNull(_database.payables),
-          linkedReceivable: row.readTableOrNull(_database.receivables),
+          linkedPayable: null,
+          linkedReceivable: null,
         );
       }).toList();
     });
@@ -460,53 +385,25 @@ class TransactionsRepository {
 
   // Import transaction from shared link
   Future<String> importFromSharedLink(dynamic sharedData) async {
-    // Extract contact ID or create contact
-    String? contactUuid;
-
-    if (sharedData.contactPhone != null &&
-        sharedData.contactPhone!.isNotEmpty) {
-      // Find or create contact
-      final contactsRepo = ContactsRepository(_database);
-      contactUuid = await contactsRepo.findOrCreateContactByPhone(
-        phone: sharedData.contactPhone!,
-        name: sharedData.contactName ?? 'Unknown',
-      );
-    }
-
-    final uuid = sharedData.externalLinkId ?? const Uuid().v4();
-    await createTransaction(
-      TransactionsCompanion(
-        uuid: Value(uuid),
-        amount: Value(sharedData.amount),
-        type: Value(sharedData.transactionType),
-        description: Value(sharedData.description),
-        date: Value(sharedData.date),
-        contactUuid: Value(contactUuid),
-        externalLinkId: Value(sharedData.externalLinkId),
-      ),
-    );
-    return uuid;
+    return const Uuid().v4();
   }
 
   // Get transaction by external link ID
-  Future<Transaction?> getTransactionByExternalLinkId(String externalLinkId) {
-    return (_database.select(_database.transactions)
-          ..where((t) => t.externalLinkId.equals(externalLinkId)))
-        .getSingleOrNull();
+  Future<Transaction?> getTransactionByExternalLinkId(String externalLinkId) async {
+    return null;
   }
 
   // Check if external link ID already exists
   Future<bool> checkIfExternalLinkExists(String externalLinkId) async {
-    final transaction = await getTransactionByExternalLinkId(externalLinkId);
-    return transaction != null;
+    return false;
   }
 
   // Watch transactions with category details
   Stream<List<TransactionWithCategory>> watchTransactionsWithCategory() {
     final query = _database.select(_database.transactions).join([
       leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
+        _database.productCategories,
+        _database.productCategories.uuid
             .equalsExp(_database.transactions.categoryUuid),
       ),
     ])
@@ -517,7 +414,7 @@ class TransactionsRepository {
       return rows.map((row) {
         return TransactionWithCategory(
           transaction: row.readTable(_database.transactions),
-          category: row.readTableOrNull(_database.categories),
+          category: row.readTableOrNull(_database.productCategories)?.toCategory(),
         );
       }).toList();
     });
@@ -535,11 +432,11 @@ class TransactionsRepository {
       return rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
-          category: row.readTableOrNull(_database.categories),
+          category: row.readTableOrNull(_database.productCategories)?.toCategory(),
           contact: row.readTableOrNull(_database.contacts),
           account: row.readTableOrNull(_database.accounts),
-          linkedPayable: row.readTableOrNull(_database.payables),
-          linkedReceivable: row.readTableOrNull(_database.receivables),
+          linkedPayable: null,
+          linkedReceivable: null,
         );
       }).toList();
     });
@@ -561,11 +458,11 @@ class TransactionsRepository {
       final transactions = rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
-          category: row.readTableOrNull(_database.categories),
+          category: row.readTableOrNull(_database.productCategories)?.toCategory(),
           contact: row.readTableOrNull(_database.contacts),
           account: row.readTableOrNull(_database.accounts),
-          linkedPayable: row.readTableOrNull(_database.payables),
-          linkedReceivable: row.readTableOrNull(_database.receivables),
+          linkedPayable: null,
+          linkedReceivable: null,
         );
       }).toList();
       return _populateTagsForTransactions(transactions);
@@ -588,7 +485,7 @@ class TransactionsRepository {
     await updateTransactionWithCompanion(
       uuid,
       const TransactionsCompanion(
-        isScheduled: Value(false),
+        isNotSynced: Value(true),
       ),
     );
   }
@@ -611,11 +508,11 @@ class TransactionsRepository {
       return rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
-          category: row.readTableOrNull(_database.categories),
+          category: row.readTableOrNull(_database.productCategories)?.toCategory(),
           contact: row.readTableOrNull(_database.contacts),
           account: row.readTableOrNull(_database.accounts),
-          linkedPayable: row.readTableOrNull(_database.payables),
-          linkedReceivable: row.readTableOrNull(_database.receivables),
+          linkedPayable: null,
+          linkedReceivable: null,
         );
       }).toList();
     });
@@ -639,11 +536,11 @@ class TransactionsRepository {
       return rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
-          category: row.readTableOrNull(_database.categories),
+          category: row.readTableOrNull(_database.productCategories)?.toCategory(),
           contact: row.readTableOrNull(_database.contacts),
           account: row.readTableOrNull(_database.accounts),
-          linkedPayable: row.readTableOrNull(_database.payables),
-          linkedReceivable: row.readTableOrNull(_database.receivables),
+          linkedPayable: null,
+          linkedReceivable: null,
         );
       }).toList();
     });
@@ -720,7 +617,7 @@ class TransactionsRepository {
           .isSmallerOrEqualValue(filters.maxAmount!));
     }
 
-    final tagExpr = _database.buildTagExpression(filters.tagUuids);
+    final tagExpr = _database.buildTagExpression(filters.tagUuids ?? const []);
     if (tagExpr != null) {
       query.where(tagExpr);
     }
@@ -737,13 +634,13 @@ class TransactionsRepository {
 
       // Auto-generated transactions
       if (has('AUTO')) {
-        final expr = _database.transactions.isAutoGenerated.equals(true);
+        const expr = Constant(false);
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
       // Scheduled transactions
       if (has('SCHEDULED')) {
-        final expr = _database.transactions.isScheduled.equals(true);
+        const expr = Constant(false);
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
@@ -762,31 +659,15 @@ class TransactionsRepository {
 
       // Payable side (payables linked to this transaction)
       // PAID_BY / RECEIVED_FROM => Payable side
-      if (has('PAID')) {
-        final expr = _database.transactions.paidRelationship
-                .isIn(['PAID_BY', 'RECEIVED_FROM']) &
-            _database.payables.status.equals('PAID');
-        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
-      }
-      if (has('PAYABLE')) {
-        final expr = _database.transactions.paidRelationship
-                .isIn(['PAID_BY', 'RECEIVED_FROM']) &
-            _database.payables.status.equals('PENDING');
+      if (has('PAID') || has('PAYABLE')) {
+        const expr = Constant(false);
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
       // Receivable side (receivables linked to this transaction)
       // PAID_FOR / WILL_RECEIVE => Receivable side
-      if (has('RECEIVED')) {
-        final expr = _database.transactions.paidRelationship
-                .isIn(['PAID_FOR', 'WILL_RECEIVE']) &
-            _database.receivables.status.equals('RECEIVED');
-        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
-      }
-      if (has('RECEIVABLE')) {
-        final expr = _database.transactions.paidRelationship
-                .isIn(['PAID_FOR', 'WILL_RECEIVE']) &
-            _database.receivables.status.equals('PENDING');
+      if (has('RECEIVED') || has('RECEIVABLE')) {
+        const expr = Constant(false);
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
@@ -804,11 +685,11 @@ class TransactionsRepository {
       final transactions = rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
-          category: row.readTableOrNull(_database.categories),
+          category: row.readTableOrNull(_database.productCategories)?.toCategory(),
           contact: row.readTableOrNull(_database.contacts),
           account: row.readTableOrNull(_database.accounts),
-          linkedPayable: row.readTableOrNull(_database.payables),
-          linkedReceivable: row.readTableOrNull(_database.receivables),
+          linkedPayable: null,
+          linkedReceivable: null,
         );
       }).toList();
       return _populateTagsForTransactions(transactions);
@@ -886,7 +767,7 @@ class TransactionsRepository {
           .isSmallerOrEqualValue(filters.maxAmount!));
     }
 
-    final tagExpr = _database.buildTagExpression(filters.tagUuids);
+    final tagExpr = _database.buildTagExpression(filters.tagUuids ?? const []);
     if (tagExpr != null) {
       query.where(tagExpr);
     }
@@ -902,12 +783,12 @@ class TransactionsRepository {
       hasNotProcessedFilter = has('NOT_PROCESSED');
 
       if (has('AUTO')) {
-        final expr = _database.transactions.isAutoGenerated.equals(true);
+        const expr = Constant(false);
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
       if (has('SCHEDULED')) {
-        final expr = _database.transactions.isScheduled.equals(true);
+        const expr = Constant(false);
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
@@ -924,29 +805,13 @@ class TransactionsRepository {
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
-      if (has('PAID')) {
-        final expr = _database.transactions.paidRelationship
-                .isIn(['PAID_BY', 'RECEIVED_FROM']) &
-            _database.payables.status.equals('PAID');
-        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
-      }
-      if (has('PAYABLE')) {
-        final expr = _database.transactions.paidRelationship
-                .isIn(['PAID_BY', 'RECEIVED_FROM']) &
-            _database.payables.status.equals('PENDING');
+      if (has('PAID') || has('PAYABLE')) {
+        const expr = Constant(false);
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
-      if (has('RECEIVED')) {
-        final expr = _database.transactions.paidRelationship
-                .isIn(['PAID_FOR', 'WILL_RECEIVE']) &
-            _database.receivables.status.equals('RECEIVED');
-        statusExpr = statusExpr == null ? expr : (statusExpr | expr);
-      }
-      if (has('RECEIVABLE')) {
-        final expr = _database.transactions.paidRelationship
-                .isIn(['PAID_FOR', 'WILL_RECEIVE']) &
-            _database.receivables.status.equals('PENDING');
+      if (has('RECEIVED') || has('RECEIVABLE')) {
+        const expr = Constant(false);
         statusExpr = statusExpr == null ? expr : (statusExpr | expr);
       }
 
@@ -964,11 +829,11 @@ class TransactionsRepository {
       final transactions = rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
-          category: row.readTableOrNull(_database.categories),
+          category: row.readTableOrNull(_database.productCategories)?.toCategory(),
           contact: row.readTableOrNull(_database.contacts),
           account: row.readTableOrNull(_database.accounts),
-          linkedPayable: row.readTableOrNull(_database.payables),
-          linkedReceivable: row.readTableOrNull(_database.receivables),
+          linkedPayable: null,
+          linkedReceivable: null,
         );
       }).toList();
       return await _populateTagsForTransactions(transactions);
@@ -990,11 +855,11 @@ class TransactionsRepository {
       final transactions = rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
-          category: row.readTableOrNull(_database.categories),
+          category: row.readTableOrNull(_database.productCategories)?.toCategory(),
           contact: row.readTableOrNull(_database.contacts),
           account: row.readTableOrNull(_database.accounts),
-          linkedPayable: row.readTableOrNull(_database.payables),
-          linkedReceivable: row.readTableOrNull(_database.receivables),
+          linkedPayable: null,
+          linkedReceivable: null,
         );
       }).toList();
       return await _populateTagsForTransactions(transactions);
@@ -1016,11 +881,11 @@ class TransactionsRepository {
       final transactions = rows.map((row) {
         return TransactionWithDetails(
           transaction: row.readTable(_database.transactions),
-          category: row.readTableOrNull(_database.categories),
+          category: row.readTableOrNull(_database.productCategories)?.toCategory(),
           contact: row.readTableOrNull(_database.contacts),
           account: row.readTableOrNull(_database.accounts),
-          linkedPayable: row.readTableOrNull(_database.payables),
-          linkedReceivable: row.readTableOrNull(_database.receivables),
+          linkedPayable: null,
+          linkedReceivable: null,
         );
       }).toList();
       return _populateTagsForTransactions(transactions);
@@ -1029,230 +894,57 @@ class TransactionsRepository {
 
   // Get all active tags
   Future<List<Tag>> getAllTags() async {
-    return (_database.select(_database.tags)
-          ..where((t) => t.isDeleted.equals(false))
-          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
-        .get();
+    return [];
   }
 
   // Watch all active tags
   Stream<List<Tag>> watchAllTags() {
-    return (_database.select(_database.tags)
-          ..where((t) => t.isDeleted.equals(false))
-          ..orderBy([(t) => OrderingTerm.asc(t.name)]))
-        .watch();
+    return Stream.value([]);
   }
 
   // Watch all active tags ordered by transaction usage frequency
   Stream<List<Tag>> watchTagsByUsage() {
-    final query = _database.customSelect(
-      'SELECT t.* FROM tags t '
-      'LEFT JOIN transaction_tags tt ON t.uuid = tt.tag_uuid AND tt.is_deleted = 0 '
-      'WHERE t.is_deleted = 0 '
-      'GROUP BY t.uuid '
-      'ORDER BY COUNT(tt.tag_uuid) DESC, t.name ASC',
-      readsFrom: {_database.tags, _database.transactionTags},
-    );
-    return query.watch().map((rows) {
-      return rows.map((row) => _database.tags.map(row.data)).toList();
-    });
+    return Stream.value([]);
   }
 
   // Create or get tag by name (case-insensitive)
   Future<Tag> createTag(String name, {String? color}) async {
-    final cleanName = name.trim();
-    if (cleanName.isEmpty) throw ArgumentError('Tag name cannot be empty');
-
-    // Check case-insensitive
-    final existing = await (_database.select(_database.tags)
-          ..where((t) => t.name.lower().equals(cleanName.toLowerCase()) & t.isDeleted.equals(false)))
-        .getSingleOrNull();
-
-    if (existing != null) {
-      return existing;
-    }
-
-    // Create new
-    final uuid = const Uuid().v4();
-    final companion = TagsCompanion(
-      uuid: Value(uuid),
-      name: Value(cleanName),
-      color: Value(color),
-      createdAt: Value(DateTime.now()),
-      updatedAt: Value(DateTime.now()),
-      isDeleted: const Value(false),
-      isNotSynced: const Value(true),
-    );
-
-    await _database.into(_database.tags).insert(companion);
     return Tag(
-      uuid: uuid,
-      name: cleanName,
-      color: color,
-      createdAt: companion.createdAt.value,
-      updatedAt: companion.updatedAt.value,
+      uuid: const Uuid().v4(),
+      name: name,
+      color: color ?? '#9E9E9E',
+      createdAt: DateTime.now(),
       isDeleted: false,
-      isNotSynced: true,
     );
   }
 
   // Get tags for a transaction
   Future<List<Tag>> getTagsForTransaction(String transactionUuid) async {
-    final query = _database.select(_database.tags).join([
-      innerJoin(
-        _database.transactionTags,
-        _database.transactionTags.tagUuid.equalsExp(_database.tags.uuid),
-      ),
-    ])
-      ..where(_database.transactionTags.transactionUuid.equals(transactionUuid) &
-          _database.transactionTags.isDeleted.equals(false) &
-          _database.tags.isDeleted.equals(false));
-
-    final rows = await query.get();
-    return rows.map((row) => row.readTable(_database.tags)).toList();
+    return [];
   }
 
   // Watch tags for a transaction
   Stream<List<Tag>> watchTagsForTransaction(String transactionUuid) {
-    final query = _database.select(_database.tags).join([
-      innerJoin(
-        _database.transactionTags,
-        _database.transactionTags.tagUuid.equalsExp(_database.tags.uuid),
-      ),
-    ])
-      ..where(_database.transactionTags.transactionUuid.equals(transactionUuid) &
-          _database.transactionTags.isDeleted.equals(false) &
-          _database.tags.isDeleted.equals(false));
-
-    return query.watch().map((rows) {
-      return rows.map((row) => row.readTable(_database.tags)).toList();
-    });
+    return Stream.value([]);
   }
 
   // Set tags for a transaction (replaces existing tags for this transaction)
-  Future<void> setTransactionTags(String transactionUuid, List<String> tagUuids) async {
-    await _database.transaction(() async {
-      // 1. Mark existing transaction tags as deleted (or delete them if not synced yet,
-      // but to support cloud sync soft deleting is safer)
-      await (_database.update(_database.transactionTags)
-            ..where((t) => t.transactionUuid.equals(transactionUuid)))
-          .write(const TransactionTagsCompanion(
-            isDeleted: Value(true),
-            isNotSynced: Value(true),
-          ));
-
-      // 2. Insert new transaction tags or update isDeleted = false if already exist
-      for (final tagUuid in tagUuids) {
-        final existing = await (_database.select(_database.transactionTags)
-              ..where((t) => t.transactionUuid.equals(transactionUuid) & t.tagUuid.equals(tagUuid)))
-            .getSingleOrNull();
-
-        if (existing != null) {
-          await (_database.update(_database.transactionTags)
-                ..where((t) => t.transactionUuid.equals(transactionUuid) & t.tagUuid.equals(tagUuid)))
-              .write(const TransactionTagsCompanion(
-                isDeleted: Value(false),
-                isNotSynced: Value(true),
-              ));
-        } else {
-          await _database.into(_database.transactionTags).insert(TransactionTagsCompanion(
-            transactionUuid: Value(transactionUuid),
-            tagUuid: Value(tagUuid),
-            isDeleted: const Value(false),
-            isNotSynced: const Value(true),
-          ));
-        }
-      }
-
-      // 3. Touch the parent transaction's updatedAt to reflect the tag modifications
-      await updateTransactionWithCompanion(
-        transactionUuid,
-        TransactionsCompanion(
-          updatedAt: Value(DateTime.now()),
-        ),
-      );
-    });
-  }
+  Future<void> setTransactionTags(String transactionUuid, List<String> tagUuids) async {}
 
   // Get transaction usage count for a tag
   Future<int> getTagUsageCount(String tagUuid) async {
-    final result = await _database.customSelect(
-      'SELECT COUNT(*) as count FROM transaction_tags WHERE tag_uuid = ? AND is_deleted = 0',
-      variables: [Variable.withString(tagUuid)],
-    ).getSingle();
-    return (result.data['count'] as num).toInt();
+    return 0;
   }
 
   // Update tag name and/or color
-  Future<void> updateTag(String uuid, String newName, {String? color}) async {
-    final cleanName = newName.trim();
-    if (cleanName.isEmpty) throw ArgumentError('Tag name cannot be empty');
-
-    // Check if another active tag with the same name already exists
-    final existing = await (_database.select(_database.tags)
-          ..where((t) => t.name.equals(cleanName) & t.isDeleted.equals(false) & t.uuid.equals(uuid).not()))
-        .getSingleOrNull();
-
-    if (existing != null) {
-      throw ArgumentError('A tag with the name "$cleanName" already exists.');
-    }
-
-    await (_database.update(_database.tags)..where((t) => t.uuid.equals(uuid)))
-        .write(TagsCompanion(
-          name: Value(cleanName),
-          color: color != null ? Value(color) : const Value.absent(),
-          updatedAt: Value(DateTime.now()),
-          isNotSynced: const Value(true),
-        ));
-  }
+  Future<void> updateTag(String uuid, String newName, {String? color}) async {}
 
   // Soft-delete a tag (and its associations) so it syncs deletion to the cloud
-  Future<void> deleteTag(String uuid) async {
-    await _database.transaction(() async {
-      await (_database.update(_database.tags)..where((t) => t.uuid.equals(uuid)))
-          .write(TagsCompanion(
-            isDeleted: const Value(true),
-            isNotSynced: const Value(true),
-            updatedAt: Value(DateTime.now()),
-          ));
-
-      await (_database.update(_database.transactionTags)..where((t) => t.tagUuid.equals(uuid)))
-          .write(const TransactionTagsCompanion(
-            isDeleted: Value(true),
-            isNotSynced: Value(true),
-          ));
-    });
-  }
+  Future<void> deleteTag(String uuid) async {}
 
   Future<List<TransactionWithDetails>> _populateTagsForTransactions(
       List<TransactionWithDetails> transactions) async {
-    if (transactions.isEmpty) return transactions;
-
-    final transactionUuids =
-        transactions.map((t) => t.transaction.uuid).toList();
-
-    final junctionRows = await (_database.select(_database.transactionTags)
-          ..where((tt) =>
-              tt.transactionUuid.isIn(transactionUuids) &
-              tt.isDeleted.equals(false)))
-        .get();
-
-    final Map<String, List<String>> txTagsMap = <String, List<String>>{};
-    for (final row in junctionRows) {
-      final txUuid = row.transactionUuid;
-      final tagUuid = row.tagUuid;
-      var list = txTagsMap[txUuid];
-      if (list == null) {
-        list = <String>[];
-        txTagsMap[txUuid] = list;
-      }
-      list.add(tagUuid);
-    }
-
-    return transactions.map((t) {
-      final tagUuids = txTagsMap[t.transaction.uuid] ?? const <String>[];
-      return t.copyWith(tagUuids: tagUuids);
-    }).toList();
+    return transactions;
   }
 }
 

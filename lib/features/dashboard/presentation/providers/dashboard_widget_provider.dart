@@ -6,6 +6,8 @@ import 'package:flowpaisa/features/categories/presentation/providers/categories_
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
+import 'package:flowpaisa/features/payables/data/payables_repository.dart';
+import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/settings/data/user_preferences_repository.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
@@ -13,10 +15,12 @@ import 'package:flowpaisa/shared/providers/database_provider.dart';
 /// Default widget layout when none is saved.
 List<DashboardWidgetConfig> get defaultDashboardWidgetLayout => [
       const DashboardWidgetConfig(kind: DashboardWidgetKind.quickActions),
+      const DashboardWidgetConfig(kind: DashboardWidgetKind.todaySales),
       const DashboardWidgetConfig(kind: DashboardWidgetKind.balance),
       const DashboardWidgetConfig(kind: DashboardWidgetKind.cashFlow),
       const DashboardWidgetConfig(kind: DashboardWidgetKind.receivablesSummary),
       const DashboardWidgetConfig(kind: DashboardWidgetKind.payablesSummary),
+      const DashboardWidgetConfig(kind: DashboardWidgetKind.lowStockAlert),
     ];
 
 class DashboardWidgetLayoutNotifier

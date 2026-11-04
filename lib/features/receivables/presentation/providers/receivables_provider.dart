@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/core/database/database.dart' hide Receivable;
+import 'package:flowpaisa/features/transactions/domain/models.dart' show Receivable;
 import 'package:flowpaisa/features/receivables/data/receivables_repository.dart';
 import 'package:flowpaisa/features/receivables/domain/models.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';

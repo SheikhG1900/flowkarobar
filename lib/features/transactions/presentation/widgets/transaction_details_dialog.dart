@@ -27,7 +27,7 @@ import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/core/utils/share_helper.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/edit_transaction_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/splitted_transactions_screen.dart';
@@ -4356,7 +4356,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
       );
 
       if (context.mounted) {
-        final activeColor = ref.read(activeCashbookProvider).color;
+        final activeColor = ref.read(activeBusinessProvider).color;
         final currency = ref.read(currentCurrencyProvider).value!;
         final userProfile = ref.read(userProfileProvider);
         final transactionService = ref.read(transactionServiceProvider);
@@ -4409,7 +4409,7 @@ class TransactionDetailsDialog extends ConsumerWidget {
       );
 
       if (context.mounted) {
-        final activeColor = ref.read(activeCashbookProvider).color;
+        final activeColor = ref.read(activeBusinessProvider).color;
         final currency = ref.read(currentCurrencyProvider).value!;
         final userProfile = ref.read(userProfileProvider);
         final transactionService = ref.read(transactionServiceProvider);

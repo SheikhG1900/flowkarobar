@@ -18,6 +18,8 @@ class UserPreferencesRepository {
   static const String keyUserEmail = 'user_email';
   static const String keyUserPhone = 'user_phone';
   static const String keyUserAddress = 'user_address';
+  static const String keyBusinessTaxId = 'business_tax_id';
+  static const String keyDefaultInvoiceNotes = 'default_invoice_notes';
   static const String keyFontEn = 'font_en';
   static const String keyFontHi = 'font_hi';
   static const String keyFontUr = 'font_ur';
@@ -203,6 +205,22 @@ class UserPreferencesRepository {
 
   Future<void> setUserAddress(String address) async {
     await setPreference(keyUserAddress, address);
+  }
+
+  Future<String?> getBusinessTaxId() async {
+    return await getPreference(keyBusinessTaxId);
+  }
+
+  Future<void> setBusinessTaxId(String taxId) async {
+    await setPreference(keyBusinessTaxId, taxId);
+  }
+
+  Future<String?> getDefaultInvoiceNotes() async {
+    return await getPreference(keyDefaultInvoiceNotes);
+  }
+
+  Future<void> setDefaultInvoiceNotes(String notes) async {
+    await setPreference(keyDefaultInvoiceNotes, notes);
   }
 
   // Font Preferences

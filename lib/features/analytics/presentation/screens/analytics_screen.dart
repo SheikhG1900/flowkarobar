@@ -1178,6 +1178,9 @@ class _ContactSummariesSection extends ConsumerWidget {
 
         return Column(
           children: summaries.map((summary) {
+            final contact = summary.contact;
+            if (contact == null) return const SizedBox.shrink();
+
             final isPositive = summary.balance >= 0;
             final isZero = summary.balance == 0;
 
@@ -1195,7 +1198,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => ContactDetailsScreen(
-                          contactUuid: summary.contact.uuid),
+                          contactUuid: contact.uuid),
                     ),
                   );
                 },
@@ -1210,13 +1213,13 @@ class _ContactSummariesSection extends ConsumerWidget {
                         height: 50,
                         decoration: BoxDecoration(
                           gradient: AppColors.getContactGradient(
-                              summary.contact.name),
+                              contact.name),
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          summary.contact.name.isNotEmpty
-                              ? summary.contact.name[0].toUpperCase()
+                          contact.name.isNotEmpty
+                              ? contact.name[0].toUpperCase()
                               : '?',
                           style: const TextStyle(
                             color: Colors.white,
@@ -1232,7 +1235,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              summary.contact.name,
+                              contact.name,
                               style: theme.textTheme.titleSmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                               ),
@@ -1253,7 +1256,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                                         .applyFilters(
                                           PayableFilters(
                                             contactUuids: [
-                                              summary.contact.uuid
+                                              contact.uuid
                                             ],
                                             startDate: dateRange.startDate,
                                             endDate: dateRange.endDate,
@@ -1302,7 +1305,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                                         .applyFilters(
                                           ReceivableFilters(
                                             contactUuids: [
-                                              summary.contact.uuid
+                                              contact.uuid
                                             ],
                                             startDate: dateRange.startDate,
                                             endDate: dateRange.endDate,
@@ -1354,7 +1357,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                                     .notifier)
                                 .applyFilters(
                                   ReceivableFilters(
-                                    contactUuids: [summary.contact.uuid],
+                                    contactUuids: [contact.uuid],
                                     startDate: dateRange.startDate,
                                     endDate: dateRange.endDate,
                                   ),
@@ -1372,7 +1375,7 @@ class _ContactSummariesSection extends ConsumerWidget {
                                     .notifier)
                                 .applyFilters(
                                   PayableFilters(
-                                    contactUuids: [summary.contact.uuid],
+                                    contactUuids: [contact.uuid],
                                     startDate: dateRange.startDate,
                                     endDate: dateRange.endDate,
                                   ),
@@ -2523,17 +2526,20 @@ class _TopContactsChart extends ConsumerWidget {
 
         return Column(
           children: contacts.take(10).map((contact) {
+            final innerContact = contact.contact;
+            if (innerContact == null) return const SizedBox.shrink();
+
             final isPositive = contact.balance >= 0;
             final barColor = isPositive
                 ? AppColors.receivableColor
                 : AppColors.payableColor;
             final avatarColor =
-                AppColors.getContactColor(contact.contact.name);
+                AppColors.getContactColor(innerContact.name);
             final fillFactor = maxAmount > 0
                 ? (contact.balance.abs() / maxAmount).clamp(0.0, 1.0)
                 : 0.0;
-            final initials = contact.contact.name.trim().isNotEmpty
-                ? contact.contact.name.trim()[0].toUpperCase()
+            final initials = innerContact.name.trim().isNotEmpty
+                ? innerContact.name.trim()[0].toUpperCase()
                 : '?';
 
             Widget content(Color textColor) => Padding(
@@ -2561,7 +2567,7 @@ class _TopContactsChart extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          contact.contact.name,
+                          innerContact.name,
                           style: TextStyle(
                             color: textColor.withValues(alpha: 0.85),
                             fontWeight: FontWeight.w500,
@@ -2590,7 +2596,7 @@ class _TopContactsChart extends ConsumerWidget {
                   context,
                   MaterialPageRoute(
                     builder: (_) => ContactDetailsScreen(
-                        contactUuid: contact.contact.uuid),
+                        contactUuid: innerContact.uuid),
                   ),
                 ),
                 borderRadius: BorderRadius.circular(10),

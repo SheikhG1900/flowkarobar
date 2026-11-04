@@ -288,7 +288,7 @@ class ShareHelper {
     final deepLinkService = DeepLinkService();
     final isPaid = payable.status == 'PAID';
     final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        payableUuid: payable.uuid);
+        payable.uuid);
 
     if (context.mounted) {
       final link = deepLinkService.generateReceivableLink(ReceivableShareData(
@@ -374,7 +374,7 @@ class ShareHelper {
     final deepLinkService = DeepLinkService();
     final isReceived = receivable.status == 'RECEIVED';
     final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        receivableUuid: receivable.uuid);
+        receivable.uuid);
 
     if (context.mounted) {
       final link = deepLinkService.generatePayableLink(PayableShareData(
@@ -461,7 +461,7 @@ class ShareHelper {
 
     final deepLinkService = DeepLinkService();
     final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        transactionUuid: transaction.uuid);
+        transaction.uuid);
 
     // Fetch linked payable/receivable to get the dueDate
     DateTime? dueDate;
@@ -571,7 +571,7 @@ class ShareHelper {
     final deepLinkService = DeepLinkService();
     final isPaid = payable.status == 'PAID';
     final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        payableUuid: payable.uuid);
+        payable.uuid);
 
     final finalDescription = transactionDescriptionOverride ?? payable.description;
 
@@ -669,7 +669,7 @@ class ShareHelper {
     final deepLinkService = DeepLinkService();
     final isReceived = receivable.status == 'RECEIVED';
     final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        receivableUuid: receivable.uuid);
+        receivable.uuid);
 
     final finalDescription = transactionDescriptionOverride ?? receivable.description;
 
@@ -764,7 +764,7 @@ class ShareHelper {
     final l10n = AppLocalizations.of(context)!;
     final deepLinkService = DeepLinkService();
     final effectiveExternalId = await transactionService.ensureExternalLinkId(
-        transactionUuid: transaction.uuid);
+        transaction.uuid);
 
     // Fetch linked payable/receivable to get the dueDate
     DateTime? dueDate;

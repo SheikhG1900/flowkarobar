@@ -8,7 +8,7 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
@@ -900,7 +900,7 @@ class _RecentTransfersSection extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final transfersAsync = ref.watch(allTransfersWithDetailsProvider);
-    final cashbookAccent = ref.watch(activeCashbookProvider).color;
+    final cashbookAccent = ref.watch(activeBusinessProvider).color;
 
     return transfersAsync.when(
       data: (list) {

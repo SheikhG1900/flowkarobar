@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 
 /// Service to handle in-app updates across platforms.
@@ -127,7 +127,7 @@ class UpdateService {
     String downloadUrl,
     String changelog,
   ) {
-    final activeCashbook = ref.read(activeCashbookProvider);
+    final activeCashbook = ref.read(activeBusinessProvider);
     final primaryColor = activeCashbook.color;
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
@@ -218,7 +218,7 @@ class UpdateService {
 
   /// Displays a linear progress dialog showing real-time download progress.
   void _showDownloadProgressDialog(BuildContext context, WidgetRef ref, String downloadUrl) {
-    final activeCashbook = ref.read(activeCashbookProvider);
+    final activeCashbook = ref.read(activeBusinessProvider);
     final primaryColor = activeCashbook.color;
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
@@ -479,7 +479,7 @@ class WindowsUpdateStatusIcon extends ConsumerWidget {
     }
 
     final updateState = ref.watch(windowsUpdateStateProvider);
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
     final primaryColor = activeCashbook.color;
     final theme = Theme.of(context);
 

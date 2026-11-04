@@ -9,10 +9,302 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get businesses => 'Businesses';
+
+  @override
+  String get business => 'Business';
+
+  @override
+  String get products => 'Products';
+
+  @override
+  String get product => 'Product';
+
+  @override
+  String get batches => 'Batches';
+
+  @override
+  String get batch => 'Batch';
+
+  @override
+  String get expiryDate => 'Expiry Date';
+
+  @override
+  String get orders => 'Orders';
+
+  @override
+  String get order => 'Order';
+
+  @override
+  String get sale => 'Sale';
+
+  @override
+  String get purchase => 'Purchase';
+
+  @override
+  String get customers => 'Customers';
+
+  @override
+  String get customer => 'Customer';
+
+  @override
+  String get suppliers => 'Suppliers';
+
+  @override
+  String get supplier => 'Supplier';
+
+  @override
+  String get taxInvoice => 'Tax Invoice';
+
+  @override
+  String get purchaseReceipt => 'Purchase Receipt';
+
+  @override
+  String get reconcileInventory => 'Reconcile Inventory';
+
+  @override
+  String get reconciliation => 'Reconciliation';
+
+  @override
+  String get catalogs => 'Catalogs';
+
+  @override
+  String get catalog => 'Catalog';
+
+  @override
+  String get sales => 'Sales';
+
+  @override
+  String get purchases => 'Purchases';
+
+  @override
+  String get returns => 'Returns';
+
+  @override
+  String get more => 'More';
+
+  @override
+  String get stock => 'Stock';
+
+  @override
+  String get toCollect => 'To Collect';
+
+  @override
+  String get toPay => 'To Pay';
+
+  @override
+  String get sectionDetails => 'Details';
+
+  @override
+  String get sectionPricing => 'Pricing';
+
+  @override
+  String get sectionPayment => 'Payment';
+
+  @override
+  String get sectionDelivery => 'Delivery';
+
+  @override
+  String get sectionStock => 'Stock';
+
+  @override
+  String get sectionSummary => 'Summary';
+
+  @override
+  String get sectionActions => 'Actions';
+
+  @override
+  String get noResultsFound => 'No results found';
+
+  @override
+  String get manage => 'Manage';
+
+  @override
+  String get noSalesYet => 'No sales yet';
+
+  @override
+  String get noPurchasesYet => 'No purchases yet';
+
+  @override
+  String get noReturnsYet => 'No returns yet';
+
+  @override
+  String get newSale => 'New Sale';
+
+  @override
+  String get newPurchase => 'New Purchase';
+
+  @override
+  String get newReturn => 'New Return';
+
+  @override
+  String get comingSoon => 'Coming soon';
+
+  @override
+  String get walkInCustomer => 'Walk-in';
+
+  @override
+  String get unpaid => 'Unpaid';
+
+  @override
+  String get partiallyPaid => 'Partially Paid';
+
+  @override
+  String get delivered => 'Delivered';
+
+  @override
+  String get shipped => 'Shipped';
+
+  @override
+  String get deliveryPending => 'Delivery Pending';
+
+  @override
+  String get deliveryStatus => 'Delivery Status';
+
+  @override
+  String get orderDetails => 'Order Details';
+
+  @override
+  String get orderNotFound => 'Order not found';
+
+  @override
+  String get addItem => 'Add Item';
+
+  @override
+  String get selectProduct => 'Select Product';
+
+  @override
+  String get noProductsAvailable =>
+      'No products available. Add a product first.';
+
+  @override
+  String get items => 'Items';
+
+  @override
+  String get quantity => 'Quantity';
+
+  @override
+  String get discount => 'Discount';
+
+  @override
+  String get subtotal => 'Subtotal';
+
+  @override
+  String get paymentNow => 'Payment Now';
+
+  @override
+  String get balanceDue => 'Balance Due';
+
+  @override
+  String get showAllContacts => 'Show all contacts';
+
+  @override
+  String get addAtLeastOneItem => 'Add at least one item';
+
+  @override
+  String get selectAccountForPayment =>
+      'Select an account to record the payment';
+
+  @override
+  String get orderCreated => 'Order created successfully';
+
+  @override
+  String get markDelivered => 'Mark as Delivered';
+
+  @override
+  String get orderMarkedDelivered => 'Order marked as delivered';
+
+  @override
+  String get shareInvoice => 'Share Invoice';
+
+  @override
+  String get paymentRecorded => 'Payment recorded successfully';
+
+  @override
+  String get collectPayment => 'Collect Payment';
+
+  @override
+  String get payToSupplier => 'Pay Supplier';
+
+  @override
+  String get fieldRequired => 'This field is required';
+
+  @override
+  String get invalidNumber => 'Enter a valid number';
+
+  @override
+  String get addProduct => 'Add Product';
+
+  @override
+  String get editProduct => 'Edit Product';
+
+  @override
+  String get productName => 'Product Name';
+
+  @override
+  String get noProductsYet => 'No products yet';
+
+  @override
+  String get lowStock => 'Low stock';
+
+  @override
+  String stockLabel(String quantity) {
+    return 'Stock: $quantity';
+  }
+
+  @override
+  String get deleteProduct => 'Delete Product';
+
+  @override
+  String deleteProductConfirm(String name) {
+    return 'Are you sure you want to delete $name?';
+  }
+
+  @override
+  String get productDeleted => 'Product deleted successfully';
+
+  @override
+  String get productSaved => 'Product saved successfully';
+
+  @override
+  String get sku => 'SKU';
+
+  @override
+  String get unit => 'Unit';
+
+  @override
+  String get purchasePrice => 'Purchase Price';
+
+  @override
+  String get retailPrice => 'Retail Price';
+
+  @override
+  String get wholesalePrice => 'Wholesale Price';
+
+  @override
+  String get stockQuantity => 'Stock Quantity';
+
+  @override
+  String get openingStock => 'Opening Stock';
+
+  @override
+  String get currentStock => 'Current Stock';
+
+  @override
+  String get currentStockHint =>
+      'Managed by purchases, sales, and stock adjustments';
+
+  @override
+  String get minStockAlert => 'Min Stock Alert';
+
+  @override
+  String get isServiceProduct => 'This is a service (no stock tracking)';
+
+  @override
   String get refresh => 'Refresh';
 
   @override
-  String get appTitle => 'Flowpaisa';
+  String get appTitle => 'FlowKarobar';
 
   @override
   String get backgroundActivityStarted => 'Activity started in background';
@@ -1055,7 +1347,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get debugToggleMode => 'DEBUG: Toggle Mode';
 
   @override
-  String get premiumTitle => 'Flowpaisa Premium';
+  String get premiumTitle => 'FlowKarobar Premium';
 
   @override
   String get unlockAllFeatures => 'Unlock all features';
@@ -1435,7 +1727,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get about => 'About';
 
   @override
-  String get rateUs => 'Rate Flowpaisa';
+  String get rateUs => 'Rate FlowKarobar';
 
   @override
   String get tagline => 'Track every paisa';
@@ -1447,7 +1739,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'Flowpaisa is a comprehensive personal finance and cash flow manager. Track your expenses, incomes, receivables, and payables all in one place. Features include receipt scanning, WhatsApp integration, cloud backup, and beautiful analytics.';
+      'FlowKarobar is a comprehensive business and cash flow manager. Track your sales, purchases, products, orders, receivables, and payables all in one place. Features include receipt scanning, WhatsApp integration, cloud backup, and beautiful analytics.';
 
   @override
   String get openSourceLicenses => 'Open Source Licenses';
@@ -1547,14 +1839,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guideDeepLinksStep =>
-      'Tap the \'Share\' icon on any transaction or receivable. This generates a unique link. When the recipient clicks the link on their device, Flowpaisa will open and allow them to import that transaction into their own cashbook.';
+      'Tap the \'Share\' icon on any transaction or receivable. This generates a unique link. When the recipient clicks the link on their device, FlowKarobar will open and allow them to import that transaction into their own cashbook.';
 
   @override
   String get guideImportDeepLink => 'How to import a shared transaction?';
 
   @override
   String get guideImportDeepLinkStep =>
-      'When you receive a Flowpaisa link via WhatsApp or message, simply tap it. The app will open a preview screen showing the details. Tap \'Import\' to add it to your records. If it\'s a settlement, it will update your existing pending record.';
+      'When you receive a FlowKarobar link via WhatsApp or message, simply tap it. The app will open a preview screen showing the details. Tap \'Import\' to add it to your records. If it\'s a settlement, it will update your existing pending record.';
 
   @override
   String get guideSyncDevices => 'How to share cashbook to another device?';
@@ -1703,7 +1995,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingResetSuccess => 'App tour reset successfully';
 
   @override
-  String get tourWelcome => 'Welcome to Flowpaisa!';
+  String get tourWelcome => 'Welcome to FlowKarobar!';
 
   @override
   String get tourWelcomeDesc =>
@@ -1855,7 +2147,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tourSettingsPremiumDesc =>
-      'Unlock advanced analytics, custom message templates, and more with Flowpaisa Premium.';
+      'Unlock advanced analytics, custom message templates, and more with FlowKarobar Premium.';
 
   @override
   String get tourAddTxAmountTitle => 'Enter Amount';
@@ -2427,27 +2719,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String sharePayableCompleted(String amount, String date, String link) {
-    return 'Greetings!\n\nThe payment of $amount on $date has been completed.\n\nSync in Flowpaisa:\n$link';
+    return 'Greetings!\n\nThe payment of $amount on $date has been completed.\n\nSync in FlowKarobar:\n$link';
   }
 
   @override
   String sharePayablePending(String amount, String date, String link) {
-    return 'I owe you $amount\nDate: $date\n\nView in Flowpaisa:\n$link';
+    return 'I owe you $amount\nDate: $date\n\nView in FlowKarobar:\n$link';
   }
 
   @override
   String shareReceivableReceived(String amount, String date, String link) {
-    return 'Greetings!\n\nThe payment of $amount on $date has been received.\n\nSync in Flowpaisa:\n$link';
+    return 'Greetings!\n\nThe payment of $amount on $date has been received.\n\nSync in FlowKarobar:\n$link';
   }
 
   @override
   String shareReceivablePending(String amount, String date, String link) {
-    return 'Amount to receive: $amount\nDate: $date\n\nView in Flowpaisa:\n$link';
+    return 'Amount to receive: $amount\nDate: $date\n\nView in FlowKarobar:\n$link';
   }
 
   @override
   String shareTransactionMessage(String amount, String date, String link) {
-    return 'Recorded a transaction of $amount on $date.\n\nView in Flowpaisa:\n$link';
+    return 'Recorded a transaction of $amount on $date.\n\nView in FlowKarobar:\n$link';
   }
 
   @override
@@ -3420,7 +3712,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearAllCloudDataMessage =>
-      'This will permanently delete ALL your Flowpaisa backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?';
+      'This will permanently delete ALL your FlowKarobar backups and synchronization data from Google Drive. This action cannot be undone.\n\nAre you sure you want to clear all cloud data?';
 
   @override
   String get cloudDataClearedSuccess => 'All cloud data cleared successfully';
@@ -4377,11 +4669,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get others => 'Others';
 
   @override
-  String get onboardingWelcomeTitle => 'Welcome to Flowpaisa';
+  String get onboardingWelcomeTitle => 'Welcome to FlowKarobar';
 
   @override
   String get onboardingWelcomeBody =>
-      'Your complete personal finance and cash flow manager. Take control of your money with ease, precision, and the peace of mind that your data is fully secured and private.';
+      'Your complete business and cash flow manager. Take control of your sales, purchases, and orders with ease, precision, and the peace of mind that your data is fully secured and private.';
 
   @override
   String get onboardingScanTitle => 'Scan or Speak';
@@ -4423,7 +4715,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guideCreditCardsBody =>
-      'Set credit limits and billing cycles. Flowpaisa will notify you before your due date so you never miss a payment.';
+      'Set credit limits and billing cycles. FlowKarobar will notify you before your due date so you never miss a payment.';
 
   @override
   String get guideBulkImportTitle => 'Bulk Import Transactions';
@@ -4602,7 +4894,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String updateAvailableMessage(String version) {
-    return 'A new version ($version) of Flowpaisa is available. Update now to get the latest features and improvements!';
+    return 'A new version ($version) of FlowKarobar is available. Update now to get the latest features and improvements!';
   }
 
   @override
@@ -4963,4 +5255,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tagRenamedSuccessfully => 'Tag renamed successfully';
+
+  @override
+  String get todaySales => 'Today\'s Sales';
+
+  @override
+  String get lowStockAlert => 'Low Stock Alert';
 }

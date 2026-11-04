@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flowpaisa/features/cashbooks/domain/models/cashbook.dart';
+import 'package:flowpaisa/features/businesses/domain/models/business.dart';
 import 'package:flowpaisa/core/utils/native_share.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/database/connection/native.dart' as native;
@@ -11,7 +11,7 @@ import 'package:share_plus/share_plus.dart';
 
 class LocalBackupService {
   /// Prepares a database backup file in the temporary directory
-  static Future<String> prepareBackupFile(Cashbook cashbook) async {
+  static Future<String> prepareBackupFile(Business cashbook) async {
     // `cashbook.dbPath` is a logical name; Drift stores as '<name>.sqlite'.
     final dbFolder = await getApplicationDocumentsDirectory();
     final logicalName =

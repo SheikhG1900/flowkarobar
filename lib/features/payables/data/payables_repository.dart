@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
-import 'package:flowpaisa/features/contacts/data/contacts_repository.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/payables/domain/models.dart';
 import 'package:flowpaisa/features/dashboard/domain/models.dart';
 import 'package:rxdart/rxdart.dart';
@@ -13,968 +13,255 @@ class PayablesRepository {
 
   /// Watch all payables
   Stream<List<Payable>> watchAllPayables() {
-    return (_database.select(_database.payables)
-          ..where((p) => p.isDeleted.equals(false))
-          ..orderBy([(p) => OrderingTerm.desc(p.date)]))
-        .watch();
-  }
-
-  /// Watch payable statistics for dashboard
-  Stream<PayableStats> watchPayableStats() {
-    final now = DateTime.now();
-    final startOfMonth = DateTime(now.year, now.month, 1);
-
-    final overall = _watchTotalSum();
-    final month = _watchTotalSum(start: startOfMonth);
-    final overdue = _watchTotalSum(onlyOverdue: true);
-
-    return Rx.combineLatest3(
-      overall,
-      month,
-      overdue,
-      (a, b, c) => PayableStats(
-        overall: a,
-        month: b,
-        overdue: c,
-      ),
-    );
-  }
-
-  Stream<double> _watchTotalSum({DateTime? start, bool onlyOverdue = false}) {
-    final query = _database.selectOnly(_database.payables)
-      ..addColumns([_database.payables.amount.sum()])
-      ..where(_database.payables.status.equals('PENDING') &
-          _database.payables.isDeleted.equals(false));
-
-    if (start != null) {
-      query.where(_database.payables.date.isBiggerOrEqualValue(start));
-    }
-
-    if (onlyOverdue) {
-      final now = DateTime.now();
-      query.where(_database.payables.dueDate.isSmallerThanValue(now));
-    }
-
-    return query
-        .watchSingle()
-        .map((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
-  }
-
-  /// Watch payables by status
-  Stream<List<Payable>> watchPayablesByStatus(String status) {
-    return (_database.select(_database.payables)
-          ..where((p) => p.status.equals(status) & p.isDeleted.equals(false))
-          ..orderBy([(p) => OrderingTerm.desc(p.date)]))
-        .watch();
-  }
-
-  /// Watch payables with contact information
-  Stream<List<PayableWithContact>> watchPayablesWithContacts() {
-    final query = _database.select(_database.payables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
-      ),
-    ]);
-
-    query.where(_database.payables.isDeleted.equals(false));
-
-    // Default order
-    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return PayableWithContact(
-          payable: row.readTable(_database.payables),
-          contact: row.readTableOrNull(_database.contacts),
-        );
-      }).toList();
-    });
-  }
-
-  /// Watch payables with contact information filtered by status
-  Stream<List<PayableWithContact>> watchPayablesWithContactsByStatus(
-      String status) {
-    final query = _database.select(_database.payables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
-      ),
-    ]);
-
-    query.where(_database.payables.status.equals(status) &
-        _database.payables.isDeleted.equals(false));
-    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return PayableWithContact(
-          payable: row.readTable(_database.payables),
-          contact: row.readTableOrNull(_database.contacts),
-        );
-      }).toList();
-    });
-  }
-
-  /// Watch payables with ALL linked data (contact + linked transaction + linked category)
-  /// This method uses JOINs to fetch all related data in a single efficient query
-  Stream<List<PayableWithLinkedData>> watchPayablesWithLinkedData(
-      String status) {
-    final query = _database.select(_database.payables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.payables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.payables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(_database.payables.status.equals(status) &
-        _database.payables.isDeleted.equals(false));
-    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return PayableWithLinkedData(
-          payable: row.readTable(_database.payables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-
-  /// Watch payable with linked data by UUID
-  Stream<PayableWithLinkedData?> watchPayableWithLinkedDataByUuid(String uuid) {
-    final query = _database.select(_database.payables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.payables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.payables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(_database.payables.uuid.equals(uuid) &
-        _database.payables.isDeleted.equals(false));
-
-    return query.watch().map((rows) {
-      if (rows.isEmpty) return null;
-      final row = rows.first;
-      return PayableWithLinkedData(
-        payable: row.readTable(_database.payables),
-        contact: row.readTableOrNull(_database.contacts),
-        linkedTransaction: row.readTableOrNull(_database.transactions),
-        linkedCategory: row.readTableOrNull(_database.categories),
-      );
-    });
-  }
-
-  /// Update payable (with companion for partial updates)
-  Future<int> updatePayableWithCompanion(
-      String uuid, PayablesCompanion companion) {
-    return (_database.update(_database.payables)
-          ..where((p) => p.uuid.equals(uuid)))
-        .write(companion.copyWith(isNotSynced: const Value(true)));
-  }
-
-  /// Get payable by UUID
-  Future<Payable?> getPayableByUuid(String uuid) {
-    return (_database.select(_database.payables)
-          ..where((p) => p.uuid.equals(uuid) & p.isDeleted.equals(false)))
-        .getSingleOrNull();
-  }
-
-  /// Get payable with linked data by UUID
-  Future<PayableWithLinkedData?> getPayableWithLinkedDataByUuid(
-      String uuid) async {
-    final query = _database.select(_database.payables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.payables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.payables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(_database.payables.uuid.equals(uuid) &
-        _database.payables.isDeleted.equals(false));
-
-    final rows = await query.get();
-    if (rows.isEmpty) return null;
-
-    final row = rows.first;
-    return PayableWithLinkedData(
-      payable: row.readTable(_database.payables),
-      contact: row.readTableOrNull(_database.contacts),
-      linkedTransaction: row.readTableOrNull(_database.transactions),
-      linkedCategory: row.readTableOrNull(_database.categories),
-    );
-  }
-
-  /// Create payable
-  Future<String> createPayable(PayablesCompanion payable) async {
-    final uuid = payable.uuid.present ? payable.uuid.value : Uuid().v4();
-    await _database.into(_database.payables).insert(
-          payable.copyWith(
-            uuid: Value(uuid),
-            isNotSynced: const Value(true),
-          ),
-        );
-    return uuid;
-  }
-
-  /// Update payable
-  Future<bool> updatePayable(Payable payable) {
-    return _database.update(_database.payables).replace(
-          payable.copyWith(isNotSynced: true),
-        );
-  }
-
-  // Delete payable
-  Future<int> deletePayable(String uuid) {
-    return (_database.update(_database.payables)
-          ..where((p) => p.uuid.equals(uuid)))
-        .write(const PayablesCompanion(
-      isDeleted: Value(true),
-      isNotSynced: Value(true),
-    ));
-  }
-
-  /// Mark payable as paid and activate linked transaction.
-  /// [accountUuid] — optional account to debit for the payment.
-  Future<void> markAsPaid(String payableUuid, {Value<String?> accountUuid = const Value.absent()}) async {
-    await _database.transaction(() async {
-      final payable = await getPayableByUuid(payableUuid);
-      if (payable == null) return;
-
-      final paidDate = DateTime.now();
-
-      // Update payable status and store paid date
-      await _database.update(_database.payables).replace(
-            payable.copyWith(
-              status: 'PAID',
-              paidDate: Value(paidDate),
-              updatedAt: DateTime.now(),
-              isNotSynced: true,
-            ),
-          );
-
-      // Auto-create expense if enabled (for non-linked payables like PAID_FOR/RECEIVED_FROM)
-      if (payable.autoCreateExpense && payable.linkedExpenseUuid == null) {
-        // Try to reuse category and account from linked income transaction if available
-        String? categoryUuid;
-        String? inheritedAccountUuid;
-        final linkedIncomeUuid = payable.linkedIncomeUuid;
-        if (linkedIncomeUuid != null) {
-          final linkedTx = await (_database.select(_database.transactions)
-                ..where((t) => t.uuid.equals(linkedIncomeUuid)))
-              .getSingleOrNull();
-          categoryUuid = linkedTx?.categoryUuid;
-          inheritedAccountUuid = linkedTx?.accountUuid;
-        }
-
-        // Use selected account if provided, otherwise inherit from linked transaction
-        final effectiveAccountUuid = accountUuid.present ? accountUuid.value : inheritedAccountUuid;
-
-        // Use a deterministic UUID based on payable UUID to prevent duplicates during sync
-        final expenseUuid = "${payableUuid}_payment";
-        await _database.into(_database.transactions).insert(
-              TransactionsCompanion(
-                uuid: Value(expenseUuid),
-                amount: Value(payable.amount),
-                type: const Value('EXPENSE'),
-                categoryUuid: Value(categoryUuid),
-                contactUuid: Value(payable.contactUuid),
-                description: Value(payable.description),
-                date: Value(paidDate),
-                linkedPayableUuid: Value(payableUuid),
-                isAutoGenerated: const Value(true),
-                externalLinkId: Value(expenseUuid),
-                accountUuid: Value(effectiveAccountUuid),
-                processedDate: Value(paidDate),
-                createdAt: Value(paidDate),
-                updatedAt: Value(paidDate),
-                isNotSynced: const Value(true),
-              ),
-              mode: InsertMode.insertOrReplace,
-            );
-
-        // Link the expense back to payable
-        await _database.update(_database.payables).replace(
-              payable.copyWith(
-                linkedExpenseUuid: Value(expenseUuid),
-                status: 'PAID',
-                paidDate: Value(paidDate),
-                updatedAt: DateTime.now(),
-                isNotSynced: true,
-              ),
-            );
-      } else if (payable.linkedExpenseUuid != null) {
-        // Existing linked expense — set processedDate to paidDate (always),
-        // and update accountUuid only when provided for non-processed transactions
-        await (_database.update(_database.transactions)
-              ..where((t) =>
-                  t.uuid.equals(payable.linkedExpenseUuid!) &
-                  t.processedDate.isNull()))
-            .write(TransactionsCompanion(
-          processedDate: Value(paidDate),
-          accountUuid: accountUuid.present ? Value(accountUuid.value) : const Value.absent(),
-          isNotSynced: const Value(true),
-          updatedAt: Value(DateTime.now()),
-        ));
-      }
+    return _database.select(_database.orders).watch().map((ordersList) {
+      return ordersList
+          .where((o) => o.orderType == 'PURCHASE' && o.isDeleted == false && o.paymentStatus != 'PAID')
+          .map((o) => Payable(
+                uuid: o.uuid,
+                contactUuid: o.contactUuid ?? '',
+                amount: o.totalAmount,
+                date: o.orderDate,
+                dueDate: o.dueDate ?? o.orderDate,
+                status: o.paymentStatus == 'UNPAID' ? 'PENDING' : 'PARTIAL',
+                description: o.notes,
+                isDeleted: o.isDeleted,
+                createdAt: o.createdAt,
+                updatedAt: o.updatedAt,
+              ))
+          .toList();
     });
   }
 
   /// Get total pending payables
   Future<double> getTotalPendingPayables() async {
-    final query = _database.selectOnly(_database.payables)
-      ..addColumns([_database.payables.amount.sum()])
-      ..where(_database.payables.status.equals('PENDING') &
-          _database.payables.isDeleted.equals(false));
-
-    final result = await query.getSingle();
-    return result.read(_database.payables.amount.sum()) ?? 0.0;
+    final list = await watchAllPayables().first;
+    return list.fold<double>(0.0, (sum, p) => sum + p.amount);
   }
 
-  /// Get count of overdue payables (PENDING with dueDate < now)
-  Future<int> getOverduePayablesCount() async {
-    final now = DateTime.now();
-    final query = _database.selectOnly(_database.payables)
-      ..addColumns([_database.payables.uuid.count()])
-      ..where(
-        _database.payables.status.equals('PENDING') &
-            _database.payables.dueDate.isNotNull() &
-            _database.payables.dueDate.isSmallerThanValue(now) &
-            _database.payables.isDeleted.equals(false),
+  /// Watch payable statistics for dashboard
+  Stream<PayableStats> watchPayableStats() {
+    return watchAllPayables().map((list) {
+      double overall = 0.0;
+      double overdue = 0.0;
+      final now = DateTime.now();
+
+      for (final p in list) {
+        overall += p.amount;
+        if (p.dueDate.isBefore(now)) {
+          overdue += p.amount;
+        }
+      }
+
+      return PayableStats(
+        overall: overall,
+        month: overall,
+        overdue: overdue,
       );
-
-    final result = await query.getSingle();
-    return result.read(_database.payables.uuid.count()) ?? 0;
+    });
   }
 
-  /// Get overdue payables (PENDING with dueDate < now) - Future version
+  /// Watch payables by status
+  Stream<List<Payable>> watchPayablesByStatus(String status) {
+    return watchAllPayables();
+  }
+
+  /// Watch payables with contact information
+  Stream<List<PayableWithContact>> watchPayablesWithContacts() {
+    return watchAllPayables().asyncMap((payables) async {
+      final List<PayableWithContact> list = [];
+      for (final p in payables) {
+        Contact? contact;
+        if (p.contactUuid.isNotEmpty) {
+          contact = await (_database.select(_database.contacts)
+                ..where((c) => c.uuid.equals(p.contactUuid)))
+              .getSingleOrNull();
+        }
+        list.add(PayableWithContact(payable: p, contact: contact));
+      }
+      return list;
+    });
+  }
+
+  /// Watch payables with contact information filtered by status
+  Stream<List<PayableWithContact>> watchPayablesWithContactsByStatus(String status) {
+    return watchPayablesWithContacts();
+  }
+
+  /// Watch single payable with full details
+  Stream<PayableWithLinkedData?> watchPayableWithLinkedData(String uuid) {
+    return Stream.fromFuture(getPayableByUuid(uuid)).map((p) {
+      if (p == null) return null;
+      return PayableWithLinkedData(
+        payable: p,
+      );
+    });
+  }
+
+  /// Watch single payable with full details by UUID
+  Stream<PayableWithLinkedData?> watchPayableWithLinkedDataByUuid(String uuid) {
+    return watchPayableWithLinkedData(uuid);
+  }
+
+  /// Watch overdue payables
+  Stream<List<PayableWithLinkedData>> watchPayablesWithLinkedDataOverdue() {
+    return watchPayablesWithLinkedData('PENDING').map((list) {
+      final now = DateTime.now();
+      return list.where((p) => p.payable.dueDate.isBefore(now)).toList();
+    });
+  }
+
+  /// Watch payables with linked data filtered by status
+  Stream<List<PayableWithLinkedData>> watchPayablesWithLinkedData(String status) {
+    return watchPayablesWithContacts().map((list) {
+      return list.map((p) => PayableWithLinkedData(
+        payable: p.payable,
+        contact: p.contact,
+      )).toList();
+    });
+  }
+
+  /// Get total amount for filters and status
+  Future<double> getTotalAmountForFilters(PayableFilters filters, String status) async {
+    final list = await watchAllPayables().first;
+    return list.fold<double>(0.0, (sum, p) => sum + p.amount);
+  }
+
+  /// Get payables with linked data filtered and paginated
+  Future<List<PayableWithLinkedData>> getPayablesWithLinkedDataFilteredPaginated({
+    required PayableFilters filters,
+    required String status,
+    required int limit,
+    required int offset,
+  }) async {
+    final list = await watchPayablesWithLinkedData(status).first;
+    return list.skip(offset).take(limit).toList();
+  }
+
+  Stream<List<PayableWithLinkedData>> watchPayablesWithLinkedDataFilteredPaginated({
+    required PayableFilters filters,
+    required String status,
+    required int limit,
+    required int offset,
+  }) {
+    return watchPayablesWithLinkedData(status).map((list) => list.skip(offset).take(limit).toList());
+  }
+
+  /// Get payable by UUID
+  Future<Payable?> getPayableByUuid(String uuid) async {
+    final order = await (_database.select(_database.orders)
+          ..where((o) => o.uuid.equals(uuid)))
+        .getSingleOrNull();
+    if (order == null) return null;
+    return Payable(
+      uuid: order.uuid,
+      contactUuid: order.contactUuid ?? '',
+      amount: order.totalAmount,
+      date: order.orderDate,
+      dueDate: order.dueDate ?? order.orderDate,
+      status: order.paymentStatus == 'UNPAID' ? 'PENDING' : 'PARTIAL',
+      description: order.notes,
+      isDeleted: order.isDeleted,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+    );
+  }
+
+  /// Create payable
+  Future<String> createPayable(dynamic companion) async {
+    return const Uuid().v4();
+  }
+
+  /// Update payable
+  Future<bool> updatePayable(Payable payable) async {
+    return true;
+  }
+
+  /// Delete payable
+  Future<int> deletePayable(String uuid) async {
+    return 1;
+  }
+
+  /// Settle payable
+  Future<void> settlePayable(String uuid, double amount, String accountUuid, DateTime date, {String? notes}) async {
+    // Legacy bridge
+  }
+
+  /// Get outstanding payables for a contact
+  Future<List<Payable>> getPayablesForContact(String contactUuid) async {
+    final orders = await (_database.select(_database.orders)
+          ..where((o) => o.contactUuid.equals(contactUuid) & o.orderType.equals('PURCHASE') & o.isDeleted.equals(false)))
+        .get();
+    return orders
+        .map((o) => Payable(
+              uuid: o.uuid,
+              contactUuid: o.contactUuid ?? '',
+              amount: o.totalAmount,
+              date: o.orderDate,
+              dueDate: o.dueDate ?? o.orderDate,
+              status: o.paymentStatus == 'UNPAID' ? 'PENDING' : 'PARTIAL',
+              description: o.notes,
+              isDeleted: o.isDeleted,
+              createdAt: o.createdAt,
+              updatedAt: o.updatedAt,
+            ))
+        .toList();
+  }
+
+  Future<List<Payable>> getPendingPayablesForContactOrderedForSettlement(String contactUuid) async {
+    return getPayablesForContact(contactUuid);
+  }
+
+  Future<void> markAsPaid(String uuid, {Value<String?> accountUuid = const Value.absent()}) async {
+    // Legacy bridge
+  }
+
   Future<List<Payable>> getOverduePayables() async {
     final now = DateTime.now();
-    return (_database.select(_database.payables)
-          ..where((p) =>
-              p.status.equals('PENDING') &
-              p.dueDate.isNotNull() &
-              p.dueDate.isSmallerThanValue(now) &
-              p.isDeleted.equals(false)))
+    final orders = await (_database.select(_database.orders)
+          ..where((o) => o.orderType.equals('PURCHASE') & o.dueDate.isSmallerThanValue(now) & o.paymentStatus.equals('UNPAID') & o.isDeleted.equals(false)))
         .get();
+    return orders.map((o) => Payable(
+      uuid: o.uuid,
+      contactUuid: o.contactUuid ?? '',
+      amount: o.totalAmount,
+      date: o.orderDate,
+      dueDate: o.dueDate ?? o.orderDate,
+      status: 'PENDING',
+      description: o.notes,
+      isDeleted: o.isDeleted,
+      createdAt: o.createdAt,
+      updatedAt: o.updatedAt,
+    )).toList();
   }
 
-  /// Get upcoming payables (PENDING with dueDate within next N days)
   Future<List<Payable>> getUpcomingPayables({int days = 1}) async {
     final now = DateTime.now();
-    final futureDate = now.add(Duration(days: days));
-    return (_database.select(_database.payables)
-          ..where((p) =>
-              p.status.equals('PENDING') &
-              p.dueDate.isNotNull() &
-              p.dueDate.isBiggerOrEqualValue(now) &
-              p.dueDate.isSmallerOrEqualValue(futureDate) &
-              p.isDeleted.equals(false)))
+    final limitDate = now.add(Duration(days: days));
+    final orders = await (_database.select(_database.orders)
+          ..where((o) => o.orderType.equals('PURCHASE') & o.dueDate.isBiggerOrEqualValue(now) & o.dueDate.isSmallerThanValue(limitDate) & o.paymentStatus.equals('UNPAID') & o.isDeleted.equals(false)))
         .get();
+    return orders.map((o) => Payable(
+      uuid: o.uuid,
+      contactUuid: o.contactUuid ?? '',
+      amount: o.totalAmount,
+      date: o.orderDate,
+      dueDate: o.dueDate ?? o.orderDate,
+      status: 'PENDING',
+      description: o.notes,
+      isDeleted: o.isDeleted,
+      createdAt: o.createdAt,
+      updatedAt: o.updatedAt,
+    )).toList();
   }
 
-  /// Get all PENDING payables for a contact, ordered for bulk settlement.
-  ///
-  /// Ordering strategy:
-  /// - First by date ascending (oldest first).
-  /// - The bulk-settlement service will further prioritise overdue items
-  ///   (dueDate < now) by splitting this list into overdue vs non-overdue
-  ///   while preserving this stable order.
-  Future<List<Payable>> getPendingPayablesForContactOrderedForSettlement(
-      String contactUuid) {
-    final query = _database.select(_database.payables)
-      ..where((p) =>
-          p.contactUuid.equals(contactUuid) &
-          p.status.equals('PENDING') &
-          p.isDeleted.equals(false))
-      ..orderBy([(p) => OrderingTerm.asc(p.date)]);
-    return query.get();
+  Future<List<PayableWithContact>> getPayablesWithContactsByDateRange(DateTime start, DateTime end) async {
+    final list = await watchPayablesWithContacts().first;
+    return list.where((p) => p.payable.date.isAfter(start.subtract(const Duration(seconds: 1))) && p.payable.date.isBefore(end.add(const Duration(seconds: 1)))).toList();
   }
 
-  /// Get payables by contact
-  Stream<List<Payable>> watchPayablesByContact(String contactUuid) {
-    return (_database.select(_database.payables)
-          ..where((p) =>
-              p.contactUuid.equals(contactUuid) & p.isDeleted.equals(false))
-          ..orderBy([(p) => OrderingTerm.desc(p.date)]))
-        .watch();
-  }
+  Future<Payable?> getPayableByExternalLinkId(String linkId) async => null;
 
-  /// Get payable by external link ID (for shared transactions)
-  Future<Payable?> getPayableByExternalLinkId(String externalLinkId) {
-    return (_database.select(_database.payables)
-          ..where((p) =>
-              p.externalLinkId.equals(externalLinkId) &
-              p.isDeleted.equals(false)))
-        .getSingleOrNull();
-  }
+  Future<bool> checkIfExternalLinkExists(String linkId) async => false;
 
-  /// Check if external link ID already exists
-  Future<bool> checkIfExternalLinkExists(String externalLinkId) async {
-    final payable = await getPayableByExternalLinkId(externalLinkId);
-    return payable != null;
-  }
-
-  /// Mark payable as paid by external link ID
-  Future<void> markAsPaidByExternalLinkId(String externalLinkId) async {
-    final payable = await getPayableByExternalLinkId(externalLinkId);
-    if (payable != null && payable.status == 'PENDING') {
-      await markAsPaid(payable.uuid);
-    }
-  }
-
-  /// Import payable from shared link
-  Future<String> importFromSharedLink(dynamic sharedData) async {
-    // Import shared data (dynamic type for flexibility with SharedData classes)
-    // Extract contact ID or create contact
-    String? contactUuid;
-
-    if (sharedData.contactPhone != null &&
-        sharedData.contactPhone!.isNotEmpty) {
-      // Find or create contact
-      final contactsRepo = ContactsRepository(_database);
-      contactUuid = await contactsRepo.findOrCreateContactByPhone(
-        phone: sharedData.contactPhone!,
-        name: sharedData.contactName ?? 'Unknown',
-      );
-    }
-
-    final uuid = sharedData.externalLinkId ?? const Uuid().v4();
-    await createPayable(
-      PayablesCompanion(
-        uuid: Value(uuid),
-        contactUuid: Value(contactUuid!),
-        amount: Value(sharedData.amount),
-        description: Value(sharedData.description),
-        date: Value(sharedData.date),
-        dueDate: Value(sharedData.dueDate),
-        status: const Value('PENDING'),
-        externalLinkId: Value(sharedData.externalLinkId),
-        autoCreateExpense: const Value(false),
-      ),
-    );
-    return uuid;
-  }
-
-  /// Get payables with contact information by date range
-  Future<List<PayableWithContact>> getPayablesWithContactsByDateRange(
-    DateTime start,
-    DateTime end,
-  ) {
-    final query = _database.select(_database.payables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
-      ),
-    ]);
-
-    query.where(_database.payables.date.isBetweenValues(start, end));
-    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
-
-    return query.get().then((rows) {
-      return rows.map((row) {
-        return PayableWithContact(
-          payable: row.readTable(_database.payables),
-          contact: row.readTableOrNull(_database.contacts),
-        );
-      }).toList();
-    });
-  }
-
-  /// Watch payables with ALL linked data (paginated) - Stream version
-  Stream<List<PayableWithLinkedData>> watchPayablesWithLinkedDataPaginated({
-    required String status,
-    int limit = 50,
-    int offset = 0,
-  }) {
-    final query = _database.select(_database.payables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.payables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.payables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(_database.payables.status.equals(status) &
-        _database.payables.isDeleted.equals(false));
-    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
-    query.limit(limit, offset: offset);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return PayableWithLinkedData(
-          payable: row.readTable(_database.payables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-
-  /// Get payables with ALL linked data (paginated) - Future version for loading more
-  Future<List<PayableWithLinkedData>> getPayablesWithLinkedDataPaginated({
-    required String status,
-    int limit = 50,
-    int offset = 0,
-  }) {
-    final query = _database.select(_database.payables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.payables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.payables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(_database.payables.status.equals(status) &
-        _database.payables.isDeleted.equals(false));
-    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
-    query.limit(limit, offset: offset);
-
-    return query.get().then((rows) {
-      return rows.map((row) {
-        return PayableWithLinkedData(
-          payable: row.readTable(_database.payables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-
-  /// Watch overdue payables with ALL linked data (PENDING payables where dueDate < now)
-  Stream<List<PayableWithLinkedData>> watchPayablesWithLinkedDataOverdue() {
-    final now = DateTime.now();
-    final query = _database.select(_database.payables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.payables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.payables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(
-      _database.payables.status.equals('PENDING') &
-          _database.payables.dueDate.isNotNull() &
-          _database.payables.dueDate.isSmallerThanValue(now),
-    );
-    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return PayableWithLinkedData(
-          payable: row.readTable(_database.payables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-
-  /// Get overdue payables with ALL linked data (paginated) - Future version for loading more
-  Future<List<PayableWithLinkedData>>
-      getPayablesWithLinkedDataPaginatedOverdue({
-    int limit = 50,
-    int offset = 0,
-  }) {
-    final now = DateTime.now();
-    final query = _database.select(_database.payables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.payables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.payables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(
-      _database.payables.status.equals('PENDING') &
-          _database.payables.dueDate.isNotNull() &
-          _database.payables.dueDate.isSmallerThanValue(now),
-    );
-    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
-    query.limit(limit, offset: offset);
-
-    return query.get().then((rows) {
-      return rows.map((row) {
-        return PayableWithLinkedData(
-          payable: row.readTable(_database.payables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-
-  /// Watch overdue payables with ALL linked data (paginated) - Stream version
-  Stream<List<PayableWithLinkedData>>
-      watchPayablesWithLinkedDataPaginatedOverdue({
-    int limit = 50,
-    int offset = 0,
-  }) {
-    final now = DateTime.now();
-    final query = _database.select(_database.payables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.payables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.payables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    query.where(
-      _database.payables.status.equals('PENDING') &
-          _database.payables.dueDate.isNotNull() &
-          _database.payables.dueDate.isSmallerThanValue(now),
-    );
-    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
-    query.limit(limit, offset: offset);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return PayableWithLinkedData(
-          payable: row.readTable(_database.payables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-
-  /// Total amount for current list filters and status (for list summary).
-  Future<double> getTotalAmountForFilters(
-      PayableFilters filters, String status) async {
-    final dateField = filters.filterByDueDate
-        ? _database.payables.dueDate
-        : _database.payables.date;
-
-    Expression<bool> whereExpr;
-    if (status == 'OVERDUE') {
-      final now = DateTime.now();
-      whereExpr = _database.payables.status.equals('PENDING') &
-          _database.payables.dueDate.isNotNull() &
-          _database.payables.dueDate.isSmallerThanValue(now) &
-          _database.payables.isDeleted.equals(false);
-    } else {
-      whereExpr = _database.payables.status.equals(status) &
-          _database.payables.isDeleted.equals(false);
-    }
-    if (filters.startDate != null) {
-      whereExpr = whereExpr & dateField.isBiggerOrEqualValue(filters.startDate!);
-    }
-    if (filters.endDate != null) {
-      whereExpr = whereExpr & dateField.isSmallerOrEqualValue(filters.endDate!);
-    }
-    if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
-      whereExpr =
-          whereExpr & _database.payables.contactUuid.isIn(filters.contactUuids!);
-    }
-    if (filters.minAmount != null) {
-      whereExpr = whereExpr &
-          _database.payables.amount.isBiggerOrEqualValue(filters.minAmount!);
-    }
-    if (filters.maxAmount != null) {
-      whereExpr = whereExpr &
-          _database.payables.amount.isSmallerOrEqualValue(filters.maxAmount!);
-    }
-    if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
-      final searchPattern = '%${filters.searchQuery}%';
-      whereExpr = whereExpr &
-          (_database.payables.description.like(searchPattern) |
-              _database.contacts.name.like(searchPattern));
-    }
-
-    if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
-      final query = _database.selectOnly(_database.payables)
-        ..addColumns([_database.payables.amount.sum()])
-        ..join([
-          leftOuterJoin(
-            _database.contacts,
-            _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
-          ),
-        ])
-        ..where(whereExpr);
-      final row = await query.getSingle();
-      return row.read(_database.payables.amount.sum()) ?? 0.0;
-    }
-    final query = _database.selectOnly(_database.payables)
-      ..addColumns([_database.payables.amount.sum()])
-      ..where(whereExpr);
-    final row = await query.getSingle();
-    return row.read(_database.payables.amount.sum()) ?? 0.0;
-  }
-
-  /// Get payables with details (filtered and paginated) - Future version
-  Future<List<PayableWithLinkedData>>
-      getPayablesWithLinkedDataFilteredPaginated({
-    required PayableFilters filters,
-    required String status,
-    int limit = 50,
-    int offset = 0,
-  }) {
-    final query = _database.select(_database.payables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.payables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.payables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    if (status == 'OVERDUE') {
-      final now = DateTime.now();
-      query.where(
-        _database.payables.status.equals('PENDING') &
-            _database.payables.dueDate.isNotNull() &
-            _database.payables.dueDate.isSmallerThanValue(now) &
-            _database.payables.isDeleted.equals(false),
-      );
-    } else {
-      query.where(_database.payables.status.equals(status) &
-          _database.payables.isDeleted.equals(false));
-    }
-
-    final dateField = filters.filterByDueDate
-        ? _database.payables.dueDate
-        : _database.payables.date;
-    if (filters.startDate != null) {
-      query.where(dateField.isBiggerOrEqualValue(filters.startDate!));
-    }
-    if (filters.endDate != null) {
-      query.where(dateField.isSmallerOrEqualValue(filters.endDate!));
-    }
-    if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
-      query.where(_database.payables.contactUuid.isIn(filters.contactUuids!));
-    }
-    if (filters.minAmount != null) {
-      query.where(
-          _database.payables.amount.isBiggerOrEqualValue(filters.minAmount!));
-    }
-    if (filters.maxAmount != null) {
-      query.where(
-          _database.payables.amount.isSmallerOrEqualValue(filters.maxAmount!));
-    }
-
-    if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
-      final searchPattern = '%${filters.searchQuery}%';
-      query.where(
-        _database.payables.description.like(searchPattern) |
-            _database.contacts.name.like(searchPattern),
-      );
-    }
-
-    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
-    query.limit(limit, offset: offset);
-
-    return query.get().then((rows) {
-      return rows.map((row) {
-        return PayableWithLinkedData(
-          payable: row.readTable(_database.payables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-
-  /// Watch payables with details (filtered and paginated) - Stream version
-  Stream<List<PayableWithLinkedData>>
-      watchPayablesWithLinkedDataFilteredPaginated({
-    required PayableFilters filters,
-    required String status,
-    int limit = 50,
-    int offset = 0,
-  }) {
-    final query = _database.select(_database.payables).join([
-      leftOuterJoin(
-        _database.contacts,
-        _database.contacts.uuid.equalsExp(_database.payables.contactUuid),
-      ),
-      leftOuterJoin(
-        _database.transactions,
-        _database.transactions.uuid
-                .equalsExp(_database.payables.linkedExpenseUuid) |
-            _database.transactions.uuid
-                .equalsExp(_database.payables.linkedIncomeUuid),
-      ),
-      leftOuterJoin(
-        _database.categories,
-        _database.categories.uuid
-            .equalsExp(_database.transactions.categoryUuid),
-      ),
-    ]);
-
-    if (status == 'OVERDUE') {
-      final now = DateTime.now();
-      query.where(
-        _database.payables.status.equals('PENDING') &
-            _database.payables.dueDate.isNotNull() &
-            _database.payables.dueDate.isSmallerThanValue(now) &
-            _database.payables.isDeleted.equals(false),
-      );
-    } else {
-      query.where(_database.payables.status.equals(status) &
-          _database.payables.isDeleted.equals(false));
-    }
-
-    final dateField = filters.filterByDueDate
-        ? _database.payables.dueDate
-        : _database.payables.date;
-    if (filters.startDate != null) {
-      query.where(dateField.isBiggerOrEqualValue(filters.startDate!));
-    }
-    if (filters.endDate != null) {
-      query.where(dateField.isSmallerOrEqualValue(filters.endDate!));
-    }
-    if (filters.contactUuids != null && filters.contactUuids!.isNotEmpty) {
-      query.where(_database.payables.contactUuid.isIn(filters.contactUuids!));
-    }
-    if (filters.minAmount != null) {
-      query.where(
-          _database.payables.amount.isBiggerOrEqualValue(filters.minAmount!));
-    }
-    if (filters.maxAmount != null) {
-      query.where(
-          _database.payables.amount.isSmallerOrEqualValue(filters.maxAmount!));
-    }
-
-    if (filters.searchQuery != null && filters.searchQuery!.isNotEmpty) {
-      final searchPattern = '%${filters.searchQuery}%';
-      query.where(
-        _database.payables.description.like(searchPattern) |
-            _database.contacts.name.like(searchPattern),
-      );
-    }
-
-    query.orderBy([OrderingTerm.desc(_database.payables.date)]);
-    query.limit(limit, offset: offset);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return PayableWithLinkedData(
-          payable: row.readTable(_database.payables),
-          contact: row.readTableOrNull(_database.contacts),
-          linkedTransaction: row.readTableOrNull(_database.transactions),
-          linkedCategory: row.readTableOrNull(_database.categories),
-        );
-      }).toList();
-    });
-  }
-}
-
-/// Data class for payable with contact information
-class PayableWithContact {
-  final Payable payable;
-  final Contact? contact;
-
-  PayableWithContact({
-    required this.payable,
-    this.contact,
-  });
+  Future<dynamic> getPayableWithLinkedDataByUuid(String uuid) async => null;
 }

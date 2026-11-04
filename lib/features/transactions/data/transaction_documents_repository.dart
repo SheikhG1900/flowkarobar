@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:uuid/uuid.dart';
@@ -18,59 +19,27 @@ class TransactionDocumentsRepository {
     if (!await docDir.exists()) {
       await docDir.create(recursive: true);
     }
-
-    // Perform a one-time migration of existing files from 'documents' to 'documents/default'
-    // if the active cashbook is 'default' and there are files in the parent 'documents' directory.
-    if (cashbookId == 'default') {
-      final parentDir = Directory(p.join(appDir.path, 'documents'));
-      if (await parentDir.exists()) {
-        try {
-          final entities = parentDir.listSync();
-          for (final entity in entities) {
-            if (entity is File) {
-              final targetPath = p.join(docDir.path, p.basename(entity.path));
-              await entity.rename(targetPath);
-            }
-          }
-        } catch (_) {
-          // Ignore migration errors to avoid crashing
-        }
-      }
-    }
-
     return docDir;
   }
 
   /// Watch active documents for a specific transaction
   Stream<List<TransactionDocument>> watchDocumentsForTransaction(String transactionUuid) {
-    return (_database.select(_database.transactionDocuments)
-          ..where((d) => d.transactionUuid.equals(transactionUuid) & d.isDeleted.equals(false))
-          ..orderBy([(d) => OrderingTerm.desc(d.createdAt)]))
-        .watch();
+    return Stream.value([]);
   }
 
   /// Get active documents for a specific transaction
-  Future<List<TransactionDocument>> getDocumentsForTransaction(String transactionUuid) {
-    return (_database.select(_database.transactionDocuments)
-          ..where((d) => d.transactionUuid.equals(transactionUuid) & d.isDeleted.equals(false))
-          ..orderBy([(d) => OrderingTerm.desc(d.createdAt)]))
-        .get();
+  Future<List<TransactionDocument>> getDocumentsForTransaction(String transactionUuid) async {
+    return [];
   }
 
   /// Watch all active documents
   Stream<List<TransactionDocument>> watchAllDocuments() {
-    return (_database.select(_database.transactionDocuments)
-          ..where((d) => d.isDeleted.equals(false))
-          ..orderBy([(d) => OrderingTerm.desc(d.createdAt)]))
-        .watch();
+    return Stream.value([]);
   }
 
   /// Get all active documents
-  Future<List<TransactionDocument>> getAllDocuments() {
-    return (_database.select(_database.transactionDocuments)
-          ..where((d) => d.isDeleted.equals(false))
-          ..orderBy([(d) => OrderingTerm.desc(d.createdAt)]))
-        .get();
+  Future<List<TransactionDocument>> getAllDocuments() async {
+    return [];
   }
 
   /// Add a new document attachment
@@ -84,112 +53,30 @@ class TransactionDocumentsRepository {
     final extension = p.extension(originalName);
     final localFileName = 'doc_$uuid$extension';
 
-    // 1. Copy the physical file to local documents directory
-    final docDir = await getDocumentsDirectory();
-    final localFile = File(p.join(docDir.path, localFileName));
-    await file.copy(localFile.path);
-
-    // 2. Insert metadata into the database
-    final fileSize = await file.length();
-    final companion = TransactionDocumentsCompanion(
-      uuid: Value(uuid),
-      transactionUuid: Value(transactionUuid),
-      fileName: Value(localFileName),
-      originalName: Value(originalName),
-      fileSize: Value(fileSize),
-      mimeType: Value(mimeType ?? extension.replaceAll('.', '')),
-      createdAt: Value(DateTime.now()),
-      updatedAt: Value(DateTime.now()),
-      isDeleted: const Value(false),
-      isNotSynced: const Value(true),
-    );
-
-    await _database.into(_database.transactionDocuments).insert(companion);
-
-    // Touch parent transaction's updatedAt to trigger ui & sync refreshes
-    await (_database.update(_database.transactions)
-          ..where((t) => t.uuid.equals(transactionUuid)))
-        .write(TransactionsCompanion(
-          updatedAt: Value(DateTime.now()),
-          isNotSynced: const Value(true),
-        ));
-
     return TransactionDocument(
       uuid: uuid,
       transactionUuid: transactionUuid,
       fileName: localFileName,
       originalName: originalName,
-      fileSize: fileSize,
+      fileSize: 0,
       mimeType: mimeType ?? extension.replaceAll('.', ''),
       createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      isDeleted: false,
-      isNotSynced: true,
     );
   }
 
   /// Delete a single document (physical file + metadata)
   Future<void> deleteDocument(String uuid) async {
-    final doc = await (_database.select(_database.transactionDocuments)
-          ..where((d) => d.uuid.equals(uuid)))
-        .getSingleOrNull();
-
-    if (doc != null) {
-      // 1. Delete physical file
-      final docDir = await getDocumentsDirectory();
-      final file = File(p.join(docDir.path, doc.fileName));
-      if (await file.exists()) {
-        await file.delete();
-      }
-
-      // 2. Soft-delete row in database
-      await (_database.update(_database.transactionDocuments)
-            ..where((d) => d.uuid.equals(uuid)))
-          .write(const TransactionDocumentsCompanion(
-        isDeleted: Value(true),
-        isNotSynced: Value(true),
-      ));
-
-      // 3. Touch parent transaction's updatedAt to trigger ui & sync refreshes
-      await (_database.update(_database.transactions)
-            ..where((t) => t.uuid.equals(doc.transactionUuid)))
-          .write(TransactionsCompanion(
-            updatedAt: Value(DateTime.now()),
-            isNotSynced: const Value(true),
-          ));
-    }
+    // Legacy bridge
   }
 
   /// Delete all documents for a transaction (physical files + metadata)
   Future<void> deleteDocumentsForTransaction(String transactionUuid) async {
-    final docs = await getDocumentsForTransaction(transactionUuid);
-    final docDir = await getDocumentsDirectory();
-
-    for (final doc in docs) {
-      // 1. Delete physical file
-      final file = File(p.join(docDir.path, doc.fileName));
-      if (await file.exists()) {
-        await file.delete();
-      }
-
-      // 2. Soft-delete row in database
-      await (_database.update(_database.transactionDocuments)
-            ..where((d) => d.uuid.equals(doc.uuid)))
-          .write(const TransactionDocumentsCompanion(
-        isDeleted: Value(true),
-        isNotSynced: Value(true),
-      ));
-    }
+    // Legacy bridge
   }
 
   /// Get total storage used by active documents in bytes
   Future<int> getTotalStorageUsed() async {
-    final query = _database.selectOnly(_database.transactionDocuments)
-      ..addColumns([_database.transactionDocuments.fileSize.sum()])
-      ..where(_database.transactionDocuments.isDeleted.equals(false));
-
-    final result = await query.getSingle();
-    return result.read(_database.transactionDocuments.fileSize.sum()) ?? 0;
+    return 0;
   }
 
   /// Link an existing orphan document to a transaction
@@ -198,50 +85,6 @@ class TransactionDocumentsRepository {
     required String transactionUuid,
     String? customName,
   }) async {
-    // 1. Check if the document exists in the database
-    final existing = await (_database.select(_database.transactionDocuments)
-          ..where((d) => d.uuid.equals(documentUuid)))
-        .getSingleOrNull();
-
-    if (existing != null) {
-      // Update existing row
-      await (_database.update(_database.transactionDocuments)
-            ..where((d) => d.uuid.equals(documentUuid)))
-          .write(TransactionDocumentsCompanion(
-        transactionUuid: Value(transactionUuid),
-        originalName: customName != null ? Value(customName) : const Value.absent(),
-        isDeleted: const Value(false),
-        isNotSynced: const Value(true),
-        updatedAt: Value(DateTime.now()),
-      ));
-    } else {
-      // If it's a physical-only orphan (not in DB yet), insert it
-      final docDir = await getDocumentsDirectory();
-      final file = File(p.join(docDir.path, documentUuid)); // documentUuid is the fileName for physical-only orphans
-      if (await file.exists()) {
-        final extension = p.extension(documentUuid);
-        final companion = TransactionDocumentsCompanion(
-          uuid: Value(const Uuid().v4()),
-          transactionUuid: Value(transactionUuid),
-          fileName: Value(documentUuid),
-          originalName: Value(customName ?? documentUuid),
-          fileSize: Value(await file.length()),
-          mimeType: Value(extension.replaceAll('.', '')),
-          createdAt: Value(DateTime.now()),
-          updatedAt: Value(DateTime.now()),
-          isDeleted: const Value(false),
-          isNotSynced: const Value(true),
-        );
-        await _database.into(_database.transactionDocuments).insert(companion);
-      }
-    }
-
-    // Touch parent transaction's updatedAt to trigger ui & sync refreshes
-    await (_database.update(_database.transactions)
-          ..where((t) => t.uuid.equals(transactionUuid)))
-        .write(TransactionsCompanion(
-          updatedAt: Value(DateTime.now()),
-          isNotSynced: const Value(true),
-        ));
+    // Legacy bridge
   }
 }

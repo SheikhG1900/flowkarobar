@@ -1598,8 +1598,6 @@ class _BulkImportScreenState extends ConsumerState<BulkImportScreen> {
             categoryUuid = await categoriesRepo.createCategory(
               CategoriesCompanion(
                 name: Value(categoryName),
-                type: Value(type),
-                isDefault: const Value(false),
                 icon: Value(defaultIcon.codePoint.toString()),
                 color: Value(isExpense
                     ? AppColors.expenseColor.value

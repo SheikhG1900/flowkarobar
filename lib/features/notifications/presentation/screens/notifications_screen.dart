@@ -4,7 +4,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/notifications/presentation/providers/notification_provider.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
 import 'package:flowpaisa/features/receivables/presentation/widgets/receivable_details_dialog.dart';
 import 'package:flowpaisa/features/payables/presentation/screens/payables_list_screen.dart';
@@ -168,9 +168,9 @@ class NotificationsScreen extends ConsumerWidget {
       BuildContext context, WidgetRef ref, NotificationItem notification) async {
     // If notification is for a specific cashbook, check if it's active
     if (notification.cashbookUuid != null) {
-      final activeId = ref.read(activeCashbookIdProvider);
+      final activeId = ref.read(activeBusinessIdProvider);
       if (activeId != notification.cashbookUuid) {
-        final cashbooks = ref.read(cashbooksProvider);
+        final cashbooks = ref.read(businessesProvider);
         final targetCashbook = cashbooks.firstWhere(
             (c) => c.id == notification.cashbookUuid,
             orElse: () => cashbooks.first);
@@ -197,7 +197,7 @@ class NotificationsScreen extends ConsumerWidget {
 
         if (proceed == true) {
           await ref
-              .read(activeCashbookIdProvider.notifier)
+              .read(activeBusinessIdProvider.notifier)
               .setActive(notification.cashbookUuid!);
           // After switching, we need to wait for the app to rebuild/refresh
           // Since we use Phoenix.rebirth in setActive (indirectly via main.dart listener or similar)
@@ -401,7 +401,7 @@ class _NotificationCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final color = _getColor(theme);
 
-    final cashbooks = ref.watch(cashbooksProvider);
+    final cashbooks = ref.watch(businessesProvider);
     final cashbookName = notification.cashbookUuid != null
         ? cashbooks
             .firstWhere((c) => c.id == notification.cashbookUuid,

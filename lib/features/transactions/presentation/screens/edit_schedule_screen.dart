@@ -92,7 +92,7 @@ class _EditScheduleScreenState extends ConsumerState<EditScheduleScreen> {
     _dueDate = widget.schedule.dueDate;
     _startDate = widget.schedule.startDate;
     _endDate = widget.schedule.endDate;
-    _scheduleType = widget.schedule.scheduleType;
+    _scheduleType = widget.schedule.scheduleType ?? 'DAILY';
 
     // Parse selected days
     if (widget.schedule.selectedDaysOfWeek != null) {

@@ -1,4 +1,5 @@
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/transactions/domain/models.dart';
 
 /// Enhanced payable model with pre-fetched related data
 /// Includes linked transaction and its category to avoid N+1 query problems
@@ -19,6 +20,16 @@ class PayableWithLinkedData {
   String toString() {
     return 'PayableWithLinkedData(payable: ${payable.uuid}, contact: ${contact?.name}, linkedCategory: ${linkedCategory?.name})';
   }
+}
+
+class PayableWithContact {
+  final Payable payable;
+  final Contact? contact;
+
+  PayableWithContact({
+    required this.payable,
+    this.contact,
+  });
 }
 
 class PayableFilters {

@@ -41,14 +41,18 @@ import 'package:flowpaisa/features/voice_command/presentation/screens/voice_add_
 import 'package:flowpaisa/features/receipt_scan/presentation/screens/scan_receipt_screen.dart';
 import 'package:flowpaisa/features/transactions/presentation/screens/add_transaction_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/user_guide_screen.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/core/utils/category_helper.dart';
 import 'package:flowpaisa/features/categories/presentation/widgets/category_budget_progress_bar.dart';
 import 'package:flowpaisa/core/utils/category_budget_utils.dart';
 import 'package:flowpaisa/shared/widgets/dual_amount_progress_bar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/account_slider.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/widgets/cashbook_slider.dart';
+import 'package:flowpaisa/features/businesses/presentation/widgets/business_slider.dart';
+import 'package:flowpaisa/features/orders/presentation/providers/orders_provider.dart';
+import 'package:flowpaisa/features/orders/presentation/screens/orders_list_screen.dart';
+import 'package:flowpaisa/features/inventory/presentation/providers/inventory_provider.dart';
+import 'package:flowpaisa/features/inventory/presentation/screens/products_list_screen.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
@@ -128,13 +132,18 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
             l10n,
             currency,
             filter,
-            title: l10n.receivableTag,
+            title: l10n.toCollect,
             icon: Icons.call_received,
             color: AppColors.receivableColor,
             builder: (stats) => AmountFormatter.formatWithCurrency(
                 stats.receivable(filter),
                 currency!),
-            onTap: () => _openReceivables(ref, context, filter),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const OrdersListScreen(initialTab: 0),
+              ),
+            ),
             onRemove: () => _removeAt(ref, layoutIndex),
           ),
           () => _removeAt(ref, layoutIndex),
@@ -148,13 +157,18 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
             l10n,
             currency,
             filter,
-            title: l10n.payableTag,
+            title: l10n.toPay,
             icon: Icons.call_made,
             color: AppColors.payableColor,
             builder: (stats) => AmountFormatter.formatWithCurrency(
                 stats.payable(filter),
                 currency!),
-            onTap: () => _openPayables(ref, context, filter),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const OrdersListScreen(initialTab: 1),
+              ),
+            ),
             onRemove: () => _removeAt(ref, layoutIndex),
           ),
           () => _removeAt(ref, layoutIndex),
@@ -292,6 +306,29 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
           ),
           () => _removeAt(ref, layoutIndex),
         );
+      case DashboardWidgetKind.todaySales:
+        return wrapRemove(
+          _buildTodaySalesWidget(
+            context,
+            ref,
+            theme,
+            l10n,
+            currency,
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
+        );
+      case DashboardWidgetKind.lowStockAlert:
+        return wrapRemove(
+          _buildLowStockAlertWidget(
+            context,
+            ref,
+            theme,
+            l10n,
+            onRemove: () => _removeAt(ref, layoutIndex),
+          ),
+          () => _removeAt(ref, layoutIndex),
+        );
       default:
         return const SizedBox.shrink();
     }
@@ -323,9 +360,85 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
     return const Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        CashbookSlider(),
+        BusinessSlider(),
         SizedBox(height: 12),
       ],
+    );
+  }
+
+  Widget _buildTodaySalesWidget(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l10n,
+    dynamic currency, {
+    required VoidCallback onRemove,
+  }) {
+    final todayOrdersAsync = ref.watch(todayOrdersStreamProvider);
+    return todayOrdersAsync.when(
+      data: (orders) {
+        final sales = orders.where((o) => o.orderType == 'SALE').toList();
+        final totalAmount = sales.fold<double>(0.0, (sum, o) => sum + o.totalAmount);
+        final count = sales.length;
+        final amountStr = currency != null
+            ? AmountFormatter.formatWithCurrency(totalAmount, currency)
+            : totalAmount.toStringAsFixed(2);
+        return _buildSummaryCard(
+          context,
+          ref,
+          theme,
+          l10n,
+          title: l10n.todaySales,
+          subtitle: '$count ${count == 1 ? "sale" : "sales"}',
+          amountLabel: amountStr,
+          icon: Icons.point_of_sale_rounded,
+          color: AppColors.incomeColor,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const OrdersListScreen(initialTab: 0),
+            ),
+          ),
+          onRemove: onRemove,
+          key: const ValueKey('summary-card-today-sales'),
+        );
+      },
+      loading: () => _buildCardPlaceholder(theme),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildLowStockAlertWidget(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeData theme,
+    AppLocalizations l10n, {
+    required VoidCallback onRemove,
+  }) {
+    final lowStockAsync = ref.watch(lowStockProductsStreamProvider);
+    return lowStockAsync.when(
+      data: (products) {
+        final count = products.length;
+        return _buildSummaryCard(
+          context,
+          ref,
+          theme,
+          l10n,
+          title: l10n.lowStockAlert,
+          subtitle: count == 0 ? 'All stocks healthy' : '$count items below minimum',
+          amountLabel: '$count',
+          icon: Icons.warning_amber_rounded,
+          color: count > 0 ? AppColors.expenseColor : AppColors.incomeColor,
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProductsListScreen()),
+          ),
+          onRemove: onRemove,
+          key: const ValueKey('summary-card-low-stock-alert'),
+        );
+      },
+      loading: () => _buildCardPlaceholder(theme),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 
@@ -2226,30 +2339,17 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
 
   void _openReceivables(
       WidgetRef ref, BuildContext context, DashboardFilter filter) {
-    final isMonthly = filter == DashboardFilter.monthly;
-    final now = DateTime.now();
-    final startDate = isMonthly ? DateTime(now.year, now.month, 1) : null;
-    final endDate = isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-    ref.read(receivablesPaginatedProvider('PENDING').notifier).applyFilters(
-        ReceivableFilters(startDate: startDate, endDate: endDate));
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const ReceivablesListScreen()),
+      MaterialPageRoute(builder: (_) => const OrdersListScreen(initialTab: 0)),
     );
   }
 
   void _openPayables(
       WidgetRef ref, BuildContext context, DashboardFilter filter) {
-    final isMonthly = filter == DashboardFilter.monthly;
-    final now = DateTime.now();
-    final startDate = isMonthly ? DateTime(now.year, now.month, 1) : null;
-    final endDate = isMonthly ? DateTime(now.year, now.month + 1, 0) : null;
-    ref
-        .read(payablesPaginatedProvider('PENDING').notifier)
-        .applyFilters(PayableFilters(startDate: startDate, endDate: endDate));
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const PayablesListScreen()),
+      MaterialPageRoute(builder: (_) => const OrdersListScreen(initialTab: 1)),
     );
   }
 
@@ -2278,7 +2378,7 @@ class DashboardSummaryWidgetCard extends ConsumerWidget {
       DashboardWidgetConfig config,
       int layoutIndex) {
     final theme = Theme.of(context);
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
     final activeColor = activeCashbook.color;
 
     return Padding(

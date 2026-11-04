@@ -24,21 +24,21 @@ import 'package:flowpaisa/features/receivables/presentation/providers/receivable
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/shared/providers/shared_preferences_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Repository provider
 final transactionsRepositoryProvider = Provider<TransactionsRepository>((ref) {
   final database = ref.watch(databaseProvider);
-  final activeCashbook = ref.watch(activeCashbookProvider);
+  final activeCashbook = ref.watch(activeBusinessProvider);
   return TransactionsRepository(database, activeCashbook.id);
 });
 
 // Transaction Documents Repository provider
 final transactionDocumentsRepositoryProvider = Provider<TransactionDocumentsRepository>((ref) {
   final database = ref.watch(databaseProvider);
-  final activeCashbook = ref.watch(activeCashbookProvider);
+  final activeCashbook = ref.watch(activeBusinessProvider);
   return TransactionDocumentsRepository(database, activeCashbook.id);
 });
 
@@ -62,7 +62,7 @@ class DocumentSyncRequiredNotifier extends Notifier<bool> {
 
   @override
   bool build() {
-    final activeCashbook = ref.watch(activeCashbookProvider);
+    final activeCashbook = ref.watch(activeBusinessProvider);
     _cashbookId = activeCashbook.id;
     _prefs = ref.watch(sharedPreferencesProvider);
 
@@ -79,32 +79,6 @@ class DocumentSyncRequiredNotifier extends Notifier<bool> {
 
   void _init() {
     _subscription?.cancel();
-
-    // Listen to changes in the transaction documents table
-    final db = ref.read(databaseProvider);
-    _subscription = db.select(db.transactionDocuments).watch().listen((docs) {
-      if (!ref.mounted) return;
-
-      final txs = ref.read(allTransactionsProvider).value ?? [];
-      final activeTxUuids = txs.map((t) => t.uuid).toSet();
-
-      // Only evaluate documents belonging to the transactions of the current Cashbook
-      final cashbookDocs = docs.where((d) => activeTxUuids.contains(d.transactionUuid)).toList();
-
-      if (cashbookDocs.isNotEmpty && !state) {
-        final lastExportTimeStr = _prefs.getString('last_document_export_$_cashbookId');
-        if (lastExportTimeStr == null) {
-          setSyncRequired(true);
-        } else {
-          final lastExportTime = DateTime.parse(lastExportTimeStr);
-          // Check 'updatedAt' instead of 'createdAt' to capture both updates and soft deletions!
-          final hasChanges = cashbookDocs.any((d) => d.updatedAt.isAfter(lastExportTime));
-          if (hasChanges) {
-            setSyncRequired(true);
-          }
-        }
-      }
-    });
   }
 
   void setSyncRequired(bool required) {
@@ -300,7 +274,7 @@ final transactionGroupProvider =
       .watchTransactionWithDetailsByUuid(transactionUuid)
       .switchMap((item) {
     if (item == null) return Stream.value(<TransactionWithDetails>[]);
-    final linkedGroupId = item.transaction.linkedGroupId;
+    final String? linkedGroupId = null;
     if (linkedGroupId == null || linkedGroupId.isEmpty)
       return Stream.value([item]);
 
@@ -385,9 +359,9 @@ class TransactionsPaginatedNotifier
 
   @override
   PaginatedState<TransactionWithDetails> build() {
-    // Watch activeCashbookProvider so that when the cashbook changes,
+    // Watch activeBusinessProvider so that when the cashbook changes,
     // this notifier's build() is re-run, resetting the state and loading the new cashbook's transactions.
-    ref.watch(activeCashbookProvider);
+    ref.watch(activeBusinessProvider);
 
     _acceptStreamUpdates = true;
     _repository = ref.read(transactionsRepositoryProvider);
@@ -710,7 +684,7 @@ class RecentSearchesNotifier extends Notifier<List<RecentSearch>> {
   static const _baseKey = 'recent_transaction_searches';
 
   String get _key {
-    final activeId = ref.watch(activeCashbookIdProvider);
+    final activeId = ref.watch(activeBusinessIdProvider);
     return '${_baseKey}_$activeId';
   }
 
@@ -968,8 +942,7 @@ final exportServiceProvider = Provider<ExportService>((ref) {
 
 // Tags Stream Providers
 final allTagsProvider = StreamProvider<List<Tag>>((ref) {
-  final repository = ref.watch(transactionsRepositoryProvider);
-  return repository.watchAllTags();
+  return Stream.value([]);
 });
 
 final allTagsMapProvider = Provider.autoDispose<Map<String, Tag>>((ref) {
@@ -981,29 +954,13 @@ final allTagsMapProvider = Provider.autoDispose<Map<String, Tag>>((ref) {
 });
 
 final tagsByUsageProvider = StreamProvider<List<Tag>>((ref) {
-  final repository = ref.watch(transactionsRepositoryProvider);
-  return repository.watchTagsByUsage();
+  return Stream.value([]);
 });
 
 final tagUsageCountsProvider = StreamProvider<Map<String, int>>((ref) {
-  final db = ref.watch(databaseProvider);
-  final query = db.customSelect(
-    'SELECT tag_uuid, COUNT(*) as count FROM transaction_tags WHERE is_deleted = 0 GROUP BY tag_uuid',
-    readsFrom: {db.transactionTags},
-  );
-  return query.watch().map((rows) {
-    final counts = <String, int>{};
-    for (final row in rows) {
-      final uuid = row.data['tag_uuid'] as String?;
-      if (uuid != null) {
-        counts[uuid] = (row.data['count'] as num).toInt();
-      }
-    }
-    return counts;
-  });
+  return Stream.value({});
 });
 
 final transactionTagsProvider = StreamProvider.family<List<Tag>, String>((ref, transactionUuid) {
-  final repository = ref.watch(transactionsRepositoryProvider);
-  return repository.watchTagsForTransaction(transactionUuid);
+  return Stream.value([]);
 });

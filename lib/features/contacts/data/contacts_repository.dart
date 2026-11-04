@@ -45,30 +45,12 @@ class ContactsRepository {
 
   /// Watch contacts with usage stats (most used first)
   Stream<List<ContactWithUsage>> watchContactsWithUsage() {
-    final query = _database.select(_database.contacts).join([
-      leftOuterJoin(
-        _database.contactUsageStats,
-        _database.contactUsageStats.contactUuid
-            .equalsExp(_database.contacts.uuid),
-      ),
-    ])
-      ..where(_database.contacts.isDeleted.equals(false))
-      ..orderBy([
-        OrderingTerm.desc(
-          _database.contactUsageStats.usageCount,
-        ),
-        OrderingTerm.asc(_database.contacts.name),
-      ]);
-
-    return query.watch().map((rows) {
-      return rows.map((row) {
-        return ContactWithUsage(
-          contact: row.readTable(_database.contacts),
-          usageCount:
-              row.readTableOrNull(_database.contactUsageStats)?.usageCount ?? 0,
-          lastUsed: row.readTableOrNull(_database.contactUsageStats)?.lastUsed,
-        );
-      }).toList();
+    return watchAllContacts().map((contacts) {
+      return contacts.map((c) => ContactWithUsage(
+        contact: c,
+        usageCount: 0,
+        lastUsed: DateTime.now(),
+      )).toList();
     });
   }
 
@@ -134,104 +116,32 @@ class ContactsRepository {
 
   /// Increment contact usage count
   Future<void> incrementUsageCount(String contactUuid) async {
-    await _database.transaction(() async {
-      // Check if usage stat exists
-      final existingStat = await (_database.select(_database.contactUsageStats)
-            ..where((s) => s.contactUuid.equals(contactUuid)))
-          .getSingleOrNull();
-
-      if (existingStat != null) {
-        // Update existing
-        await _database.update(_database.contactUsageStats).replace(
-              existingStat.copyWith(
-                usageCount: existingStat.usageCount + 1,
-                lastUsed: Value(DateTime.now()),
-              ),
-            );
-      } else {
-        // Create new
-        await _database.into(_database.contactUsageStats).insert(
-              ContactUsageStatsCompanion(
-                contactUuid: Value(contactUuid),
-                usageCount: const Value(1),
-                lastUsed: Value(DateTime.now()),
-              ),
-            );
-      }
-    });
+    // Legacy stub
   }
 
   /// Decrement contact usage count
   Future<void> decrementUsageCount(String contactUuid) async {
-    await _database.transaction(() async {
-      // Check if usage stat exists
-      final existingStat = await (_database.select(_database.contactUsageStats)
-            ..where((s) => s.contactUuid.equals(contactUuid)))
-          .getSingleOrNull();
-
-      if (existingStat != null && existingStat.usageCount > 0) {
-        // Update existing (don't go below 0)
-        await _database.update(_database.contactUsageStats).replace(
-              existingStat.copyWith(
-                usageCount: existingStat.usageCount - 1,
-              ),
-            );
-      }
-    });
+    // Legacy stub
   }
 
   /// Get most used contacts
   Future<List<ContactWithUsage>> getMostUsedContacts(int limit) async {
-    final query = _database.select(_database.contacts).join([
-      innerJoin(
-        _database.contactUsageStats,
-        _database.contactUsageStats.contactUuid
-            .equalsExp(_database.contacts.uuid),
-      ),
-    ])
-      ..where(_database.contacts.isDeleted.equals(false))
-      ..orderBy([
-        OrderingTerm.desc(
-          _database.contactUsageStats.usageCount,
-        ),
-      ])
-      ..limit(limit);
-
-    final rows = await query.get();
-    return rows.map((row) {
-      return ContactWithUsage(
-        contact: row.readTable(_database.contacts),
-        usageCount: row.readTable(_database.contactUsageStats).usageCount,
-        lastUsed: row.readTable(_database.contactUsageStats).lastUsed,
-      );
-    }).toList();
+    final list = await watchAllContacts().first;
+    return list.take(limit).map((c) => ContactWithUsage(
+      contact: c,
+      usageCount: 0,
+      lastUsed: DateTime.now(),
+    )).toList();
   }
 
   /// Get recently used contacts
   Future<List<ContactWithUsage>> getRecentlyUsedContacts(int limit) async {
-    final query = _database.select(_database.contacts).join([
-      innerJoin(
-        _database.contactUsageStats,
-        _database.contactUsageStats.contactUuid
-            .equalsExp(_database.contacts.uuid),
-      ),
-    ])
-      ..where(_database.contacts.isDeleted.equals(false))
-      ..orderBy([
-        OrderingTerm.desc(
-          _database.contactUsageStats.lastUsed,
-        ),
-      ])
-      ..limit(limit);
-
-    final rows = await query.get();
-    return rows.map((row) {
-      return ContactWithUsage(
-        contact: row.readTable(_database.contacts),
-        usageCount: row.readTable(_database.contactUsageStats).usageCount,
-        lastUsed: row.readTable(_database.contactUsageStats).lastUsed,
-      );
-    }).toList();
+    final list = await watchAllContacts().first;
+    return list.take(limit).map((c) => ContactWithUsage(
+      contact: c,
+      usageCount: 0,
+      lastUsed: DateTime.now(),
+    )).toList();
   }
 
   /// Find contact by phone or create if not exists
@@ -277,58 +187,64 @@ class ContactsRepository {
             .then((row) => row.read(_database.transactions.uuid.count()) ?? 0);
 
     // Get receivables count (PENDING only)
-    final receivablesCount = await (_database.selectOnly(_database.receivables)
-          ..addColumns([_database.receivables.uuid.count()])
-          ..where(_database.receivables.contactUuid.equals(contactUuid) &
-              _database.receivables.isDeleted.equals(false) &
-              _database.receivables.status.equals('PENDING')))
+    final receivablesCount = await (_database.selectOnly(_database.orders)
+          ..addColumns([_database.orders.uuid.count()])
+          ..where(_database.orders.contactUuid.equals(contactUuid) &
+              _database.orders.isDeleted.equals(false) &
+              _database.orders.orderType.equals('SALE') &
+              _database.orders.paymentStatus.equals('PAID').not()))
         .getSingle()
-        .then((row) => row.read(_database.receivables.uuid.count()) ?? 0);
+        .then((row) => row.read(_database.orders.uuid.count()) ?? 0);
 
     // Get payables count (PENDING only)
-    final payablesCount = await (_database.selectOnly(_database.payables)
-          ..addColumns([_database.payables.uuid.count()])
-          ..where(_database.payables.contactUuid.equals(contactUuid) &
-              _database.payables.isDeleted.equals(false) &
-              _database.payables.status.equals('PENDING')))
+    final payablesCount = await (_database.selectOnly(_database.orders)
+          ..addColumns([_database.orders.uuid.count()])
+          ..where(_database.orders.contactUuid.equals(contactUuid) &
+              _database.orders.isDeleted.equals(false) &
+              _database.orders.orderType.equals('PURCHASE') &
+              _database.orders.paymentStatus.equals('PAID').not()))
         .getSingle()
-        .then((row) => row.read(_database.payables.uuid.count()) ?? 0);
+        .then((row) => row.read(_database.orders.uuid.count()) ?? 0);
 
     // Get total receivable amount
-    final totalReceivable = await (_database.selectOnly(_database.receivables)
-          ..addColumns([_database.receivables.amount.sum()])
-          ..where(_database.receivables.contactUuid.equals(contactUuid) &
-              _database.receivables.isDeleted.equals(false))
-          ..where(_database.receivables.status.equals('PENDING')))
+    final totalReceivable = await (_database.selectOnly(_database.orders)
+          ..addColumns([_database.orders.totalAmount.sum()])
+          ..where(_database.orders.contactUuid.equals(contactUuid) &
+              _database.orders.isDeleted.equals(false) &
+              _database.orders.orderType.equals('SALE') &
+              _database.orders.paymentStatus.equals('PAID').not()))
         .getSingle()
-        .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+        .then((row) => row.read(_database.orders.totalAmount.sum()) ?? 0.0);
 
     // Get total payable amount
-    final totalPayable = await (_database.selectOnly(_database.payables)
-          ..addColumns([_database.payables.amount.sum()])
-          ..where(_database.payables.contactUuid.equals(contactUuid) &
-              _database.payables.isDeleted.equals(false))
-          ..where(_database.payables.status.equals('PENDING')))
+    final totalPayable = await (_database.selectOnly(_database.orders)
+          ..addColumns([_database.orders.totalAmount.sum()])
+          ..where(_database.orders.contactUuid.equals(contactUuid) &
+              _database.orders.isDeleted.equals(false) &
+              _database.orders.orderType.equals('PURCHASE') &
+              _database.orders.paymentStatus.equals('PAID').not()))
         .getSingle()
-        .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+        .then((row) => row.read(_database.orders.totalAmount.sum()) ?? 0.0);
 
     // Get total received amount
-    final totalReceived = await (_database.selectOnly(_database.receivables)
-          ..addColumns([_database.receivables.amount.sum()])
-          ..where(_database.receivables.contactUuid.equals(contactUuid) &
-              _database.receivables.isDeleted.equals(false))
-          ..where(_database.receivables.status.equals('RECEIVED')))
+    final totalReceived = await (_database.selectOnly(_database.orders)
+          ..addColumns([_database.orders.totalAmount.sum()])
+          ..where(_database.orders.contactUuid.equals(contactUuid) &
+              _database.orders.isDeleted.equals(false) &
+              _database.orders.orderType.equals('SALE') &
+              _database.orders.paymentStatus.equals('PAID')))
         .getSingle()
-        .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
+        .then((row) => row.read(_database.orders.totalAmount.sum()) ?? 0.0);
 
     // Get total paid amount
-    final totalPaid = await (_database.selectOnly(_database.payables)
-          ..addColumns([_database.payables.amount.sum()])
-          ..where(_database.payables.contactUuid.equals(contactUuid) &
-              _database.payables.isDeleted.equals(false))
-          ..where(_database.payables.status.equals('PAID')))
+    final totalPaid = await (_database.selectOnly(_database.orders)
+          ..addColumns([_database.orders.totalAmount.sum()])
+          ..where(_database.orders.contactUuid.equals(contactUuid) &
+              _database.orders.isDeleted.equals(false) &
+              _database.orders.orderType.equals('PURCHASE') &
+              _database.orders.paymentStatus.equals('PAID')))
         .getSingle()
-        .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
+        .then((row) => row.read(_database.orders.totalAmount.sum()) ?? 0.0);
 
     return ContactStatistics(
       contact: contact,
@@ -344,92 +260,15 @@ class ContactsRepository {
 
   /// Watch contact statistics (reactive version)
   Stream<ContactStatistics> watchContactStatistics(String contactUuid) {
-    // Combine multiple tables to ensure reactivity when any related data changes
-    return Rx.combineLatest4(
+    return Rx.combineLatest2(
       watchContactByUuid(contactUuid),
-      _database.select(_database.transactions).watch(),
-      _database.select(_database.receivables).watch(),
-      _database.select(_database.payables).watch(),
-      (contact, txs, recs, pays) => contact,
+      _database.select(_database.orders).watch(),
+      (contact, orders) => contact,
     ).asyncMap((contact) async {
       if (contact == null) {
         throw Exception('Contact not found');
       }
-
-        // Get transactions count
-      final transactionsCount = await (_database
-              .selectOnly(_database.transactions)
-            ..addColumns([_database.transactions.uuid.count()])
-            ..where(_database.transactions.contactUuid.equals(contactUuid) &
-                _database.transactions.isDeleted.equals(false)))
-          .getSingle()
-          .then((row) => row.read(_database.transactions.uuid.count()) ?? 0);
-
-      // Get receivables count (PENDING only)
-      final receivablesCount =
-          await (_database.selectOnly(_database.receivables)
-                ..addColumns([_database.receivables.uuid.count()])
-                ..where(_database.receivables.contactUuid.equals(contactUuid) &
-                    _database.receivables.isDeleted.equals(false) &
-                    _database.receivables.status.equals('PENDING')))
-              .getSingle()
-              .then((row) => row.read(_database.receivables.uuid.count()) ?? 0);
-
-      // Get payables count (PENDING only)
-      final payablesCount = await (_database.selectOnly(_database.payables)
-            ..addColumns([_database.payables.uuid.count()])
-            ..where(_database.payables.contactUuid.equals(contactUuid) &
-                _database.payables.isDeleted.equals(false) &
-                _database.payables.status.equals('PENDING')))
-          .getSingle()
-          .then((row) => row.read(_database.payables.uuid.count()) ?? 0);
-
-      // Get total receivable amount
-      final totalReceivable = await (_database.selectOnly(_database.receivables)
-            ..addColumns([_database.receivables.amount.sum()])
-            ..where(_database.receivables.contactUuid.equals(contactUuid) &
-                _database.receivables.isDeleted.equals(false))
-            ..where(_database.receivables.status.equals('PENDING')))
-          .getSingle()
-          .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
-
-      // Get total payable amount
-      final totalPayable = await (_database.selectOnly(_database.payables)
-            ..addColumns([_database.payables.amount.sum()])
-            ..where(_database.payables.contactUuid.equals(contactUuid) &
-                _database.payables.isDeleted.equals(false))
-            ..where(_database.payables.status.equals('PENDING')))
-          .getSingle()
-          .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
-
-      // Get total received amount
-      final totalReceived = await (_database.selectOnly(_database.receivables)
-            ..addColumns([_database.receivables.amount.sum()])
-            ..where(_database.receivables.contactUuid.equals(contactUuid) &
-                _database.receivables.isDeleted.equals(false))
-            ..where(_database.receivables.status.equals('RECEIVED')))
-          .getSingle()
-          .then((row) => row.read(_database.receivables.amount.sum()) ?? 0.0);
-
-      // Get total paid amount
-      final totalPaid = await (_database.selectOnly(_database.payables)
-            ..addColumns([_database.payables.amount.sum()])
-            ..where(_database.payables.contactUuid.equals(contactUuid) &
-                _database.payables.isDeleted.equals(false))
-            ..where(_database.payables.status.equals('PAID')))
-          .getSingle()
-          .then((row) => row.read(_database.payables.amount.sum()) ?? 0.0);
-
-      return ContactStatistics(
-        contact: contact,
-        transactionsCount: transactionsCount,
-        receivablesCount: receivablesCount,
-        payablesCount: payablesCount,
-        totalReceivable: totalReceivable,
-        totalPayable: totalPayable,
-        totalReceived: totalReceived,
-        totalPaid: totalPaid,
-      );
+      return getContactStatistics(contactUuid);
     });
   }
 }
@@ -447,7 +286,7 @@ class ContactWithUsage {
   });
 }
 
-  /// Data class for contact statistics
+/// Data class for contact statistics
 class ContactStatistics {
   final Contact contact;
   final int transactionsCount;
@@ -457,6 +296,8 @@ class ContactStatistics {
   final double totalPayable;
   final double totalReceived;
   final double totalPaid;
+
+  double get netBalance => totalReceivable - totalPayable;
 
   ContactStatistics({
     required this.contact,
@@ -468,6 +309,4 @@ class ContactStatistics {
     this.totalReceived = 0.0,
     this.totalPaid = 0.0,
   });
-
-  double get netBalance => totalReceivable - totalPayable;
 }

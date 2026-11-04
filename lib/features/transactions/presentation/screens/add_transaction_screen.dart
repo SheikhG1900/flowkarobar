@@ -15,7 +15,7 @@ import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/whatsapp/presentation/providers/whatsapp_provider.dart';
 import 'package:flowpaisa/core/utils/share_helper.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/tabular_parser.dart';
@@ -475,7 +475,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
       ref.invalidate(scheduleLimitsProvider);
 
       if (mounted) {
-        final capturedActiveColor = ref.read(activeCashbookProvider).color;
+        final capturedActiveColor = ref.read(activeBusinessProvider).color;
 
         Navigator.pop(context);
 
@@ -626,7 +626,7 @@ class _AddTransactionScreenState extends ConsumerState<AddTransactionScreen> {
             await repository.getTransactionWithDetailsByUuid(transactionUuid);
 
         if (mounted && transactionWithDetails != null) {
-          final activeColor = ref.read(activeCashbookProvider).color;
+          final activeColor = ref.read(activeBusinessProvider).color;
           final currency = ref.read(currentCurrencyProvider).value!;
           final userProfile = ref.read(userProfileProvider);
           final whatsAppService = ref.read(whatsAppServiceProvider);

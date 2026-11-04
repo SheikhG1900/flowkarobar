@@ -1,0 +1,8 @@
+  0s riverpod_generator on 266 inputs; lib/core/constants/app_constants.dart
+  0s riverpod_generator on 266 inputs: 1 skipped; lib/core/database/connection/connection.dart
+  0s riverpod_generator on 266 inputs: 266 skipped
+  0s drift_dev on 1064 inputs; lib/core/constants/app_constants.dart
+  0s drift_dev on 1064 inputs: 1064 skipped
+  0s source_gen:combining_builder on 532 inputs; lib/core/constants/app_constants.dart
+  0s source_gen:combining_builder on 532 inputs: 532 skipped
+  Built with build_runner/aot in 2s; wrote 0 outputs.

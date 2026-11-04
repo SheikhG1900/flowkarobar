@@ -12,9 +12,9 @@
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command) {
-  // Try to find if an existing window of Flowpaisa is already running
+  // Try to find if an existing window of FlowKarobar is already running
   // Window class matches FLUTTER_RUNNER_WIN32_WINDOW
-  HWND hwndExisting = FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"flowpaisa");
+  HWND hwndExisting = FindWindowW(L"FLUTTER_RUNNER_WIN32_WINDOW", L"FlowKarobar");
   if (hwndExisting != NULL) {
     // We found an existing window!
     // Bring the existing window to the foreground and activate it
@@ -32,7 +32,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
     if (argv != NULL && argc > 1) {
       std::wstring argStr = argv[1];
       // Check if argument is custom scheme or web redirect
-      if (argStr.rfind(L"flowpaisa://", 0) == 0 || argStr.find(L"tamatasoft.github.io") != std::wstring::npos) {
+      if (argStr.rfind(L"flowkarobar://", 0) == 0 || argStr.find(L"tamatasoft.github.io") != std::wstring::npos) {
         // Convert UTF-16 wide string to standard UTF-8 (since app_links plugin expects a char* payload)
         int size_needed = WideCharToMultiByte(CP_UTF8, 0, argStr.c_str(), (int)argStr.length(), NULL, 0, NULL, NULL);
         std::string utf8Link(size_needed, 0);
@@ -69,7 +69,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   FlutterWindow window(project);
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(1280, 720);
-  if (!window.Create(L"flowpaisa", origin, size)) {
+  if (!window.Create(L"FlowKarobar", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);

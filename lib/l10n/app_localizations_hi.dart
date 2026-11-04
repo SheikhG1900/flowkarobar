@@ -9,6 +9,296 @@ class AppLocalizationsHi extends AppLocalizations {
   AppLocalizationsHi([String locale = 'hi']) : super(locale);
 
   @override
+  String get businesses => 'व्यवसाय';
+
+  @override
+  String get business => 'व्यवसाय';
+
+  @override
+  String get products => 'उत्पाद';
+
+  @override
+  String get product => 'उत्पाद';
+
+  @override
+  String get batches => 'बैच';
+
+  @override
+  String get batch => 'बैच';
+
+  @override
+  String get expiryDate => 'समाप्ति तिथि';
+
+  @override
+  String get orders => 'ऑर्डर';
+
+  @override
+  String get order => 'ऑर्डर';
+
+  @override
+  String get sale => 'बिक्री';
+
+  @override
+  String get purchase => 'खरीद';
+
+  @override
+  String get customers => 'ग्राहक';
+
+  @override
+  String get customer => 'ग्राहक';
+
+  @override
+  String get suppliers => 'विक्रेता';
+
+  @override
+  String get supplier => 'विक्रेता';
+
+  @override
+  String get taxInvoice => 'टैक्स इनवॉइस';
+
+  @override
+  String get purchaseReceipt => 'खरीद रसीद';
+
+  @override
+  String get reconcileInventory => 'इन्वेंटरी मिलान करें';
+
+  @override
+  String get reconciliation => 'मिलान';
+
+  @override
+  String get catalogs => 'कैटलॉग';
+
+  @override
+  String get catalog => 'कैटलॉग';
+
+  @override
+  String get sales => 'बिक्री';
+
+  @override
+  String get purchases => 'खरीदारी';
+
+  @override
+  String get returns => 'वापसी';
+
+  @override
+  String get more => 'और';
+
+  @override
+  String get stock => 'स्टॉक';
+
+  @override
+  String get toCollect => 'वसूली';
+
+  @override
+  String get toPay => 'भुगतान';
+
+  @override
+  String get sectionDetails => 'विवरण';
+
+  @override
+  String get sectionPricing => 'मूल्य निर्धारण';
+
+  @override
+  String get sectionPayment => 'भुगतान';
+
+  @override
+  String get sectionDelivery => 'डिलीवरी';
+
+  @override
+  String get sectionStock => 'स्टॉक';
+
+  @override
+  String get sectionSummary => 'सारांश';
+
+  @override
+  String get sectionActions => 'कार्रवाई';
+
+  @override
+  String get noResultsFound => 'कोई परिणाम नहीं मिला';
+
+  @override
+  String get manage => 'प्रबंधित करें';
+
+  @override
+  String get noSalesYet => 'अभी तक कोई बिक्री नहीं';
+
+  @override
+  String get noPurchasesYet => 'अभी तक कोई खरीदारी नहीं';
+
+  @override
+  String get noReturnsYet => 'अभी तक कोई वापसी नहीं';
+
+  @override
+  String get newSale => 'नई बिक्री';
+
+  @override
+  String get newPurchase => 'नई खरीद';
+
+  @override
+  String get newReturn => 'नई वापसी';
+
+  @override
+  String get comingSoon => 'जल्द आ रहा है';
+
+  @override
+  String get walkInCustomer => 'वॉक-इन';
+
+  @override
+  String get unpaid => 'अवैतनिक';
+
+  @override
+  String get partiallyPaid => 'आंशिक भुगतान';
+
+  @override
+  String get delivered => 'डिलीवर हो गया';
+
+  @override
+  String get shipped => 'भेजा गया';
+
+  @override
+  String get deliveryPending => 'डिलीवरी लंबित';
+
+  @override
+  String get deliveryStatus => 'डिलीवरी स्थिति';
+
+  @override
+  String get orderDetails => 'ऑर्डर विवरण';
+
+  @override
+  String get orderNotFound => 'ऑर्डर नहीं मिला';
+
+  @override
+  String get addItem => 'आइटम जोड़ें';
+
+  @override
+  String get selectProduct => 'उत्पाद चुनें';
+
+  @override
+  String get noProductsAvailable =>
+      'कोई उत्पाद उपलब्ध नहीं। पहले उत्पाद जोड़ें।';
+
+  @override
+  String get items => 'आइटम';
+
+  @override
+  String get quantity => 'मात्रा';
+
+  @override
+  String get discount => 'छूट';
+
+  @override
+  String get subtotal => 'उप-योग';
+
+  @override
+  String get paymentNow => 'अभी भुगतान';
+
+  @override
+  String get balanceDue => 'बकाया राशि';
+
+  @override
+  String get showAllContacts => 'सभी संपर्क दिखाएं';
+
+  @override
+  String get addAtLeastOneItem => 'कम से कम एक आइटम जोड़ें';
+
+  @override
+  String get selectAccountForPayment => 'भुगतान दर्ज करने के लिए खाता चुनें';
+
+  @override
+  String get orderCreated => 'ऑर्डर सफलतापूर्वक बनाया गया';
+
+  @override
+  String get markDelivered => 'डिलीवर किया गया चिह्नित करें';
+
+  @override
+  String get orderMarkedDelivered => 'ऑर्डर डिलीवर किया गया चिह्नित हुआ';
+
+  @override
+  String get shareInvoice => 'इनवॉइस साझा करें';
+
+  @override
+  String get paymentRecorded => 'भुगतान सफलतापूर्वक दर्ज हुआ';
+
+  @override
+  String get collectPayment => 'भुगतान प्राप्त करें';
+
+  @override
+  String get payToSupplier => 'विक्रेता को भुगतान करें';
+
+  @override
+  String get fieldRequired => 'यह फ़ील्ड आवश्यक है';
+
+  @override
+  String get invalidNumber => 'मान्य संख्या दर्ज करें';
+
+  @override
+  String get addProduct => 'उत्पाद जोड़ें';
+
+  @override
+  String get editProduct => 'उत्पाद संपादित करें';
+
+  @override
+  String get productName => 'उत्पाद का नाम';
+
+  @override
+  String get noProductsYet => 'अभी तक कोई उत्पाद नहीं';
+
+  @override
+  String get lowStock => 'कम स्टॉक';
+
+  @override
+  String stockLabel(String quantity) {
+    return 'स्टॉक: $quantity';
+  }
+
+  @override
+  String get deleteProduct => 'उत्पाद हटाएं';
+
+  @override
+  String deleteProductConfirm(String name) {
+    return 'क्या आप वाकई $name को हटाना चाहते हैं?';
+  }
+
+  @override
+  String get productDeleted => 'उत्पाद सफलतापूर्वक हटाया गया';
+
+  @override
+  String get productSaved => 'उत्पाद सफलतापूर्वक सहेजा गया';
+
+  @override
+  String get sku => 'एसकेयू';
+
+  @override
+  String get unit => 'इकाई';
+
+  @override
+  String get purchasePrice => 'खरीद मूल्य';
+
+  @override
+  String get retailPrice => 'खुदरा मूल्य';
+
+  @override
+  String get wholesalePrice => 'थोक मूल्य';
+
+  @override
+  String get stockQuantity => 'स्टॉक मात्रा';
+
+  @override
+  String get openingStock => 'प्रारंभिक स्टॉक';
+
+  @override
+  String get currentStock => 'वर्तमान स्टॉक';
+
+  @override
+  String get currentStockHint => 'खरीद, बिक्री और स्टॉक समायोजन से प्रबंधित';
+
+  @override
+  String get minStockAlert => 'न्यूनतम स्टॉक अलर्ट';
+
+  @override
+  String get isServiceProduct => 'यह एक सेवा है (स्टॉक ट्रैकिंग नहीं)';
+
+  @override
   String get refresh => 'ताज़ा करें';
 
   @override
@@ -1442,7 +1732,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get about => 'ऐप के बारे में';
 
   @override
-  String get rateUs => 'Flowpaisa को रेट करें';
+  String get rateUs => 'FlowKarobar को रेट करें';
 
   @override
   String get tagline => 'हर पैसे का हिसाब रखें';
@@ -1454,7 +1744,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'Flowpaisa एक व्यापक व्यक्तिगत वित्त और कैशफ्लो मैनेजर है। अपने खर्चों, आय, प्राप्य और देय राशि को एक ही स्थान पर ट्रैक करें। सुविधाओं में रसीद स्कैनिंग, व्हाट्सएप एकीकरण, क्लाउड बैकअप और सुंदर एनालिटिक्स शामिल हैं।';
+      'FlowKarobar एक व्यापक व्यक्तिगत वित्त और कैशफ्लो मैनेजर है। अपने खर्चों, आय, प्राप्य और देय राशि को एक ही स्थान पर ट्रैक करें। सुविधाओं में रसीद स्कैनिंग, व्हाट्सएप एकीकरण, क्लाउड बैकअप और सुंदर एनालिटिक्स शामिल हैं।';
 
   @override
   String get openSourceLicenses => 'ओपन सोर्स लाइसेंस';
@@ -1554,14 +1844,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get guideDeepLinksStep =>
-      'किसी भी लेन-देन या प्राप्य पर \'Share\' आइकन पर टैप करें। यह एक अनूठा लिंक उत्पन्न करता है। जब प्राप्तकर्ता अपने डिवाइस पर लिंक पर क्लिक करता है, तो Flowpaisa खुल जाएगा और उन्हें उस लेन-देन को अपनी कैशबुक में आयात (Import) करने की अनुमति देगा।';
+      'किसी भी लेन-देन या प्राप्य पर \'Share\' आइकन पर टैप करें। यह एक अनूठा लिंक उत्पन्न करता है। जब प्राप्तकर्ता अपने डिवाइस पर लिंक पर क्लिक करता है, तो FlowKarobar खुल जाएगा और उन्हें उस लेन-देन को अपनी कैशबुक में आयात (Import) करने की अनुमति देगा।';
 
   @override
   String get guideImportDeepLink => 'साझा किए गए लेन-देन को कैसे आयात करें?';
 
   @override
   String get guideImportDeepLinkStep =>
-      'जब आपको व्हाट्सएप या संदेश के माध्यम से Flowpaisa लिंक प्राप्त होता है, तो बस उस पर टैप करें। ऐप विवरण दिखाते हुए एक पूर्वावलोकन स्क्रीन खोलेगा। इसे अपने रिकॉर्ड में जोड़ने के लिए \'Import\' पर टैप करें। यदि यह एक निपटान (Settlement) है, तो यह आपके मौजूदा लंबित रिकॉर्ड को अपडेट कर देगा।';
+      'जब आपको व्हाट्सएप या संदेश के माध्यम से FlowKarobar लिंक प्राप्त होता है, तो बस उस पर टैप करें। ऐप विवरण दिखाते हुए एक पूर्वावलोकन स्क्रीन खोलेगा। इसे अपने रिकॉर्ड में जोड़ने के लिए \'Import\' पर टैप करें। यदि यह एक निपटान (Settlement) है, तो यह आपके मौजूदा लंबित रिकॉर्ड को अपडेट कर देगा।';
 
   @override
   String get guideSyncDevices => 'कैशबुक को दूसरे डिवाइस पर कैसे साझा करें?';
@@ -2436,27 +2726,27 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String sharePayableCompleted(String amount, String date, String link) {
-    return 'नमस्ते!\n\n$date को $amount का भुगतान पूरा हो गया है।\n\nFlowpaisa में सिंक करें:\n$link';
+    return 'नमस्ते!\n\n$date को $amount का भुगतान पूरा हो गया है।\n\nFlowKarobar में सिंक करें:\n$link';
   }
 
   @override
   String sharePayablePending(String amount, String date, String link) {
-    return 'मैंने आपके $amount देने हैं\nतारीख: $date\n\nFlowpaisa में देखें:\n$link';
+    return 'मैंने आपके $amount देने हैं\nतारीख: $date\n\nFlowKarobar में देखें:\n$link';
   }
 
   @override
   String shareReceivableReceived(String amount, String date, String link) {
-    return 'नमस्ते!\n\n$date को $amount का भुगतान प्राप्त हो गया है।\n\nFlowpaisa में सिंक करें:\n$link';
+    return 'नमस्ते!\n\n$date को $amount का भुगतान प्राप्त हो गया है।\n\nFlowKarobar में सिंक करें:\n$link';
   }
 
   @override
   String shareReceivablePending(String amount, String date, String link) {
-    return 'प्राप्त होने वाली राशि: $amount\nतारीख: $date\n\nFlowpaisa में देखें:\n$link';
+    return 'प्राप्त होने वाली राशि: $amount\nतारीख: $date\n\nFlowKarobar में देखें:\n$link';
   }
 
   @override
   String shareTransactionMessage(String amount, String date, String link) {
-    return '$date को $amount का लेन-देन रिकॉर्ड किया गया।\n\nFlowpaisa में देखें:\n$link';
+    return '$date को $amount का लेन-देन रिकॉर्ड किया गया।\n\nFlowKarobar में देखें:\n$link';
   }
 
   @override
@@ -3431,7 +3721,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get clearAllCloudDataMessage =>
-      'यह Google Drive से आपके सभी Flowpaisa बैकअप और सिंक्रनाइज़ेशन डेटा को स्थायी रूप से हटा देगा। इस क्रिया को पूर्ववत नहीं किया जा सकता है।\n\nक्या आप वाकई सभी क्लाउड डेटा साफ़ करना चाहते हैं?';
+      'यह Google Drive से आपके सभी FlowKarobar बैकअप और सिंक्रनाइज़ेशन डेटा को स्थायी रूप से हटा देगा। इस क्रिया को पूर्ववत नहीं किया जा सकता है।\n\nक्या आप वाकई सभी क्लाउड डेटा साफ़ करना चाहते हैं?';
 
   @override
   String get cloudDataClearedSuccess =>
@@ -4388,7 +4678,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get others => 'अन्य';
 
   @override
-  String get onboardingWelcomeTitle => 'Flowpaisa में आपका स्वागत है';
+  String get onboardingWelcomeTitle => 'FlowKarobar में आपका स्वागत है';
 
   @override
   String get onboardingWelcomeBody =>
@@ -4434,7 +4724,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get guideCreditCardsBody =>
-      'क्रेडिट सीमा और बिलिंग चक्र निर्धारित करें। Flowpaisa आपको देय तिथि से पहले सूचित करेगा ताकि आप कभी भी भुगतान न चूकें।';
+      'क्रेडिट सीमा और बिलिंग चक्र निर्धारित करें। FlowKarobar आपको देय तिथि से पहले सूचित करेगा ताकि आप कभी भी भुगतान न चूकें।';
 
   @override
   String get guideBulkImportTitle => 'बल्क इंपोर्ट लेनदेन';
@@ -4978,4 +5268,10 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get tagRenamedSuccessfully => 'टैग का नाम सफलतापूर्वक बदल दिया गया';
+
+  @override
+  String get todaySales => 'आज की बिक्री';
+
+  @override
+  String get lowStockAlert => 'कम स्टॉक चेतावनी';
 }

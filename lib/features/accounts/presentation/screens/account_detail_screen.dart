@@ -17,7 +17,7 @@ import 'package:flowpaisa/features/accounts/presentation/widgets/account_transfe
 import 'package:flowpaisa/features/accounts/presentation/widgets/pay_bill_sheet.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/transfer_account_box.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/features/dashboard/domain/dashboard_widget_models.dart';
 import 'package:flowpaisa/features/dashboard/presentation/providers/dashboard_widget_provider.dart';
 import 'package:flowpaisa/features/whatsapp/domain/deep_link_service.dart';
@@ -784,7 +784,7 @@ class _TransfersSection extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final transfersAsync = ref.watch(transfersForAccountProvider(accountUuid));
-    final cashbookAccent = ref.watch(activeCashbookProvider).color;
+    final cashbookAccent = ref.watch(activeBusinessProvider).color;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -7,7 +7,7 @@ import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/backup/presentation/screens/backup_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_loading_indicator.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transactions_provider.dart';
@@ -362,7 +362,7 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
     // Keep sync status polling active while this section is visible (reactive approach).
     ref.watch(syncStatusPollingProvider);
     final backupState = ref.watch(backupProvider);
-    final activeCashbookId = ref.watch(activeCashbookIdProvider);
+    final activeCashbookId = ref.watch(activeBusinessIdProvider);
 
     // Ignore cross-cashbook status updates by returning early if the
     // sync state does not belong to the currently active cashbook.

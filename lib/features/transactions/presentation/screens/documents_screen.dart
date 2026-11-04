@@ -23,7 +23,7 @@ import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:flowpaisa/features/transactions/presentation/screens/export_screen.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flowpaisa/features/cashbooks/presentation/providers/cashbook_provider.dart';
+import 'package:flowpaisa/features/businesses/presentation/providers/business_provider.dart';
 import 'package:flowpaisa/features/backup/presentation/providers/backup_provider.dart';
 
 class DocumentsScreen extends ConsumerStatefulWidget {
@@ -60,7 +60,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
         });
       }
       try {
-        final activeCashbook = ref.read(activeCashbookProvider);
+        final activeCashbook = ref.read(activeBusinessProvider);
         final backupService = ref.read(documentBackupServiceProvider);
         final backup = await backupService.getLatestCloudBackup(activeCashbook.id);
         if (mounted) {
@@ -485,7 +485,7 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
         });
       }
 
-      final activeCashbook = ref.read(activeCashbookProvider);
+      final activeCashbook = ref.read(activeBusinessProvider);
       final backupService = ref.read(documentBackupServiceProvider);
       
       if (kDebugMode) print('[DocumentsScreen] Uploading ZIP backup to Google Drive...');

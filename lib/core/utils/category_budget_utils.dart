@@ -1,4 +1,5 @@
-import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/core/database/database.dart' hide Category;
+import 'package:flowpaisa/features/transactions/domain/models.dart' show Category;
 import 'package:flowpaisa/shared/models/date_range_state.dart';
 
 /// Resolves which budget column applies for [range.type].
