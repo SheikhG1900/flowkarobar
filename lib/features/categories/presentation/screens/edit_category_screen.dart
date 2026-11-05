@@ -369,10 +369,11 @@ class _EditCategoryScreenState extends ConsumerState<EditCategoryScreen> {
                 ),
                 child: GridView.builder(
                   padding: const EdgeInsets.all(12),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 6,
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 56,
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 8,
+                    childAspectRatio: 1,
                   ),
                   itemCount: IconHelper.allIcons.length,
                   itemBuilder: (context, index) {
