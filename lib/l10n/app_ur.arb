@@ -121,6 +121,57 @@
   "minStockAlert": "کم از کم اسٹاک الرٹ",
   "isServiceProduct": "یہ ایک سروس ہے (اسٹاک ٹریکنگ نہیں)",
   "serviceProduct": "سروس",
+  "productDetails": "پروڈکٹ تفصیلات",
+  "onHandStock": "دستیاب اسٹاک",
+  "openLots": "کھلے لاٹس",
+  "inventoryValue": "انوینٹری ویلیو",
+  "lotsSection": "لاٹس",
+  "noLotsYet": "ابھی کوئی لاٹ نہیں",
+  "noOpenLots": "کوئی کھلا لاٹ نہیں",
+  "addManualLot": "مینوئل لاٹ شامل کریں",
+  "manualLotSaved": "لاٹ کامیابی سے شامل ہو گیا",
+  "lotTypeOpening": "اوپننگ",
+  "lotTypeProduction": "پروڈکشن",
+  "lotTypeAdjustment": "ایڈجسٹمنٹ",
+  "lotTypePurchase": "خرید",
+  "lotRemaining": "باقی",
+  "lotConsumed": "استعمال شدہ",
+  "lotUnitCost": "یونٹ لاگت",
+  "lotBatchNumber": "بیچ نمبر",
+  "lotExpiry": "میعاد",
+  "lotManufacture": "تیاری",
+  "lotQuantity": "مقدار",
+  "lotFilterOpen": "کھلے",
+  "lotFilterAll": "سب",
+  "lotFilterConsumed": "ختم",
+  "viewPurchaseOrder": "خرید آرڈر دیکھیں",
+  "receivedOn": "موصول {date}",
+  "@receivedOn": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "fromSupplier": "{name} سے",
+  "@fromSupplier": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "serviceNoStockHint": "سروسز میں اسٹاک یا لاٹ ٹریک نہیں ہوتے",
+  "minStockLabel": "کم از کم الرٹ: {quantity}",
+  "@minStockLabel": {
+    "placeholders": {
+      "quantity": { "type": "String" }
+    }
+  },
+  "ofTotalQty": "{quantity} میں سے",
+  "@ofTotalQty": {
+    "placeholders": {
+      "quantity": { "type": "String" }
+    }
+  },
+  "selectLotType": "لاٹ کی قسم",
+  "effectiveCostLabel": "یونٹ لاگت",
   "@@locale": "ur",
   "refresh": "تازہ کریں",
   "appTitle": "فلوپیسہ",

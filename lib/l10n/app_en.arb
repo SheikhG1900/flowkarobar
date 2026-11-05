@@ -121,6 +121,57 @@
   "minStockAlert": "Min Stock Alert",
   "isServiceProduct": "This is a service (no stock tracking)",
   "serviceProduct": "Service",
+  "productDetails": "Product Details",
+  "onHandStock": "On hand",
+  "openLots": "Open lots",
+  "inventoryValue": "Inventory value",
+  "lotsSection": "Lots",
+  "noLotsYet": "No lots yet",
+  "noOpenLots": "No open lots",
+  "addManualLot": "Add manual lot",
+  "manualLotSaved": "Lot added successfully",
+  "lotTypeOpening": "Opening",
+  "lotTypeProduction": "Production",
+  "lotTypeAdjustment": "Adjustment",
+  "lotTypePurchase": "Purchase",
+  "lotRemaining": "Remaining",
+  "lotConsumed": "Consumed",
+  "lotUnitCost": "Unit cost",
+  "lotBatchNumber": "Batch number",
+  "lotExpiry": "Expiry",
+  "lotManufacture": "Manufacture",
+  "lotQuantity": "Quantity",
+  "lotFilterOpen": "Open",
+  "lotFilterAll": "All",
+  "lotFilterConsumed": "Consumed",
+  "viewPurchaseOrder": "View purchase order",
+  "receivedOn": "Received {date}",
+  "@receivedOn": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "fromSupplier": "From {name}",
+  "@fromSupplier": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "serviceNoStockHint": "Services do not track stock or lots",
+  "minStockLabel": "Min alert: {quantity}",
+  "@minStockLabel": {
+    "placeholders": {
+      "quantity": { "type": "String" }
+    }
+  },
+  "ofTotalQty": "of {quantity}",
+  "@ofTotalQty": {
+    "placeholders": {
+      "quantity": { "type": "String" }
+    }
+  },
+  "selectLotType": "Lot type",
+  "effectiveCostLabel": "Unit cost",
   "@@locale": "en",
   "refresh": "Refresh",
   "appTitle": "FlowKarobar",

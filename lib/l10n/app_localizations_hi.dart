@@ -343,6 +343,107 @@ class AppLocalizationsHi extends AppLocalizations {
   String get serviceProduct => 'सेवा';
 
   @override
+  String get productDetails => 'उत्पाद विवरण';
+
+  @override
+  String get onHandStock => 'उपलब्ध स्टॉक';
+
+  @override
+  String get openLots => 'खुले लॉट';
+
+  @override
+  String get inventoryValue => 'इन्वेंटरी मूल्य';
+
+  @override
+  String get lotsSection => 'लॉट';
+
+  @override
+  String get noLotsYet => 'अभी कोई लॉट नहीं';
+
+  @override
+  String get noOpenLots => 'कोई खुला लॉट नहीं';
+
+  @override
+  String get addManualLot => 'मैन्युअल लॉट जोड़ें';
+
+  @override
+  String get manualLotSaved => 'लॉट सफलतापूर्वक जोड़ा गया';
+
+  @override
+  String get lotTypeOpening => 'ओपनिंग';
+
+  @override
+  String get lotTypeProduction => 'प्रोडक्शन';
+
+  @override
+  String get lotTypeAdjustment => 'एडजस्टमेंट';
+
+  @override
+  String get lotTypePurchase => 'खरीद';
+
+  @override
+  String get lotRemaining => 'शेष';
+
+  @override
+  String get lotConsumed => 'उपयोग हुआ';
+
+  @override
+  String get lotUnitCost => 'यूनिट लागत';
+
+  @override
+  String get lotBatchNumber => 'बैच नंबर';
+
+  @override
+  String get lotExpiry => 'समाप्ति';
+
+  @override
+  String get lotManufacture => 'निर्माण';
+
+  @override
+  String get lotQuantity => 'मात्रा';
+
+  @override
+  String get lotFilterOpen => 'खुले';
+
+  @override
+  String get lotFilterAll => 'सभी';
+
+  @override
+  String get lotFilterConsumed => 'खत्म';
+
+  @override
+  String get viewPurchaseOrder => 'खरीद आदेश देखें';
+
+  @override
+  String receivedOn(String date) {
+    return 'प्राप्ति की तारीख: $date';
+  }
+
+  @override
+  String fromSupplier(String name) {
+    return '$name से';
+  }
+
+  @override
+  String get serviceNoStockHint => 'सेवाओं में स्टॉक या लॉट ट्रैक नहीं होते';
+
+  @override
+  String minStockLabel(String quantity) {
+    return 'न्यूनतम अलर्ट: $quantity';
+  }
+
+  @override
+  String ofTotalQty(String quantity) {
+    return '$quantity में से';
+  }
+
+  @override
+  String get selectLotType => 'लॉट प्रकार';
+
+  @override
+  String get effectiveCostLabel => 'यूनिट लागत';
+
+  @override
   String get refresh => 'ताज़ा करें';
 
   @override
@@ -2658,11 +2759,6 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String paidOn(String date) {
     return 'भुगतान की तारीख: $date';
-  }
-
-  @override
-  String receivedOn(String date) {
-    return 'प्राप्ति की तारीख: $date';
   }
 
   @override

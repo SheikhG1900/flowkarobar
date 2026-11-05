@@ -6,10 +6,12 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/inventory/presentation/providers/inventory_provider.dart';
 import 'package:flowpaisa/features/inventory/presentation/screens/add_product_screen.dart';
+import 'package:flowpaisa/features/inventory/presentation/screens/product_details_screen.dart';
 import 'package:flowpaisa/features/orders/presentation/widgets/order_entity_pickers.dart';
 import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
+import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 /// Sentinel filter value for products with no category.
@@ -26,46 +28,19 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
   /// `null` = all categories.
   String? _categoryFilter;
 
-  Future<bool> _confirmDelete(
-    BuildContext context,
-    Product product,
-  ) async {
+  /// Called after [SwipeableListItem] (or hover pill) already confirmed delete.
+  Future<void> _deleteProduct(Product product) async {
     final l10n = AppLocalizations.of(context)!;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.deleteProduct),
-        content: Text(l10n.deleteProductConfirm(product.name)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.cancel),
-          ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
-            ),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return false;
-
     try {
       await ref.read(inventoryRepositoryProvider).deleteProduct(product.uuid);
-      if (context.mounted) {
+      if (mounted) {
         ToastUtils.showSuccessToast(context, ref, l10n.productDeleted);
       }
-      return true;
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ToastUtils.showErrorToast(
             context, ref, l10n.errorOccurred(e.toString()));
       }
-      return false;
     }
   }
 
@@ -74,6 +49,16 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => AddProductScreen(existing: product),
+      ),
+    );
+  }
+
+  void _openDetails(Product product) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+            ProductDetailsScreen(productUuid: product.uuid),
       ),
     );
   }
@@ -226,32 +211,28 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                               ? null
                               : categoriesById[product.categoryUuid];
 
+                          final accent = parseCategoryColor(
+                            category?.color,
+                            AppColors.incomeColor,
+                          );
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 12),
-                            child: Dismissible(
-                              key: ValueKey(product.uuid),
-                              direction: DismissDirection.endToStart,
-                              confirmDismiss: (_) =>
-                                  _confirmDelete(context, product),
-                              background: Container(
-                                alignment: AlignmentDirectional.centerEnd,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 24),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.error,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Icon(
-                                  Icons.delete_outline,
-                                  color: theme.colorScheme.onError,
-                                ),
-                              ),
+                            child: SwipeableListItem(
+                              key: ValueKey('product-swipe-${product.uuid}'),
+                              enableEdit: true,
+                              enableDelete: true,
+                              editBackgroundColor: accent,
+                              deleteBackgroundColor: AppColors.error,
+                              borderRadius: 20,
+                              confirmTitle: l10n.deleteProduct,
+                              confirmMessage:
+                                  l10n.deleteProductConfirm(product.name),
+                              onEdit: () => _openEditor(product: product),
+                              onDelete: () => _deleteProduct(product),
                               child: _ProductCard(
                                 product: product,
                                 category: category,
-                                onTap: () => _openEditor(product: product),
-                                onLongPress: () =>
-                                    _confirmDelete(context, product),
+                                onTap: () => _openDetails(product),
                               ),
                             ),
                           );
@@ -459,13 +440,11 @@ class _ProductCard extends StatelessWidget {
   final Product product;
   final ProductCategory? category;
   final VoidCallback onTap;
-  final VoidCallback onLongPress;
 
   const _ProductCard({
     required this.product,
     required this.category,
     required this.onTap,
-    required this.onLongPress,
   });
 
   @override
@@ -491,7 +470,6 @@ class _ProductCard extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: onTap,
-          onLongPress: onLongPress,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(

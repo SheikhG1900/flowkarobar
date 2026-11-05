@@ -748,6 +748,192 @@ abstract class AppLocalizations {
   /// **'Service'**
   String get serviceProduct;
 
+  /// No description provided for @productDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Details'**
+  String get productDetails;
+
+  /// No description provided for @onHandStock.
+  ///
+  /// In en, this message translates to:
+  /// **'On hand'**
+  String get onHandStock;
+
+  /// No description provided for @openLots.
+  ///
+  /// In en, this message translates to:
+  /// **'Open lots'**
+  String get openLots;
+
+  /// No description provided for @inventoryValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory value'**
+  String get inventoryValue;
+
+  /// No description provided for @lotsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Lots'**
+  String get lotsSection;
+
+  /// No description provided for @noLotsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No lots yet'**
+  String get noLotsYet;
+
+  /// No description provided for @noOpenLots.
+  ///
+  /// In en, this message translates to:
+  /// **'No open lots'**
+  String get noOpenLots;
+
+  /// No description provided for @addManualLot.
+  ///
+  /// In en, this message translates to:
+  /// **'Add manual lot'**
+  String get addManualLot;
+
+  /// No description provided for @manualLotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Lot added successfully'**
+  String get manualLotSaved;
+
+  /// No description provided for @lotTypeOpening.
+  ///
+  /// In en, this message translates to:
+  /// **'Opening'**
+  String get lotTypeOpening;
+
+  /// No description provided for @lotTypeProduction.
+  ///
+  /// In en, this message translates to:
+  /// **'Production'**
+  String get lotTypeProduction;
+
+  /// No description provided for @lotTypeAdjustment.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjustment'**
+  String get lotTypeAdjustment;
+
+  /// No description provided for @lotTypePurchase.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase'**
+  String get lotTypePurchase;
+
+  /// No description provided for @lotRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get lotRemaining;
+
+  /// No description provided for @lotConsumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumed'**
+  String get lotConsumed;
+
+  /// No description provided for @lotUnitCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit cost'**
+  String get lotUnitCost;
+
+  /// No description provided for @lotBatchNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch number'**
+  String get lotBatchNumber;
+
+  /// No description provided for @lotExpiry.
+  ///
+  /// In en, this message translates to:
+  /// **'Expiry'**
+  String get lotExpiry;
+
+  /// No description provided for @lotManufacture.
+  ///
+  /// In en, this message translates to:
+  /// **'Manufacture'**
+  String get lotManufacture;
+
+  /// No description provided for @lotQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get lotQuantity;
+
+  /// No description provided for @lotFilterOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get lotFilterOpen;
+
+  /// No description provided for @lotFilterAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get lotFilterAll;
+
+  /// No description provided for @lotFilterConsumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumed'**
+  String get lotFilterConsumed;
+
+  /// No description provided for @viewPurchaseOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'View purchase order'**
+  String get viewPurchaseOrder;
+
+  /// No description provided for @receivedOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Received on: {date}'**
+  String receivedOn(String date);
+
+  /// No description provided for @fromSupplier.
+  ///
+  /// In en, this message translates to:
+  /// **'From {name}'**
+  String fromSupplier(String name);
+
+  /// No description provided for @serviceNoStockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Services do not track stock or lots'**
+  String get serviceNoStockHint;
+
+  /// No description provided for @minStockLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Min alert: {quantity}'**
+  String minStockLabel(String quantity);
+
+  /// No description provided for @ofTotalQty.
+  ///
+  /// In en, this message translates to:
+  /// **'of {quantity}'**
+  String ofTotalQty(String quantity);
+
+  /// No description provided for @selectLotType.
+  ///
+  /// In en, this message translates to:
+  /// **'Lot type'**
+  String get selectLotType;
+
+  /// No description provided for @effectiveCostLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit cost'**
+  String get effectiveCostLabel;
+
   /// No description provided for @refresh.
   ///
   /// In en, this message translates to:
@@ -4935,12 +5121,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Paid on: {date}'**
   String paidOn(String date);
-
-  /// No description provided for @receivedOn.
-  ///
-  /// In en, this message translates to:
-  /// **'Received on: {date}'**
-  String receivedOn(String date);
 
   /// No description provided for @deleteTransactionTitle.
   ///

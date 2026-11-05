@@ -343,6 +343,107 @@ class AppLocalizationsUr extends AppLocalizations {
   String get serviceProduct => 'سروس';
 
   @override
+  String get productDetails => 'پروڈکٹ تفصیلات';
+
+  @override
+  String get onHandStock => 'دستیاب اسٹاک';
+
+  @override
+  String get openLots => 'کھلے لاٹس';
+
+  @override
+  String get inventoryValue => 'انوینٹری ویلیو';
+
+  @override
+  String get lotsSection => 'لاٹس';
+
+  @override
+  String get noLotsYet => 'ابھی کوئی لاٹ نہیں';
+
+  @override
+  String get noOpenLots => 'کوئی کھلا لاٹ نہیں';
+
+  @override
+  String get addManualLot => 'مینوئل لاٹ شامل کریں';
+
+  @override
+  String get manualLotSaved => 'لاٹ کامیابی سے شامل ہو گیا';
+
+  @override
+  String get lotTypeOpening => 'اوپننگ';
+
+  @override
+  String get lotTypeProduction => 'پروڈکشن';
+
+  @override
+  String get lotTypeAdjustment => 'ایڈجسٹمنٹ';
+
+  @override
+  String get lotTypePurchase => 'خرید';
+
+  @override
+  String get lotRemaining => 'باقی';
+
+  @override
+  String get lotConsumed => 'استعمال شدہ';
+
+  @override
+  String get lotUnitCost => 'یونٹ لاگت';
+
+  @override
+  String get lotBatchNumber => 'بیچ نمبر';
+
+  @override
+  String get lotExpiry => 'میعاد';
+
+  @override
+  String get lotManufacture => 'تیاری';
+
+  @override
+  String get lotQuantity => 'مقدار';
+
+  @override
+  String get lotFilterOpen => 'کھلے';
+
+  @override
+  String get lotFilterAll => 'سب';
+
+  @override
+  String get lotFilterConsumed => 'ختم';
+
+  @override
+  String get viewPurchaseOrder => 'خرید آرڈر دیکھیں';
+
+  @override
+  String receivedOn(String date) {
+    return 'وصولی کی تاریخ: $date';
+  }
+
+  @override
+  String fromSupplier(String name) {
+    return '$name سے';
+  }
+
+  @override
+  String get serviceNoStockHint => 'سروسز میں اسٹاک یا لاٹ ٹریک نہیں ہوتے';
+
+  @override
+  String minStockLabel(String quantity) {
+    return 'کم از کم الرٹ: $quantity';
+  }
+
+  @override
+  String ofTotalQty(String quantity) {
+    return '$quantity میں سے';
+  }
+
+  @override
+  String get selectLotType => 'لاٹ کی قسم';
+
+  @override
+  String get effectiveCostLabel => 'یونٹ لاگت';
+
+  @override
   String get refresh => 'تازہ کریں';
 
   @override
@@ -2664,11 +2765,6 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String paidOn(String date) {
     return 'ادائیگی کی تاریخ: $date';
-  }
-
-  @override
-  String receivedOn(String date) {
-    return 'وصولی کی تاریخ: $date';
   }
 
   @override

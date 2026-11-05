@@ -345,6 +345,107 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serviceProduct => 'Service';
 
   @override
+  String get productDetails => 'Product Details';
+
+  @override
+  String get onHandStock => 'On hand';
+
+  @override
+  String get openLots => 'Open lots';
+
+  @override
+  String get inventoryValue => 'Inventory value';
+
+  @override
+  String get lotsSection => 'Lots';
+
+  @override
+  String get noLotsYet => 'No lots yet';
+
+  @override
+  String get noOpenLots => 'No open lots';
+
+  @override
+  String get addManualLot => 'Add manual lot';
+
+  @override
+  String get manualLotSaved => 'Lot added successfully';
+
+  @override
+  String get lotTypeOpening => 'Opening';
+
+  @override
+  String get lotTypeProduction => 'Production';
+
+  @override
+  String get lotTypeAdjustment => 'Adjustment';
+
+  @override
+  String get lotTypePurchase => 'Purchase';
+
+  @override
+  String get lotRemaining => 'Remaining';
+
+  @override
+  String get lotConsumed => 'Consumed';
+
+  @override
+  String get lotUnitCost => 'Unit cost';
+
+  @override
+  String get lotBatchNumber => 'Batch number';
+
+  @override
+  String get lotExpiry => 'Expiry';
+
+  @override
+  String get lotManufacture => 'Manufacture';
+
+  @override
+  String get lotQuantity => 'Quantity';
+
+  @override
+  String get lotFilterOpen => 'Open';
+
+  @override
+  String get lotFilterAll => 'All';
+
+  @override
+  String get lotFilterConsumed => 'Consumed';
+
+  @override
+  String get viewPurchaseOrder => 'View purchase order';
+
+  @override
+  String receivedOn(String date) {
+    return 'Received on: $date';
+  }
+
+  @override
+  String fromSupplier(String name) {
+    return 'From $name';
+  }
+
+  @override
+  String get serviceNoStockHint => 'Services do not track stock or lots';
+
+  @override
+  String minStockLabel(String quantity) {
+    return 'Min alert: $quantity';
+  }
+
+  @override
+  String ofTotalQty(String quantity) {
+    return 'of $quantity';
+  }
+
+  @override
+  String get selectLotType => 'Lot type';
+
+  @override
+  String get effectiveCostLabel => 'Unit cost';
+
+  @override
   String get refresh => 'Refresh';
 
   @override
@@ -2651,11 +2752,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String paidOn(String date) {
     return 'Paid on: $date';
-  }
-
-  @override
-  String receivedOn(String date) {
-    return 'Received on: $date';
   }
 
   @override

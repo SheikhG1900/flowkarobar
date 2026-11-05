@@ -10,14 +10,47 @@ Implemented in the current stage (see code):
 - **Manual lot cost change**: if `consumed > 0`, auto-split remaining into a new lot (`total` capped to `consumed` on the old lot).
 - **`order_items.receivedQuantity`** for partial receives.
 - **`product_batches.shipmentLineUuid`** (null when `isManual`); **`sourceLotUuid`** after cost split.
+- **Product details** screen (`ProductDetailsScreen`): hero + on-hand / open-lots / inventory value; lot list with Open/All/Consumed filters; group by `batchNumber`; manual-lot sheet; purchase lot → PO # / supplier / received date + deep link to order detail; list tap opens details (edit from app bar).
 
 ## Deferred (not in this stage)
+
+### Product details — remaining Phase C (polish / lineage)
+
+Done already on the details screen: inventory value (Σ remaining × `effectiveCost`), Open/All/Consumed chips, lots ordered FEFO via `watchBatchesForProduct` (expiry then `createdAt`).
+
+Still to do later:
+
+- **Expiry-soon filter**
+  - Chip or segment alongside Open / All / Consumed (e.g. “Expiring” within N days; reuse same threshold as `watchExpiringSoonBatches`, default 60).
+  - Highlight / sort those lots first; keep warning accent on expiry already used on cards.
+- **Cost-split lineage (`sourceLotUuid`)**
+  - When a manual cost change splits a lot, show “Split from …” on the new lot (batch # / short id / unit cost of parent).
+  - Optional: tap parent to scroll/focus that lot, or a small lineage sheet (parent → children).
+  - Do **not** allow editing purchase-lot cost from this UI; lineage is read-only context for manual splits only.
+- **Consumed section UX**
+  - Optional collapsible “Fully consumed” block when filter is All (instead of mixing open + empty in one flat list).
+  - Keep default filter = Open so day-to-day stock stays uncluttered.
+- **Batch-group summary row**
+  - Under each `batchNumber` header: sum remaining qty + inventory value for lots in that group (handy when one label spans many shipment lots).
+
+### Product details — Phase D (catalogs & outbound history)
+
+Depends on catalogs existing as sellable pools (not product master prices).
+
+- **Catalog memberships**
+  - Section on product details: which catalogs include this product / which of its lots are pooled.
+  - Per membership: catalog name, sell price(s), consume strategy (FEFO / FIFO / short-expiry pool), link to catalog screen.
+  - Empty state: “Not in any catalog yet” + CTA once catalog create/edit exists.
+- **Sales-out / consumption history**
+  - Per lot (or product): which sale orders / return lines consumed qty (from FEFO allocations / order items with `batchUuid`).
+  - Show date, order #, qty, customer; deep link to sale order detail.
+  - Helps 360° view beyond inbound PO/receipt (Phase B already covers inbound).
+- **Do not** put retail/wholesale or “add to sale” CTAs on product details until catalogs own selling; product remains inventory identity + lots.
 
 ### Product master vs catalogs vs lots
 - **Add/Edit Product** stays identity-only (name, SKU, unit, category, service, min-stock alert).
 - **Sell prices** live on **catalogs** (virtual pools): a catalog groups selected lots (or product+strategy) with its own prices and its own consume policy (FEFO / FIFO / short-expiry pool vs normal), separate from other catalogs’ lots.
 - Same physical product can appear in multiple catalogs at different prices; consumption for a sale uses that catalog’s lot subset + strategy — not the global product FEFO pool alone.
-- **Product details** screen (future): rich view of all lots, receipts, on-hand, catalog memberships.
 
 ### Partial-receive UI
 - Dedicated “Receive shipment” screen: pick qty per open PO line, batch/expiry per line, multiple receipts against one PO.

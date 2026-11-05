@@ -104,6 +104,13 @@ class InventoryRepository {
         .getSingleOrNull();
   }
 
+  Stream<Product?> watchProduct(String uuid) {
+    return (_db.select(_db.products)
+          ..where((p) => p.uuid.equals(uuid) & p.isDeleted.equals(false)))
+        .watch()
+        .map((rows) => rows.isEmpty ? null : rows.first);
+  }
+
   Future<ProductCategory?> getCategory(String uuid) {
     return (_db.select(_db.productCategories)
           ..where((c) => c.uuid.equals(uuid) & c.isDeleted.equals(false)))
@@ -193,6 +200,72 @@ class InventoryRepository {
     return (_db.select(_db.productBatches)
           ..where((b) => b.uuid.equals(uuid) & b.isDeleted.equals(false)))
         .getSingleOrNull();
+  }
+
+  /// Resolves PO + supplier + receipt date for a purchase lot.
+  Future<LotPurchaseContext?> getLotPurchaseContext(ProductBatche lot) async {
+    if (lot.isManual) return null;
+    final orderItemId = lot.orderItemUuid;
+    if (orderItemId == null || orderItemId.isEmpty) return null;
+
+    final item = await (_db.select(_db.orderItems)
+          ..where(
+              (oi) => oi.uuid.equals(orderItemId) & oi.isDeleted.equals(false)))
+        .getSingleOrNull();
+    if (item == null) return null;
+
+    final order = await (_db.select(_db.orders)
+          ..where(
+              (o) => o.uuid.equals(item.orderUuid) & o.isDeleted.equals(false)))
+        .getSingleOrNull();
+    if (order == null) return null;
+
+    String? supplierName;
+    final contactUuid = order.contactUuid;
+    if (contactUuid != null && contactUuid.isNotEmpty) {
+      final contact = await (_db.select(_db.contacts)
+            ..where((c) =>
+                c.uuid.equals(contactUuid) & c.isDeleted.equals(false)))
+          .getSingleOrNull();
+      supplierName = contact?.name;
+    }
+
+    DateTime? receivedAt;
+    final shipmentLineId = lot.shipmentLineUuid;
+    if (shipmentLineId != null && shipmentLineId.isNotEmpty) {
+      final line = await (_db.select(_db.goodsReceiptLines)
+            ..where((l) =>
+                l.uuid.equals(shipmentLineId) & l.isDeleted.equals(false)))
+          .getSingleOrNull();
+      if (line != null) {
+        final receipt = await (_db.select(_db.goodsReceipts)
+              ..where((r) =>
+                  r.uuid.equals(line.receiptUuid) &
+                  r.isDeleted.equals(false)))
+            .getSingleOrNull();
+        receivedAt = receipt?.receivedAt;
+      }
+    }
+
+    return LotPurchaseContext(
+      orderUuid: order.uuid,
+      orderNumber: order.orderNumber,
+      orderDate: order.orderDate,
+      supplierName: supplierName,
+      receivedAt: receivedAt,
+    );
+  }
+
+  Future<Map<String, LotPurchaseContext>> getLotPurchaseContexts(
+    Iterable<ProductBatche> lots,
+  ) async {
+    final map = <String, LotPurchaseContext>{};
+    for (final lot in lots) {
+      if (lot.isManual) continue;
+      final ctx = await getLotPurchaseContext(lot);
+      if (ctx != null) map[lot.uuid] = ctx;
+    }
+    return map;
   }
 
   /// Recomputes [Product.stockQuantity] from sum of lot remainings.

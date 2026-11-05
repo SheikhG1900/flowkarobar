@@ -121,6 +121,57 @@
   "minStockAlert": "न्यूनतम स्टॉक अलर्ट",
   "isServiceProduct": "यह एक सेवा है (स्टॉक ट्रैकिंग नहीं)",
   "serviceProduct": "सेवा",
+  "productDetails": "उत्पाद विवरण",
+  "onHandStock": "उपलब्ध स्टॉक",
+  "openLots": "खुले लॉट",
+  "inventoryValue": "इन्वेंटरी मूल्य",
+  "lotsSection": "लॉट",
+  "noLotsYet": "अभी कोई लॉट नहीं",
+  "noOpenLots": "कोई खुला लॉट नहीं",
+  "addManualLot": "मैन्युअल लॉट जोड़ें",
+  "manualLotSaved": "लॉट सफलतापूर्वक जोड़ा गया",
+  "lotTypeOpening": "ओपनिंग",
+  "lotTypeProduction": "प्रोडक्शन",
+  "lotTypeAdjustment": "एडजस्टमेंट",
+  "lotTypePurchase": "खरीद",
+  "lotRemaining": "शेष",
+  "lotConsumed": "उपयोग हुआ",
+  "lotUnitCost": "यूनिट लागत",
+  "lotBatchNumber": "बैच नंबर",
+  "lotExpiry": "समाप्ति",
+  "lotManufacture": "निर्माण",
+  "lotQuantity": "मात्रा",
+  "lotFilterOpen": "खुले",
+  "lotFilterAll": "सभी",
+  "lotFilterConsumed": "खत्म",
+  "viewPurchaseOrder": "खरीद आदेश देखें",
+  "receivedOn": "प्राप्त {date}",
+  "@receivedOn": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "fromSupplier": "{name} से",
+  "@fromSupplier": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "serviceNoStockHint": "सेवाओं में स्टॉक या लॉट ट्रैक नहीं होते",
+  "minStockLabel": "न्यूनतम अलर्ट: {quantity}",
+  "@minStockLabel": {
+    "placeholders": {
+      "quantity": { "type": "String" }
+    }
+  },
+  "ofTotalQty": "{quantity} में से",
+  "@ofTotalQty": {
+    "placeholders": {
+      "quantity": { "type": "String" }
+    }
+  },
+  "selectLotType": "लॉट प्रकार",
+  "effectiveCostLabel": "यूनिट लागत",
   "@@locale": "hi",
   "refresh": "ताज़ा करें",
   "appTitle": "फ्लोपैसा",
