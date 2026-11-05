@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/inventory/data/inventory_repository.dart';
 import 'package:flowpaisa/features/inventory/domain/batch_models.dart';
+import 'package:flowpaisa/features/inventory/domain/order_costing.dart';
 import 'package:uuid/uuid.dart';
 
 class OrdersRepository {
@@ -103,9 +104,23 @@ class OrdersRepository {
     });
   }
 
-  Future<void> markDelivered(String orderUuid) async {
+  /// Marks sale delivered (FEFO consume) or receives remaining purchase qty.
+  Future<void> markDelivered(
+    String orderUuid, {
+    double freightAmount = 0,
+    double dutyAmount = 0,
+  }) async {
     final order = await getOrder(orderUuid);
     if (order == null || order.deliveryStatus == 'DELIVERED') return;
+
+    if (order.orderType == 'PURCHASE') {
+      await _receiveRemainingPurchase(
+        orderUuid: orderUuid,
+        freightAmount: freightAmount,
+        dutyAmount: dutyAmount,
+      );
+      return;
+    }
 
     await _db.transaction(() async {
       final items = await (_db.select(_db.orderItems)
@@ -114,27 +129,7 @@ class OrdersRepository {
           .get();
 
       if (order.deliveryStatus != 'SHIPPED') {
-        await _applyStockForItems(
-          isSale: order.orderType == 'SALE',
-          items: items
-              .map(
-                (i) => OrderItemsCompanion(
-                  uuid: Value(i.uuid),
-                  orderUuid: Value(i.orderUuid),
-                  productUuid: Value(i.productUuid),
-                  productNameSnapshot: Value(i.productNameSnapshot),
-                  quantity: Value(i.quantity),
-                  unitPrice: Value(i.unitPrice),
-                  discountAmount: Value(i.discountAmount),
-                  taxRate: Value(i.taxRate),
-                  batchUuid: Value(i.batchUuid),
-                  purchasePriceSnapshot: Value(i.purchasePriceSnapshot),
-                  unit: Value(i.unit),
-                ),
-              )
-              .toList(),
-          updateExistingItems: true,
-        );
+        await _applySaleStock(items);
       }
 
       await (_db.update(_db.orders)..where((o) => o.uuid.equals(orderUuid)))
@@ -191,12 +186,48 @@ class OrdersRepository {
     required List<OrderItemsCompanion> items,
     required double paymentAmount,
     required String? accountUuid,
+    double freightAmount = 0,
+    double dutyAmount = 0,
   }) async {
     await _db.transaction(() async {
       final uuid = order.uuid.present ? order.uuid.value : const Uuid().v4();
       final isSale = order.orderType.value == 'SALE';
       final appliesStock = order.deliveryStatus.value == 'DELIVERED' ||
           order.deliveryStatus.value == 'SHIPPED';
+
+      // Stamp planned unit costs (discounts only; freight applied at receive).
+      final costInputs = items
+          .map(
+            (i) => OrderLineCostInput(
+              id: i.uuid.present ? i.uuid.value : const Uuid().v4(),
+              quantity: i.quantity.value,
+              unitPrice: i.unitPrice.value,
+              lineDiscount:
+                  i.discountAmount.present ? i.discountAmount.value : 0,
+            ),
+          )
+          .toList();
+      // Ensure uuids exist on companions before insert
+      final itemsWithIds = <OrderItemsCompanion>[];
+      for (var i = 0; i < items.length; i++) {
+        final item = items[i];
+        final itemUuid = item.uuid.present ? item.uuid.value : costInputs[i].id;
+        itemsWithIds.add(item.copyWith(uuid: Value(itemUuid)));
+      }
+      final planned = computePlannedUnitCosts(
+        lines: [
+          for (final i in itemsWithIds)
+            OrderLineCostInput(
+              id: i.uuid.value,
+              quantity: i.quantity.value,
+              unitPrice: i.unitPrice.value,
+              lineDiscount:
+                  i.discountAmount.present ? i.discountAmount.value : 0,
+            ),
+        ],
+        orderDiscount:
+            order.discountAmount.present ? order.discountAmount.value : 0,
+      );
 
       await _db.into(_db.orders).insert(
             order.copyWith(
@@ -205,25 +236,33 @@ class OrdersRepository {
             ),
           );
 
-      final insertedItems = <OrderItemsCompanion>[];
-      for (final item in items) {
-        final itemUuid =
-            item.uuid.present ? item.uuid.value : const Uuid().v4();
+      final inserted = <OrderItem>[];
+      for (final item in itemsWithIds) {
+        final plannedCost = planned[item.uuid.value] ?? item.unitPrice.value;
         final companion = item.copyWith(
-          uuid: Value(itemUuid),
           orderUuid: Value(uuid),
+          purchasePriceSnapshot: Value(plannedCost),
+          receivedQuantity: const Value(0.0),
           isNotSynced: const Value(true),
         );
         await _db.into(_db.orderItems).insert(companion);
-        insertedItems.add(companion);
+        inserted.add(
+          await (_db.select(_db.orderItems)
+                ..where((oi) => oi.uuid.equals(item.uuid.value)))
+              .getSingle(),
+        );
       }
 
       if (appliesStock) {
-        await _applyStockForItems(
-          isSale: isSale,
-          items: insertedItems,
-          updateExistingItems: true,
-        );
+        if (isSale) {
+          await _applySaleStock(inserted);
+        } else {
+          await _receiveRemainingPurchase(
+            orderUuid: uuid,
+            freightAmount: freightAmount,
+            dutyAmount: dutyAmount,
+          );
+        }
       }
 
       if (paymentAmount > 0 && accountUuid != null) {
@@ -250,116 +289,80 @@ class OrdersRepository {
     });
   }
 
-  /// Applies lot receive (purchase) or FEFO consume (sale) and stamps COGS.
-  Future<void> _applyStockForItems({
-    required bool isSale,
-    required List<OrderItemsCompanion> items,
-    required bool updateExistingItems,
+  Future<void> _receiveRemainingPurchase({
+    required String orderUuid,
+    double freightAmount = 0,
+    double dutyAmount = 0,
   }) async {
-    for (final item in items) {
-      final productUuid = item.productUuid.value;
-      final qty = item.quantity.value;
-      final itemUuid = item.uuid.value;
+    final items = await (_db.select(_db.orderItems)
+          ..where((oi) =>
+              oi.orderUuid.equals(orderUuid) & oi.isDeleted.equals(false)))
+        .get();
 
-      // Skip services
-      final product = await _inventory.getProduct(productUuid);
+    final lines = <ReceiveLineInput>[];
+    for (final item in items) {
+      final product = await _inventory.getProduct(item.productUuid);
+      if (product == null || product.isService) continue;
+      final open = item.quantity - item.receivedQuantity;
+      if (open <= 1e-9) continue;
+      lines.add(
+        ReceiveLineInput(
+          orderItemUuid: item.uuid,
+          quantity: open,
+        ),
+      );
+    }
+    if (lines.isEmpty) return;
+
+    await _inventory.receivePurchaseShipment(
+      orderUuid: orderUuid,
+      lines: lines,
+      freightAmount: freightAmount,
+      dutyAmount: dutyAmount,
+    );
+  }
+
+  Future<void> _applySaleStock(List<OrderItem> items) async {
+    for (final item in items) {
+      final product = await _inventory.getProduct(item.productUuid);
       if (product == null || product.isService) continue;
 
-      if (isSale) {
-        String? batchUuid = item.batchUuid.present ? item.batchUuid.value : null;
-        double cogs = item.purchasePriceSnapshot.present
-            ? item.purchasePriceSnapshot.value
-            : 0.0;
+      String? batchUuid = item.batchUuid;
+      double cogs = item.purchasePriceSnapshot;
 
-        if (batchUuid != null) {
-          final batch = await _inventory.getBatch(batchUuid);
-          if (batch == null) {
-            throw StateError('Batch not found: $batchUuid');
-          }
-          await _inventory.consumeFromBatch(
-            batchUuid: batchUuid,
-            quantity: qty,
-          );
-          cogs = batch.effectiveCost;
-        } else {
-          final allocations = await _inventory.consumeFefo(
-            productUuid: productUuid,
-            quantity: qty,
-          );
-          if (allocations.isEmpty) continue;
-          batchUuid = allocations.first.batchUuid;
-          final costSum = allocations.fold<double>(
-            0,
-            (s, a) => s + a.quantity * a.effectiveCost,
-          );
-          cogs = costSum / qty;
+      if (batchUuid != null) {
+        final batch = await _inventory.getBatch(batchUuid);
+        if (batch == null) {
+          throw StateError('Batch not found: $batchUuid');
         }
-
-        if (updateExistingItems) {
-          await (_db.update(_db.orderItems)
-                ..where((oi) => oi.uuid.equals(itemUuid)))
-              .write(
-            OrderItemsCompanion(
-              batchUuid: Value(batchUuid),
-              purchasePriceSnapshot: Value(cogs),
-              isNotSynced: const Value(true),
-              updatedAt: Value(DateTime.now()),
-            ),
-          );
-        }
-      } else {
-        // Purchase receive → new non-manual lot; stamp unit price as effectiveCost
-        final unitCost = item.unitPrice.value;
-        String? batchUuid = item.batchUuid.present ? item.batchUuid.value : null;
-
-        if (batchUuid == null) {
-          batchUuid = await _inventory.receiveIntoBatch(
-            productUuid: productUuid,
-            quantity: qty,
-            effectiveCost: unitCost,
-            isManual: false,
-          );
-        } else {
-          // Existing batch specified: increase total (rare path)
-          final batch = await _inventory.getBatch(batchUuid);
-          if (batch == null) {
-            throw StateError('Batch not found: $batchUuid');
-          }
-          await (_db.update(_db.productBatches)
-                ..where((b) => b.uuid.equals(batchUuid!)))
-              .write(
-            ProductBatchesCompanion(
-              totalQuantity: Value(batch.totalQuantity + qty),
-              effectiveCost: Value(unitCost),
-              isNotSynced: const Value(true),
-              updatedAt: Value(DateTime.now()),
-            ),
-          );
-          await _inventory.refreshProductStockCache(productUuid);
-        }
-
-        await (_db.update(_db.products)..where((p) => p.uuid.equals(productUuid)))
-            .write(
-          ProductsCompanion(
-            purchasePrice: Value(unitCost),
-            isNotSynced: const Value(true),
-            updatedAt: Value(DateTime.now()),
-          ),
+        await _inventory.consumeFromBatch(
+          batchUuid: batchUuid,
+          quantity: item.quantity,
         );
-
-        if (updateExistingItems) {
-          await (_db.update(_db.orderItems)
-                ..where((oi) => oi.uuid.equals(itemUuid)))
-              .write(
-            OrderItemsCompanion(
-              batchUuid: Value(batchUuid),
-              purchasePriceSnapshot: Value(unitCost),
-              isNotSynced: const Value(true),
-              updatedAt: Value(DateTime.now()),
-            ),
-          );
-        }
+        cogs = batch.effectiveCost;
+      } else {
+        final allocations = await _inventory.consumeFefo(
+          productUuid: item.productUuid,
+          quantity: item.quantity,
+        );
+        if (allocations.isEmpty) continue;
+        batchUuid = allocations.first.batchUuid;
+        final costSum = allocations.fold<double>(
+          0,
+          (s, a) => s + a.quantity * a.effectiveCost,
+        );
+        cogs = costSum / item.quantity;
       }
+
+      await (_db.update(_db.orderItems)..where((oi) => oi.uuid.equals(item.uuid)))
+          .write(
+        OrderItemsCompanion(
+          batchUuid: Value(batchUuid),
+          purchasePriceSnapshot: Value(cogs),
+          isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     }
   }
 
@@ -404,7 +407,6 @@ class OrdersRepository {
         final qty = item.quantity.value;
 
         if (isSaleReturn) {
-          // Customer returns goods → restore onto lot (or OPENING-like if unknown)
           if (batchUuid != null) {
             await _inventory.restoreToBatch(
               batchUuid: batchUuid,
@@ -421,7 +423,6 @@ class OrdersRepository {
             );
           }
         } else {
-          // Purchase return → consume from lot
           if (batchUuid != null) {
             await _inventory.consumeFromBatch(
               batchUuid: batchUuid,
@@ -459,10 +460,6 @@ class OrdersRepository {
       }
     });
   }
-
-  // ==========================================
-  // Standalone Payments & Collections
-  // ==========================================
 
   Future<void> recordLedgerSettlement({
     required String contactUuid,

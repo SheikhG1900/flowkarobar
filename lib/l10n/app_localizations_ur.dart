@@ -215,6 +215,19 @@ class AppLocalizationsUr extends AppLocalizations {
   String get orderMarkedDelivered => 'آرڈر ڈیلیور شدہ نشان زد ہو گیا';
 
   @override
+  String get inboundFreight => 'آمدنی کرایہ';
+
+  @override
+  String get importDuty => 'امپورٹ ڈیوٹی';
+
+  @override
+  String get landedCostHint =>
+      'اختیاری۔ اس رسید کی انوینٹری یونٹ لاگت میں شامل ہوگا۔';
+
+  @override
+  String get receiveShipment => 'شپمنٹ وصول کریں';
+
+  @override
   String get shareInvoice => 'انوائس شیئر کریں';
 
   @override
@@ -270,6 +283,25 @@ class AppLocalizationsUr extends AppLocalizations {
   String get sku => 'ایس کے یو';
 
   @override
+  String get scanSkuTitle => 'SKU اسکین کریں';
+
+  @override
+  String get scanSkuHint => 'کیمرہ بارکوڈ یا QR کوڈ پر لگائیں';
+
+  @override
+  String get scanSkuTorch => 'ٹارچ';
+
+  @override
+  String get scanSkuUnavailable =>
+      'بارکوڈ اسکیننگ فون پر دستیاب ہے۔ یہاں SKU دستی درج کریں۔';
+
+  @override
+  String get scanSkuReplaceConfirm => 'موجودہ SKU کو اسکین شدہ کوڈ سے بدلیں؟';
+
+  @override
+  String get scanSkuTooltip => 'بارکوڈ یا QR اسکین کریں';
+
+  @override
   String get unit => 'یونٹ';
 
   @override
@@ -292,6 +324,14 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get currentStockHint => 'خرید، فروخت اور اسٹاک ایڈجسٹمنٹ سے منظم';
+
+  @override
+  String get productMasterHint =>
+      'صرف شناخت — اسٹاک لاٹس/خرید سے؛ قیمتیں بعد میں کیٹلاگ سے';
+
+  @override
+  String get productStockManagedElsewhere =>
+      'موجودہ اسٹاک لاٹس اور خرید رسیدوں سے آتا ہے';
 
   @override
   String get minStockAlert => 'کم از کم اسٹاک الرٹ';

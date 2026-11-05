@@ -82,7 +82,8 @@ class Products extends Table {
 }
 
 /// Inventory lots. Remaining qty = [totalQuantity] - [consumedQuantity].
-/// Purchase lots: [isManual]=false. Manual lots: [isManual]=true + [manualType].
+/// Purchase: 1 lot ↔ 1 [GoodsReceiptLines] row. Manual: [isManual]=true + [manualType].
+/// [batchNumber] is a label; multiple lots may share it (UI groups them).
 class ProductBatches extends Table {
   TextColumn get uuid => text()();
   TextColumn get productUuid => text().references(Products, #uuid)();
@@ -94,13 +95,23 @@ class ProductBatches extends Table {
   /// Qty consumed from this lot (sales, purchase returns, write-offs).
   RealColumn get consumedQuantity => real().withDefault(const Constant(0.0))();
 
-  /// Per-unit cost stamped at receive time; sales use this for COGS.
+  /// Per-unit cost stamped at receive (or manual create); immutable for purchase lots.
   RealColumn get effectiveCost => real().withDefault(const Constant(0.0))();
 
   BoolColumn get isManual => boolean().withDefault(const Constant(false))();
 
   /// When [isManual]: OPENING | PRODUCTION | ADJUSTMENT. Null for purchase lots.
   TextColumn get manualType => text().nullable()();
+
+  /// Purchase lot → [GoodsReceiptLines.uuid]. Null when [isManual].
+  /// Plain text to avoid circular FK with receipt lines / order items.
+  TextColumn get shipmentLineUuid => text().nullable()();
+
+  /// PO line this lot fulfilled (purchase). Null for manual.
+  TextColumn get orderItemUuid => text().nullable()();
+
+  /// Set when a manual cost-split creates this lot from another.
+  TextColumn get sourceLotUuid => text().nullable()();
 
   RealColumn get retailPriceOverride => real().nullable()();
   RealColumn get wholesalePriceOverride => real().nullable()();
@@ -153,14 +164,70 @@ class OrderItems extends Table {
   TextColumn get productUuid => text().references(Products, #uuid)();
   TextColumn get productNameSnapshot => text()();
 
+  /// Ordered qty (PO/SO commitment).
   RealColumn get quantity => real()();
   RealColumn get unitPrice => real()();
   RealColumn get discountAmount => real().withDefault(const Constant(0.0))();
   RealColumn get taxRate => real().withDefault(const Constant(0.0))();
 
+  /// Cumulative qty received against this PO line (purchases).
+  RealColumn get receivedQuantity => real().withDefault(const Constant(0.0))();
+
   TextColumn get batchUuid => text().nullable().references(ProductBatches, #uuid)();
+  /// Planned / stamped unit cost (net of discounts; sales COGS or PO planned cost).
   RealColumn get purchasePriceSnapshot => real().withDefault(const Constant(0.0))();
   TextColumn get unit => text().withDefault(const Constant('Pcs'))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+/// One inbound shipment / goods receipt against a purchase order.
+class GoodsReceipts extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get orderUuid => text().references(Orders, #uuid)();
+  DateTimeColumn get receivedAt => dateTime()();
+
+  /// Inbound freight landed into line costs (not recoverable tax).
+  RealColumn get freightAmount => real().withDefault(const Constant(0.0))();
+
+  /// Import duty / non-recoverable landed charges.
+  RealColumn get dutyAmount => real().withDefault(const Constant(0.0))();
+
+  TextColumn get notes => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+/// One receive line = one inventory lot (1:1).
+class GoodsReceiptLines extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get receiptUuid => text().references(GoodsReceipts, #uuid)();
+  TextColumn get orderItemUuid => text().references(OrderItems, #uuid)();
+  TextColumn get productUuid => text().references(Products, #uuid)();
+
+  RealColumn get quantity => real()();
+
+  /// Unit cost stamped onto the lot (discounts + landed share).
+  RealColumn get effectiveUnitCost => real().withDefault(const Constant(0.0))();
+
+  TextColumn get batchNumber => text().withDefault(const Constant(''))();
+  DateTimeColumn get manufactureDate => dateTime().nullable()();
+  DateTimeColumn get expiryDate => dateTime().nullable()();
+
+  /// Lot created for this line (set after insert). Plain text avoids circular FK.
+  TextColumn get lotUuid => text().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -408,6 +475,8 @@ typedef CategoriesCompanion = ProductCategoriesCompanion;
   ProductBatches,
   Orders,
   OrderItems,
+  GoodsReceipts,
+  GoodsReceiptLines,
   OrderReturns,
   OrderReturnItems,
   Catalogs,
@@ -420,7 +489,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   // Compatibility getters and helpers for deprecated tables
   $ProductCategoriesTable get categories => productCategories;
@@ -468,8 +537,36 @@ class AppDatabase extends _$AppDatabase {
           if (from < 2) {
             await _migrateProductBatchesToV2();
           }
+          if (from < 3) {
+            await _migrateGoodsReceiptsToV3(m);
+          }
         },
       );
+
+  /// Receipts + lot shipment refs + order_items.received_quantity.
+  Future<void> _migrateGoodsReceiptsToV3(Migrator m) async {
+    await m.createTable(goodsReceipts);
+    await m.createTable(goodsReceiptLines);
+
+    Future<void> tryAlter(String sql) async {
+      try {
+        await customStatement(sql);
+      } catch (e) {
+        if (kDebugMode) {
+          print('Database migrate v3 alter skipped: $e');
+        }
+      }
+    }
+
+    await tryAlter(
+        'ALTER TABLE order_items ADD COLUMN received_quantity REAL NOT NULL DEFAULT 0.0');
+    await tryAlter(
+        'ALTER TABLE product_batches ADD COLUMN shipment_line_uuid TEXT REFERENCES goods_receipt_lines (uuid)');
+    await tryAlter(
+        'ALTER TABLE product_batches ADD COLUMN order_item_uuid TEXT REFERENCES order_items (uuid)');
+    await tryAlter(
+        'ALTER TABLE product_batches ADD COLUMN source_lot_uuid TEXT REFERENCES product_batches (uuid)');
+  }
 
   /// Adds lot inventory columns and migrates legacy [stock_quantity] → total/consumed.
   Future<void> _migrateProductBatchesToV2() async {

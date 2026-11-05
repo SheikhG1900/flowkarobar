@@ -1,34 +1,8 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/inventory/domain/batch_models.dart';
+import 'package:flowpaisa/features/inventory/domain/order_costing.dart';
 import 'package:uuid/uuid.dart';
-
-// #region agent log
-void _agentLog({
-  required String hypothesisId,
-  required String location,
-  required String message,
-  Map<String, Object?> data = const {},
-  String runId = 'impl1',
-}) {
-  try {
-    final payload = jsonEncode({
-      'sessionId': 'd35474',
-      'runId': runId,
-      'hypothesisId': hypothesisId,
-      'location': location,
-      'message': message,
-      'data': data,
-      'timestamp': DateTime.now().millisecondsSinceEpoch,
-    });
-    File(r'E:\work\github\finflow\debug-d35474.log')
-        .writeAsStringSync('$payload\n', mode: FileMode.append);
-  } catch (_) {}
-}
-// #endregion
 
 /// One FEFO allocation slice when consuming across lots.
 class BatchAllocation {
@@ -40,6 +14,23 @@ class BatchAllocation {
     required this.batchUuid,
     required this.quantity,
     required this.effectiveCost,
+  });
+}
+
+/// One line to receive against a PO item (1 shipment line → 1 lot).
+class ReceiveLineInput {
+  final String orderItemUuid;
+  final double quantity;
+  final String? batchNumber;
+  final DateTime? manufactureDate;
+  final DateTime? expiryDate;
+
+  const ReceiveLineInput({
+    required this.orderItemUuid,
+    required this.quantity,
+    this.batchNumber,
+    this.manufactureDate,
+    this.expiryDate,
   });
 }
 
@@ -130,7 +121,7 @@ class InventoryRepository {
     return uuid;
   }
 
-  /// Creates a product and, when [openingQuantity] &gt; 0, an OPENING manual lot.
+  /// Creates a product and, when [openingQuantity] > 0, an OPENING manual lot.
   Future<String> createProductWithOpeningStock({
     required ProductsCompanion product,
     double openingQuantity = 0,
@@ -224,14 +215,6 @@ class InventoryRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
-    // #region agent log
-    _agentLog(
-      hypothesisId: 'H3',
-      location: 'inventory_repository.dart:refreshProductStockCache',
-      message: 'product stock cache synced',
-      data: {'productUuid': productUuid, 'stockQuantity': cached},
-    );
-    // #endregion
   }
 
   Future<String> createBatch(ProductBatchesCompanion batch) async {
@@ -256,14 +239,15 @@ class InventoryRepository {
           ),
         );
 
-    final productUuid = batch.productUuid.present ? batch.productUuid.value : null;
+    final productUuid =
+        batch.productUuid.present ? batch.productUuid.value : null;
     if (productUuid != null) {
       await refreshProductStockCache(productUuid);
     }
     return uuid;
   }
 
-  /// Receive qty into a new lot (purchase or manual OPENING/PRODUCTION/ADJUSTMENT).
+  /// Receive qty into a new lot (manual OPENING/PRODUCTION/ADJUSTMENT, or raw insert).
   Future<String> receiveIntoBatch({
     required String productUuid,
     required double quantity,
@@ -275,6 +259,9 @@ class InventoryRepository {
     DateTime? expiryDate,
     double? retailPriceOverride,
     double? wholesalePriceOverride,
+    String? shipmentLineUuid,
+    String? orderItemUuid,
+    String? sourceLotUuid,
   }) async {
     if (quantity <= 0) {
       throw ArgumentError('receive quantity must be > 0');
@@ -285,21 +272,10 @@ class InventoryRepository {
         'manualType required for manual lots: ${ManualBatchType.all.join("|")}',
       );
     }
+    if (!isManual && shipmentLineUuid == null) {
+      throw ArgumentError('purchase lots require shipmentLineUuid');
+    }
 
-    // #region agent log
-    _agentLog(
-      hypothesisId: 'H1',
-      location: 'inventory_repository.dart:receiveIntoBatch',
-      message: 'receive lot',
-      data: {
-        'productUuid': productUuid,
-        'quantity': quantity,
-        'effectiveCost': effectiveCost,
-        'isManual': isManual,
-        'manualType': manualType,
-      },
-    );
-    // #endregion
     return createBatch(
       ProductBatchesCompanion.insert(
         uuid: const Uuid().v4(),
@@ -310,6 +286,9 @@ class InventoryRepository {
         effectiveCost: Value(effectiveCost),
         isManual: Value(isManual),
         manualType: Value(isManual ? manualType : null),
+        shipmentLineUuid: Value(isManual ? null : shipmentLineUuid),
+        orderItemUuid: Value(isManual ? null : orderItemUuid),
+        sourceLotUuid: Value(sourceLotUuid),
         manufactureDate: Value(manufactureDate),
         expiryDate: Value(expiryDate),
         retailPriceOverride: Value(retailPriceOverride),
@@ -324,6 +303,89 @@ class InventoryRepository {
         .replace(batch.copyWith(isNotSynced: true));
     await refreshProductStockCache(batch.productUuid);
     return ok;
+  }
+
+  /// Manual lots only: set cost in place if unused; else split remaining to a new lot.
+  /// Returns the lot uuid that holds the new cost (same or new).
+  Future<String> updateManualLotEffectiveCost({
+    required String lotUuid,
+    required double newEffectiveCost,
+  }) async {
+    final lot = await getBatch(lotUuid);
+    if (lot == null) throw StateError('Lot not found: $lotUuid');
+    if (!lot.isManual) {
+      throw StateError('Purchase lot cost is immutable; correct via PO/receive');
+    }
+    if ((newEffectiveCost - lot.effectiveCost).abs() < 1e-9) {
+      return lotUuid;
+    }
+
+    if (lot.consumedQuantity <= 1e-9) {
+      await (_db.update(_db.productBatches)..where((b) => b.uuid.equals(lotUuid)))
+          .write(
+        ProductBatchesCompanion(
+          effectiveCost: Value(newEffectiveCost),
+          isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+      return lotUuid;
+    }
+
+    final remaining = lot.remainingQuantity;
+    if (remaining <= 1e-9) {
+      throw StateError('No remaining qty to reprice on lot $lotUuid');
+    }
+
+    return _db.transaction(() async {
+      // Close remaining on old lot without inventing consumption.
+      await (_db.update(_db.productBatches)..where((b) => b.uuid.equals(lotUuid)))
+          .write(
+        ProductBatchesCompanion(
+          totalQuantity: Value(lot.consumedQuantity),
+          isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
+      final newLotUuid = await receiveIntoBatch(
+        productUuid: lot.productUuid,
+        quantity: remaining,
+        effectiveCost: newEffectiveCost,
+        isManual: true,
+        manualType: lot.manualType ?? ManualBatchType.adjustment,
+        batchNumber: lot.batchNumber,
+        manufactureDate: lot.manufactureDate,
+        expiryDate: lot.expiryDate,
+        retailPriceOverride: lot.retailPriceOverride,
+        wholesalePriceOverride: lot.wholesalePriceOverride,
+        sourceLotUuid: lot.uuid,
+      );
+      return newLotUuid;
+    });
+  }
+
+  /// Reduce manual (or any) lot total, not below consumed.
+  Future<void> reduceLotTotalQuantity({
+    required String lotUuid,
+    required double newTotalQuantity,
+  }) async {
+    final lot = await getBatch(lotUuid);
+    if (lot == null) throw StateError('Lot not found: $lotUuid');
+    if (newTotalQuantity < lot.consumedQuantity - 1e-9) {
+      throw StateError(
+        'totalQuantity cannot be less than consumed (${lot.consumedQuantity})',
+      );
+    }
+    await (_db.update(_db.productBatches)..where((b) => b.uuid.equals(lotUuid)))
+        .write(
+      ProductBatchesCompanion(
+        totalQuantity: Value(newTotalQuantity),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+    await refreshProductStockCache(lot.productUuid);
   }
 
   /// Consume [quantity] from a specific lot.
@@ -363,7 +425,8 @@ class InventoryRepository {
     if (batch == null) {
       throw StateError('Batch not found: $batchUuid');
     }
-    final nextConsumed = (batch.consumedQuantity - quantity).clamp(0.0, double.infinity);
+    final nextConsumed =
+        (batch.consumedQuantity - quantity).clamp(0.0, double.infinity);
     await (_db.update(_db.productBatches)..where((b) => b.uuid.equals(batchUuid)))
         .write(
       ProductBatchesCompanion(
@@ -405,7 +468,8 @@ class InventoryRepository {
     final allocations = <BatchAllocation>[];
     for (final batch in batches) {
       if (need <= 1e-9) break;
-      final take = batch.remainingQuantity < need ? batch.remainingQuantity : need;
+      final take =
+          batch.remainingQuantity < need ? batch.remainingQuantity : need;
       if (take <= 0) continue;
       await (_db.update(_db.productBatches)
             ..where((b) => b.uuid.equals(batch.uuid)))
@@ -427,21 +491,220 @@ class InventoryRepository {
     }
 
     await refreshProductStockCache(productUuid);
-    // #region agent log
-    _agentLog(
-      hypothesisId: 'H2',
-      location: 'inventory_repository.dart:consumeFefo',
-      message: 'FEFO consume done',
-      data: {
-        'productUuid': productUuid,
-        'quantity': quantity,
-        'slices': allocations.length,
-        'firstBatch': allocations.isEmpty ? null : allocations.first.batchUuid,
-        'cogsSample': allocations.isEmpty ? null : allocations.first.effectiveCost,
-      },
-    );
-    // #endregion
     return allocations;
+  }
+
+  // ==========================================
+  // Goods receipts (1 shipment line → 1 lot)
+  // ==========================================
+
+  /// Receives stock against a purchase order. Each [lines] entry creates one
+  /// receipt line and one lot with frozen landed [effectiveCost].
+  Future<String> receivePurchaseShipment({
+    required String orderUuid,
+    required List<ReceiveLineInput> lines,
+    double freightAmount = 0,
+    double dutyAmount = 0,
+    DateTime? receivedAt,
+    String? notes,
+  }) async {
+    if (lines.isEmpty) {
+      throw ArgumentError('receive lines required');
+    }
+
+    return _db.transaction(() async {
+      final order = await (_db.select(_db.orders)
+            ..where((o) => o.uuid.equals(orderUuid) & o.isDeleted.equals(false)))
+          .getSingleOrNull();
+      if (order == null) throw StateError('Order not found: $orderUuid');
+      if (order.orderType != 'PURCHASE') {
+        throw StateError('Goods receipt only for purchase orders');
+      }
+
+      final orderItems = await (_db.select(_db.orderItems)
+            ..where((oi) =>
+                oi.orderUuid.equals(orderUuid) & oi.isDeleted.equals(false)))
+          .get();
+      final byId = {for (final i in orderItems) i.uuid: i};
+
+      // Validate open qty and build costing inputs for THIS shipment's lines
+      // using full PO lines for discount weight, then scale landed onto received.
+      final costInputs = orderItems
+          .map((i) => OrderLineCostInput(
+                id: i.uuid,
+                quantity: i.quantity,
+                unitPrice: i.unitPrice,
+                lineDiscount: i.discountAmount,
+              ))
+          .toList();
+
+      final plannedByLine = computePlannedUnitCosts(
+        lines: costInputs,
+        orderDiscount: order.discountAmount,
+        freightAmount: 0,
+        dutyAmount: 0,
+      );
+
+      // Landed share only across lines being received, by receive value weight.
+      final receiveCostInputs = <OrderLineCostInput>[];
+      for (final line in lines) {
+        final item = byId[line.orderItemUuid];
+        if (item == null) {
+          throw StateError('Order item not found: ${line.orderItemUuid}');
+        }
+        final product = await getProduct(item.productUuid);
+        if (product == null || product.isService) continue;
+        if (line.quantity <= 0) {
+          throw ArgumentError('receive qty must be > 0');
+        }
+        final open = item.quantity - item.receivedQuantity;
+        if (line.quantity > open + 1e-9) {
+          throw StateError(
+            'Receive ${line.quantity} exceeds open $open for ${item.productNameSnapshot}',
+          );
+        }
+        final planned = plannedByLine[item.uuid] ?? item.unitPrice;
+        receiveCostInputs.add(
+          OrderLineCostInput(
+            id: item.uuid,
+            quantity: line.quantity,
+            unitPrice: planned,
+            lineDiscount: 0,
+          ),
+        );
+      }
+
+      final landedUnitByLine = computePlannedUnitCosts(
+        lines: receiveCostInputs,
+        orderDiscount: 0,
+        freightAmount: freightAmount,
+        dutyAmount: dutyAmount,
+      );
+
+      final receiptUuid = const Uuid().v4();
+      await _db.into(_db.goodsReceipts).insert(
+            GoodsReceiptsCompanion.insert(
+              uuid: receiptUuid,
+              orderUuid: orderUuid,
+              receivedAt: receivedAt ?? DateTime.now(),
+              freightAmount: Value(freightAmount),
+              dutyAmount: Value(dutyAmount),
+              notes: Value(notes),
+            ),
+          );
+
+      final receivedSoFar = <String, double>{
+        for (final i in orderItems) i.uuid: i.receivedQuantity,
+      };
+
+      for (final line in lines) {
+        final item = byId[line.orderItemUuid]!;
+        final product = await getProduct(item.productUuid);
+        if (product == null || product.isService) continue;
+
+        final unitCost = landedUnitByLine[item.uuid] ??
+            plannedByLine[item.uuid] ??
+            item.unitPrice;
+
+        final lineUuid = const Uuid().v4();
+        await _db.into(_db.goodsReceiptLines).insert(
+              GoodsReceiptLinesCompanion.insert(
+                uuid: lineUuid,
+                receiptUuid: receiptUuid,
+                orderItemUuid: item.uuid,
+                productUuid: item.productUuid,
+                quantity: line.quantity,
+                effectiveUnitCost: Value(unitCost),
+                batchNumber: Value(line.batchNumber ?? ''),
+                manufactureDate: Value(line.manufactureDate),
+                expiryDate: Value(line.expiryDate),
+              ),
+            );
+
+        final lotUuid = await receiveIntoBatch(
+          productUuid: item.productUuid,
+          quantity: line.quantity,
+          effectiveCost: unitCost,
+          isManual: false,
+          batchNumber: line.batchNumber,
+          manufactureDate: line.manufactureDate,
+          expiryDate: line.expiryDate,
+          shipmentLineUuid: lineUuid,
+          orderItemUuid: item.uuid,
+        );
+
+        await (_db.update(_db.goodsReceiptLines)
+              ..where((l) => l.uuid.equals(lineUuid)))
+            .write(
+          GoodsReceiptLinesCompanion(
+            lotUuid: Value(lotUuid),
+            isNotSynced: const Value(true),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+
+        final nextReceived =
+            (receivedSoFar[item.uuid] ?? 0) + line.quantity;
+        receivedSoFar[item.uuid] = nextReceived;
+
+        await (_db.update(_db.orderItems)..where((oi) => oi.uuid.equals(item.uuid)))
+            .write(
+          OrderItemsCompanion(
+            receivedQuantity: Value(nextReceived),
+            purchasePriceSnapshot: Value(unitCost),
+            batchUuid: Value(lotUuid),
+            isNotSynced: const Value(true),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+
+        await (_db.update(_db.products)
+              ..where((p) => p.uuid.equals(item.productUuid)))
+            .write(
+          ProductsCompanion(
+            purchasePrice: Value(unitCost),
+            isNotSynced: const Value(true),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+
+      // Refresh delivery status from received vs ordered.
+      await _refreshPurchaseDeliveryStatus(orderUuid);
+      return receiptUuid;
+    });
+  }
+
+  Future<void> _refreshPurchaseDeliveryStatus(String orderUuid) async {
+    final items = await (_db.select(_db.orderItems)
+          ..where((oi) =>
+              oi.orderUuid.equals(orderUuid) & oi.isDeleted.equals(false)))
+        .get();
+    if (items.isEmpty) return;
+
+    var allDone = true;
+    var anyReceived = false;
+    for (final i in items) {
+      final product = await getProduct(i.productUuid);
+      if (product == null || product.isService) continue;
+      if (i.receivedQuantity > 1e-9) anyReceived = true;
+      if (i.receivedQuantity + 1e-9 < i.quantity) allDone = false;
+    }
+
+    final status = allDone
+        ? 'DELIVERED'
+        : anyReceived
+            ? 'SHIPPED'
+            : 'PENDING';
+
+    await (_db.update(_db.orders)..where((o) => o.uuid.equals(orderUuid))).write(
+      OrdersCompanion(
+        deliveryStatus: Value(status),
+        deliveredDate: Value(allDone ? DateTime.now() : null),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   // ==========================================
@@ -451,9 +714,9 @@ class InventoryRepository {
   /// Syncs product stock caches from lot remainings and refreshes WAC.
   Future<void> runFullInventoryReconciliation() async {
     await _db.transaction(() async {
-      final products =
-          await (_db.select(_db.products)..where((p) => p.isDeleted.equals(false)))
-              .get();
+      final products = await (_db.select(_db.products)
+            ..where((p) => p.isDeleted.equals(false)))
+          .get();
 
       for (final prod in products) {
         await refreshProductStockCache(prod.uuid);

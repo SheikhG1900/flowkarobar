@@ -62,9 +62,25 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
 
   Future<void> _markDelivered(Order order) async {
     final l10n = AppLocalizations.of(context)!;
+    var freight = 0.0;
+    var duty = 0.0;
+    if (order.orderType == orderTypePurchase) {
+      final landed = await showDialog<_LandedCostResult>(
+        context: context,
+        builder: (context) => const _LandedCostDialog(),
+      );
+      if (landed == null || !mounted) return;
+      freight = landed.freight;
+      duty = landed.duty;
+    }
+
     setState(() => _busy = true);
     try {
-      await ref.read(ordersRepositoryProvider).markDelivered(order.uuid);
+      await ref.read(ordersRepositoryProvider).markDelivered(
+            order.uuid,
+            freightAmount: freight,
+            dutyAmount: duty,
+          );
       _refresh();
       if (!mounted) return;
       ToastUtils.showSuccessToast(context, ref, l10n.orderMarkedDelivered);
@@ -529,6 +545,85 @@ class _PaymentDialogState extends ConsumerState<_PaymentDialog> {
           child: Text(l10n.cancel),
         ),
         FilledButton(onPressed: _submit, child: Text(l10n.save)),
+      ],
+    );
+  }
+}
+
+class _LandedCostResult {
+  final double freight;
+  final double duty;
+
+  const _LandedCostResult(this.freight, this.duty);
+}
+
+class _LandedCostDialog extends StatefulWidget {
+  const _LandedCostDialog();
+
+  @override
+  State<_LandedCostDialog> createState() => _LandedCostDialogState();
+}
+
+class _LandedCostDialogState extends State<_LandedCostDialog> {
+  final _freight = TextEditingController();
+  final _duty = TextEditingController();
+
+  @override
+  void dispose() {
+    _freight.dispose();
+    _duty.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    Navigator.pop(
+      context,
+      _LandedCostResult(
+        double.tryParse(_freight.text.trim()) ?? 0,
+        double.tryParse(_duty.text.trim()) ?? 0,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return AlertDialog(
+      title: Text(l10n.receiveShipment),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.landedCostHint,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _freight,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+            ],
+            decoration: InputDecoration(labelText: l10n.inboundFreight),
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _duty,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+            ],
+            decoration: InputDecoration(labelText: l10n.importDuty),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(onPressed: _submit, child: Text(l10n.markDelivered)),
       ],
     );
   }

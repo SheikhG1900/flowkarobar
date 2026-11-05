@@ -508,6 +508,30 @@ abstract class AppLocalizations {
   /// **'Order marked as delivered'**
   String get orderMarkedDelivered;
 
+  /// No description provided for @inboundFreight.
+  ///
+  /// In en, this message translates to:
+  /// **'Inbound freight'**
+  String get inboundFreight;
+
+  /// No description provided for @importDuty.
+  ///
+  /// In en, this message translates to:
+  /// **'Import duty'**
+  String get importDuty;
+
+  /// No description provided for @landedCostHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional. Added into inventory unit cost for this receipt.'**
+  String get landedCostHint;
+
+  /// No description provided for @receiveShipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive shipment'**
+  String get receiveShipment;
+
   /// No description provided for @shareInvoice.
   ///
   /// In en, this message translates to:
@@ -610,6 +634,42 @@ abstract class AppLocalizations {
   /// **'SKU'**
   String get sku;
 
+  /// No description provided for @scanSkuTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan SKU'**
+  String get scanSkuTitle;
+
+  /// No description provided for @scanSkuHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Point the camera at a barcode or QR code'**
+  String get scanSkuHint;
+
+  /// No description provided for @scanSkuTorch.
+  ///
+  /// In en, this message translates to:
+  /// **'Torch'**
+  String get scanSkuTorch;
+
+  /// No description provided for @scanSkuUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Barcode scanning is available on phones. Enter the SKU manually here.'**
+  String get scanSkuUnavailable;
+
+  /// No description provided for @scanSkuReplaceConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace current SKU with the scanned code?'**
+  String get scanSkuReplaceConfirm;
+
+  /// No description provided for @scanSkuTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan barcode or QR'**
+  String get scanSkuTooltip;
+
   /// No description provided for @unit.
   ///
   /// In en, this message translates to:
@@ -657,6 +717,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Managed by purchases, sales, and stock adjustments'**
   String get currentStockHint;
+
+  /// No description provided for @productMasterHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Identity only — stock via lots or purchases; prices via catalogs later'**
+  String get productMasterHint;
+
+  /// No description provided for @productStockManagedElsewhere.
+  ///
+  /// In en, this message translates to:
+  /// **'On-hand stock comes from lots and purchase receipts'**
+  String get productStockManagedElsewhere;
 
   /// No description provided for @minStockAlert.
   ///

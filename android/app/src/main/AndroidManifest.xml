@@ -7,6 +7,8 @@
     <!-- Speech to Text permissions -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Camera for SKU barcode / QR scanning and receipt capture -->
+    <uses-permission android:name="android.permission.CAMERA" />
     
     <!-- Bluetooth permissions for headsets (Android 12+) -->
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />

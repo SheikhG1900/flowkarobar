@@ -214,6 +214,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String get orderMarkedDelivered => 'ऑर्डर डिलीवर किया गया चिह्नित हुआ';
 
   @override
+  String get inboundFreight => 'आवक भाड़ा';
+
+  @override
+  String get importDuty => 'आयात शुल्क';
+
+  @override
+  String get landedCostHint =>
+      'वैकल्पिक। इस रसीद की इन्वेंटरी इकाई लागत में जोड़ा जाएगा।';
+
+  @override
+  String get receiveShipment => 'शिपमेंट प्राप्त करें';
+
+  @override
   String get shareInvoice => 'इनवॉइस साझा करें';
 
   @override
@@ -269,6 +282,26 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sku => 'एसकेयू';
 
   @override
+  String get scanSkuTitle => 'SKU स्कैन करें';
+
+  @override
+  String get scanSkuHint => 'कैमरा बारकोड या QR कोड पर रखें';
+
+  @override
+  String get scanSkuTorch => 'टॉर्च';
+
+  @override
+  String get scanSkuUnavailable =>
+      'बारकोड स्कैनिंग फ़ोन पर उपलब्ध है। यहाँ SKU मैन्युअल दर्ज करें।';
+
+  @override
+  String get scanSkuReplaceConfirm =>
+      'वर्तमान SKU को स्कैन किए गए कोड से बदलें?';
+
+  @override
+  String get scanSkuTooltip => 'बारकोड या QR स्कैन करें';
+
+  @override
   String get unit => 'इकाई';
 
   @override
@@ -291,6 +324,14 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get currentStockHint => 'खरीद, बिक्री और स्टॉक समायोजन से प्रबंधित';
+
+  @override
+  String get productMasterHint =>
+      'केवल पहचान — स्टॉक लॉट/खरीद से; कीमतें बाद में कैटलॉग से';
+
+  @override
+  String get productStockManagedElsewhere =>
+      'मौजूदा स्टॉक लॉट और खरीद रसीदों से आता है';
 
   @override
   String get minStockAlert => 'न्यूनतम स्टॉक अलर्ट';

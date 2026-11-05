@@ -113,21 +113,30 @@ class FormPageScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final base = theme.scaffoldBackgroundColor;
     return Scaffold(
+      backgroundColor: base,
       appBar: appBar,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              accentColor.withValues(alpha: 0.06),
-              theme.scaffoldBackgroundColor,
-            ],
-            stops: const [0, 0.35],
+      body: ColoredBox(
+        color: base,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                // Keep accent wash barely perceptible.
+                Color.alphaBlend(
+                  accentColor.withValues(alpha: 0.012),
+                  base,
+                ),
+                base,
+              ],
+              stops: const [0.0, 0.22],
+            ),
           ),
+          child: SizedBox.expand(child: body),
         ),
-        child: body,
       ),
       bottomNavigationBar: bottomBar,
     );

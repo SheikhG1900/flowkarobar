@@ -215,6 +215,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orderMarkedDelivered => 'Order marked as delivered';
 
   @override
+  String get inboundFreight => 'Inbound freight';
+
+  @override
+  String get importDuty => 'Import duty';
+
+  @override
+  String get landedCostHint =>
+      'Optional. Added into inventory unit cost for this receipt.';
+
+  @override
+  String get receiveShipment => 'Receive shipment';
+
+  @override
   String get shareInvoice => 'Share Invoice';
 
   @override
@@ -270,6 +283,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sku => 'SKU';
 
   @override
+  String get scanSkuTitle => 'Scan SKU';
+
+  @override
+  String get scanSkuHint => 'Point the camera at a barcode or QR code';
+
+  @override
+  String get scanSkuTorch => 'Torch';
+
+  @override
+  String get scanSkuUnavailable =>
+      'Barcode scanning is available on phones. Enter the SKU manually here.';
+
+  @override
+  String get scanSkuReplaceConfirm =>
+      'Replace current SKU with the scanned code?';
+
+  @override
+  String get scanSkuTooltip => 'Scan barcode or QR';
+
+  @override
   String get unit => 'Unit';
 
   @override
@@ -293,6 +326,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get currentStockHint =>
       'Managed by purchases, sales, and stock adjustments';
+
+  @override
+  String get productMasterHint =>
+      'Identity only — stock via lots or purchases; prices via catalogs later';
+
+  @override
+  String get productStockManagedElsewhere =>
+      'On-hand stock comes from lots and purchase receipts';
 
   @override
   String get minStockAlert => 'Min Stock Alert';

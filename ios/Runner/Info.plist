@@ -67,5 +67,9 @@
 	</array>
 	<key>NSContactsUsageDescription</key>
 	<string>This app requires contact access to import names, phone numbers, and emails for your cashbook contacts.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera access is used to scan product barcodes and QR codes for SKU, and to capture receipts.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Photo library access is used to attach receipt images and documents.</string>
 </dict>
 </plist>
