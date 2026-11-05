@@ -463,10 +463,10 @@ class _ProductCard extends StatelessWidget {
         ? null
         : '${AmountFormatter.formatQuantity(product.stockQuantity)} ${product.unit}';
 
-    return Container(
-      decoration: AppColors.transactionListItemDecoration(theme, accent),
-      child: Material(
-        color: Colors.transparent,
+    return Material(
+      color: Colors.transparent,
+      child: Ink(
+        decoration: AppColors.transactionListItemDecoration(theme, accent),
         child: InkWell(
           borderRadius: BorderRadius.circular(20),
           onTap: onTap,

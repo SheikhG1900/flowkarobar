@@ -77,56 +77,50 @@ class _SwipeableListItemState extends State<SwipeableListItem> {
       return widget.child;
     }
 
-    Widget swipeable = Dismissible(
-      key: _dismissibleKey,
-      confirmDismiss: (direction) async {
-        // Add haptic feedback
-        HapticFeedback.mediumImpact();
+    // Clip the whole dismissible (strip + card) so the action color fills a
+    // rounded shape end-to-end — circular strip with no scaffold peeking in
+    // the corners.
+    final radius = BorderRadius.circular(widget.borderRadius);
+    Widget swipeable = ClipRRect(
+      borderRadius: radius,
+      child: Dismissible(
+        key: _dismissibleKey,
+        confirmDismiss: (direction) async {
+          HapticFeedback.mediumImpact();
 
-        // We keep the logical directions fixed:
-        // startToEnd (Left-to-Right in LTR, Right-to-Left in RTL) always triggers Edit
-        // endToStart (Right-to-Left in LTR, Left-to-Right in RTL) always triggers Delete
-        // Since we used AlignmentDirectional for the backgrounds, they also flip.
-        // This means in RTL, swiping from right (start) reveals Edit on the right, 
-        // and swiping from left (end) reveals Delete on the left.
+          // startToEnd → Edit, endToStart → Delete (LTR/RTL via Directional).
+          if (direction == DismissDirection.endToStart && widget.enableDelete) {
+            final confirmed = await _showConfirmDialog(
+              context,
+              title: widget.confirmTitle ?? l10n.deleteItem,
+              message: widget.confirmMessage ?? l10n.confirmDeleteItem,
+              confirmText: widget.deleteLabel ?? l10n.delete,
+              confirmColor: widget.deleteBackgroundColor,
+            );
 
-        if (direction == DismissDirection.endToStart && widget.enableDelete) {
-          // Delete action (Right-to-Left in LTR, Left-to-Right in RTL)
-          final confirmed = await _showConfirmDialog(
-            context,
-            title: widget.confirmTitle ?? l10n.deleteItem,
-            message: widget.confirmMessage ?? l10n.confirmDeleteItem,
-            confirmText: widget.deleteLabel ?? l10n.delete,
-            confirmColor: widget.deleteBackgroundColor,
-          );
-
-          if (confirmed == true && widget.onDelete != null) {
-            widget.onDelete!();
+            if (confirmed == true && widget.onDelete != null) {
+              widget.onDelete!();
+            }
+            return false;
+          } else if (direction == DismissDirection.startToEnd &&
+              widget.enableEdit) {
+            if (widget.onEdit != null) {
+              widget.onEdit!();
+            }
+            return false;
           }
-          return false; // Don't dismiss, let the parent handle the deletion
-        } else if (direction == DismissDirection.startToEnd && widget.enableEdit) {
-          // Edit action (Left-to-Right in LTR, Right-to-Left in RTL)
-          if (widget.onEdit != null) {
-            widget.onEdit!();
-          }
-          return false; // Don't dismiss
-        }
 
-        return false;
-      },
-      background: widget.enableEdit
-          ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Container(
+          return false;
+        },
+        background: widget.enableEdit
+            ? Container(
                 alignment: AlignmentDirectional.centerStart,
                 margin: widget.backgroundMargin,
                 padding: const EdgeInsetsDirectional.only(start: 20),
-                decoration: BoxDecoration(
-                  color: widget.editBackgroundColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(widget.borderRadius),
-                ),
+                color: widget.editBackgroundColor.withValues(alpha: 0.15),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       widget.editIcon,
@@ -148,22 +142,17 @@ class _SwipeableListItemState extends State<SwipeableListItem> {
                     ),
                   ],
                 ),
-              ),
-            )
-          : null,
-      secondaryBackground: widget.enableDelete
-          ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
-              child: Container(
+              )
+            : null,
+        secondaryBackground: widget.enableDelete
+            ? Container(
                 alignment: AlignmentDirectional.centerEnd,
                 margin: widget.backgroundMargin,
                 padding: const EdgeInsetsDirectional.only(end: 20),
-                decoration: BoxDecoration(
-                  color: widget.deleteBackgroundColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(widget.borderRadius),
-                ),
+                color: widget.deleteBackgroundColor.withValues(alpha: 0.15),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       widget.deleteIcon,
@@ -185,10 +174,10 @@ class _SwipeableListItemState extends State<SwipeableListItem> {
                     ),
                   ],
                 ),
-              ),
-            )
-          : null,
-      child: widget.child,
+              )
+            : null,
+        child: widget.child,
+      ),
     );
 
     // Wrap in MouseRegion and Stack to show desktop hover actions
