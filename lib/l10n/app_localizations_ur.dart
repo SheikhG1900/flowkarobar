@@ -340,6 +340,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get isServiceProduct => 'یہ ایک سروس ہے (اسٹاک ٹریکنگ نہیں)';
 
   @override
+  String get serviceProduct => 'سروس';
+
+  @override
   String get refresh => 'تازہ کریں';
 
   @override

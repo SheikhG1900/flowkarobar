@@ -120,6 +120,7 @@
   "productStockManagedElsewhere": "موجودہ اسٹاک لاٹس اور خرید رسیدوں سے آتا ہے",
   "minStockAlert": "کم از کم اسٹاک الرٹ",
   "isServiceProduct": "یہ ایک سروس ہے (اسٹاک ٹریکنگ نہیں)",
+  "serviceProduct": "سروس",
   "@@locale": "ur",
   "refresh": "تازہ کریں",
   "appTitle": "فلوپیسہ",

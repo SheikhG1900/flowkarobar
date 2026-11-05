@@ -742,6 +742,12 @@ abstract class AppLocalizations {
   /// **'This is a service (no stock tracking)'**
   String get isServiceProduct;
 
+  /// No description provided for @serviceProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Service'**
+  String get serviceProduct;
+
   /// No description provided for @refresh.
   ///
   /// In en, this message translates to:

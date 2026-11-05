@@ -342,6 +342,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get isServiceProduct => 'This is a service (no stock tracking)';
 
   @override
+  String get serviceProduct => 'Service';
+
+  @override
   String get refresh => 'Refresh';
 
   @override

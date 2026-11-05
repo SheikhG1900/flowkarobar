@@ -440,22 +440,12 @@ class _ProductHeroHeader extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(18),
-                      color: Colors.white.withValues(alpha: 0.18),
-                      border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.45),
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Icon(
-                      isService ? Icons.handyman_rounded : categoryIcon,
-                      color: onGradient,
-                      size: 30,
-                    ),
+                  _HeroCategoryIcon(
+                    categoryIcon: categoryIcon,
+                    accent: accent,
+                    onGradient: onGradient,
+                    isService: isService,
+                    serviceTooltip: l10n.serviceProduct,
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -550,6 +540,83 @@ class _HeaderChip extends StatelessWidget {
               fontWeight: FontWeight.w800,
               letterSpacing: 0.2,
             ),
+      ),
+    );
+  }
+}
+
+class _HeroCategoryIcon extends StatelessWidget {
+  final IconData categoryIcon;
+  final Color accent;
+  final Color onGradient;
+  final bool isService;
+  final String serviceTooltip;
+
+  const _HeroCategoryIcon({
+    required this.categoryIcon,
+    required this.accent,
+    required this.onGradient,
+    required this.isService,
+    required this.serviceTooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final iconBox = Container(
+      width: 64,
+      height: 64,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        color: Colors.white.withValues(alpha: 0.18),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.45),
+          width: 1.5,
+        ),
+      ),
+      child: Icon(categoryIcon, color: onGradient, size: 30),
+    );
+
+    if (!isService) return iconBox;
+
+    return Tooltip(
+      message: serviceTooltip,
+      child: SizedBox(
+        width: 68,
+        height: 68,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            iconBox,
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: accent.withValues(alpha: 0.35),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.18),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.miscellaneous_services_outlined,
+                  size: 13,
+                  color: accent,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

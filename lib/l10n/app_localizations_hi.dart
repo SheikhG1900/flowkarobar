@@ -340,6 +340,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get isServiceProduct => 'यह एक सेवा है (स्टॉक ट्रैकिंग नहीं)';
 
   @override
+  String get serviceProduct => 'सेवा';
+
+  @override
   String get refresh => 'ताज़ा करें';
 
   @override

@@ -120,6 +120,7 @@
   "productStockManagedElsewhere": "On-hand stock comes from lots and purchase receipts",
   "minStockAlert": "Min Stock Alert",
   "isServiceProduct": "This is a service (no stock tracking)",
+  "serviceProduct": "Service",
   "@@locale": "en",
   "refresh": "Refresh",
   "appTitle": "FlowKarobar",

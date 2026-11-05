@@ -120,6 +120,7 @@
   "productStockManagedElsewhere": "मौजूदा स्टॉक लॉट और खरीद रसीदों से आता है",
   "minStockAlert": "न्यूनतम स्टॉक अलर्ट",
   "isServiceProduct": "यह एक सेवा है (स्टॉक ट्रैकिंग नहीं)",
+  "serviceProduct": "सेवा",
   "@@locale": "hi",
   "refresh": "ताज़ा करें",
   "appTitle": "फ्लोपैसा",
