@@ -372,6 +372,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manualLotSaved => 'Lot added successfully';
 
   @override
+  String get editManualLot => 'Edit manual lot';
+
+  @override
+  String get manualLotUpdated => 'Lot updated successfully';
+
+  @override
+  String get manualLotCostSplitHint =>
+      'This lot is partly used. Changing unit cost will move remaining qty to a new lot.';
+
+  @override
+  String consumedQtyHint(String quantity) {
+    return 'Already consumed: $quantity';
+  }
+
+  @override
   String get lotTypeOpening => 'Opening';
 
   @override

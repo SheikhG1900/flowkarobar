@@ -802,6 +802,30 @@ abstract class AppLocalizations {
   /// **'Lot added successfully'**
   String get manualLotSaved;
 
+  /// No description provided for @editManualLot.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit manual lot'**
+  String get editManualLot;
+
+  /// No description provided for @manualLotUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Lot updated successfully'**
+  String get manualLotUpdated;
+
+  /// No description provided for @manualLotCostSplitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This lot is partly used. Changing unit cost will move remaining qty to a new lot.'**
+  String get manualLotCostSplitHint;
+
+  /// No description provided for @consumedQtyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Already consumed: {quantity}'**
+  String consumedQtyHint(String quantity);
+
   /// No description provided for @lotTypeOpening.
   ///
   /// In en, this message translates to:

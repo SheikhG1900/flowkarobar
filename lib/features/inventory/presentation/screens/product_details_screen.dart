@@ -14,7 +14,6 @@ import 'package:flowpaisa/features/orders/presentation/widgets/order_entity_pick
 import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
-import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 
 enum _LotFilter { open, all, consumed }
@@ -41,25 +40,43 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     );
   }
 
-  Future<void> _openAddManualLot(Product product) async {
+  Future<void> _openManualLotSheet(
+    Product product, {
+    ProductBatche? existing,
+  }) async {
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _AddManualLotSheet(product: product),
+      builder: (context) => _ManualLotSheet(
+        product: product,
+        existing: existing,
+      ),
     );
     if (!mounted) return;
     if (saved == true) {
       ref.invalidate(productBatchesStreamProvider(widget.productUuid));
       ref.invalidate(productStreamProvider(widget.productUuid));
       ref.invalidate(productLotSourcesProvider(widget.productUuid));
+      final l10n = AppLocalizations.of(context)!;
       ToastUtils.showSuccessToast(
         context,
         ref,
-        AppLocalizations.of(context)!.manualLotSaved,
+        existing == null ? l10n.manualLotSaved : l10n.manualLotUpdated,
       );
     }
+  }
+
+  VoidCallback? _lotTap({
+    required Product product,
+    required ProductBatche lot,
+    LotPurchaseContext? source,
+  }) {
+    if (lot.isManual) {
+      return () => _openManualLotSheet(product, existing: lot);
+    }
+    return _orderOpener(context, source);
   }
 
   List<ProductBatche> _applyFilter(List<ProductBatche> lots) {
@@ -94,6 +111,86 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
         ),
       );
     };
+  }
+
+  Widget _lotOrBatchCard({
+    required Product product,
+    required String batchKey,
+    required List<ProductBatche> groupLots,
+    required Map<String, LotPurchaseContext> sources,
+    required String dateFormat,
+  }) {
+    if (groupLots.length == 1) {
+      final lot = groupLots.first;
+      final lotSource = sources[lot.uuid];
+      return _QtyFocusCard.lot(
+        lot: lot,
+        source: lotSource,
+        dateFormat: dateFormat,
+        showBatchInFooter: true,
+        onOpenOrder: _lotTap(
+          product: product,
+          lot: lot,
+          source: lotSource,
+        ),
+      );
+    }
+    return _BatchLotPanel(
+      product: product,
+      batchNumber: batchKey.isEmpty ? '—' : batchKey,
+      lots: groupLots,
+      sources: sources,
+      dateFormat: dateFormat,
+      onEditManualLot: (lot) => _openManualLotSheet(product, existing: lot),
+    );
+  }
+
+  /// 2 columns on wide screens; single column when narrow.
+  Widget _lotsGrid({
+    required Product product,
+    required List<String> groupKeys,
+    required Map<String, List<ProductBatche>> grouped,
+    required Map<String, LotPurchaseContext> sources,
+    required String dateFormat,
+  }) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = 10.0;
+        final twoCol = constraints.maxWidth >= 720;
+        final cards = <Widget>[
+          for (final key in groupKeys)
+            _lotOrBatchCard(
+              product: product,
+              batchKey: key,
+              groupLots: grouped[key]!,
+              sources: sources,
+              dateFormat: dateFormat,
+            ),
+        ];
+
+        if (!twoCol) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < cards.length; i++) ...[
+                if (i > 0) const SizedBox(height: gap),
+                cards[i],
+              ],
+            ],
+          );
+        }
+
+        final cardWidth = (constraints.maxWidth - gap) / 2;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final card in cards)
+              SizedBox(width: cardWidth, child: card),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -160,17 +257,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               ),
             ],
           ),
-          floatingActionButton: product.isService
-              ? null
-              : AppFloatingActionButton(
-                  heroTag: 'add_manual_lot_fab',
-                  tooltip: l10n.addManualLot,
-                  onPressed: () => _openAddManualLot(product),
-                  icon: const Icon(Icons.add),
-                  label: Text(l10n.addManualLot),
-                ),
           body: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
             children: [
               _ProductHero(
                 product: product,
@@ -208,7 +296,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                       ),
                     ),
                     TextButton.icon(
-                      onPressed: () => _openAddManualLot(product),
+                      onPressed: () => _openManualLotSheet(product),
                       icon: const Icon(Icons.add, size: 18),
                       label: Text(l10n.addManualLot),
                     ),
@@ -263,7 +351,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                         if (lots.isEmpty) ...[
                           const SizedBox(height: 16),
                           FilledButton.icon(
-                            onPressed: () => _openAddManualLot(product),
+                            onPressed: () => _openManualLotSheet(product),
                             icon: const Icon(Icons.add),
                             label: Text(l10n.addManualLot),
                           ),
@@ -272,36 +360,13 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                     ),
                   )
                 else
-                  for (final key in groupKeys) ...[
-                    Builder(
-                      builder: (context) {
-                        final groupLots = grouped[key]!;
-                        if (groupLots.length == 1) {
-                          final lot = groupLots.first;
-                          final lotSource = sources[lot.uuid];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: _QtyFocusCard.lot(
-                              lot: lot,
-                              source: lotSource,
-                              dateFormat: dateFormat,
-                              showBatchInFooter: true,
-                              onOpenOrder: _orderOpener(context, lotSource),
-                            ),
-                          );
-                        }
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: _BatchLotPanel(
-                            batchNumber: key.isEmpty ? '—' : key,
-                            lots: groupLots,
-                            sources: sources,
-                            dateFormat: dateFormat,
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                  _lotsGrid(
+                    product: product,
+                    groupKeys: groupKeys,
+                    grouped: grouped,
+                    sources: sources,
+                    dateFormat: dateFormat,
+                  ),
               ] else
                 Padding(
                   padding: const EdgeInsets.only(top: 24),
@@ -745,6 +810,8 @@ class _QtyFocusCard extends ConsumerWidget {
   final int? countBadge;
   /// Footer: batch label (single lot or batch header).
   final String? footerBatch;
+  /// Manual lots: edit affordance next to remaining qty.
+  final bool showEditIcon;
 
   const _QtyFocusCard({
     required this.total,
@@ -764,6 +831,7 @@ class _QtyFocusCard extends ConsumerWidget {
     this.badgeTooltip,
     this.countBadge,
     this.footerBatch,
+    this.showEditIcon = false,
   });
 
   static Widget lot({
@@ -795,6 +863,7 @@ class _QtyFocusCard extends ConsumerWidget {
           footerBatch: showBatchInFooter && lot.batchNumber.isNotEmpty
               ? lot.batchNumber
               : null,
+          showEditIcon: lot.isManual,
         );
       },
     );
@@ -864,6 +933,7 @@ class _QtyFocusCard extends ConsumerWidget {
                           life: life,
                           lifeColor: lifeColor,
                           dense: dense,
+                          showEditIcon: showEditIcon,
                         ),
                         SizedBox(height: dense ? 10 : 12),
                         _MetricStrip(
@@ -947,6 +1017,7 @@ class _StatusCluster extends StatelessWidget {
   final double life;
   final Color lifeColor;
   final bool dense;
+  final bool showEditIcon;
 
   const _StatusCluster({
     required this.remainingLabel,
@@ -956,12 +1027,22 @@ class _StatusCluster extends StatelessWidget {
     required this.lifeColor,
     required this.dense,
     this.trailing,
+    this.showEditIcon = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final muted = theme.colorScheme.onSurfaceVariant;
+    final qtyStyle = (dense
+            ? theme.textTheme.headlineSmall
+            : theme.textTheme.headlineMedium)
+        ?.copyWith(
+      fontWeight: FontWeight.w900,
+      height: 1.05,
+      letterSpacing: -0.6,
+      color: remainingColor,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -983,17 +1064,24 @@ class _StatusCluster extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    remainingValue,
-                    style: (dense
-                            ? theme.textTheme.headlineSmall
-                            : theme.textTheme.headlineMedium)
-                        ?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      height: 1.05,
-                      letterSpacing: -0.6,
-                      color: remainingColor,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          remainingValue,
+                          style: qtyStyle,
+                        ),
+                      ),
+                      if (showEditIcon) ...[
+                        const SizedBox(width: 6),
+                        Icon(
+                          Icons.edit_outlined,
+                          size: dense ? 16 : 18,
+                          color: remainingColor.withValues(alpha: 0.75),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),
@@ -1272,16 +1360,20 @@ class _QtyStat extends StatelessWidget {
 }
 
 class _BatchLotPanel extends StatefulWidget {
+  final Product product;
   final String batchNumber;
   final List<ProductBatche> lots;
   final Map<String, LotPurchaseContext> sources;
   final String dateFormat;
+  final ValueChanged<ProductBatche> onEditManualLot;
 
   const _BatchLotPanel({
+    required this.product,
     required this.batchNumber,
     required this.lots,
     required this.sources,
     required this.dateFormat,
+    required this.onEditManualLot,
   });
 
   @override
@@ -1358,25 +1450,29 @@ class _BatchLotPanelState extends State<_BatchLotPanel> {
                           if (i > 0) const SizedBox(height: 8),
                           Builder(
                             builder: (context) {
-                              final src = widget.sources[lots[i].uuid];
+                              final lot = lots[i];
+                              final src = widget.sources[lot.uuid];
                               return _QtyFocusCard.lot(
-                                lot: lots[i],
+                                lot: lot,
                                 source: src,
                                 dateFormat: widget.dateFormat,
                                 showBatchInFooter: false,
                                 dense: true,
-                                onOpenOrder: src == null
-                                    ? null
-                                    : () {
-                                        Navigator.push<void>(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => OrderDetailScreen(
-                                              orderUuid: src.orderUuid,
-                                            ),
-                                          ),
-                                        );
-                                      },
+                                onOpenOrder: lot.isManual
+                                    ? () => widget.onEditManualLot(lot)
+                                    : src == null
+                                        ? null
+                                        : () {
+                                            Navigator.push<void>(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    OrderDetailScreen(
+                                                  orderUuid: src.orderUuid,
+                                                ),
+                                              ),
+                                            );
+                                          },
                               );
                             },
                           ),
@@ -1391,24 +1487,51 @@ class _BatchLotPanelState extends State<_BatchLotPanel> {
   }
 }
 
-class _AddManualLotSheet extends ConsumerStatefulWidget {
+class _ManualLotSheet extends ConsumerStatefulWidget {
   final Product product;
+  final ProductBatche? existing;
 
-  const _AddManualLotSheet({required this.product});
+  const _ManualLotSheet({
+    required this.product,
+    this.existing,
+  });
 
   @override
-  ConsumerState<_AddManualLotSheet> createState() => _AddManualLotSheetState();
+  ConsumerState<_ManualLotSheet> createState() => _ManualLotSheetState();
 }
 
-class _AddManualLotSheetState extends ConsumerState<_AddManualLotSheet> {
+class _ManualLotSheetState extends ConsumerState<_ManualLotSheet> {
   final _formKey = GlobalKey<FormState>();
-  final _qty = TextEditingController();
-  final _cost = TextEditingController();
-  final _batch = TextEditingController();
-  String _manualType = ManualBatchType.opening;
+  late final TextEditingController _qty;
+  late final TextEditingController _cost;
+  late final TextEditingController _batch;
+  late String _manualType;
   DateTime? _expiry;
   DateTime? _mfg;
   bool _saving = false;
+
+  bool get _isEditing => widget.existing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final lot = widget.existing;
+    _qty = TextEditingController(
+      text: lot == null
+          ? ''
+          : AmountFormatter.formatQuantity(lot.remainingQuantity),
+    );
+    _cost = TextEditingController(
+      text: lot == null ? '' : AmountFormatter.formatQuantity(lot.effectiveCost),
+    );
+    _batch = TextEditingController(text: lot?.batchNumber ?? '');
+    _manualType = lot?.manualType ?? ManualBatchType.opening;
+    if (_manualType.isEmpty || !ManualBatchType.all.contains(_manualType)) {
+      _manualType = ManualBatchType.opening;
+    }
+    _expiry = lot?.expiryDate;
+    _mfg = lot?.manufactureDate;
+  }
 
   @override
   void dispose() {
@@ -1443,20 +1566,36 @@ class _AddManualLotSheetState extends ConsumerState<_AddManualLotSheet> {
 
     final qty = double.tryParse(_qty.text.trim());
     final cost = double.tryParse(_cost.text.trim()) ?? 0;
-    if (qty == null || qty <= 0) return;
+    if (qty == null) return;
+    if (!_isEditing && qty <= 0) return;
+    if (_isEditing && qty < 0) return;
 
     setState(() => _saving = true);
     try {
-      await ref.read(inventoryRepositoryProvider).receiveIntoBatch(
-            productUuid: widget.product.uuid,
-            quantity: qty,
-            effectiveCost: cost,
-            batchNumber: _batch.text.trim().isEmpty ? null : _batch.text.trim(),
-            isManual: true,
-            manualType: _manualType,
-            manufactureDate: _mfg,
-            expiryDate: _expiry,
-          );
+      final repo = ref.read(inventoryRepositoryProvider);
+      final existing = widget.existing;
+      if (existing == null) {
+        await repo.receiveIntoBatch(
+          productUuid: widget.product.uuid,
+          quantity: qty,
+          effectiveCost: cost,
+          batchNumber: _batch.text.trim().isEmpty ? null : _batch.text.trim(),
+          isManual: true,
+          manualType: _manualType,
+          manufactureDate: _mfg,
+          expiryDate: _expiry,
+        );
+      } else {
+        await repo.updateManualLot(
+          lotUuid: existing.uuid,
+          remainingQuantity: qty,
+          effectiveCost: cost,
+          batchNumber: _batch.text.trim().isEmpty ? null : _batch.text.trim(),
+          manualType: _manualType,
+          manufactureDate: _mfg,
+          expiryDate: _expiry,
+        );
+      }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) {
@@ -1474,6 +1613,11 @@ class _AddManualLotSheetState extends ConsumerState<_AddManualLotSheet> {
     final l10n = AppLocalizations.of(context)!;
     final dateFormat = ref.watch(userProfileProvider).dateFormat;
     final bottom = MediaQuery.of(context).viewInsets.bottom;
+    final existing = widget.existing;
+    final consumed = existing?.consumedQuantity ?? 0;
+    final willSplitCost = existing != null &&
+        consumed > 1e-9 &&
+        existing.remainingQuantity > 1e-9;
 
     return Padding(
       padding: EdgeInsets.only(bottom: bottom),
@@ -1508,7 +1652,7 @@ class _AddManualLotSheetState extends ConsumerState<_AddManualLotSheet> {
                   ),
                 ),
                 Text(
-                  l10n.addManualLot,
+                  _isEditing ? l10n.editManualLot : l10n.addManualLot,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -1520,6 +1664,32 @@ class _AddManualLotSheetState extends ConsumerState<_AddManualLotSheet> {
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
+                if (willSplitCost) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppColors.warning.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.info_outline,
+                            size: 18, color: AppColors.warning),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n.manualLotCostSplitHint,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurface,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Text(
                   l10n.selectLotType,
@@ -1548,12 +1718,22 @@ class _AddManualLotSheetState extends ConsumerState<_AddManualLotSheet> {
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                   ],
                   decoration: InputDecoration(
-                    labelText: '${l10n.lotQuantity} (${widget.product.unit})',
+                    labelText: _isEditing
+                        ? '${l10n.lotRemaining} (${widget.product.unit})'
+                        : '${l10n.lotQuantity} (${widget.product.unit})',
+                    helperText: _isEditing && consumed > 1e-9
+                        ? l10n.consumedQtyHint(
+                            AmountFormatter.formatQuantity(consumed),
+                          )
+                        : null,
                     border: const OutlineInputBorder(),
                   ),
                   validator: (v) {
                     final n = double.tryParse(v?.trim() ?? '');
-                    if (n == null || n <= 0) {
+                    if (n == null) return l10n.pleaseEnterValidNumber;
+                    if (_isEditing) {
+                      if (n < 0) return l10n.pleaseEnterValidNumber;
+                    } else if (n <= 0) {
                       return l10n.pleaseEnterValidNumber;
                     }
                     return null;

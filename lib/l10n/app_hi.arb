@@ -130,6 +130,15 @@
   "noOpenLots": "कोई खुला लॉट नहीं",
   "addManualLot": "मैन्युअल लॉट जोड़ें",
   "manualLotSaved": "लॉट सफलतापूर्वक जोड़ा गया",
+  "editManualLot": "मैन्युअल लॉट संपादित करें",
+  "manualLotUpdated": "लॉट सफलतापूर्वक अपडेट हुआ",
+  "manualLotCostSplitHint": "यह लॉट आंशिक उपयोग हुआ है। यूनिट लागत बदलने पर शेष मात्रा नए लॉट में चली जाएगी।",
+  "consumedQtyHint": "पहले से उपयोग: {quantity}",
+  "@consumedQtyHint": {
+    "placeholders": {
+      "quantity": { "type": "String" }
+    }
+  },
   "lotTypeOpening": "ओपनिंग",
   "lotTypeProduction": "प्रोडक्शन",
   "lotTypeAdjustment": "एडजस्टमेंट",

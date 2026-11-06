@@ -378,6 +378,71 @@ class InventoryRepository {
     return ok;
   }
 
+  /// Update a manual lot's remaining qty / cost / labels / dates.
+  /// [remainingQuantity] is on-hand for this lot (total becomes consumed + remaining).
+  /// Qty/labels are applied first so a fully consumed lot can regain remaining
+  /// before a cost change. Cost uses [updateManualLotEffectiveCost] (may split).
+  /// Returns the lot uuid that holds remaining stock after the update.
+  Future<String> updateManualLot({
+    required String lotUuid,
+    required double remainingQuantity,
+    required double effectiveCost,
+    String? batchNumber,
+    String? manualType,
+    DateTime? manufactureDate,
+    DateTime? expiryDate,
+  }) async {
+    final lot = await getBatch(lotUuid);
+    if (lot == null) throw StateError('Lot not found: $lotUuid');
+    if (!lot.isManual) {
+      throw StateError('Purchase lots cannot be edited here');
+    }
+    if (remainingQuantity < -1e-9) {
+      throw ArgumentError('remainingQuantity cannot be negative');
+    }
+    if (manualType != null && !ManualBatchType.all.contains(manualType)) {
+      throw ArgumentError(
+        'manualType must be one of: ${ManualBatchType.all.join("|")}',
+      );
+    }
+
+    final newTotal = lot.consumedQuantity + remainingQuantity;
+
+    String batchNum = (batchNumber ?? lot.batchNumber).trim();
+    if (batchNum.isEmpty) {
+      if (expiryDate != null) {
+        batchNum =
+            'EXP-${expiryDate.year}-${expiryDate.month.toString().padLeft(2, '0')}-${expiryDate.day.toString().padLeft(2, '0')}';
+      } else {
+        batchNum = lot.batchNumber;
+      }
+    }
+
+    await (_db.update(_db.productBatches)..where((b) => b.uuid.equals(lotUuid)))
+        .write(
+      ProductBatchesCompanion(
+        totalQuantity: Value(newTotal),
+        batchNumber: Value(batchNum),
+        manualType: Value(manualType ?? lot.manualType),
+        manufactureDate: Value(manufactureDate),
+        expiryDate: Value(expiryDate),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+
+    // Reprice after qty so restoring remaining on a closed lot can still split.
+    final costLotUuid = remainingQuantity > 1e-9
+        ? await updateManualLotEffectiveCost(
+            lotUuid: lotUuid,
+            newEffectiveCost: effectiveCost,
+          )
+        : lotUuid;
+
+    await refreshProductStockCache(lot.productUuid);
+    return costLotUuid;
+  }
+
   /// Manual lots only: set cost in place if unused; else split remaining to a new lot.
   /// Returns the lot uuid that holds the new cost (same or new).
   Future<String> updateManualLotEffectiveCost({
@@ -407,7 +472,8 @@ class InventoryRepository {
 
     final remaining = lot.remainingQuantity;
     if (remaining <= 1e-9) {
-      throw StateError('No remaining qty to reprice on lot $lotUuid');
+      // Nothing left to reprice; leave historical cost as-is.
+      return lotUuid;
     }
 
     return _db.transaction(() async {

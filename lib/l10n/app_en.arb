@@ -130,6 +130,15 @@
   "noOpenLots": "No open lots",
   "addManualLot": "Add manual lot",
   "manualLotSaved": "Lot added successfully",
+  "editManualLot": "Edit manual lot",
+  "manualLotUpdated": "Lot updated successfully",
+  "manualLotCostSplitHint": "This lot is partly used. Changing unit cost will move remaining qty to a new lot.",
+  "consumedQtyHint": "Already consumed: {quantity}",
+  "@consumedQtyHint": {
+    "placeholders": {
+      "quantity": { "type": "String" }
+    }
+  },
   "lotTypeOpening": "Opening",
   "lotTypeProduction": "Production",
   "lotTypeAdjustment": "Adjustment",

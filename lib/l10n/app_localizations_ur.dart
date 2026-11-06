@@ -370,6 +370,21 @@ class AppLocalizationsUr extends AppLocalizations {
   String get manualLotSaved => 'لاٹ کامیابی سے شامل ہو گیا';
 
   @override
+  String get editManualLot => 'مینوئل لاٹ میں ترمیم';
+
+  @override
+  String get manualLotUpdated => 'لاٹ کامیابی سے اپڈیٹ ہو گیا';
+
+  @override
+  String get manualLotCostSplitHint =>
+      'یہ لاٹ جزوی طور پر استعمال ہو چکا ہے۔ یونٹ لاگت بدلنے پر باقی مقدار نئے لاٹ میں چلی جائے گی۔';
+
+  @override
+  String consumedQtyHint(String quantity) {
+    return 'پہلے سے استعمال شدہ: $quantity';
+  }
+
+  @override
   String get lotTypeOpening => 'اوپننگ';
 
   @override

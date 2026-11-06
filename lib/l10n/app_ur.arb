@@ -130,6 +130,15 @@
   "noOpenLots": "کوئی کھلا لاٹ نہیں",
   "addManualLot": "مینوئل لاٹ شامل کریں",
   "manualLotSaved": "لاٹ کامیابی سے شامل ہو گیا",
+  "editManualLot": "مینوئل لاٹ میں ترمیم",
+  "manualLotUpdated": "لاٹ کامیابی سے اپڈیٹ ہو گیا",
+  "manualLotCostSplitHint": "یہ لاٹ جزوی طور پر استعمال ہو چکا ہے۔ یونٹ لاگت بدلنے پر باقی مقدار نئے لاٹ میں چلی جائے گی۔",
+  "consumedQtyHint": "پہلے سے استعمال شدہ: {quantity}",
+  "@consumedQtyHint": {
+    "placeholders": {
+      "quantity": { "type": "String" }
+    }
+  },
   "lotTypeOpening": "اوپننگ",
   "lotTypeProduction": "پروڈکشن",
   "lotTypeAdjustment": "ایڈجسٹمنٹ",

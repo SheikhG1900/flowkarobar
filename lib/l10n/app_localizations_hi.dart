@@ -370,6 +370,21 @@ class AppLocalizationsHi extends AppLocalizations {
   String get manualLotSaved => 'लॉट सफलतापूर्वक जोड़ा गया';
 
   @override
+  String get editManualLot => 'मैन्युअल लॉट संपादित करें';
+
+  @override
+  String get manualLotUpdated => 'लॉट सफलतापूर्वक अपडेट हुआ';
+
+  @override
+  String get manualLotCostSplitHint =>
+      'यह लॉट आंशिक उपयोग हुआ है। यूनिट लागत बदलने पर शेष मात्रा नए लॉट में चली जाएगी।';
+
+  @override
+  String consumedQtyHint(String quantity) {
+    return 'पहले से उपयोग: $quantity';
+  }
+
+  @override
   String get lotTypeOpening => 'ओपनिंग';
 
   @override
