@@ -345,6 +345,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get serviceProduct => 'Service';
 
   @override
+  String get serviceUnitCost => 'Unit cost';
+
+  @override
+  String get serviceUnitCostHint =>
+      'Default cost for new sales. Past orders keep their own COGS.';
+
+  @override
+  String get lineUnitCost => 'Unit cost (COGS)';
+
+  @override
+  String get sectionCosting => 'Costing';
+
+  @override
   String get productDetails => 'Product Details';
 
   @override

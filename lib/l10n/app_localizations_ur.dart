@@ -343,6 +343,19 @@ class AppLocalizationsUr extends AppLocalizations {
   String get serviceProduct => 'سروس';
 
   @override
+  String get serviceUnitCost => 'یونٹ لاگت';
+
+  @override
+  String get serviceUnitCostHint =>
+      'نئی فروخت کے لیے ڈیفالٹ لاگت۔ پرانے آرڈرز اپنی COGS رکھتے ہیں۔';
+
+  @override
+  String get lineUnitCost => 'یونٹ لاگت (COGS)';
+
+  @override
+  String get sectionCosting => 'لاگت';
+
+  @override
   String get productDetails => 'پروڈکٹ تفصیلات';
 
   @override

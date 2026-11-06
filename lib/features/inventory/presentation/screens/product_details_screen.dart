@@ -15,6 +15,7 @@ import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dar
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/shared/widgets/form_section_card.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 
 enum _LotFilter { open, all, consumed }
@@ -368,15 +369,40 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                     sources: sources,
                     dateFormat: dateFormat,
                   ),
-              ] else
+              ] else ...[
+                const SizedBox(height: 16),
+                FormSectionCard(
+                  title: l10n.sectionCosting,
+                  icon: Icons.payments_outlined,
+                  accentColor: AppColors.payableColor,
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        Icons.attach_money_rounded,
+                        color: AppColors.payableColor,
+                      ),
+                      title: Text(l10n.serviceUnitCost),
+                      subtitle: Text(l10n.serviceUnitCostHint),
+                      trailing: Text(
+                        formatOrderAmount(ref, product.purchasePrice),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.payableColor,
+                            ),
+                      ),
+                    ),
+                  ],
+                ),
                 Padding(
-                  padding: const EdgeInsets.only(top: 24),
+                  padding: const EdgeInsets.only(top: 16),
                   child: OrderEmptyState(
                     icon: Icons.miscellaneous_services_outlined,
                     message: l10n.serviceNoStockHint,
                     color: accent,
                   ),
                 ),
+              ],
             ],
           ),
         );

@@ -28,15 +28,24 @@ class _OrderLine {
   final TextEditingController quantity;
   final TextEditingController unitPrice;
   final TextEditingController discount;
+  /// Service sale COGS; stamped to [OrderItem.purchasePriceSnapshot].
+  final TextEditingController unitCost;
 
-  _OrderLine({required this.product, required double price})
-      : quantity = TextEditingController(text: '1'),
+  _OrderLine({
+    required this.product,
+    required double price,
+    double? defaultUnitCost,
+  })  : quantity = TextEditingController(text: '1'),
         unitPrice = TextEditingController(text: _plain(price)),
-        discount = TextEditingController(text: '0');
+        discount = TextEditingController(text: '0'),
+        unitCost = TextEditingController(
+          text: _plain(defaultUnitCost ?? product.purchasePrice),
+        );
 
   double get quantityValue => _parse(quantity);
   double get unitPriceValue => _parse(unitPrice);
   double get discountValue => _parse(discount);
+  double get unitCostValue => _parse(unitCost);
   double get gross => quantityValue * unitPriceValue;
   double get lineTotal => (gross - discountValue).clamp(0, double.infinity);
 
@@ -44,6 +53,7 @@ class _OrderLine {
     quantity.dispose();
     unitPrice.dispose();
     discount.dispose();
+    unitCost.dispose();
   }
 
   static String _plain(double value) => AmountFormatter.formatQuantity(value);
@@ -108,6 +118,7 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
         _lines.add(_OrderLine(
           product: product,
           price: _isSale ? product.retailPrice : product.purchasePrice,
+          defaultUnitCost: product.purchasePrice,
         ));
       }
     });
@@ -205,7 +216,12 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
                 quantity: line.quantityValue,
                 unitPrice: line.unitPriceValue,
                 discountAmount: drift.Value(line.discountValue),
-                purchasePriceSnapshot: drift.Value(line.product.purchasePrice),
+                // Services: freeze line COGS. Goods: FEFO overwrites on deliver.
+                purchasePriceSnapshot: drift.Value(
+                  line.product.isService
+                      ? line.unitCostValue
+                      : line.product.purchasePrice,
+                ),
                 unit: drift.Value(line.product.unit),
               ))
           .toList();
@@ -369,6 +385,7 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
                           ? null
                           : categoryById[_lines[i].product.categoryUuid],
                       amountLabel: formatOrderAmount(ref, _lines[i].lineTotal),
+                      showUnitCost: _isSale && _lines[i].product.isService,
                       onChanged: () => setState(() {}),
                       onRemove: () => _removeLine(i),
                     ),
@@ -539,6 +556,7 @@ class _OrderLineCard extends ConsumerWidget {
   final Color color;
   final ProductCategory? category;
   final String amountLabel;
+  final bool showUnitCost;
   final VoidCallback onChanged;
   final VoidCallback onRemove;
 
@@ -550,6 +568,7 @@ class _OrderLineCard extends ConsumerWidget {
     required this.onChanged,
     required this.onRemove,
     this.category,
+    this.showUnitCost = false,
   });
 
   @override
@@ -689,6 +708,25 @@ class _OrderLineCard extends ConsumerWidget {
               ),
             ],
           ),
+          if (showUnitCost) ...[
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: line.unitCost,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: _decimalFormatters,
+              decoration: InputDecoration(
+                labelText: l10n.lineUnitCost,
+                helperText: l10n.serviceUnitCostHint,
+                prefixText: currencyAffix.prefixText,
+                suffixText: currencyAffix.suffixText,
+                filled: true,
+                isDense: true,
+              ),
+              validator: nonNegative,
+              onChanged: (_) => onChanged(),
+            ),
+          ],
         ],
       ),
     );

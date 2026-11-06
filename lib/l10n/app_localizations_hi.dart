@@ -343,6 +343,19 @@ class AppLocalizationsHi extends AppLocalizations {
   String get serviceProduct => 'सेवा';
 
   @override
+  String get serviceUnitCost => 'यूनिट लागत';
+
+  @override
+  String get serviceUnitCostHint =>
+      'नई बिक्री के लिए डिफ़ॉल्ट लागत। पुराने ऑर्डर अपनी COGS रखते हैं।';
+
+  @override
+  String get lineUnitCost => 'यूनिट लागत (COGS)';
+
+  @override
+  String get sectionCosting => 'लागत';
+
+  @override
   String get productDetails => 'उत्पाद विवरण';
 
   @override

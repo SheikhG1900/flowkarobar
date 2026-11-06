@@ -748,6 +748,30 @@ abstract class AppLocalizations {
   /// **'Service'**
   String get serviceProduct;
 
+  /// No description provided for @serviceUnitCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit cost'**
+  String get serviceUnitCost;
+
+  /// No description provided for @serviceUnitCostHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Default cost for new sales. Past orders keep their own COGS.'**
+  String get serviceUnitCostHint;
+
+  /// No description provided for @lineUnitCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit cost (COGS)'**
+  String get lineUnitCost;
+
+  /// No description provided for @sectionCosting.
+  ///
+  /// In en, this message translates to:
+  /// **'Costing'**
+  String get sectionCosting;
+
   /// No description provided for @productDetails.
   ///
   /// In en, this message translates to:

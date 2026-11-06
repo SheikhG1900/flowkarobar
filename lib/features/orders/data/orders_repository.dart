@@ -238,10 +238,16 @@ class OrdersRepository {
 
       final inserted = <OrderItem>[];
       for (final item in itemsWithIds) {
+        // Purchase: planned landed unit cost from PO pricing.
+        // Sale: keep caller COGS (service unit cost / product WAC); FEFO
+        // overwrites goods on deliver. Never stamp sell price as COGS.
         final plannedCost = planned[item.uuid.value] ?? item.unitPrice.value;
+        final saleCogs = item.purchasePriceSnapshot.present
+            ? item.purchasePriceSnapshot.value
+            : 0.0;
         final companion = item.copyWith(
           orderUuid: Value(uuid),
-          purchasePriceSnapshot: Value(plannedCost),
+          purchasePriceSnapshot: Value(isSale ? saleCogs : plannedCost),
           receivedQuantity: const Value(0.0),
           isNotSynced: const Value(true),
         );

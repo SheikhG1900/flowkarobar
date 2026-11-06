@@ -11,6 +11,7 @@ import 'package:flowpaisa/features/inventory/presentation/providers/inventory_pr
 import 'package:flowpaisa/features/inventory/presentation/screens/scan_sku_screen.dart';
 import 'package:flowpaisa/features/orders/presentation/widgets/order_entity_pickers.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/entity_picker_sheet.dart';
 import 'package:flowpaisa/shared/widgets/form_section_card.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
@@ -33,6 +34,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
   late final TextEditingController _sku;
   late final TextEditingController _unit;
   late final TextEditingController _minStockAlert;
+  late final TextEditingController _unitCost;
   String? _categoryUuid;
   bool _isService = false;
   bool _saving = false;
@@ -51,6 +53,11 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
           ? ''
           : AmountFormatter.formatQuantity(p!.minStockAlert!),
     );
+    _unitCost = TextEditingController(
+      text: p == null || p.purchasePrice <= 0
+          ? ''
+          : AmountFormatter.formatQuantity(p.purchasePrice),
+    );
     _categoryUuid = p?.categoryUuid;
     _isService = p?.isService ?? false;
   }
@@ -61,6 +68,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     _sku.dispose();
     _unit.dispose();
     _minStockAlert.dispose();
+    _unitCost.dispose();
     super.dispose();
   }
 
@@ -118,6 +126,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
       final repository = ref.read(inventoryRepositoryProvider);
       final unit = _unit.text.trim().isEmpty ? 'Pcs' : _unit.text.trim();
       final minAlert = _isService ? null : _optionalNumber(_minStockAlert);
+      final serviceCost = _optionalNumber(_unitCost) ?? 0.0;
 
       final existing = widget.existing;
       late final Product saved;
@@ -133,6 +142,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             stockQuantity: const drift.Value(0.0),
             minStockAlert: drift.Value(minAlert),
             isService: drift.Value(_isService),
+            purchasePrice: drift.Value(_isService ? serviceCost : 0.0),
           ),
         );
         saved = (await repository.getProduct(uuid))!;
@@ -144,6 +154,9 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
           unit: unit,
           minStockAlert: drift.Value(minAlert),
           isService: _isService,
+          // Services: master default cost. Goods: keep WAC from lots.
+          purchasePrice:
+              _isService ? serviceCost : existing.purchasePrice,
           updatedAt: DateTime.now(),
         );
         await repository.updateProduct(updated);
@@ -328,7 +341,43 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                 ),
               ],
             ),
-            if (!_isService)
+            if (_isService)
+              FormSectionCard(
+                title: l10n.sectionCosting,
+                icon: Icons.payments_outlined,
+                accentColor: AppColors.payableColor,
+                children: [
+                  Builder(
+                    builder: (context) {
+                      final isRtl =
+                          Directionality.of(context) == TextDirection.rtl;
+                      final affix = AmountFormatter.currencyAffix(
+                        ref.watch(currencySymbolProvider),
+                        isRtl: isRtl,
+                      );
+                      return TextFormField(
+                        controller: _unitCost,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d*')),
+                        ],
+                        decoration: fieldDecoration(
+                          l10n.serviceUnitCost,
+                          icon: Icons.attach_money_rounded,
+                          helper: l10n.serviceUnitCostHint,
+                        ).copyWith(
+                          prefixText: affix.prefixText,
+                          suffixText: affix.suffixText,
+                        ),
+                        validator: optionalNumber,
+                      );
+                    },
+                  ),
+                ],
+              )
+            else
               FormSectionCard(
                 title: l10n.sectionStock,
                 icon: Icons.notifications_active_outlined,
