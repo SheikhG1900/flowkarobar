@@ -136,6 +136,14 @@
   "lotTypePurchase": "خرید",
   "lotRemaining": "باقی",
   "lotConsumed": "استعمال شدہ",
+  "lotTotal": "کل",
+  "lotsUnitHint": "مقدار {unit} میں",
+  "@lotsUnitHint": {
+    "placeholders": {
+      "unit": { "type": "String" }
+    }
+  },
+  "lotInventoryCost": "ویلیو",
   "lotUnitCost": "یونٹ لاگت",
   "lotBatchNumber": "بیچ نمبر",
   "lotExpiry": "میعاد",
@@ -172,6 +180,12 @@
   },
   "selectLotType": "لاٹ کی قسم",
   "effectiveCostLabel": "یونٹ لاگت",
+  "lotsInBatch": "{count} لاٹس",
+  "@lotsInBatch": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "@@locale": "ur",
   "refresh": "تازہ کریں",
   "appTitle": "فلوپیسہ",

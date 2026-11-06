@@ -16,7 +16,6 @@ import 'package:flowpaisa/features/settings/presentation/providers/settings_prov
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
-import 'package:material_symbols_icons/symbols.dart';
 
 enum _LotFilter { open, all, consumed }
 
@@ -46,12 +45,20 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     final saved = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) => _AddManualLotSheet(product: product),
     );
-    if (saved == true && mounted) {
-      final l10n = AppLocalizations.of(context)!;
-      ToastUtils.showSuccessToast(context, ref, l10n.manualLotSaved);
+    if (!mounted) return;
+    if (saved == true) {
+      ref.invalidate(productBatchesStreamProvider(widget.productUuid));
+      ref.invalidate(productStreamProvider(widget.productUuid));
+      ref.invalidate(productLotSourcesProvider(widget.productUuid));
+      ToastUtils.showSuccessToast(
+        context,
+        ref,
+        AppLocalizations.of(context)!.manualLotSaved,
+      );
     }
   }
 
@@ -72,6 +79,21 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
       map.putIfAbsent(lot.batchNumber, () => []).add(lot);
     }
     return map;
+  }
+
+  VoidCallback? _orderOpener(
+    BuildContext context,
+    LotPurchaseContext? source,
+  ) {
+    if (source == null) return null;
+    return () {
+      Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OrderDetailScreen(orderUuid: source.orderUuid),
+        ),
+      );
+    };
   }
 
   @override
@@ -144,7 +166,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                   heroTag: 'add_manual_lot_fab',
                   tooltip: l10n.addManualLot,
                   onPressed: () => _openAddManualLot(product),
-                  child: const Icon(Icons.add),
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.addManualLot),
                 ),
           body: ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
@@ -159,12 +182,18 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                 const SizedBox(height: 14),
                 _StockSnapshotRow(
                   onHandLabel: l10n.onHandStock,
-                  onHandValue:
-                      '${AmountFormatter.formatQuantity(product.stockQuantity)} ${product.unit}',
+                  onHandValue: AmountFormatter.formatQuantity(
+                    product.stockQuantity,
+                  ),
+                  onHandColor: isLowStock
+                      ? AppColors.warning
+                      : AppColors.incomeColor,
                   openLotsLabel: l10n.openLots,
                   openLotsValue: '${openLots.length}',
+                  openLotsColor: theme.colorScheme.primary,
                   valueLabel: l10n.inventoryValue,
                   valueAmount: formatOrderAmount(ref, inventoryValue),
+                  valueColor: AppColors.receivableColor,
                   accent: isLowStock ? AppColors.warning : accent,
                 ),
                 const SizedBox(height: 18),
@@ -178,25 +207,40 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                         ),
                       ),
                     ),
-                    _LotFilterChip(
-                      label: l10n.lotFilterOpen,
-                      selected: _filter == _LotFilter.open,
-                      onTap: () => setState(() => _filter = _LotFilter.open),
-                    ),
-                    const SizedBox(width: 6),
-                    _LotFilterChip(
-                      label: l10n.lotFilterAll,
-                      selected: _filter == _LotFilter.all,
-                      onTap: () => setState(() => _filter = _LotFilter.all),
-                    ),
-                    const SizedBox(width: 6),
-                    _LotFilterChip(
-                      label: l10n.lotFilterConsumed,
-                      selected: _filter == _LotFilter.consumed,
-                      onTap: () =>
-                          setState(() => _filter = _LotFilter.consumed),
+                    TextButton.icon(
+                      onPressed: () => _openAddManualLot(product),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: Text(l10n.addManualLot),
                     ),
                   ],
+                ),
+                const SizedBox(height: 4),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _LotFilterChip(
+                        label: l10n.lotFilterOpen,
+                        selected: _filter == _LotFilter.open,
+                        onTap: () =>
+                            setState(() => _filter = _LotFilter.open),
+                      ),
+                      const SizedBox(width: 6),
+                      _LotFilterChip(
+                        label: l10n.lotFilterAll,
+                        selected: _filter == _LotFilter.all,
+                        onTap: () =>
+                            setState(() => _filter = _LotFilter.all),
+                      ),
+                      const SizedBox(width: 6),
+                      _LotFilterChip(
+                        label: l10n.lotFilterConsumed,
+                        selected: _filter == _LotFilter.consumed,
+                        onTap: () =>
+                            setState(() => _filter = _LotFilter.consumed),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 10),
                 if (batchesAsync.isLoading && lots.isEmpty)
@@ -207,55 +251,56 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                 else if (filtered.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 28),
-                    child: OrderEmptyState(
-                      icon: Icons.inventory_2_outlined,
-                      message: lots.isEmpty
-                          ? l10n.noLotsYet
-                          : l10n.noOpenLots,
-                      color: accent,
+                    child: Column(
+                      children: [
+                        OrderEmptyState(
+                          icon: Icons.inventory_2_outlined,
+                          message: lots.isEmpty
+                              ? l10n.noLotsYet
+                              : l10n.noOpenLots,
+                          color: accent,
+                        ),
+                        if (lots.isEmpty) ...[
+                          const SizedBox(height: 16),
+                          FilledButton.icon(
+                            onPressed: () => _openAddManualLot(product),
+                            icon: const Icon(Icons.add),
+                            label: Text(l10n.addManualLot),
+                          ),
+                        ],
+                      ],
                     ),
                   )
                 else
                   for (final key in groupKeys) ...[
-                    if (grouped.length > 1 || key.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8, bottom: 6, left: 2),
-                        child: Text(
-                          key.isEmpty ? '—' : key,
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    for (final lot in grouped[key]!) ...[
-                      Builder(
-                        builder: (context) {
+                    Builder(
+                      builder: (context) {
+                        final groupLots = grouped[key]!;
+                        if (groupLots.length == 1) {
+                          final lot = groupLots.first;
                           final lotSource = sources[lot.uuid];
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 10),
-                            child: _LotCard(
+                            child: _QtyFocusCard.lot(
                               lot: lot,
-                              unit: product.unit,
                               source: lotSource,
                               dateFormat: dateFormat,
-                              onOpenOrder: lotSource == null
-                                  ? null
-                                  : () {
-                                      Navigator.push<void>(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => OrderDetailScreen(
-                                            orderUuid: lotSource.orderUuid,
-                                          ),
-                                        ),
-                                      );
-                                    },
+                              showBatchInFooter: true,
+                              onOpenOrder: _orderOpener(context, lotSource),
                             ),
                           );
-                        },
-                      ),
-                    ],
+                        }
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _BatchLotPanel(
+                            batchNumber: key.isEmpty ? '—' : key,
+                            lots: groupLots,
+                            sources: sources,
+                            dateFormat: dateFormat,
+                          ),
+                        );
+                      },
+                    ),
                   ],
               ] else
                 Padding(
@@ -364,6 +409,11 @@ class _ProductHero extends StatelessWidget {
                           spacing: 8,
                           runSpacing: 6,
                           children: [
+                            if (!product.isService)
+                              _HeroPill(
+                                icon: Icons.straighten_outlined,
+                                label: product.unit,
+                              ),
                             if (category != null)
                               _HeroPill(
                                 icon: categoryIconData(category),
@@ -498,19 +548,25 @@ class _HeroPill extends StatelessWidget {
 class _StockSnapshotRow extends StatelessWidget {
   final String onHandLabel;
   final String onHandValue;
+  final Color onHandColor;
   final String openLotsLabel;
   final String openLotsValue;
+  final Color openLotsColor;
   final String valueLabel;
   final String valueAmount;
+  final Color valueColor;
   final Color accent;
 
   const _StockSnapshotRow({
     required this.onHandLabel,
     required this.onHandValue,
+    required this.onHandColor,
     required this.openLotsLabel,
     required this.openLotsValue,
+    required this.openLotsColor,
     required this.valueLabel,
     required this.valueAmount,
+    required this.valueColor,
     required this.accent,
   });
 
@@ -522,7 +578,8 @@ class _StockSnapshotRow extends StatelessWidget {
           child: _MetricTile(
             label: onHandLabel,
             value: onHandValue,
-            accent: accent,
+            valueColor: onHandColor,
+            accent: onHandColor,
           ),
         ),
         const SizedBox(width: 10),
@@ -530,7 +587,8 @@ class _StockSnapshotRow extends StatelessWidget {
           child: _MetricTile(
             label: openLotsLabel,
             value: openLotsValue,
-            accent: accent,
+            valueColor: openLotsColor,
+            accent: openLotsColor,
           ),
         ),
         const SizedBox(width: 10),
@@ -538,7 +596,8 @@ class _StockSnapshotRow extends StatelessWidget {
           child: _MetricTile(
             label: valueLabel,
             value: valueAmount,
-            accent: accent,
+            valueColor: valueColor,
+            accent: valueColor,
           ),
         ),
       ],
@@ -549,11 +608,13 @@ class _StockSnapshotRow extends StatelessWidget {
 class _MetricTile extends StatelessWidget {
   final String label;
   final String value;
+  final Color valueColor;
   final Color accent;
 
   const _MetricTile({
     required this.label,
     required this.value,
+    required this.valueColor,
     required this.accent,
   });
 
@@ -582,6 +643,7 @@ class _MetricTile extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
+              color: valueColor,
             ),
           ),
         ],
@@ -626,212 +688,704 @@ class _LotFilterChip extends StatelessWidget {
   }
 }
 
-class _LotCard extends StatelessWidget {
-  final ProductBatche lot;
-  final String unit;
-  final LotPurchaseContext? source;
-  final String dateFormat;
-  final VoidCallback? onOpenOrder;
+Color _lotAccent(BuildContext context, ProductBatche lot) {
+  if (!lot.isOpen) return Theme.of(context).colorScheme.outline;
+  if (lot.expiryDate != null) {
+    final days = lot.expiryDate!.difference(DateTime.now()).inDays;
+    if (days <= 60) return AppColors.warning;
+  }
+  if (lot.isManual) return AppColors.info;
+  return AppColors.expenseColor;
+}
 
-  const _LotCard({
-    required this.lot,
-    required this.unit,
-    required this.source,
+String _lotTypeLabel(AppLocalizations l10n, ProductBatche lot) {
+  if (!lot.isManual) return l10n.lotTypePurchase;
+  switch (lot.manualType) {
+    case ManualBatchType.opening:
+      return l10n.lotTypeOpening;
+    case ManualBatchType.production:
+      return l10n.lotTypeProduction;
+    default:
+      return l10n.lotTypeAdjustment;
+  }
+}
+
+IconData _lotTypeIcon(ProductBatche lot) {
+  if (!lot.isManual) return Icons.local_shipping_outlined;
+  switch (lot.manualType) {
+    case ManualBatchType.opening:
+      return Icons.inventory_2_outlined;
+    case ManualBatchType.production:
+      return Icons.precision_manufacturing_outlined;
+    default:
+      return Icons.tune_outlined;
+  }
+}
+
+/// Shared value-first card for a single lot or a multi-lot batch summary.
+class _QtyFocusCard extends ConsumerWidget {
+  final double total;
+  final double consumed;
+  final double remaining;
+  final double unitCost;
+  final double inventoryValue;
+  final DateTime? earliestExpiry;
+  final String? orderHint;
+  final String dateFormat;
+  final Color accent;
+  final bool dense;
+  final VoidCallback? onOpenOrder;
+  final Widget? bottom;
+  final Widget? trailing;
+
+  /// Corner badge: type icon (lot) or omitted when [countBadge] is set.
+  final IconData? badgeIcon;
+  final String? badgeTooltip;
+  /// Batch summary: number of lots in the corner badge.
+  final int? countBadge;
+  /// Footer: batch label (single lot or batch header).
+  final String? footerBatch;
+
+  const _QtyFocusCard({
+    required this.total,
+    required this.consumed,
+    required this.remaining,
+    required this.unitCost,
+    required this.inventoryValue,
     required this.dateFormat,
+    required this.accent,
+    this.earliestExpiry,
+    this.orderHint,
+    this.dense = false,
     this.onOpenOrder,
+    this.bottom,
+    this.trailing,
+    this.badgeIcon,
+    this.badgeTooltip,
+    this.countBadge,
+    this.footerBatch,
   });
 
-  Color _accent(BuildContext context) {
-    if (!lot.isOpen) {
-      return Theme.of(context).colorScheme.outline;
-    }
-    if (lot.expiryDate != null) {
-      final days = lot.expiryDate!.difference(DateTime.now()).inDays;
-      if (days <= 60) return AppColors.warning;
-    }
-    if (lot.isManual) return AppColors.info;
-    return AppColors.expenseColor;
+  static Widget lot({
+    required ProductBatche lot,
+    required LotPurchaseContext? source,
+    required String dateFormat,
+    required bool showBatchInFooter,
+    VoidCallback? onOpenOrder,
+    bool dense = false,
+  }) {
+    return Builder(
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        final accent = _lotAccent(context, lot);
+        return _QtyFocusCard(
+          total: lot.totalQuantity,
+          consumed: lot.consumedQuantity,
+          remaining: lot.remainingQuantity,
+          unitCost: lot.effectiveCost,
+          inventoryValue: lot.remainingQuantity * lot.effectiveCost,
+          earliestExpiry: lot.expiryDate,
+          orderHint: source?.orderNumber,
+          dateFormat: dateFormat,
+          accent: accent,
+          dense: dense,
+          onOpenOrder: onOpenOrder,
+          badgeIcon: _lotTypeIcon(lot),
+          badgeTooltip: _lotTypeLabel(l10n, lot),
+          footerBatch: showBatchInFooter && lot.batchNumber.isNotEmpty
+              ? lot.batchNumber
+              : null,
+        );
+      },
+    );
   }
 
-  String _typeLabel(AppLocalizations l10n) {
-    if (!lot.isManual) return l10n.lotTypePurchase;
-    switch (lot.manualType) {
-      case ManualBatchType.opening:
-        return l10n.lotTypeOpening;
-      case ManualBatchType.production:
-        return l10n.lotTypeProduction;
-      case ManualBatchType.adjustment:
-        return l10n.lotTypeAdjustment;
-      default:
-        return l10n.lotTypeAdjustment;
-    }
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final life = total <= 0 ? 0.0 : (remaining / total).clamp(0.0, 1.0);
+    final lifeColor = life <= 0
+        ? theme.colorScheme.outline
+        : life <= 0.25
+            ? AppColors.warning
+            : accent;
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final pad = dense ? 10.0 : 14.0;
+
+    final expiryWarn = earliestExpiry != null &&
+        earliestExpiry!.difference(DateTime.now()).inDays <= 60;
+    final hasFooter = (footerBatch != null && footerBatch!.isNotEmpty) ||
+        earliestExpiry != null ||
+        (orderHint != null && orderHint!.isNotEmpty);
+
+    return Container(
+      decoration: dense
+          ? BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: accent.withValues(alpha: 0.18)),
+            )
+          : AppColors.transactionListItemDecoration(theme, accent),
+      clipBehavior: Clip.none,
+      child: Material(
+        color: Colors.transparent,
+        clipBehavior: Clip.none,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                InkWell(
+                  onTap: onOpenOrder,
+                  borderRadius: BorderRadius.circular(dense ? 14 : 20),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      pad,
+                      pad + ((badgeIcon != null || countBadge != null) ? 4 : 0),
+                      pad,
+                      pad,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _StatusCluster(
+                          trailing: trailing,
+                          remainingLabel: l10n.lotRemaining,
+                          remainingValue:
+                              AmountFormatter.formatQuantity(remaining),
+                          remainingColor: remaining <= 0
+                              ? muted
+                              : life <= 0.25
+                                  ? AppColors.warning
+                                  : AppColors.incomeColor,
+                          life: life,
+                          lifeColor: lifeColor,
+                          dense: dense,
+                        ),
+                        SizedBox(height: dense ? 10 : 12),
+                        _MetricStrip(
+                          children: [
+                            _QtyStat(
+                              label: l10n.lotTotal,
+                              value: AmountFormatter.formatQuantity(total),
+                              valueColor: theme.colorScheme.onSurface,
+                            ),
+                            _QtyStat(
+                              label: l10n.lotConsumed,
+                              value: AmountFormatter.formatQuantity(consumed),
+                              valueColor: AppColors.expenseColor,
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: dense ? 8 : 10),
+                        _MetricStrip(
+                          children: [
+                            _QtyStat(
+                              label: l10n.lotUnitCost,
+                              value: formatOrderAmount(ref, unitCost),
+                              valueColor: AppColors.payableColor,
+                            ),
+                            _QtyStat(
+                              label: l10n.lotInventoryCost,
+                              value: formatOrderAmount(ref, inventoryValue),
+                              valueColor: AppColors.receivableColor,
+                              emphasize: true,
+                            ),
+                          ],
+                        ),
+                        if (hasFooter) ...[
+                          SizedBox(height: dense ? 8 : 10),
+                          _ItemFooter(
+                            batch: footerBatch,
+                            expiryText: earliestExpiry == null
+                                ? null
+                                : AppDateFormatter.formatDate(
+                                    earliestExpiry!,
+                                    pattern: dateFormat,
+                                  ),
+                            expiryWarn: expiryWarn,
+                            orderHint: orderHint,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+                if (bottom != null) bottom!,
+              ],
+            ),
+            if (badgeIcon != null || countBadge != null)
+              Positioned(
+                top: -2,
+                left: -2,
+                child: _CornerBadge(
+                  icon: badgeIcon,
+                  count: countBadge,
+                  color: accent,
+                  tooltip: badgeTooltip ??
+                      (countBadge != null
+                          ? l10n.lotsInBatch(countBadge!)
+                          : null),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
   }
+}
+
+/// Remaining + life bar (+ expand trailing). Type lives on the corner badge.
+class _StatusCluster extends StatelessWidget {
+  final Widget? trailing;
+  final String remainingLabel;
+  final String remainingValue;
+  final Color remainingColor;
+  final double life;
+  final Color lifeColor;
+  final bool dense;
+
+  const _StatusCluster({
+    required this.remainingLabel,
+    required this.remainingValue,
+    required this.remainingColor,
+    required this.life,
+    required this.lifeColor,
+    required this.dense,
+    this.trailing,
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final l10n = AppLocalizations.of(context)!;
-    final accent = _accent(context);
-    final remaining = lot.remainingQuantity;
-    final progress = lot.totalQuantity <= 0
-        ? 0.0
-        : (lot.consumedQuantity / lot.totalQuantity).clamp(0.0, 1.0);
+    final muted = theme.colorScheme.onSurfaceVariant;
 
-    return Container(
-      decoration: AppColors.transactionListItemDecoration(theme, accent),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: onOpenOrder,
-          child: Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    OrderStatusChip(
-                      label: _typeLabel(l10n),
-                      color: accent,
-                      icon: lot.isManual
-                          ? Icons.handyman_outlined
-                          : Icons.local_shipping_outlined,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(width: 18), // room for corner badge
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    remainingLabel,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: muted,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
                     ),
-                    const Spacer(),
-                    Text(
-                      '${AmountFormatter.formatQuantity(remaining)} $unit',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: lot.isOpen
-                            ? theme.colorScheme.onSurface
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  '${l10n.lotRemaining} · ${l10n.ofTotalQty(AmountFormatter.formatQuantity(lot.totalQuantity))} · ${l10n.lotConsumed} ${AmountFormatter.formatQuantity(lot.consumedQuantity)}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
                   ),
-                ),
-                const SizedBox(height: 8),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 5,
-                    backgroundColor: accent.withValues(alpha: 0.12),
-                    color: accent.withValues(alpha: 0.75),
+                  const SizedBox(height: 2),
+                  Text(
+                    remainingValue,
+                    style: (dense
+                            ? theme.textTheme.headlineSmall
+                            : theme.textTheme.headlineMedium)
+                        ?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      height: 1.05,
+                      letterSpacing: -0.6,
+                      color: remainingColor,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Icon(Icons.payments_outlined,
-                        size: 14, color: theme.colorScheme.onSurfaceVariant),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${l10n.lotUnitCost}: ',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    Consumer(
-                      builder: (context, ref, _) => Text(
-                        formatOrderAmount(ref, lot.effectiveCost),
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                if (lot.expiryDate != null) ...[
-                  const SizedBox(height: 6),
-                  Row(
+                ],
+              ),
+            ),
+            if (trailing != null) trailing!,
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(99),
+                child: SizedBox(
+                  height: dense ? 8 : 10,
+                  child: Stack(
                     children: [
-                      Icon(
-                        Icons.event_outlined,
-                        size: 14,
-                        color: accent == AppColors.warning
-                            ? AppColors.warning
-                            : theme.colorScheme.onSurfaceVariant,
+                      ColoredBox(
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.08),
+                        child: const SizedBox.expand(),
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${l10n.lotExpiry}: ${AppDateFormatter.formatDate(lot.expiryDate!, pattern: dateFormat)}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: accent == AppColors.warning
-                              ? AppColors.warning
-                              : theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      FractionallySizedBox(
+                        widthFactor: life,
+                        child: ColoredBox(color: lifeColor),
                       ),
                     ],
                   ),
-                ],
-                if (source != null) ...[
-                  const SizedBox(height: 10),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '${(life * 100).round()}%',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: lifeColor,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _CornerBadge extends StatelessWidget {
+  final IconData? icon;
+  final int? count;
+  final Color color;
+  final String? tooltip;
+
+  const _CornerBadge({
+    required this.color,
+    this.icon,
+    this.count,
+    this.tooltip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final child = Container(
+      width: 26,
+      height: 26,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        shape: BoxShape.circle,
+        border: Border.all(color: color.withValues(alpha: 0.45)),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.18),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: count != null
+          ? Text(
+              '$count',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w900,
+                fontSize: 11,
+              ),
+            )
+          : Icon(icon, size: 14, color: color),
+    );
+    if (tooltip == null || tooltip!.isEmpty) return child;
+    return Tooltip(message: tooltip!, child: child);
+  }
+}
+
+class _ItemFooter extends StatelessWidget {
+  final String? batch;
+  final String? expiryText;
+  final bool expiryWarn;
+  final String? orderHint;
+
+  const _ItemFooter({
+    this.batch,
+    this.expiryText,
+    this.expiryWarn = false,
+    this.orderHint,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final hasBatch = batch != null && batch!.isNotEmpty;
+    final hasExpiry = expiryText != null && expiryText!.isNotEmpty;
+    final hasOrder = orderHint != null && orderHint!.isNotEmpty;
+
+    if (!hasBatch && !hasExpiry && !hasOrder) {
+      return const SizedBox.shrink();
+    }
+
+    TextStyle valueStyle(Color color) => TextStyle(
+          color: color,
+          fontWeight: FontWeight.w600,
+          fontSize: 10,
+          height: 1.2,
+        );
+
+    Widget cell({
+      required IconData icon,
+      required String value,
+      required Color color,
+      String? secondary,
+      Color? secondaryColor,
+    }) {
+      return Row(
+        children: [
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: valueStyle(color),
+                ),
+                if (secondary != null)
+                  Text(
+                    secondary,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: valueStyle(secondaryColor ?? muted),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    final batchCell = hasBatch || hasOrder
+        ? cell(
+            icon: Icons.qr_code_2_outlined,
+            value: hasBatch ? batch! : '—',
+            color: muted,
+            secondary: hasOrder ? orderHint : null,
+            secondaryColor: theme.colorScheme.primary,
+          )
+        : null;
+    final expiryCell = hasExpiry
+        ? cell(
+            icon: Icons.event_outlined,
+            value: expiryText!,
+            color: expiryWarn ? AppColors.warning : muted,
+          )
+        : null;
+
+    Widget wrap(Widget child) => Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: child,
+          ),
+        );
+
+    if (batchCell != null && expiryCell != null) {
+      return Row(
+        children: [
+          wrap(batchCell),
+          const SizedBox(width: 6),
+          wrap(expiryCell),
+        ],
+      );
+    }
+    final only = batchCell ?? expiryCell;
+    if (only == null) return const SizedBox.shrink();
+    return Row(children: [wrap(only)]);
+  }
+}
+
+class _MetricStrip extends StatelessWidget {
+  final List<Widget> children;
+
+  const _MetricStrip({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            if (i > 0)
+              Container(
+                width: 1,
+                height: 28,
+                margin: const EdgeInsets.symmetric(horizontal: 10),
+                color: theme.dividerColor.withValues(alpha: 0.6),
+              ),
+            Expanded(child: children[i]),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _QtyStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final bool emphasize;
+
+  const _QtyStat({
+    required this.label,
+    required this.value,
+    this.valueColor,
+    this.emphasize = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+            fontSize: 10,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: emphasize ? FontWeight.w900 : FontWeight.w700,
+            color: valueColor,
+            fontSize: 13,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BatchLotPanel extends StatefulWidget {
+  final String batchNumber;
+  final List<ProductBatche> lots;
+  final Map<String, LotPurchaseContext> sources;
+  final String dateFormat;
+
+  const _BatchLotPanel({
+    required this.batchNumber,
+    required this.lots,
+    required this.sources,
+    required this.dateFormat,
+  });
+
+  @override
+  State<_BatchLotPanel> createState() => _BatchLotPanelState();
+}
+
+class _BatchLotPanelState extends State<_BatchLotPanel> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final lots = widget.lots;
+    final total = lots.fold<double>(0, (s, l) => s + l.totalQuantity);
+    final consumed = lots.fold<double>(0, (s, l) => s + l.consumedQuantity);
+    final remaining = lots.fold<double>(0, (s, l) => s + l.remainingQuantity);
+    final inventoryValue = lots.fold<double>(
+      0,
+      (s, l) => s + l.remainingQuantity * l.effectiveCost,
+    );
+    final unitCost = remaining > 1e-9
+        ? inventoryValue / remaining
+        : lots.fold<double>(0, (s, l) => s + l.effectiveCost) / lots.length;
+
+    DateTime? earliest;
+    for (final lot in lots) {
+      final exp = lot.expiryDate;
+      if (exp == null) continue;
+      if (earliest == null || exp.isBefore(earliest)) earliest = exp;
+    }
+
+    final accent = remaining <= 1e-9
+        ? theme.colorScheme.outline
+        : (earliest != null &&
+                earliest.difference(DateTime.now()).inDays <= 60
+            ? AppColors.warning
+            : AppColors.incomeColor);
+
+    return _QtyFocusCard(
+      total: total,
+      consumed: consumed,
+      remaining: remaining,
+      unitCost: unitCost,
+      inventoryValue: inventoryValue,
+      earliestExpiry: earliest,
+      dateFormat: widget.dateFormat,
+      accent: accent,
+      countBadge: lots.length,
+      footerBatch: widget.batchNumber,
+      onOpenOrder: () => setState(() => _expanded = !_expanded),
+      trailing: Icon(
+        _expanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+        color: theme.colorScheme.onSurfaceVariant,
+      ),
+      bottom: AnimatedSize(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeInOut,
+        alignment: Alignment.topCenter,
+        child: !_expanded
+            ? const SizedBox.shrink()
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: theme.dividerColor.withValues(alpha: 0.5),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                    child: Column(
                       children: [
-                        Icon(Symbols.receipt_long, size: 16, color: accent),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                source!.orderNumber,
-                                style: theme.textTheme.labelLarge?.copyWith(
-                                  fontWeight: FontWeight.w800,
-                                  color: accent,
-                                ),
-                              ),
-                              if (source!.supplierName != null)
-                                Text(
-                                  l10n.fromSupplier(source!.supplierName!),
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              if (source!.receivedAt != null)
-                                Text(
-                                  l10n.receivedOn(
-                                    AppDateFormatter.formatDate(
-                                      source!.receivedAt!,
-                                      pattern: dateFormat,
-                                    ),
-                                  ),
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: theme.colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                            ],
+                        for (var i = 0; i < lots.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 8),
+                          Builder(
+                            builder: (context) {
+                              final src = widget.sources[lots[i].uuid];
+                              return _QtyFocusCard.lot(
+                                lot: lots[i],
+                                source: src,
+                                dateFormat: widget.dateFormat,
+                                showBatchInFooter: false,
+                                dense: true,
+                                onOpenOrder: src == null
+                                    ? null
+                                    : () {
+                                        Navigator.push<void>(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => OrderDetailScreen(
+                                              orderUuid: src.orderUuid,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                              );
+                            },
                           ),
-                        ),
-                        Icon(
-                          Icons.chevron_right_rounded,
-                          color: accent,
-                        ),
+                        ],
                       ],
                     ),
                   ),
                 ],
-              ],
-            ),
-          ),
-        ),
+              ),
       ),
     );
   }

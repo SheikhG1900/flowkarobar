@@ -388,6 +388,17 @@ class AppLocalizationsHi extends AppLocalizations {
   String get lotConsumed => 'उपयोग हुआ';
 
   @override
+  String get lotTotal => 'कुल';
+
+  @override
+  String lotsUnitHint(String unit) {
+    return 'मात्रा $unit में';
+  }
+
+  @override
+  String get lotInventoryCost => 'मूल्य';
+
+  @override
   String get lotUnitCost => 'यूनिट लागत';
 
   @override
@@ -442,6 +453,11 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get effectiveCostLabel => 'यूनिट लागत';
+
+  @override
+  String lotsInBatch(int count) {
+    return '$count लॉट';
+  }
 
   @override
   String get refresh => 'ताज़ा करें';

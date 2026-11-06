@@ -136,6 +136,14 @@
   "lotTypePurchase": "Purchase",
   "lotRemaining": "Remaining",
   "lotConsumed": "Consumed",
+  "lotTotal": "Total",
+  "lotsUnitHint": "Quantities in {unit}",
+  "@lotsUnitHint": {
+    "placeholders": {
+      "unit": { "type": "String" }
+    }
+  },
+  "lotInventoryCost": "Value",
   "lotUnitCost": "Unit cost",
   "lotBatchNumber": "Batch number",
   "lotExpiry": "Expiry",
@@ -172,6 +180,12 @@
   },
   "selectLotType": "Lot type",
   "effectiveCostLabel": "Unit cost",
+  "lotsInBatch": "{count} lots",
+  "@lotsInBatch": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "@@locale": "en",
   "refresh": "Refresh",
   "appTitle": "FlowKarobar",

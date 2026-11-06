@@ -838,6 +838,24 @@ abstract class AppLocalizations {
   /// **'Consumed'**
   String get lotConsumed;
 
+  /// No description provided for @lotTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get lotTotal;
+
+  /// No description provided for @lotsUnitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantities in {unit}'**
+  String lotsUnitHint(String unit);
+
+  /// No description provided for @lotInventoryCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Value'**
+  String get lotInventoryCost;
+
   /// No description provided for @lotUnitCost.
   ///
   /// In en, this message translates to:
@@ -933,6 +951,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Unit cost'**
   String get effectiveCostLabel;
+
+  /// No description provided for @lotsInBatch.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} lots'**
+  String lotsInBatch(int count);
 
   /// No description provided for @refresh.
   ///

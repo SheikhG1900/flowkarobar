@@ -388,6 +388,17 @@ class AppLocalizationsUr extends AppLocalizations {
   String get lotConsumed => 'استعمال شدہ';
 
   @override
+  String get lotTotal => 'کل';
+
+  @override
+  String lotsUnitHint(String unit) {
+    return 'مقدار $unit میں';
+  }
+
+  @override
+  String get lotInventoryCost => 'ویلیو';
+
+  @override
   String get lotUnitCost => 'یونٹ لاگت';
 
   @override
@@ -442,6 +453,11 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get effectiveCostLabel => 'یونٹ لاگت';
+
+  @override
+  String lotsInBatch(int count) {
+    return '$count لاٹس';
+  }
 
   @override
   String get refresh => 'تازہ کریں';

@@ -136,6 +136,14 @@
   "lotTypePurchase": "खरीद",
   "lotRemaining": "शेष",
   "lotConsumed": "उपयोग हुआ",
+  "lotTotal": "कुल",
+  "lotsUnitHint": "मात्रा {unit} में",
+  "@lotsUnitHint": {
+    "placeholders": {
+      "unit": { "type": "String" }
+    }
+  },
+  "lotInventoryCost": "मूल्य",
   "lotUnitCost": "यूनिट लागत",
   "lotBatchNumber": "बैच नंबर",
   "lotExpiry": "समाप्ति",
@@ -172,6 +180,12 @@
   },
   "selectLotType": "लॉट प्रकार",
   "effectiveCostLabel": "यूनिट लागत",
+  "lotsInBatch": "{count} लॉट",
+  "@lotsInBatch": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "@@locale": "hi",
   "refresh": "ताज़ा करें",
   "appTitle": "फ्लोपैसा",

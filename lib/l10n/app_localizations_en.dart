@@ -390,6 +390,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get lotConsumed => 'Consumed';
 
   @override
+  String get lotTotal => 'Total';
+
+  @override
+  String lotsUnitHint(String unit) {
+    return 'Quantities in $unit';
+  }
+
+  @override
+  String get lotInventoryCost => 'Value';
+
+  @override
   String get lotUnitCost => 'Unit cost';
 
   @override
@@ -444,6 +455,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get effectiveCostLabel => 'Unit cost';
+
+  @override
+  String lotsInBatch(int count) {
+    return '$count lots';
+  }
 
   @override
   String get refresh => 'Refresh';
