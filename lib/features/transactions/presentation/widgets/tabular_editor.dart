@@ -316,11 +316,18 @@ class _TabularRowInputState extends State<_TabularRowInput> {
                   controller: _unitAmountController,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
-                  decoration: InputDecoration(
+                  decoration: () {
+                    final affix = AmountFormatter.currencyAffix(
+                      widget.currencySymbol,
+                      isRtl: Directionality.of(context) == TextDirection.rtl,
+                    );
+                    return InputDecoration(
                     labelText: l10n.unitPrice,
                     isDense: true,
-                    prefixText: widget.currencySymbol,
-                  ),
+                    prefixText: affix.prefixText,
+                    suffixText: affix.suffixText,
+                  );
+                  }(),
                   onChanged: (val) {
                     widget.row.unitAmount = double.tryParse(val) ?? 0.0;
                     widget.onChanged();

@@ -120,6 +120,19 @@ class AmountFormatter {
     return formatWithCurrencyRaw(amount, symbol, decimalPlaces, isRtl: isRtl, scaleFactor: scaleFactor);
   }
 
+  /// Readonly currency chrome for amount text fields.
+  /// LTR → [prefixText]; RTL → [suffixText] (matches transaction amount fields).
+  static ({String? prefixText, String? suffixText}) currencyAffix(
+    String symbol, {
+    required bool isRtl,
+  }) {
+    final s = symbol.trim();
+    if (s.isEmpty) return (prefixText: null, suffixText: null);
+    return isRtl
+        ? (prefixText: null, suffixText: ' $s')
+        : (prefixText: '$s ', suffixText: null);
+  }
+
   /// Units / quantity: no decimals when the value is a whole number; otherwise
   /// minimal decimal digits (trailing zeros stripped).
   static String formatQuantity(double quantity, {int maxDecimals = 8}) {

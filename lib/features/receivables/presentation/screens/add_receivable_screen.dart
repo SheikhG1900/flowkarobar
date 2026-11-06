@@ -652,6 +652,11 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
     final limitsAsync = ref.watch(receivableLimitsProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
     final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final currencyAffix = AmountFormatter.currencyAffix(
+      currencySymbol,
+      isRtl: isRtl,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -714,8 +719,12 @@ class _AddReceivableScreenState extends ConsumerState<AddReceivableScreen> {
                         color: AppColors.receivableColor,
                       ),
                       decoration: InputDecoration(
-                        prefixText: '$currencySymbol ',
+                        prefixText: currencyAffix.prefixText,
+                        suffixText: currencyAffix.suffixText,
                         prefixStyle: theme.textTheme.displayMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        suffixStyle: theme.textTheme.displayMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                         border: InputBorder.none,

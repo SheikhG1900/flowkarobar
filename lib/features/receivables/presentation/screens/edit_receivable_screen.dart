@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/receivables/presentation/providers/receivables_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
@@ -324,6 +325,11 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
     final theme = Theme.of(context);
     final currencySymbol = ref.watch(currencySymbolProvider);
     final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final currencyAffix = AmountFormatter.currencyAffix(
+      currencySymbol,
+      isRtl: isRtl,
+    );
 
     if (_isLoadingData) {
       return Scaffold(
@@ -398,8 +404,12 @@ class _EditReceivableScreenState extends ConsumerState<EditReceivableScreen> {
                         color: AppColors.receivableColor,
                       ),
                       decoration: InputDecoration(
-                        prefixText: '$currencySymbol ',
+                        prefixText: currencyAffix.prefixText,
+                        suffixText: currencyAffix.suffixText,
                         prefixStyle: theme.textTheme.displayMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        suffixStyle: theme.textTheme.displayMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                         border: InputBorder.none,

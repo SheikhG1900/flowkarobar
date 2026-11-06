@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/amount_snap_bar.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
@@ -150,6 +152,12 @@ class _SetCategoryBudgetSheetContentState
     final l10n = AppLocalizations.of(context)!;
     final c = widget.category;
     final isExpense = c.type == 'EXPENSE';
+    final currencySymbol = ref.watch(currencySymbolProvider);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final affix = AmountFormatter.currencyAffix(
+      currencySymbol,
+      isRtl: isRtl,
+    );
 
     return Padding(
       padding: EdgeInsets.only(
@@ -203,6 +211,8 @@ class _SetCategoryBudgetSheetContentState
               controller: _monthlyController,
               decoration: InputDecoration(
                 labelText: isExpense ? l10n.monthlyBudget : l10n.monthlyTarget,
+                prefixText: affix.prefixText,
+                suffixText: affix.suffixText,
                 border: const OutlineInputBorder(),
               ),
               keyboardType:
@@ -213,13 +223,16 @@ class _SetCategoryBudgetSheetContentState
             ),
             AmountSnapBar(
               controller: _monthlyController,
-              currencySymbol: '',
+              currencySymbol: currencySymbol,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _quarterlyController,
               decoration: InputDecoration(
-                labelText: isExpense ? l10n.quarterlyBudget : l10n.quarterlyTarget,
+                labelText:
+                    isExpense ? l10n.quarterlyBudget : l10n.quarterlyTarget,
+                prefixText: affix.prefixText,
+                suffixText: affix.suffixText,
                 border: const OutlineInputBorder(),
               ),
               keyboardType:
@@ -230,13 +243,15 @@ class _SetCategoryBudgetSheetContentState
             ),
             AmountSnapBar(
               controller: _quarterlyController,
-              currencySymbol: '',
+              currencySymbol: currencySymbol,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _yearlyController,
               decoration: InputDecoration(
                 labelText: isExpense ? l10n.yearlyBudget : l10n.yearlyTarget,
+                prefixText: affix.prefixText,
+                suffixText: affix.suffixText,
                 border: const OutlineInputBorder(),
               ),
               keyboardType:
@@ -247,13 +262,15 @@ class _SetCategoryBudgetSheetContentState
             ),
             AmountSnapBar(
               controller: _yearlyController,
-              currencySymbol: '',
+              currencySymbol: currencySymbol,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _overallController,
               decoration: InputDecoration(
                 labelText: isExpense ? l10n.overallBudget : l10n.overallTarget,
+                prefixText: affix.prefixText,
+                suffixText: affix.suffixText,
                 border: const OutlineInputBorder(),
               ),
               keyboardType:
@@ -264,7 +281,7 @@ class _SetCategoryBudgetSheetContentState
             ),
             AmountSnapBar(
               controller: _overallController,
-              currencySymbol: '',
+              currencySymbol: currencySymbol,
             ),
             const SizedBox(height: 20),
 

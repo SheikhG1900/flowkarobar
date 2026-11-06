@@ -257,6 +257,10 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
     final isDark = theme.brightness == Brightness.dark;
     final currencySymbol = ref.watch(currencySymbolProvider);
     final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAffix = AmountFormatter.currencyAffix(
+      currencySymbol,
+      isRtl: Directionality.of(context) == TextDirection.rtl,
+    );
     final l10n = AppLocalizations.of(context)!;
     final activeCashbook = ref.watch(activeBusinessProvider);
     final activeCashbookBackColor = activeCashbook.backColor(context);
@@ -513,8 +517,16 @@ class _ScanReceiptScreenState extends ConsumerState<ScanReceiptScreen> {
                                                 ),
                                                 decoration: InputDecoration(
                                                   prefixText:
-                                                      '$currencySymbol ',
+                                                      currencyAffix.prefixText,
+                                                  suffixText:
+                                                      currencyAffix.suffixText,
                                                   prefixStyle: theme
+                                                      .textTheme.displayMedium
+                                                      ?.copyWith(
+                                                    color: theme.colorScheme
+                                                        .onSurfaceVariant,
+                                                  ),
+                                                  suffixStyle: theme
                                                       .textTheme.displayMedium
                                                       ?.copyWith(
                                                     color: theme.colorScheme

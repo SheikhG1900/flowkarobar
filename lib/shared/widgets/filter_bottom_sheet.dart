@@ -2,7 +2,9 @@ import 'package:flutter/material.dart' hide Category;
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/features/categories/presentation/providers/categories_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
@@ -933,6 +935,34 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
 
   Widget _buildAmountRangeInputs(AppLocalizations l10n, Color primaryColor) {
     final theme = Theme.of(context);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final affix = AmountFormatter.currencyAffix(
+      ref.watch(currencySymbolProvider),
+      isRtl: isRtl,
+    );
+    InputDecoration amountDecoration(String hint) => InputDecoration(
+          hintText: hint,
+          hintStyle: theme.textTheme.bodyMedium
+              ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          prefixText: affix.prefixText,
+          suffixText: affix.suffixText,
+          filled: true,
+          fillColor: theme.colorScheme.surface,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: theme.dividerColor, width: 1.5),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: theme.dividerColor, width: 1.5),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: primaryColor, width: 1.5),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        );
     return Row(
       children: [
         Expanded(
@@ -940,27 +970,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             controller: _minAmountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: theme.textTheme.bodyMedium,
-            decoration: InputDecoration(
-              hintText: l10n.minAmount,
-              hintStyle: theme.textTheme.bodyMedium
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              filled: true,
-              fillColor: theme.colorScheme.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: theme.dividerColor, width: 1.5),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: theme.dividerColor, width: 1.5),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: primaryColor, width: 1.5),
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            ),
+            decoration: amountDecoration(l10n.minAmount),
             onChanged: (_) => setState(() {}),
           ),
         ),
@@ -970,27 +980,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
             controller: _maxAmountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             style: theme.textTheme.bodyMedium,
-            decoration: InputDecoration(
-              hintText: l10n.maxAmount,
-              hintStyle: theme.textTheme.bodyMedium
-                  ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-              filled: true,
-              fillColor: theme.colorScheme.surface,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: theme.dividerColor, width: 1.5),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: theme.dividerColor, width: 1.5),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: primaryColor, width: 1.5),
-              ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            ),
+            decoration: amountDecoration(l10n.maxAmount),
             onChanged: (_) => setState(() {}),
           ),
         ),

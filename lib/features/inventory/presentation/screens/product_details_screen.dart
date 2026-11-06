@@ -14,6 +14,7 @@ import 'package:flowpaisa/features/orders/presentation/widgets/order_entity_pick
 import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 
 enum _LotFilter { open, all, consumed }
@@ -421,8 +422,8 @@ class _ProductHero extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: Stack(
           children: [
-            Positioned(
-              right: -24,
+            PositionedDirectional(
+              end: -24,
               top: -28,
               child: Container(
                 width: 110,
@@ -552,8 +553,8 @@ class _HeroIcon extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             box,
-            Positioned(
-              right: 0,
+            PositionedDirectional(
+              end: 0,
               bottom: 0,
               child: Container(
                 width: 22,
@@ -988,9 +989,9 @@ class _QtyFocusCard extends ConsumerWidget {
               ],
             ),
             if (badgeIcon != null || countBadge != null)
-              Positioned(
+              PositionedDirectional(
                 top: -2,
-                left: -2,
+                start: -2,
                 child: _CornerBadge(
                   icon: badgeIcon,
                   count: countBadge,
@@ -1740,17 +1741,29 @@ class _ManualLotSheetState extends ConsumerState<_ManualLotSheet> {
                   },
                 ),
                 const SizedBox(height: 12),
-                TextFormField(
-                  controller: _cost,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                  ],
-                  decoration: InputDecoration(
-                    labelText: l10n.effectiveCostLabel,
-                    border: const OutlineInputBorder(),
-                  ),
+                Builder(
+                  builder: (context) {
+                    final isRtl =
+                        Directionality.of(context) == TextDirection.rtl;
+                    final affix = AmountFormatter.currencyAffix(
+                      ref.watch(currencySymbolProvider),
+                      isRtl: isRtl,
+                    );
+                    return TextFormField(
+                      controller: _cost,
+                      keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: l10n.effectiveCostLabel,
+                        prefixText: affix.prefixText,
+                        suffixText: affix.suffixText,
+                        border: const OutlineInputBorder(),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(

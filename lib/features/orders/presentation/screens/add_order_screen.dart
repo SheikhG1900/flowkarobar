@@ -18,6 +18,7 @@ import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dar
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/entity_picker_sheet.dart';
 import 'package:flowpaisa/shared/widgets/form_section_card.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
@@ -402,17 +403,29 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
                   ? AppColors.receivableColor
                   : AppColors.payableColor,
               children: [
-                TextFormField(
-                  controller: _paymentController,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: _decimalFormatters,
-                  decoration: InputDecoration(
-                    labelText: l10n.paymentNow,
-                    prefixIcon: const Icon(Icons.payments_outlined),
-                    filled: true,
-                  ),
-                  onChanged: (_) => setState(() {}),
+                Builder(
+                  builder: (context) {
+                    final isRtl =
+                        Directionality.of(context) == TextDirection.rtl;
+                    final affix = AmountFormatter.currencyAffix(
+                      ref.watch(currencySymbolProvider),
+                      isRtl: isRtl,
+                    );
+                    return TextFormField(
+                      controller: _paymentController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true),
+                      inputFormatters: _decimalFormatters,
+                      decoration: InputDecoration(
+                        labelText: l10n.paymentNow,
+                        prefixIcon: const Icon(Icons.payments_outlined),
+                        prefixText: affix.prefixText,
+                        suffixText: affix.suffixText,
+                        filled: true,
+                      ),
+                      onChanged: (_) => setState(() {}),
+                    );
+                  },
                 ),
                 if (payment > 0)
                   AccountPickerField(
@@ -521,7 +534,7 @@ class _EmptyItemsHint extends StatelessWidget {
   }
 }
 
-class _OrderLineCard extends StatelessWidget {
+class _OrderLineCard extends ConsumerWidget {
   final _OrderLine line;
   final Color color;
   final ProductCategory? category;
@@ -540,9 +553,14 @@ class _OrderLineCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final currencyAffix = AmountFormatter.currencyAffix(
+      ref.watch(currencySymbolProvider),
+      isRtl: isRtl,
+    );
 
     String? positive(String? value) {
       final number = double.tryParse(value?.trim() ?? '');
@@ -635,6 +653,8 @@ class _OrderLineCard extends StatelessWidget {
                   inputFormatters: _decimalFormatters,
                   decoration: InputDecoration(
                     labelText: l10n.unitPrice,
+                    prefixText: currencyAffix.prefixText,
+                    suffixText: currencyAffix.suffixText,
                     filled: true,
                     isDense: true,
                   ),
@@ -652,6 +672,8 @@ class _OrderLineCard extends StatelessWidget {
                   inputFormatters: _decimalFormatters,
                   decoration: InputDecoration(
                     labelText: l10n.discount,
+                    prefixText: currencyAffix.prefixText,
+                    suffixText: currencyAffix.suffixText,
                     filled: true,
                     isDense: true,
                   ),

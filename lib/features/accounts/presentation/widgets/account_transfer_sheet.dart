@@ -193,6 +193,10 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
     final theme = Theme.of(context);
     final currencySymbol = ref.watch(currencySymbolProvider);
     final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+    final currencyAffix = AmountFormatter.currencyAffix(
+      currencySymbol,
+      isRtl: Directionality.of(context) == TextDirection.rtl,
+    );
     final dateFormat = ref.watch(userProfileProvider).dateFormat;
     final isLight = theme.brightness == Brightness.light;
     final sheetBg = isLight ? Colors.white : theme.scaffoldBackgroundColor;
@@ -293,9 +297,14 @@ class _AccountTransferSheetState extends ConsumerState<AccountTransferSheet> {
                               fontWeight: FontWeight.bold,
                               color: theme.colorScheme.primary,
                             ),
-                            decoration: InputDecoration(
-                              prefixText: '$currencySymbol ',
+                              decoration: InputDecoration(
+                              prefixText: currencyAffix.prefixText,
+                              suffixText: currencyAffix.suffixText,
                               prefixStyle:
+                                  theme.textTheme.displayMedium?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                              suffixStyle:
                                   theme.textTheme.displayMedium?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),

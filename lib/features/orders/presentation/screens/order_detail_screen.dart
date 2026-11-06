@@ -14,6 +14,7 @@ import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dar
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/form_section_card.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 
@@ -502,6 +503,11 @@ class _PaymentDialogState extends ConsumerState<_PaymentDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final accounts = ref.watch(accountsStreamProvider).value ?? const <Account>[];
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final affix = AmountFormatter.currencyAffix(
+      ref.watch(currencySymbolProvider),
+      isRtl: isRtl,
+    );
 
     return AlertDialog(
       title: Text(l10n.recordPayment),
@@ -518,7 +524,11 @@ class _PaymentDialogState extends ConsumerState<_PaymentDialog> {
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
               ],
-              decoration: InputDecoration(labelText: l10n.amount),
+              decoration: InputDecoration(
+                labelText: l10n.amount,
+                prefixText: affix.prefixText,
+                suffixText: affix.suffixText,
+              ),
               validator: (value) {
                 final number = double.tryParse(value?.trim() ?? '');
                 if (number == null || number <= 0) {
@@ -557,14 +567,14 @@ class _LandedCostResult {
   const _LandedCostResult(this.freight, this.duty);
 }
 
-class _LandedCostDialog extends StatefulWidget {
+class _LandedCostDialog extends ConsumerStatefulWidget {
   const _LandedCostDialog();
 
   @override
-  State<_LandedCostDialog> createState() => _LandedCostDialogState();
+  ConsumerState<_LandedCostDialog> createState() => _LandedCostDialogState();
 }
 
-class _LandedCostDialogState extends State<_LandedCostDialog> {
+class _LandedCostDialogState extends ConsumerState<_LandedCostDialog> {
   final _freight = TextEditingController();
   final _duty = TextEditingController();
 
@@ -588,6 +598,11 @@ class _LandedCostDialogState extends State<_LandedCostDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final affix = AmountFormatter.currencyAffix(
+      ref.watch(currencySymbolProvider),
+      isRtl: isRtl,
+    );
     return AlertDialog(
       title: Text(l10n.receiveShipment),
       content: Column(
@@ -605,7 +620,11 @@ class _LandedCostDialogState extends State<_LandedCostDialog> {
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
             ],
-            decoration: InputDecoration(labelText: l10n.inboundFreight),
+            decoration: InputDecoration(
+              labelText: l10n.inboundFreight,
+              prefixText: affix.prefixText,
+              suffixText: affix.suffixText,
+            ),
           ),
           const SizedBox(height: 8),
           TextField(
@@ -614,7 +633,11 @@ class _LandedCostDialogState extends State<_LandedCostDialog> {
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
             ],
-            decoration: InputDecoration(labelText: l10n.importDuty),
+            decoration: InputDecoration(
+              labelText: l10n.importDuty,
+              prefixText: affix.prefixText,
+              suffixText: affix.suffixText,
+            ),
           ),
         ],
       ),

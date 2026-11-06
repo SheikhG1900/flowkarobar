@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' as drift show Value;
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/payables/presentation/providers/payables_provider.dart';
@@ -321,6 +322,11 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
     final theme = Theme.of(context);
     final currencySymbol = ref.watch(currencySymbolProvider);
     final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final currencyAffix = AmountFormatter.currencyAffix(
+      currencySymbol,
+      isRtl: isRtl,
+    );
 
     if (_isLoadingData) {
       return Scaffold(
@@ -395,8 +401,12 @@ class _EditPayableScreenState extends ConsumerState<EditPayableScreen> {
                         color: AppColors.payableColor,
                       ),
                       decoration: InputDecoration(
-                        prefixText: '$currencySymbol ',
+                        prefixText: currencyAffix.prefixText,
+                        suffixText: currencyAffix.suffixText,
                         prefixStyle: theme.textTheme.displayMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        suffixStyle: theme.textTheme.displayMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                         border: InputBorder.none,

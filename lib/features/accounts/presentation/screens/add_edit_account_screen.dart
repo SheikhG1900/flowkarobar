@@ -277,17 +277,25 @@ class _AddEditAccountScreenState extends ConsumerState<AddEditAccountScreen> {
                         FilteringTextInputFormatter.allow(
                             RegExp(r'^\d+\.?\d{0,2}')),
                       ],
-                      decoration: InputDecoration(
+                      decoration: () {
+                        final affix = AmountFormatter.currencyAffix(
+                          currencySymbol,
+                          isRtl: Directionality.of(context) ==
+                              TextDirection.rtl,
+                        );
+                        return InputDecoration(
                         labelText: _selectedType.isCreditCard
                             ? l10n.openingBalanceDues
                             : l10n.openingBalance,
-                        prefixText: '$currencySymbol ',
+                        prefixText: affix.prefixText,
+                        suffixText: affix.suffixText,
                         prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                         hintText: AmountFormatter.formatAmount(0, decimalPlaces),
-                      ),
+                      );
+                      }(),
                     ),
                     AmountSnapBar(
                       controller: _openingBalanceController,
@@ -774,13 +782,20 @@ class _CreditCardFields extends StatelessWidget {
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
             ],
-            decoration: InputDecoration(
+            decoration: () {
+              final affix = AmountFormatter.currencyAffix(
+                currencySymbol,
+                isRtl: Directionality.of(context) == TextDirection.rtl,
+              );
+              return InputDecoration(
               labelText: l10n.creditLimit,
-              prefixText: '$currencySymbol ',
+              prefixText: affix.prefixText,
+              suffixText: affix.suffixText,
               prefixIcon: const Icon(Icons.credit_score_outlined),
               border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12)),
-            ),
+            );
+            }(),
           ),
           const SizedBox(height: 16),
 

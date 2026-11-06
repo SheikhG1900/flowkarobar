@@ -1096,19 +1096,31 @@ class _BulkSettleSheetContentState extends State<_BulkSettleSheetContent> {
           ),
           const SizedBox(height: 16),
           if (widget.absNet > 0) ...[
-            TextField(
-              controller: _amountController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: widget.l10n.amount,
-                border: const OutlineInputBorder(),
-              ),
-              onChanged: (value) {
-                final parsed = double.tryParse(value.trim()) ?? 0;
-                setState(() {
-                  _currentAmount = parsed;
-                });
+            Builder(
+              builder: (context) {
+                final isRtl =
+                    Directionality.of(context) == TextDirection.rtl;
+                final affix = AmountFormatter.currencyAffix(
+                  currency.symbol,
+                  isRtl: isRtl,
+                );
+                return TextField(
+                  controller: _amountController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true),
+                  decoration: InputDecoration(
+                    labelText: widget.l10n.amount,
+                    prefixText: affix.prefixText,
+                    suffixText: affix.suffixText,
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: (value) {
+                    final parsed = double.tryParse(value.trim()) ?? 0;
+                    setState(() {
+                      _currentAmount = parsed;
+                    });
+                  },
+                );
               },
             ),
             const SizedBox(height: 8),

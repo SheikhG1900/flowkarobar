@@ -651,6 +651,11 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
     final limitsAsync = ref.watch(payableLimitsProvider);
     final currencySymbol = ref.watch(currencySymbolProvider);
     final decimalPlaces = ref.watch(currencyDecimalPlacesProvider);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final currencyAffix = AmountFormatter.currencyAffix(
+      currencySymbol,
+      isRtl: isRtl,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -713,8 +718,12 @@ class _AddPayableScreenState extends ConsumerState<AddPayableScreen> {
                         color: AppColors.payableColor,
                       ),
                       decoration: InputDecoration(
-                        prefixText: '$currencySymbol ',
+                        prefixText: currencyAffix.prefixText,
+                        suffixText: currencyAffix.suffixText,
                         prefixStyle: theme.textTheme.displayMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        suffixStyle: theme.textTheme.displayMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                         border: InputBorder.none,

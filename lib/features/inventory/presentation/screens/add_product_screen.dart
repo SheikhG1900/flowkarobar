@@ -404,8 +404,8 @@ class _ProductHeroHeader extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         child: Stack(
           children: [
-            Positioned(
-              right: -28,
+            PositionedDirectional(
+              end: -28,
               top: -32,
               child: Container(
                 width: 120,
@@ -420,8 +420,8 @@ class _ProductHeroHeader extends StatelessWidget {
                 ),
               ),
             ),
-            Positioned(
-              right: 28,
+            PositionedDirectional(
+              end: 28,
               bottom: -40,
               child: Container(
                 width: 90,
@@ -587,8 +587,8 @@ class _HeroCategoryIcon extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             iconBox,
-            Positioned(
-              right: 0,
+            PositionedDirectional(
+              end: 0,
               bottom: 0,
               child: Container(
                 width: 22,
