@@ -270,6 +270,7 @@ class ProductionRepository {
     required String orderUuid,
     required DateTime productionDate,
     String? notes,
+    double? scaleFactor,
     required List<ProductionOrderInputsCompanion> inputs,
     required List<ProductionOrderOutputsCompanion> outputs,
     List<ProductionOrderChargesCompanion> charges = const [],
@@ -290,6 +291,9 @@ class ProductionRepository {
         ProductionOrdersCompanion(
           productionDate: Value(productionDate),
           notes: Value(notes),
+          scaleFactor: scaleFactor == null
+              ? const Value.absent()
+              : Value(scaleFactor <= 0 ? 1.0 : scaleFactor),
           isNotSynced: const Value(true),
           updatedAt: Value(DateTime.now()),
         ),

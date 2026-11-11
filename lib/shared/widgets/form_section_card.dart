@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 /// Grouped form content with a titled card — reduces flat “wall of fields” layouts.
 class FormSectionCard extends StatelessWidget {
   final String title;
+  final String? subtitle;
   final IconData? icon;
   final Color? accentColor;
   final List<Widget> children;
@@ -13,6 +14,7 @@ class FormSectionCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.children,
+    this.subtitle,
     this.icon,
     this.accentColor,
     this.padding = const EdgeInsets.fromLTRB(16, 14, 16, 16),
@@ -23,6 +25,7 @@ class FormSectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final accent = accentColor ?? theme.colorScheme.primary;
+    final hasSubtitle = subtitle != null && subtitle!.trim().isNotEmpty;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
@@ -59,7 +62,7 @@ class FormSectionCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                 ],
-                Expanded(
+                Flexible(
                   child: Text(
                     title,
                     style: theme.textTheme.titleSmall?.copyWith(
@@ -68,7 +71,27 @@ class FormSectionCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (trailing != null) trailing!,
+                if (hasSubtitle) ...[
+                  const SizedBox(width: 8),
+                  Flexible(
+                    flex: 2,
+                    child: Text(
+                      subtitle!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                        height: 1.25,
+                      ),
+                    ),
+                  ),
+                ],
+                if (trailing != null) ...[
+                  const SizedBox(width: 4),
+                  trailing!,
+                ],
               ],
             ),
           ),

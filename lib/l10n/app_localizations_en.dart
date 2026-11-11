@@ -401,6 +401,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Multiplies recipe quantities (e.g. 2 = double batch)';
 
   @override
+  String get applyScale => 'Apply scale';
+
+  @override
+  String get scaleAdjustHint =>
+      'Updates input, output, and charge quantities to the new scale';
+
+  @override
   String get productionFromRecipe => 'Production from recipe';
 
   @override

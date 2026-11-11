@@ -398,6 +398,13 @@ class AppLocalizationsUr extends AppLocalizations {
   String get scaleFactorHint => 'ریسیپی مقدار کو ضرب دیں (مثلاً 2 = دوگنا بیچ)';
 
   @override
+  String get applyScale => 'اسکیل لگائیں';
+
+  @override
+  String get scaleAdjustHint =>
+      'ان پٹ، آؤٹ پٹ اور چارجز کی مقدار نئی اسکیل کے مطابق اپ ڈیٹ ہوتی ہے';
+
+  @override
   String get productionFromRecipe => 'ریسیپی سے پیداوار';
 
   @override

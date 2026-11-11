@@ -398,6 +398,13 @@ class AppLocalizationsHi extends AppLocalizations {
   String get scaleFactorHint => 'रेसिपी मात्रा गुणा करें (जैसे 2 = डबल बैच)';
 
   @override
+  String get applyScale => 'स्केल लागू करें';
+
+  @override
+  String get scaleAdjustHint =>
+      'इनपुट, आउटपुट और शुल्क मात्रा नई स्केल के अनुसार अपडेट होती है';
+
+  @override
   String get productionFromRecipe => 'रेसिपी से उत्पादन';
 
   @override

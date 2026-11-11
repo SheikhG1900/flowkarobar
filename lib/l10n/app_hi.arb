@@ -139,6 +139,8 @@
   "produceFromRecipe": "उत्पादन करें",
   "scaleFactor": "बैच / स्केल",
   "scaleFactorHint": "रेसिपी मात्रा गुणा करें (जैसे 2 = डबल बैच)",
+  "applyScale": "स्केल लागू करें",
+  "scaleAdjustHint": "इनपुट, आउटपुट और शुल्क मात्रा नई स्केल के अनुसार अपडेट होती है",
   "productionFromRecipe": "रेसिपी से उत्पादन",
   "adhocProduction": "खाली आदेश",
   "recipeScaledNote": "{recipe} से ×{scale} स्केल",

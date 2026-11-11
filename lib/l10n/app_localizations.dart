@@ -856,6 +856,18 @@ abstract class AppLocalizations {
   /// **'Multiplies recipe quantities (e.g. 2 = double batch)'**
   String get scaleFactorHint;
 
+  /// No description provided for @applyScale.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply scale'**
+  String get applyScale;
+
+  /// No description provided for @scaleAdjustHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Updates input, output, and charge quantities to the new scale'**
+  String get scaleAdjustHint;
+
   /// No description provided for @productionFromRecipe.
   ///
   /// In en, this message translates to:

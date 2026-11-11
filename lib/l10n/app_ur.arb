@@ -139,6 +139,8 @@
   "produceFromRecipe": "تیار کریں",
   "scaleFactor": "بیچ / اسکیل",
   "scaleFactorHint": "ریسیپی مقدار کو ضرب دیں (مثلاً 2 = دوگنا بیچ)",
+  "applyScale": "اسکیل لگائیں",
+  "scaleAdjustHint": "ان پٹ، آؤٹ پٹ اور چارجز کی مقدار نئی اسکیل کے مطابق اپ ڈیٹ ہوتی ہے",
   "productionFromRecipe": "ریسیپی سے پیداوار",
   "adhocProduction": "خالی آرڈر",
   "recipeScaledNote": "{recipe} سے ×{scale} اسکیل",

@@ -68,14 +68,21 @@ class GradientButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(borderRadius),
           child: Padding(
             padding: padding,
+            // Keep loading height intrinsic. A bare [Center] expands to the
+            // Scaffold bottom-bar max height and the gradient fills the screen.
             child: isLoading
-                ? const Center(
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ? const SizedBox(
+                    height: 20,
+                    width: double.infinity,
+                    child: Center(
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
                       ),
                     ),
                   )

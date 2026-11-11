@@ -139,6 +139,8 @@
   "produceFromRecipe": "Produce",
   "scaleFactor": "Batches / scale",
   "scaleFactorHint": "Multiplies recipe quantities (e.g. 2 = double batch)",
+  "applyScale": "Apply scale",
+  "scaleAdjustHint": "Updates input, output, and charge quantities to the new scale",
   "productionFromRecipe": "Production from recipe",
   "adhocProduction": "Blank order",
   "recipeScaledNote": "Scaled ×{scale} from {recipe}",

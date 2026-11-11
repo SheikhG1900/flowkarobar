@@ -28,6 +28,8 @@ class ProductionOrderDetailScreen extends ConsumerStatefulWidget {
 class _ProductionOrderDetailScreenState
     extends ConsumerState<ProductionOrderDetailScreen> {
   bool _busy = false;
+  /// Stays true after the first full data reveal so refreshes don't re-dim.
+  bool _contentRevealed = false;
 
   Future<void> _complete() async {
     final l10n = AppLocalizations.of(context)!;
@@ -189,6 +191,24 @@ class _ProductionOrderDetailScreenState
             ? ref.watch(productionCompletionPreviewProvider(order.uuid))
             : null;
         final preview = previewAsync?.value;
+        final linesReady = inputsAsync.hasValue &&
+            outputsAsync.hasValue &&
+            chargesAsync.hasValue;
+        final calcReady = !isDraft ||
+            preview != null ||
+            (previewAsync?.hasError ?? false);
+        final contentReady = linesReady && calcReady;
+        // First paint stays dull; reveal on the next frame so the fade always runs.
+        if (contentReady && !_contentRevealed) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && !_contentRevealed) {
+              setState(() => _contentRevealed = true);
+            }
+          });
+        }
+        final revealed = _contentRevealed;
+        final previewRefreshing =
+            isDraft && (previewAsync?.isLoading ?? false) && preview != null;
         final impactByInput = <String, ProductionInputImpact>{
           for (final i in preview?.inputs ?? const <ProductionInputImpact>[])
             i.inputUuid: i,
@@ -205,7 +225,7 @@ class _ProductionOrderDetailScreenState
               if (isDraft)
                 IconButton(
                   tooltip: l10n.editProductionOrder,
-                  onPressed: _busy
+                  onPressed: _busy || !revealed
                       ? null
                       : () {
                           Navigator.push(
@@ -221,259 +241,292 @@ class _ProductionOrderDetailScreenState
                 ),
             ],
           ),
-          body: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            children: [
-              _ProductionHero(
-                productionNumber: order.productionNumber,
-                statusLabel: statusLabel,
-                statusColor: statusColor,
-                dateText: AppDateFormatter.formatDate(
-                  order.productionDate,
-                  pattern: dateFormat,
-                ),
-                recipeText: order.recipeNameSnapshot != null &&
-                        order.recipeNameSnapshot!.isNotEmpty
-                    ? l10n.recipeScaledNote(
-                        AmountFormatter.formatQuantity(order.scaleFactor),
-                        order.recipeNameSnapshot!,
-                      )
-                    : null,
-                notes: order.notes?.trim().isNotEmpty == true
-                    ? order.notes!.trim()
-                    : null,
-              ),
-              const SizedBox(height: 14),
-              FormSectionCard(
-                title: l10n.sectionInputs,
-                icon: Icons.input_rounded,
-                accentColor: AppColors.expenseColor,
-                trailing: _CountPill(
-                  count: inputs.length,
-                  color: AppColors.expenseColor,
-                ),
+          body: AnimatedOpacity(
+            opacity: revealed ? 1 : 0.34,
+            duration: const Duration(milliseconds: 480),
+            curve: Curves.easeOutCubic,
+            child: AnimatedSlide(
+              offset: revealed ? Offset.zero : const Offset(0, 0.02),
+              duration: const Duration(milliseconds: 480),
+              curve: Curves.easeOutCubic,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                 children: [
-                  if (inputsAsync.isLoading && inputs.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  else if (inputs.isEmpty)
-                    Text(
-                      l10n.noResultsFound,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    )
-                  else
-                    for (var i = 0; i < inputs.length; i++) ...[
-                      if (i > 0) const SizedBox(height: 8),
-                      Builder(
-                        builder: (context) {
-                          final input = inputs[i];
-                          final impact = impactByInput[input.uuid];
-                          final qty =
-                              order.status == ProductionStatus.completed &&
+                  _ProductionHero(
+                    productionNumber: order.productionNumber,
+                    statusLabel: statusLabel,
+                    statusColor: statusColor,
+                    dateText: AppDateFormatter.formatDate(
+                      order.productionDate,
+                      pattern: dateFormat,
+                    ),
+                    recipeText: order.recipeNameSnapshot != null &&
+                            order.recipeNameSnapshot!.isNotEmpty
+                        ? l10n.recipeScaledNote(
+                            AmountFormatter.formatQuantity(order.scaleFactor),
+                            order.recipeNameSnapshot!,
+                          )
+                        : null,
+                    notes: order.notes?.trim().isNotEmpty == true
+                        ? order.notes!.trim()
+                        : null,
+                  ),
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 280),
+                    curve: Curves.easeOutCubic,
+                    alignment: Alignment.topCenter,
+                    child: (!revealed || previewRefreshing)
+                        ? Padding(
+                            padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(999),
+                              child: LinearProgressIndicator(
+                                minHeight: 2.5,
+                                color: AppColors.incomeColor,
+                                backgroundColor: AppColors.incomeColor
+                                    .withValues(alpha: 0.12),
+                              ),
+                            ),
+                          )
+                        : const SizedBox(width: double.infinity),
+                  ),
+                  const SizedBox(height: 14),
+                  FormSectionCard(
+                    title: l10n.sectionInputs,
+                    icon: Icons.input_rounded,
+                    accentColor: AppColors.expenseColor,
+                    trailing: _CountPill(
+                      count: inputs.length,
+                      color: AppColors.expenseColor,
+                    ),
+                    children: [
+                      if (!inputsAsync.hasValue)
+                        const _SectionPlaceholder(accent: AppColors.expenseColor)
+                      else if (inputs.isEmpty)
+                        Text(
+                          l10n.noResultsFound,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        )
+                      else
+                        for (var i = 0; i < inputs.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 8),
+                          Builder(
+                            builder: (context) {
+                              final input = inputs[i];
+                              final impact = impactByInput[input.uuid];
+                              final qty = order.status ==
+                                          ProductionStatus.completed &&
                                       input.actualQuantity > 0
                                   ? input.actualQuantity
                                   : input.plannedQuantity;
-                          final mode =
-                              input.consumeMode == ProductionConsumeMode.batch
+                              final mode = input.consumeMode ==
+                                      ProductionConsumeMode.batch
                                   ? '${l10n.consumeModeBatch}: ${input.batchNumber ?? '—'}'
                                   : l10n.consumeModeAuto;
-                          final showInputCosts = impact != null &&
-                              !impact.missingBatch;
-                          return _ProductionLineCard(
-                            name: input.productNameSnapshot,
-                            unit: input.unit,
-                            meta: impact?.missingBatch == true
-                                ? l10n.selectBatch
-                                : mode,
-                            // Costs sit next to stock-math qty rows (like outputs).
-                            costLabel: null,
-                            costAmount: null,
-                            accent: impact?.insufficient == true
-                                ? AppColors.error
-                                : AppColors.expenseColor,
-                            quantity: impact == null ? qty : null,
-                            stockMath: impact == null || impact.missingBatch
-                                ? null
-                                : (
-                                    base: impact.available,
-                                    delta: impact.required,
-                                    result: impact.remainingAfter,
-                                    isAdd: false,
-                                    baseCost: showInputCosts &&
-                                            impact.available > 1e-9
-                                        ? formatOrderAmount(
-                                            ref, impact.currentUnitCost)
-                                        : null,
-                                    deltaCost: showInputCosts &&
-                                            impact.required > 1e-9 &&
-                                            impact.consumeUnitCost > 0
-                                        ? formatOrderAmount(
-                                            ref, impact.consumeUnitCost)
-                                        : null,
-                                    resultCost: showInputCosts &&
-                                            impact.remainingAfter > 1e-9
-                                        ? formatOrderAmount(
-                                            ref, impact.unitCostAfter)
-                                        : null,
-                                  ),
-                            warn: impact?.insufficient == true,
-                          );
-                        },
-                      ),
+                              final showInputCosts =
+                                  impact != null && !impact.missingBatch;
+                              return _ProductionLineCard(
+                                name: input.productNameSnapshot,
+                                unit: input.unit,
+                                meta: impact?.missingBatch == true
+                                    ? l10n.selectBatch
+                                    : mode,
+                                costLabel: null,
+                                costAmount: null,
+                                accent: impact?.insufficient == true
+                                    ? AppColors.error
+                                    : AppColors.expenseColor,
+                                quantity: impact == null ? qty : null,
+                                stockMath: impact == null ||
+                                        impact.missingBatch
+                                    ? null
+                                    : (
+                                        base: impact.available,
+                                        delta: impact.required,
+                                        result: impact.remainingAfter,
+                                        isAdd: false,
+                                        baseCost: showInputCosts &&
+                                                impact.available > 1e-9
+                                            ? formatOrderAmount(
+                                                ref, impact.currentUnitCost)
+                                            : null,
+                                        deltaCost: showInputCosts &&
+                                                impact.required > 1e-9 &&
+                                                impact.consumeUnitCost > 0
+                                            ? formatOrderAmount(
+                                                ref, impact.consumeUnitCost)
+                                            : null,
+                                        resultCost: showInputCosts &&
+                                                impact.remainingAfter > 1e-9
+                                            ? formatOrderAmount(
+                                                ref, impact.unitCostAfter)
+                                            : null,
+                                      ),
+                                warn: impact?.insufficient == true,
+                              );
+                            },
+                          ),
+                        ],
                     ],
-                ],
-              ),
-              FormSectionCard(
-                title: l10n.sectionCharges,
-                icon: Icons.payments_outlined,
-                accentColor: AppColors.payableColor,
-                trailing: _CountPill(
-                  count: charges.length,
-                  color: AppColors.payableColor,
-                ),
-                children: [
-                  if (charges.isEmpty)
-                    Text(
-                      l10n.noResultsFound,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    )
-                  else
-                    for (var i = 0; i < charges.length; i++) ...[
-                      if (i > 0) const SizedBox(height: 8),
-                      _ChargeLineCard(
-                        description: charges[i].description,
-                        amountLabel:
-                            formatOrderAmount(ref, charges[i].amount),
-                      ),
-                    ],
-                ],
-              ),
-              if (isDraft && preview != null) ...[
-                FormSectionCard(
-                  title: l10n.productionCostSummary,
-                  icon: Icons.calculate_outlined,
-                  accentColor: AppColors.payableColor,
-                  children: [
-                    _CostSummaryPanel(
-                      materialLabel: l10n.materialCost,
-                      materialValue:
-                          formatOrderAmount(ref, preview.materialCost),
-                      chargesLabel: l10n.sectionCharges,
-                      chargesValue:
-                          formatOrderAmount(ref, preview.chargesTotal),
-                      totalLabel: l10n.totalProductionCost,
-                      totalValue: formatOrderAmount(ref, preview.totalCost),
+                  ),
+                  FormSectionCard(
+                    title: l10n.sectionCharges,
+                    icon: Icons.payments_outlined,
+                    accentColor: AppColors.payableColor,
+                    trailing: _CountPill(
+                      count: charges.length,
+                      color: AppColors.payableColor,
                     ),
-                  ],
-                ),
-              ],
-              FormSectionCard(
-                title: l10n.sectionOutputs,
-                icon: Icons.output_rounded,
-                accentColor: AppColors.incomeColor,
-                trailing: _CountPill(
-                  count: outputs.length,
-                  color: AppColors.incomeColor,
-                ),
-                children: [
-                  if (outputsAsync.isLoading && outputs.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  else if (outputs.isEmpty)
-                    Text(
-                      l10n.noResultsFound,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    )
-                  else
-                    for (var i = 0; i < outputs.length; i++) ...[
-                      if (i > 0) const SizedBox(height: 8),
-                      Builder(
-                        builder: (context) {
-                          final output = outputs[i];
-                          final impact = outputImpactById[output.uuid];
-                          final qty =
-                              order.status == ProductionStatus.completed &&
+                    children: [
+                      if (!chargesAsync.hasValue)
+                        const _SectionPlaceholder(
+                            accent: AppColors.payableColor)
+                      else if (charges.isEmpty)
+                        Text(
+                          l10n.noResultsFound,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        )
+                      else
+                        for (var i = 0; i < charges.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 8),
+                          _ChargeLineCard(
+                            description: charges[i].description,
+                            amountLabel:
+                                formatOrderAmount(ref, charges[i].amount),
+                          ),
+                        ],
+                    ],
+                  ),
+                  _CalcReveal(
+                    revealKey: isDraft && preview != null
+                        ? 'cost-${preview.materialCost}-${preview.chargesTotal}-${preview.totalCost}'
+                        : 'cost-hidden',
+                    child: isDraft && preview != null
+                        ? FormSectionCard(
+                            title: l10n.productionCostSummary,
+                            icon: Icons.calculate_outlined,
+                            accentColor: AppColors.payableColor,
+                            children: [
+                              _CostSummaryPanel(
+                                materialLabel: l10n.materialCost,
+                                materialValue: formatOrderAmount(
+                                    ref, preview.materialCost),
+                                chargesLabel: l10n.sectionCharges,
+                                chargesValue: formatOrderAmount(
+                                    ref, preview.chargesTotal),
+                                totalLabel: l10n.totalProductionCost,
+                                totalValue: formatOrderAmount(
+                                    ref, preview.totalCost),
+                              ),
+                            ],
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                  FormSectionCard(
+                    title: l10n.sectionOutputs,
+                    icon: Icons.output_rounded,
+                    accentColor: AppColors.incomeColor,
+                    trailing: _CountPill(
+                      count: outputs.length,
+                      color: AppColors.incomeColor,
+                    ),
+                    children: [
+                      if (!outputsAsync.hasValue)
+                        const _SectionPlaceholder(
+                            accent: AppColors.incomeColor)
+                      else if (outputs.isEmpty)
+                        Text(
+                          l10n.noResultsFound,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        )
+                      else
+                        for (var i = 0; i < outputs.length; i++) ...[
+                          if (i > 0) const SizedBox(height: 8),
+                          Builder(
+                            builder: (context) {
+                              final output = outputs[i];
+                              final impact = outputImpactById[output.uuid];
+                              final qty = order.status ==
+                                          ProductionStatus.completed &&
                                       output.actualQuantity > 0
                                   ? output.actualQuantity
                                   : output.plannedQuantity;
-                          final batch = output.batchNumber.trim();
-                          final String? costLbl;
-                          final String? costAmt;
-                          if (order.status == ProductionStatus.completed) {
-                            costLbl = l10n.effectiveCostLabel;
-                            costAmt = formatOrderAmount(
-                                ref, output.unitCostSnapshot);
-                          } else if (impact == null) {
-                            costLbl = l10n.costWeight;
-                            costAmt = AmountFormatter.formatQuantity(
-                                output.costWeight);
-                          } else {
-                            // Costs sit next to stock-math qty rows.
-                            costLbl = null;
-                            costAmt = null;
-                          }
-                          return _ProductionLineCard(
-                            name: output.productNameSnapshot,
-                            unit: output.unit,
-                            meta: batch.isEmpty
-                                ? ''
-                                : '${l10n.consumeModeBatch}: $batch',
-                            costLabel: costLbl,
-                            costAmount: costAmt,
-                            accent: AppColors.incomeColor,
-                            quantity: impact == null ? qty : null,
-                            stockMath: impact == null
-                                ? null
-                                : (
-                                    base: impact.currentStock,
-                                    delta: impact.quantity,
-                                    result: impact.stockAfter,
-                                    isAdd: true,
-                                    baseCost: impact.currentStock > 1e-9
-                                        ? formatOrderAmount(
-                                            ref, impact.currentUnitCost)
-                                        : null,
-                                    deltaCost: formatOrderAmount(
-                                        ref, impact.unitCost),
-                                    resultCost: formatOrderAmount(
-                                        ref, impact.unitCostAfter),
-                                  ),
-                          );
-                        },
-                      ),
+                              final batch = output.batchNumber.trim();
+                              final String? costLbl;
+                              final String? costAmt;
+                              if (order.status ==
+                                  ProductionStatus.completed) {
+                                costLbl = l10n.effectiveCostLabel;
+                                costAmt = formatOrderAmount(
+                                    ref, output.unitCostSnapshot);
+                              } else if (impact == null) {
+                                costLbl = l10n.costWeight;
+                                costAmt = AmountFormatter.formatQuantity(
+                                    output.costWeight);
+                              } else {
+                                costLbl = null;
+                                costAmt = null;
+                              }
+                              return _ProductionLineCard(
+                                name: output.productNameSnapshot,
+                                unit: output.unit,
+                                meta: batch.isEmpty
+                                    ? ''
+                                    : '${l10n.consumeModeBatch}: $batch',
+                                costLabel: costLbl,
+                                costAmount: costAmt,
+                                accent: AppColors.incomeColor,
+                                quantity: impact == null ? qty : null,
+                                stockMath: impact == null
+                                    ? null
+                                    : (
+                                        base: impact.currentStock,
+                                        delta: impact.quantity,
+                                        result: impact.stockAfter,
+                                        isAdd: true,
+                                        baseCost: impact.currentStock > 1e-9
+                                            ? formatOrderAmount(
+                                                ref, impact.currentUnitCost)
+                                            : null,
+                                        deltaCost: formatOrderAmount(
+                                            ref, impact.unitCost),
+                                        resultCost: formatOrderAmount(
+                                            ref, impact.unitCostAfter),
+                                      ),
+                              );
+                            },
+                          ),
+                        ],
                     ],
+                  ),
+                  if (isDraft) ...[
+                    const SizedBox(height: 8),
+                    GradientButton(
+                      label: l10n.completeProduction,
+                      isLoading: _busy,
+                      width: double.infinity,
+                      gradient: AppColors.getPrimaryGradient(
+                          AppColors.incomeColor),
+                      onPressed: (_busy || !revealed) ? null : _complete,
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton(
+                      onPressed: (_busy || !revealed) ? null : _cancel,
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                      child: Text(l10n.cancelProduction),
+                    ),
+                  ],
                 ],
               ),
-              if (isDraft) ...[
-                const SizedBox(height: 8),
-                GradientButton(
-                  label: l10n.completeProduction,
-                  isLoading: _busy,
-                  width: double.infinity,
-                  gradient:
-                      AppColors.getPrimaryGradient(AppColors.incomeColor),
-                  onPressed: _busy ? null : _complete,
-                ),
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  onPressed: _busy ? null : _cancel,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                  child: Text(l10n.cancelProduction),
-                ),
-              ],
-            ],
+            ),
           ),
         );
       },
@@ -616,6 +669,104 @@ class _CountPill extends StatelessWidget {
           fontWeight: FontWeight.w800,
           color: color,
         ),
+      ),
+    );
+  }
+}
+
+class _SectionPlaceholder extends StatelessWidget {
+  final Color accent;
+
+  const _SectionPlaceholder({required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    Widget bar({required double widthFactor, required double height}) {
+      return FractionallySizedBox(
+        widthFactor: widthFactor,
+        alignment: AlignmentDirectional.centerStart,
+        child: Container(
+          height: height,
+          decoration: BoxDecoration(
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        for (var i = 0; i < 2; i++) ...[
+          if (i > 0) const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest
+                  .withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: accent.withValues(alpha: 0.12)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                bar(widthFactor: 0.55, height: 12),
+                const SizedBox(height: 10),
+                bar(widthFactor: 0.35, height: 10),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Soft fade + slide when calculated blocks appear or refresh.
+class _CalcReveal extends StatelessWidget {
+  final String revealKey;
+  final Widget child;
+
+  const _CalcReveal({
+    required this.revealKey,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 380),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) {
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.05),
+              end: Offset.zero,
+            ).animate(curved),
+            child: child,
+          ),
+        );
+      },
+      layoutBuilder: (currentChild, previousChildren) {
+        return Stack(
+          alignment: Alignment.topCenter,
+          children: [
+            ...previousChildren,
+            if (currentChild != null) currentChild,
+          ],
+        );
+      },
+      child: KeyedSubtree(
+        key: ValueKey(revealKey),
+        child: child,
       ),
     );
   }
@@ -929,30 +1080,56 @@ class _ProductionLineCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            if (stockMath != null)
-              _StockMathColumn(
-                base: stockMath!.base,
-                delta: stockMath!.delta,
-                result: stockMath!.result,
-                isAdd: stockMath!.isAdd,
-                accent: lineColor,
-                warn: warn,
-                baseCost: stockMath!.baseCost,
-                deltaCost: stockMath!.deltaCost,
-                resultCost: stockMath!.resultCost,
-              )
-            else if (quantity != null)
-              Align(
-                alignment: Alignment.centerRight,
-                child: Text(
-                  AmountFormatter.formatQuantity(quantity!),
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: lineColor,
-                    height: 1.1,
-                  ),
-                ),
-              ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 320),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) {
+                final offset = Tween<Offset>(
+                  begin: const Offset(0.08, 0),
+                  end: Offset.zero,
+                ).animate(animation);
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(position: offset, child: child),
+                );
+              },
+              child: stockMath != null
+                  ? KeyedSubtree(
+                      key: ValueKey(
+                        'math-${stockMath!.base}-${stockMath!.delta}-'
+                        '${stockMath!.result}-${stockMath!.baseCost}-'
+                        '${stockMath!.deltaCost}-${stockMath!.resultCost}',
+                      ),
+                      child: _StockMathColumn(
+                        base: stockMath!.base,
+                        delta: stockMath!.delta,
+                        result: stockMath!.result,
+                        isAdd: stockMath!.isAdd,
+                        accent: lineColor,
+                        warn: warn,
+                        baseCost: stockMath!.baseCost,
+                        deltaCost: stockMath!.deltaCost,
+                        resultCost: stockMath!.resultCost,
+                      ),
+                    )
+                  : quantity != null
+                      ? KeyedSubtree(
+                          key: ValueKey('qty-$quantity'),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              AmountFormatter.formatQuantity(quantity!),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: lineColor,
+                                height: 1.1,
+                              ),
+                            ),
+                          ),
+                        )
+                      : const SizedBox.shrink(key: ValueKey('empty')),
+            ),
           ],
         ),
       ),

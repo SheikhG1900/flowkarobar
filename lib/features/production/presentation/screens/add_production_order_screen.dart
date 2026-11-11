@@ -94,10 +94,16 @@ class _AddProductionOrderScreenState
     extends ConsumerState<AddProductionOrderScreen> {
   final _formKey = GlobalKey<FormState>();
   final _notes = TextEditingController();
+  final _scale = TextEditingController(
+    text: AmountFormatter.formatQuantity(1),
+  );
   final _inputs = <_InputLine>[];
   final _outputs = <_OutputLine>[];
   final _charges = <_ChargeLine>[];
   DateTime _date = DateTime.now();
+  /// Scale that current line quantities currently correspond to.
+  double _appliedScale = 1;
+  String? _recipeName;
   bool _saving = false;
   bool _loading = false;
 
@@ -152,12 +158,18 @@ class _AddProductionOrderScreenState
     }
     _notes.text = order.notes ?? '';
     _date = order.productionDate;
+    final scale = order.scaleFactor <= 0 ? 1.0 : order.scaleFactor;
+    _appliedScale = scale;
+    _scale.text = AmountFormatter.formatQuantity(scale);
+    final recipe = order.recipeNameSnapshot?.trim();
+    _recipeName = (recipe == null || recipe.isEmpty) ? null : recipe;
     if (mounted) setState(() => _loading = false);
   }
 
   @override
   void dispose() {
     _notes.dispose();
+    _scale.dispose();
     for (final i in _inputs) {
       i.dispose();
     }
@@ -168,6 +180,40 @@ class _AddProductionOrderScreenState
       c.dispose();
     }
     super.dispose();
+  }
+
+  void _applyScale() {
+    final l10n = AppLocalizations.of(context)!;
+    final next = double.tryParse(_scale.text.trim());
+    if (next == null || next <= 0) {
+      ToastUtils.showErrorToast(context, ref, l10n.pleaseEnterValidNumber);
+      return;
+    }
+    final prev = _appliedScale <= 0 ? 1.0 : _appliedScale;
+    if ((next - prev).abs() < 1e-12) return;
+    final ratio = next / prev;
+    setState(() {
+      for (final i in _inputs) {
+        final q = _parse(i.qty);
+        if (q > 0) {
+          i.qty.text = AmountFormatter.formatQuantity(q * ratio);
+        }
+      }
+      for (final o in _outputs) {
+        final q = _parse(o.qty);
+        if (q > 0) {
+          o.qty.text = AmountFormatter.formatQuantity(q * ratio);
+        }
+      }
+      for (final c in _charges) {
+        final a = _parse(c.amount);
+        if (a > 0) {
+          c.amount.text = AmountFormatter.formatQuantity(a * ratio);
+        }
+      }
+      _appliedScale = next;
+      _scale.text = AmountFormatter.formatQuantity(next);
+    });
   }
 
   Future<void> _pickStockProduct({required bool forInput}) async {
@@ -312,6 +358,7 @@ class _AddProductionOrderScreenState
           orderUuid: widget.existingUuid!,
           productionDate: _date,
           notes: notes.isEmpty ? null : notes,
+          scaleFactor: _appliedScale,
           inputs: inputRows,
           outputs: outputRows,
           charges: chargeRows,
@@ -320,6 +367,7 @@ class _AddProductionOrderScreenState
         await repo.createDraft(
           productionDate: _date,
           notes: notes.isEmpty ? null : notes,
+          scaleFactor: _appliedScale,
           inputs: inputRows,
           outputs: outputRows,
           charges: chargeRows,
@@ -386,33 +434,110 @@ class _AddProductionOrderScreenState
           children: [
             FormSectionCard(
               title: l10n.sectionDetails,
+              subtitle: _recipeName == null
+                  ? null
+                  : l10n.recipeScaledNote(
+                      AmountFormatter.formatQuantity(_appliedScale),
+                      _recipeName!,
+                    ),
               icon: Icons.event_outlined,
               accentColor: accent,
               children: [
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.calendar_today_outlined),
-                  title: Text(l10n.productionDate),
-                  subtitle: Text(
-                    AppDateFormatter.formatDate(_date, pattern: dateFormat),
-                  ),
-                  onTap: () async {
-                    final picked = await showDatePicker(
-                      context: context,
-                      initialDate: _date,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                    );
-                    if (picked != null) setState(() => _date = picked);
-                  },
-                ),
-                TextFormField(
-                  controller: _notes,
-                  maxLines: 2,
-                  decoration: InputDecoration(
-                    labelText: l10n.notesLabel,
-                    filled: true,
-                  ),
+                // One block so section gaps don't push fields apart.
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _date,
+                          firstDate: DateTime(2000),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
+                        );
+                        if (picked != null) setState(() => _date = picked);
+                      },
+                      child: InputDecorator(
+                        isEmpty: false,
+                        decoration: InputDecoration(
+                          labelText: l10n.productionDate,
+                          filled: true,
+                          isDense: true,
+                          prefixIcon: const Icon(
+                            Icons.calendar_today_outlined,
+                            size: 18,
+                          ),
+                        ),
+                        child: Text(
+                          AppDateFormatter.formatDate(
+                            _date,
+                            pattern: dateFormat,
+                          ),
+                          style: theme.textTheme.bodyLarge,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            controller: _scale,
+                            keyboardType:
+                                const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: _decimalFormatters,
+                            decoration: InputDecoration(
+                              labelText: l10n.scaleFactor,
+                              filled: true,
+                              isDense: true,
+                              suffixIcon: IconButton(
+                                tooltip: l10n.scaleAdjustHint,
+                                onPressed: () {
+                                  ToastUtils.showInfoToast(
+                                    context,
+                                    ref,
+                                    l10n.scaleAdjustHint,
+                                  );
+                                },
+                                icon: Icon(
+                                  Icons.info_outline,
+                                  size: 18,
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            validator: (v) {
+                              final n = double.tryParse(v?.trim() ?? '');
+                              if (n == null || n <= 0) {
+                                return l10n.pleaseEnterValidNumber;
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        FilledButton.tonal(
+                          onPressed: _applyScale,
+                          child: Text(l10n.applyScale),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: _notes,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        labelText: l10n.notesLabel,
+                        filled: true,
+                        isDense: true,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
