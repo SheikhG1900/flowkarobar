@@ -501,6 +501,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String get stockAvailable => 'उपलब्ध';
 
   @override
+  String get stockAfterComplete => 'पूर्ण के बाद';
+
+  @override
+  String get stockRequired => 'आवश्यक';
+
+  @override
+  String get stockRemaining => 'शेष स्टॉक';
+
+  @override
+  String get estimatedUnitCost => 'अनुमानित यूनिट लागत';
+
+  @override
+  String get productionCostSummary => 'लागत सारांश';
+
+  @override
+  String get materialCost => 'सामग्री लागत';
+
+  @override
+  String get totalProductionCost => 'कुल लागत';
+
+  @override
   String get inputsRequired => 'आवश्यक इनपुट';
 
   @override

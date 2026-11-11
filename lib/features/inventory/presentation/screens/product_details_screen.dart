@@ -918,7 +918,8 @@ class _QtyFocusCard extends ConsumerWidget {
         earliestExpiry!.difference(DateTime.now()).inDays <= 60;
     final hasDescription =
         description != null && description!.trim().isNotEmpty;
-    final hasFooter = (footerBatch != null && footerBatch!.isNotEmpty) ||
+    final hasFooter = hasDescription ||
+        (footerBatch != null && footerBatch!.isNotEmpty) ||
         earliestExpiry != null ||
         (orderHint != null && orderHint!.isNotEmpty);
 
@@ -1000,18 +1001,6 @@ class _QtyFocusCard extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        if (hasDescription) ...[
-                          SizedBox(height: dense ? 8 : 10),
-                          Text(
-                            description!,
-                            maxLines: dense ? 2 : 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: muted,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
                         if (hasFooter) ...[
                           SizedBox(height: dense ? 8 : 10),
                           _ItemFooter(
@@ -1024,6 +1013,8 @@ class _QtyFocusCard extends ConsumerWidget {
                                   ),
                             expiryWarn: expiryWarn,
                             orderHint: orderHint,
+                            description: hasDescription ? description : null,
+                            dense: dense,
                           ),
                         ],
                       ],
@@ -1227,12 +1218,16 @@ class _ItemFooter extends StatelessWidget {
   final String? expiryText;
   final bool expiryWarn;
   final String? orderHint;
+  final String? description;
+  final bool dense;
 
   const _ItemFooter({
     this.batch,
     this.expiryText,
     this.expiryWarn = false,
     this.orderHint,
+    this.description,
+    this.dense = false,
   });
 
   @override
@@ -1242,8 +1237,9 @@ class _ItemFooter extends StatelessWidget {
     final hasBatch = batch != null && batch!.isNotEmpty;
     final hasExpiry = expiryText != null && expiryText!.isNotEmpty;
     final hasOrder = orderHint != null && orderHint!.isNotEmpty;
+    final hasDescription = description != null && description!.trim().isNotEmpty;
 
-    if (!hasBatch && !hasExpiry && !hasOrder) {
+    if (!hasBatch && !hasExpiry && !hasOrder && !hasDescription) {
       return const SizedBox.shrink();
     }
 
@@ -1260,8 +1256,11 @@ class _ItemFooter extends StatelessWidget {
       required Color color,
       String? secondary,
       Color? secondaryColor,
+      int maxLines = 1,
     }) {
       return Row(
+        crossAxisAlignment:
+            maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
           Icon(icon, size: 11, color: color),
           const SizedBox(width: 4),
@@ -1271,7 +1270,7 @@ class _ItemFooter extends StatelessWidget {
               children: [
                 Text(
                   value,
-                  maxLines: 1,
+                  maxLines: maxLines,
                   overflow: TextOverflow.ellipsis,
                   style: valueStyle(color),
                 ),
@@ -1287,6 +1286,19 @@ class _ItemFooter extends StatelessWidget {
           ),
         ],
       );
+    }
+
+    Widget field(Widget child, {bool expand = true}) {
+      final box = Container(
+        width: expand ? null : double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: child,
+      );
+      return expand ? Expanded(child: box) : box;
     }
 
     final batchCell = hasBatch || hasOrder
@@ -1305,30 +1317,45 @@ class _ItemFooter extends StatelessWidget {
             color: expiryWarn ? AppColors.warning : muted,
           )
         : null;
-
-    Widget wrap(Widget child) => Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(8),
+    final descriptionField = hasDescription
+        ? field(
+            cell(
+              icon: Icons.notes_outlined,
+              value: description!.trim(),
+              color: muted,
+              maxLines: dense ? 2 : 3,
             ),
-            child: child,
-          ),
-        );
+            expand: false,
+          )
+        : null;
 
+    Widget? metaRow;
     if (batchCell != null && expiryCell != null) {
-      return Row(
+      metaRow = Row(
         children: [
-          wrap(batchCell),
+          field(batchCell),
           const SizedBox(width: 6),
-          wrap(expiryCell),
+          field(expiryCell),
+        ],
+      );
+    } else {
+      final only = batchCell ?? expiryCell;
+      if (only != null) {
+        metaRow = Row(children: [field(only)]);
+      }
+    }
+
+    if (metaRow != null && descriptionField != null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          metaRow,
+          const SizedBox(height: 6),
+          descriptionField,
         ],
       );
     }
-    final only = batchCell ?? expiryCell;
-    if (only == null) return const SizedBox.shrink();
-    return Row(children: [wrap(only)]);
+    return metaRow ?? descriptionField ?? const SizedBox.shrink();
   }
 }
 

@@ -1054,6 +1054,48 @@ abstract class AppLocalizations {
   /// **'Available'**
   String get stockAvailable;
 
+  /// No description provided for @stockAfterComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'After complete'**
+  String get stockAfterComplete;
+
+  /// No description provided for @stockRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get stockRequired;
+
+  /// No description provided for @stockRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Left in stock'**
+  String get stockRemaining;
+
+  /// No description provided for @estimatedUnitCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Est. unit cost'**
+  String get estimatedUnitCost;
+
+  /// No description provided for @productionCostSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost summary'**
+  String get productionCostSummary;
+
+  /// No description provided for @materialCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Material cost'**
+  String get materialCost;
+
+  /// No description provided for @totalProductionCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Total cost'**
+  String get totalProductionCost;
+
   /// No description provided for @inputsRequired.
   ///
   /// In en, this message translates to:

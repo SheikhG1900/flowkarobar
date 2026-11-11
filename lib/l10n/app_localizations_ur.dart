@@ -500,6 +500,27 @@ class AppLocalizationsUr extends AppLocalizations {
   String get stockAvailable => 'دستیاب';
 
   @override
+  String get stockAfterComplete => 'مکمل کے بعد';
+
+  @override
+  String get stockRequired => 'درکار';
+
+  @override
+  String get stockRemaining => 'باقی اسٹاک';
+
+  @override
+  String get estimatedUnitCost => 'تخمینی یونٹ لاگت';
+
+  @override
+  String get productionCostSummary => 'لاگت کا خلاصہ';
+
+  @override
+  String get materialCost => 'مواد کی لاگت';
+
+  @override
+  String get totalProductionCost => 'کل لاگت';
+
+  @override
   String get inputsRequired => 'درکار ان پٹ';
 
   @override

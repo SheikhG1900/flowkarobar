@@ -593,6 +593,24 @@ class InventoryRepository {
     return lots.fold<double>(0, (s, b) => s + b.remainingQuantity);
   }
 
+  /// Remaining-qty weighted average unit cost of open lots (batch-scoped optional).
+  Future<double> averageUnitCost({
+    required String productUuid,
+    String? batchNumber,
+  }) async {
+    final lots = await _openLots(productUuid, batchNumber: batchNumber);
+    var qty = 0.0;
+    var value = 0.0;
+    for (final lot in lots) {
+      final remaining = lot.remainingQuantity;
+      if (remaining <= 1e-9) continue;
+      qty += remaining;
+      value += remaining * lot.effectiveCost;
+    }
+    if (qty <= 1e-9) return 0;
+    return value / qty;
+  }
+
   /// Distinct open batch labels for a product (for consume pickers).
   Future<List<String>> openBatchNumbers(String productUuid) async {
     final lots = await _openLots(productUuid);
@@ -637,6 +655,33 @@ class InventoryRepository {
     final scope = batchNumber?.trim();
     if (scope == null || scope.isEmpty) return lots;
     return lots.where((l) => l.batchNumber.trim() == scope).toList();
+  }
+
+  /// FEFO allocation preview without writing (same order as [consumeFefo]).
+  Future<List<BatchAllocation>> peekFefo({
+    required String productUuid,
+    required double quantity,
+    String? batchNumber,
+  }) async {
+    if (quantity <= 0) return const [];
+    final batches = await _openLots(productUuid, batchNumber: batchNumber);
+    var need = quantity;
+    final allocations = <BatchAllocation>[];
+    for (final batch in batches) {
+      if (need <= 1e-9) break;
+      final take =
+          batch.remainingQuantity < need ? batch.remainingQuantity : need;
+      if (take <= 0) continue;
+      allocations.add(
+        BatchAllocation(
+          batchUuid: batch.uuid,
+          quantity: take,
+          effectiveCost: batch.effectiveCost,
+        ),
+      );
+      need -= take;
+    }
+    return allocations;
   }
 
   /// FEFO consume across lots. Optional [batchNumber] limits to that virtual batch.

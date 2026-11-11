@@ -23,6 +23,96 @@ class ProductionStockShortfall {
   });
 }
 
+class ProductionInputImpact {
+  final String inputUuid;
+  final String productUuid;
+  final String productName;
+  final String unit;
+  final String? batchNumber;
+  final bool batchMode;
+  final bool missingBatch;
+  final double required;
+  final double available;
+  final double remainingAfter;
+  final double estimatedMaterialCost;
+  /// Avg unit cost of available open stock (batch-scoped when set).
+  final double currentUnitCost;
+  /// FEFO unit cost of the qty being consumed.
+  final double consumeUnitCost;
+  /// Blended avg unit cost of stock left after consume.
+  final double unitCostAfter;
+
+  const ProductionInputImpact({
+    required this.inputUuid,
+    required this.productUuid,
+    required this.productName,
+    required this.unit,
+    required this.required,
+    required this.available,
+    required this.remainingAfter,
+    required this.estimatedMaterialCost,
+    required this.batchMode,
+    required this.missingBatch,
+    required this.currentUnitCost,
+    required this.consumeUnitCost,
+    required this.unitCostAfter,
+    this.batchNumber,
+  });
+
+  bool get insufficient => missingBatch || required > available + 1e-9;
+}
+
+class ProductionOutputImpact {
+  final String outputUuid;
+  final String productUuid;
+  final String productName;
+  final String unit;
+  final double quantity;
+  final double costWeight;
+  /// Calculated production unit cost for this output line.
+  final double unitCost;
+  final double shareCost;
+  final double currentStock;
+  final double stockAfter;
+  /// Current avg unit cost of open stock (batch-scoped when [batchNumber] set).
+  final double currentUnitCost;
+  /// Blended avg unit cost after landing this production qty.
+  final double unitCostAfter;
+  final String? batchNumber;
+
+  const ProductionOutputImpact({
+    required this.outputUuid,
+    required this.productUuid,
+    required this.productName,
+    required this.unit,
+    required this.quantity,
+    required this.costWeight,
+    required this.unitCost,
+    required this.shareCost,
+    required this.currentStock,
+    required this.stockAfter,
+    required this.currentUnitCost,
+    required this.unitCostAfter,
+    this.batchNumber,
+  });
+}
+
+class ProductionCompletionPreview {
+  final double materialCost;
+  final double chargesTotal;
+  final double totalCost;
+  final List<ProductionInputImpact> inputs;
+  final List<ProductionOutputImpact> outputs;
+
+  const ProductionCompletionPreview({
+    required this.materialCost,
+    required this.chargesTotal,
+    required this.totalCost,
+    required this.inputs,
+    required this.outputs,
+  });
+}
+
 class ProductionRepository {
   final AppDatabase _db;
   late final InventoryRepository _inventory;
@@ -348,6 +438,155 @@ class ProductionRepository {
       }
     }
     return shortfalls;
+  }
+
+  /// Draft preview: stock left after consume + estimated output unit costs.
+  Future<ProductionCompletionPreview> previewCompletion(
+    String orderUuid, {
+    Map<String, double>? actualInputQty,
+    Map<String, double>? actualOutputQty,
+  }) async {
+    final inputs = await getInputs(orderUuid);
+    final outputs = await getOutputs(orderUuid);
+    final charges = await getCharges(orderUuid);
+    final chargesTotal = charges.fold<double>(0, (s, c) => s + c.amount);
+
+    var materialCost = 0.0;
+    final inputImpacts = <ProductionInputImpact>[];
+    for (final input in inputs) {
+      final need = actualInputQty?[input.uuid] ??
+          (input.actualQuantity > 1e-9
+              ? input.actualQuantity
+              : input.plannedQuantity);
+      final batchMode = input.consumeMode == ProductionConsumeMode.batch;
+      final batchScope = batchMode ? input.batchNumber : null;
+      final missingBatch =
+          batchMode && (batchScope == null || batchScope.trim().isEmpty);
+
+      double available = 0;
+      double estimatedCost = 0;
+      double currentUnitCost = 0;
+      if (!missingBatch) {
+        available = await _inventory.availableQuantity(
+          productUuid: input.productUuid,
+          batchNumber: batchScope,
+        );
+        currentUnitCost = await _inventory.averageUnitCost(
+          productUuid: input.productUuid,
+          batchNumber: batchScope,
+        );
+        if (need > 1e-9) {
+          final peek = await _inventory.peekFefo(
+            productUuid: input.productUuid,
+            quantity: need <= available ? need : available,
+            batchNumber: batchScope,
+          );
+          estimatedCost =
+              peek.fold<double>(0, (s, a) => s + a.quantity * a.effectiveCost);
+          if (need <= available + 1e-9) {
+            materialCost += estimatedCost;
+          } else if (available > 1e-9) {
+            // Partial cost estimate when short; still show available slice cost.
+            materialCost += estimatedCost;
+          }
+        }
+      }
+
+      final remainingAfter = missingBatch ? 0.0 : (available - need);
+      final consumedQty = need <= available ? need : available;
+      final consumeUnitCost =
+          consumedQty > 1e-9 ? estimatedCost / consumedQty : 0.0;
+      final remainingValue =
+          (available * currentUnitCost) - estimatedCost;
+      final unitCostAfter = remainingAfter > 1e-9
+          ? (remainingValue / remainingAfter).clamp(0.0, double.infinity)
+          : 0.0;
+
+      inputImpacts.add(
+        ProductionInputImpact(
+          inputUuid: input.uuid,
+          productUuid: input.productUuid,
+          productName: input.productNameSnapshot,
+          unit: input.unit,
+          batchNumber: batchScope,
+          batchMode: batchMode,
+          missingBatch: missingBatch,
+          required: need,
+          available: available,
+          remainingAfter: remainingAfter,
+          estimatedMaterialCost: estimatedCost,
+          currentUnitCost: currentUnitCost,
+          consumeUnitCost: consumeUnitCost,
+          unitCostAfter: unitCostAfter,
+        ),
+      );
+    }
+
+    final resolved = <({ProductionOrderOutput line, double qty})>[];
+    for (final output in outputs) {
+      final qty = actualOutputQty?[output.uuid] ??
+          (output.actualQuantity > 1e-9
+              ? output.actualQuantity
+              : output.plannedQuantity);
+      if (qty <= 1e-9) continue;
+      resolved.add((line: output, qty: qty));
+    }
+
+    final weightSum = resolved.fold<double>(
+      0,
+      (s, o) => s + (o.line.costWeight <= 0 ? 1.0 : o.line.costWeight),
+    );
+    final totalCost = materialCost + chargesTotal;
+
+    final outputImpacts = <ProductionOutputImpact>[];
+    for (final item in resolved) {
+      final weight = item.line.costWeight <= 0 ? 1.0 : item.line.costWeight;
+      final share = weightSum <= 1e-9 ? 0.0 : totalCost * (weight / weightSum);
+      final unitCost = share / item.qty;
+      final batch = item.line.batchNumber.trim();
+      final hasBatch = batch.isNotEmpty;
+      final batchScope = hasBatch ? batch : null;
+      // When an output batch is chosen, mirror inputs: stock math is scoped
+      // to that batch label. Otherwise use product-level open stock.
+      final currentStock = await _inventory.availableQuantity(
+        productUuid: item.line.productUuid,
+        batchNumber: batchScope,
+      );
+      final currentUnitCost = await _inventory.averageUnitCost(
+        productUuid: item.line.productUuid,
+        batchNumber: batchScope,
+      );
+      final stockAfter = currentStock + item.qty;
+      final unitCostAfter = stockAfter <= 1e-9
+          ? unitCost
+          : ((currentStock * currentUnitCost) + (item.qty * unitCost)) /
+              stockAfter;
+      outputImpacts.add(
+        ProductionOutputImpact(
+          outputUuid: item.line.uuid,
+          productUuid: item.line.productUuid,
+          productName: item.line.productNameSnapshot,
+          unit: item.line.unit,
+          quantity: item.qty,
+          costWeight: weight,
+          unitCost: unitCost,
+          shareCost: share,
+          currentStock: currentStock,
+          stockAfter: stockAfter,
+          currentUnitCost: currentUnitCost,
+          unitCostAfter: unitCostAfter,
+          batchNumber: batchScope,
+        ),
+      );
+    }
+
+    return ProductionCompletionPreview(
+      materialCost: materialCost,
+      chargesTotal: chargesTotal,
+      totalCost: totalCost,
+      inputs: inputImpacts,
+      outputs: outputImpacts,
+    );
   }
 
   /// Complete: verify stock, consume inputs, land charges, create output lots.

@@ -423,29 +423,6 @@ class _AddRecipeScreenState extends ConsumerState<AddRecipeScreen> {
               ],
             ),
             FormSectionCard(
-              title: l10n.sectionOutputs,
-              icon: Icons.output_rounded,
-              accentColor: AppColors.incomeColor,
-              trailing: TextButton.icon(
-                onPressed: () => _pickProduct(forInput: false),
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(l10n.addOutput),
-              ),
-              children: [
-                if (_outputs.isEmpty)
-                  Text(
-                    l10n.atLeastOneOutput,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                for (var i = 0; i < _outputs.length; i++) ...[
-                  if (i > 0) const Divider(height: 20),
-                  _outputCard(_outputs[i], l10n),
-                ],
-              ],
-            ),
-            FormSectionCard(
               title: l10n.sectionCharges,
               icon: Icons.payments_outlined,
               accentColor: AppColors.payableColor,
@@ -495,6 +472,29 @@ class _AddRecipeScreenState extends ConsumerState<AddRecipeScreen> {
                       ),
                     ],
                   ),
+                ],
+              ],
+            ),
+            FormSectionCard(
+              title: l10n.sectionOutputs,
+              icon: Icons.output_rounded,
+              accentColor: AppColors.incomeColor,
+              trailing: TextButton.icon(
+                onPressed: () => _pickProduct(forInput: false),
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(l10n.addOutput),
+              ),
+              children: [
+                if (_outputs.isEmpty)
+                  Text(
+                    l10n.atLeastOneOutput,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                for (var i = 0; i < _outputs.length; i++) ...[
+                  if (i > 0) const Divider(height: 20),
+                  _outputCard(_outputs[i], l10n),
                 ],
               ],
             ),

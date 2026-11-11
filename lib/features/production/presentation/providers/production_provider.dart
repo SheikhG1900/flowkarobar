@@ -62,3 +62,16 @@ final productionChargesStreamProvider =
     StreamProvider.family<List<ProductionOrderCharge>, String>((ref, uuid) {
   return ref.watch(productionRepositoryProvider).watchCharges(uuid);
 });
+
+final productionCompletionPreviewProvider =
+    FutureProvider.autoDispose.family<ProductionCompletionPreview, String>(
+        (ref, orderUuid) async {
+  // Rebuild when order lines change.
+  ref.watch(productionOrderStreamProvider(orderUuid));
+  ref.watch(productionInputsStreamProvider(orderUuid));
+  ref.watch(productionOutputsStreamProvider(orderUuid));
+  ref.watch(productionChargesStreamProvider(orderUuid));
+  return ref
+      .watch(productionRepositoryProvider)
+      .previewCompletion(orderUuid);
+});

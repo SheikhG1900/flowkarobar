@@ -9,6 +9,7 @@ import 'package:flowpaisa/features/categories/presentation/screens/categories_li
 import 'package:flowpaisa/features/contacts/presentation/screens/contacts_list_screen.dart';
 import 'package:flowpaisa/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:flowpaisa/features/premium/presentation/screens/premium_screen.dart';
+import 'package:flowpaisa/features/currencies/presentation/screens/currencies_list_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/about_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/font_selector_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/language_selector_screen.dart';
@@ -85,6 +86,12 @@ class MoreScreen extends ConsumerWidget {
             color: AppColors.settingsSectionColor,
             title: l10n.language,
             screen: const LanguageSelectorScreen(),
+          ),
+          _MoreTile(
+            icon: Icons.currency_exchange,
+            color: AppColors.settingsSectionColor,
+            title: l10n.currency,
+            screen: const CurrenciesListScreen(),
           ),
           _MoreTile(
             icon: Icons.font_download_outlined,

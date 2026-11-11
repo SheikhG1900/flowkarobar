@@ -504,6 +504,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get stockAvailable => 'Available';
 
   @override
+  String get stockAfterComplete => 'After complete';
+
+  @override
+  String get stockRequired => 'Required';
+
+  @override
+  String get stockRemaining => 'Left in stock';
+
+  @override
+  String get estimatedUnitCost => 'Est. unit cost';
+
+  @override
+  String get productionCostSummary => 'Cost summary';
+
+  @override
+  String get materialCost => 'Material cost';
+
+  @override
+  String get totalProductionCost => 'Total cost';
+
+  @override
   String get inputsRequired => 'Inputs required';
 
   @override

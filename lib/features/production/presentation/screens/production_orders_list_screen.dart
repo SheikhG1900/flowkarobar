@@ -259,31 +259,28 @@ class _ProductionOrderCard extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      _StatusBadge(
-                        label: statusLabel,
-                        color: statusColor,
-                      ),
-                      if (outputs.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        _CountBadge(
-                          count: outputs.length,
-                          accent: statusColor,
-                        ),
-                      ],
-                    ],
+                  _StatusBadge(
+                    label: statusLabel,
+                    color: statusColor,
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              Text(
-                l10n.sectionOutputs,
-                style: theme.textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: muted,
-                ),
+              Row(
+                children: [
+                  Text(
+                    l10n.sectionOutputs,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: muted,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _CountBadge(
+                    count: outputs.length,
+                    accent: AppColors.incomeColor,
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               if (outputsAsync.isLoading && outputs.isEmpty)
