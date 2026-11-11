@@ -119,6 +119,9 @@ class ProductBatches extends Table {
   DateTimeColumn get manufactureDate => dateTime().nullable()();
   DateTimeColumn get expiryDate => dateTime().nullable()();
 
+  /// Optional free-text note shown on lot cards when set.
+  TextColumn get description => text().nullable()();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
@@ -228,6 +231,197 @@ class GoodsReceiptLines extends Table {
 
   /// Lot created for this line (set after insert). Plain text avoids circular FK.
   TextColumn get lotUuid => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+/// Reusable BOM template. Quantities are a base batch; production orders scale them.
+class Recipes extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get name => text().withLength(min: 1, max: 200)();
+  TextColumn get notes => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+class RecipeInputs extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get recipeUuid => text().references(Recipes, #uuid)();
+  TextColumn get productUuid => text().references(Products, #uuid)();
+  TextColumn get productNameSnapshot => text()();
+  RealColumn get quantity => real()();
+
+  /// Default consume mode copied onto production inputs (AUTO | BATCH).
+  TextColumn get consumeMode => text().withDefault(const Constant('AUTO'))();
+
+  /// Preferred batch label when [consumeMode] is BATCH; copied onto draft POs.
+  TextColumn get batchNumber => text().nullable()();
+
+  TextColumn get unit => text().withDefault(const Constant('Pcs'))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+class RecipeOutputs extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get recipeUuid => text().references(Recipes, #uuid)();
+  TextColumn get productUuid => text().references(Products, #uuid)();
+  TextColumn get productNameSnapshot => text()();
+  RealColumn get quantity => real()();
+  RealColumn get costWeight => real().withDefault(const Constant(1.0))();
+  TextColumn get unit => text().withDefault(const Constant('Pcs'))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+/// Template other charges; scaled by production [ProductionOrders.scaleFactor].
+class RecipeCharges extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get recipeUuid => text().references(Recipes, #uuid)();
+  TextColumn get description => text()();
+  RealColumn get amount => real().withDefault(const Constant(0.0))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+/// Formal production run: consume inputs (+ charges) → one or more output lots.
+/// Stock moves only when [status] becomes COMPLETED.
+class ProductionOrders extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get productionNumber => text()();
+  DateTimeColumn get productionDate => dateTime()();
+
+  /// DRAFT | COMPLETED | CANCELLED
+  TextColumn get status => text().withDefault(const Constant('DRAFT'))();
+  TextColumn get notes => text().nullable()();
+  DateTimeColumn get completedAt => dateTime().nullable()();
+
+  /// Optional recipe this run was created from (audit only; lines are copied).
+  TextColumn get recipeUuid => text().nullable().references(Recipes, #uuid)();
+  TextColumn get recipeNameSnapshot => text().nullable()();
+  /// Multiplier applied to recipe base quantities when creating this order.
+  RealColumn get scaleFactor => real().withDefault(const Constant(1.0))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+/// Raw / component lines consumed when the production order is completed.
+class ProductionOrderInputs extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get productionOrderUuid =>
+      text().references(ProductionOrders, #uuid)();
+  TextColumn get productUuid => text().references(Products, #uuid)();
+  TextColumn get productNameSnapshot => text()();
+
+  RealColumn get plannedQuantity => real()();
+  /// Qty actually consumed on complete (defaults to planned).
+  RealColumn get actualQuantity => real().withDefault(const Constant(0.0))();
+
+  /// AUTO = FEFO across all lots; BATCH = FEFO within [batchNumber] only.
+  TextColumn get consumeMode => text().withDefault(const Constant('AUTO'))();
+  TextColumn get batchNumber => text().nullable()();
+  TextColumn get unit => text().withDefault(const Constant('Pcs'))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+/// Finished goods produced by this run (supports co-products).
+class ProductionOrderOutputs extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get productionOrderUuid =>
+      text().references(ProductionOrders, #uuid)();
+  TextColumn get productUuid => text().references(Products, #uuid)();
+  TextColumn get productNameSnapshot => text()();
+
+  RealColumn get plannedQuantity => real()();
+  RealColumn get actualQuantity => real().withDefault(const Constant(0.0))();
+
+  /// Cost allocation weight (relative). Normalized on complete.
+  RealColumn get costWeight => real().withDefault(const Constant(1.0))();
+  /// Frozen unit cost after complete.
+  RealColumn get unitCostSnapshot => real().withDefault(const Constant(0.0))();
+  TextColumn get outputLotUuid => text().nullable()();
+  TextColumn get batchNumber => text().withDefault(const Constant(''))();
+  TextColumn get unit => text().withDefault(const Constant('Pcs'))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+/// Non-material charges landed into output lot costs (labor, power, etc.).
+class ProductionOrderCharges extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get productionOrderUuid =>
+      text().references(ProductionOrders, #uuid)();
+  TextColumn get description => text()();
+  RealColumn get amount => real().withDefault(const Constant(0.0))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+/// Audit: which lots were consumed for an input line on complete.
+class ProductionConsumptions extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get productionOrderUuid =>
+      text().references(ProductionOrders, #uuid)();
+  TextColumn get inputLineUuid =>
+      text().references(ProductionOrderInputs, #uuid)();
+  TextColumn get lotUuid => text().references(ProductBatches, #uuid)();
+  RealColumn get quantity => real()();
+  RealColumn get effectiveCost => real()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -477,6 +671,15 @@ typedef CategoriesCompanion = ProductCategoriesCompanion;
   OrderItems,
   GoodsReceipts,
   GoodsReceiptLines,
+  Recipes,
+  RecipeInputs,
+  RecipeOutputs,
+  RecipeCharges,
+  ProductionOrders,
+  ProductionOrderInputs,
+  ProductionOrderOutputs,
+  ProductionOrderCharges,
+  ProductionConsumptions,
   OrderReturns,
   OrderReturnItems,
   Catalogs,
@@ -489,7 +692,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 7;
 
   // Compatibility getters and helpers for deprecated tables
   $ProductCategoriesTable get categories => productCategories;
@@ -540,8 +743,81 @@ class AppDatabase extends _$AppDatabase {
           if (from < 3) {
             await _migrateGoodsReceiptsToV3(m);
           }
+          // Recipes before production when both are new (FK on production_orders).
+          if (from < 5) {
+            await _ensureRecipeTables(m);
+          }
+          if (from < 4) {
+            await _migrateProductionOrdersToV4(m);
+          } else if (from < 5) {
+            await _addProductionRecipeColumns();
+          }
+          if (from < 6) {
+            await _migrateLotDescriptionToV6();
+          }
+          if (from < 7) {
+            await _migrateRecipeInputBatchToV7();
+          }
         },
       );
+
+  Future<void> _migrateLotDescriptionToV6() async {
+    try {
+      await customStatement(
+        'ALTER TABLE product_batches ADD COLUMN description TEXT',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v6 alter skipped: $e');
+      }
+    }
+  }
+
+  Future<void> _migrateRecipeInputBatchToV7() async {
+    try {
+      await customStatement(
+        'ALTER TABLE recipe_inputs ADD COLUMN batch_number TEXT',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v7 alter skipped: $e');
+      }
+    }
+  }
+
+  Future<void> _ensureRecipeTables(Migrator m) async {
+    await m.createTable(recipes);
+    await m.createTable(recipeInputs);
+    await m.createTable(recipeOutputs);
+    await m.createTable(recipeCharges);
+  }
+
+  Future<void> _migrateProductionOrdersToV4(Migrator m) async {
+    await m.createTable(productionOrders);
+    await m.createTable(productionOrderInputs);
+    await m.createTable(productionOrderOutputs);
+    await m.createTable(productionOrderCharges);
+    await m.createTable(productionConsumptions);
+  }
+
+  Future<void> _addProductionRecipeColumns() async {
+    Future<void> tryAlter(String sql) async {
+      try {
+        await customStatement(sql);
+      } catch (e) {
+        if (kDebugMode) {
+          print('Database migrate v5 alter skipped: $e');
+        }
+      }
+    }
+
+    await tryAlter(
+        'ALTER TABLE production_orders ADD COLUMN recipe_uuid TEXT REFERENCES recipes (uuid)');
+    await tryAlter(
+        'ALTER TABLE production_orders ADD COLUMN recipe_name_snapshot TEXT');
+    await tryAlter(
+        'ALTER TABLE production_orders ADD COLUMN scale_factor REAL NOT NULL DEFAULT 1.0');
+  }
 
   /// Receipts + lot shipment refs + order_items.received_quantity.
   Future<void> _migrateGoodsReceiptsToV3(Migrator m) async {

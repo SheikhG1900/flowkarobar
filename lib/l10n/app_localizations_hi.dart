@@ -356,6 +356,157 @@ class AppLocalizationsHi extends AppLocalizations {
   String get sectionCosting => 'लागत';
 
   @override
+  String get productionOrders => 'उत्पादन';
+
+  @override
+  String get productionOrder => 'उत्पादन आदेश';
+
+  @override
+  String get newProductionOrder => 'नया उत्पादन';
+
+  @override
+  String get recipes => 'रेसिपी';
+
+  @override
+  String get recipe => 'रेसिपी';
+
+  @override
+  String get newRecipe => 'नई रेसिपी';
+
+  @override
+  String get editRecipe => 'रेसिपी संपादित करें';
+
+  @override
+  String get noRecipesYet => 'अभी कोई रेसिपी नहीं';
+
+  @override
+  String get recipeName => 'रेसिपी नाम';
+
+  @override
+  String get recipeSaved => 'रेसिपी सहेजी गई';
+
+  @override
+  String get recipeDeleted => 'रेसिपी हटाई गई';
+
+  @override
+  String get produceFromRecipe => 'उत्पादन करें';
+
+  @override
+  String get scaleFactor => 'बैच / स्केल';
+
+  @override
+  String get scaleFactorHint => 'रेसिपी मात्रा गुणा करें (जैसे 2 = डबल बैच)';
+
+  @override
+  String get productionFromRecipe => 'रेसिपी से उत्पादन';
+
+  @override
+  String get adhocProduction => 'खाली आदेश';
+
+  @override
+  String recipeScaledNote(String scale, String recipe) {
+    return '$recipe से ×$scale स्केल';
+  }
+
+  @override
+  String get noProductionOrdersYet => 'अभी कोई उत्पादन आदेश नहीं';
+
+  @override
+  String get productionDraft => 'ड्राफ़्ट';
+
+  @override
+  String get productionCompleted => 'पूर्ण';
+
+  @override
+  String get productionCancelled => 'रद्द';
+
+  @override
+  String get sectionInputs => 'इनपुट';
+
+  @override
+  String get sectionOutputs => 'आउटपुट';
+
+  @override
+  String get sectionCharges => 'अन्य शुल्क';
+
+  @override
+  String get addInput => 'इनपुट जोड़ें';
+
+  @override
+  String get addOutput => 'आउटपुट जोड़ें';
+
+  @override
+  String get addCharge => 'शुल्क जोड़ें';
+
+  @override
+  String get consumeModeAuto => 'ऑटो (सभी लॉट)';
+
+  @override
+  String get consumeModeBatch => 'बैच';
+
+  @override
+  String get selectBatch => 'बैच चुनें';
+
+  @override
+  String get costWeight => 'लागत हिस्सा';
+
+  @override
+  String get costWeightHint => 'आउटपुट्स में कुल लागत बाँटने का सापेक्ष भार';
+
+  @override
+  String get plannedQty => 'नियोजित मात्रा';
+
+  @override
+  String get chargeDescription => 'शुल्क विवरण';
+
+  @override
+  String get completeProduction => 'उत्पादन पूर्ण करें';
+
+  @override
+  String get completeProductionConfirm =>
+      'स्टॉक खपत होगा और आउटपुट लॉट बनेंगे। जारी रखें?';
+
+  @override
+  String get productionCompletedToast => 'उत्पादन पूर्ण हुआ';
+
+  @override
+  String get productionSaved => 'उत्पादन आदेश सहेजा गया';
+
+  @override
+  String get productionCancelledToast => 'उत्पादन रद्द हुआ';
+
+  @override
+  String get insufficientStockToComplete =>
+      'पूर्ण करने के लिए पर्याप्त स्टॉक नहीं';
+
+  @override
+  String get cancelProduction => 'आदेश रद्द करें';
+
+  @override
+  String get editProductionOrder => 'उत्पादन संपादित करें';
+
+  @override
+  String get productionDate => 'उत्पादन तिथि';
+
+  @override
+  String get outputBatchNumber => 'आउटपुट बैच #';
+
+  @override
+  String get atLeastOneInput => 'कम से कम एक इनपुट जोड़ें';
+
+  @override
+  String get atLeastOneOutput => 'कम से कम एक आउटपुट जोड़ें';
+
+  @override
+  String get stockAvailable => 'उपलब्ध';
+
+  @override
+  String get inputsRequired => 'आवश्यक इनपुट';
+
+  @override
+  String get outputsProduced => 'आउटपुट';
+
+  @override
   String get productDetails => 'उत्पाद विवरण';
 
   @override
@@ -431,6 +582,12 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get lotBatchNumber => 'बैच नंबर';
+
+  @override
+  String get lotDescription => 'विवरण';
+
+  @override
+  String get lotDescriptionHint => 'इस लॉट के लिए वैकल्पिक नोट्स';
 
   @override
   String get lotExpiry => 'समाप्ति';

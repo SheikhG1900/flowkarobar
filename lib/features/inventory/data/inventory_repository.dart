@@ -330,6 +330,7 @@ class InventoryRepository {
     String? manualType,
     DateTime? manufactureDate,
     DateTime? expiryDate,
+    String? description,
     double? retailPriceOverride,
     double? wholesalePriceOverride,
     String? shipmentLineUuid,
@@ -349,6 +350,7 @@ class InventoryRepository {
       throw ArgumentError('purchase lots require shipmentLineUuid');
     }
 
+    final desc = description?.trim();
     return createBatch(
       ProductBatchesCompanion.insert(
         uuid: const Uuid().v4(),
@@ -364,6 +366,7 @@ class InventoryRepository {
         sourceLotUuid: Value(sourceLotUuid),
         manufactureDate: Value(manufactureDate),
         expiryDate: Value(expiryDate),
+        description: Value(desc == null || desc.isEmpty ? null : desc),
         retailPriceOverride: Value(retailPriceOverride),
         wholesalePriceOverride: Value(wholesalePriceOverride),
       ),
@@ -391,6 +394,7 @@ class InventoryRepository {
     String? manualType,
     DateTime? manufactureDate,
     DateTime? expiryDate,
+    String? description,
   }) async {
     final lot = await getBatch(lotUuid);
     if (lot == null) throw StateError('Lot not found: $lotUuid');
@@ -418,6 +422,7 @@ class InventoryRepository {
       }
     }
 
+    final desc = description?.trim();
     await (_db.update(_db.productBatches)..where((b) => b.uuid.equals(lotUuid)))
         .write(
       ProductBatchesCompanion(
@@ -426,6 +431,7 @@ class InventoryRepository {
         manualType: Value(manualType ?? lot.manualType),
         manufactureDate: Value(manufactureDate),
         expiryDate: Value(expiryDate),
+        description: Value(desc == null || desc.isEmpty ? null : desc),
         isNotSynced: const Value(true),
         updatedAt: Value(DateTime.now()),
       ),
@@ -496,6 +502,7 @@ class InventoryRepository {
         batchNumber: lot.batchNumber,
         manufactureDate: lot.manufactureDate,
         expiryDate: lot.expiryDate,
+        description: lot.description,
         retailPriceOverride: lot.retailPriceOverride,
         wholesalePriceOverride: lot.wholesalePriceOverride,
         sourceLotUuid: lot.uuid,
@@ -577,29 +584,80 @@ class InventoryRepository {
     await refreshProductStockCache(batch.productUuid);
   }
 
-  /// FEFO consume across lots. Returns allocation slices (may be multiple).
+  /// Open-lot remaining for a product, optionally scoped to a batch label.
+  Future<double> availableQuantity({
+    required String productUuid,
+    String? batchNumber,
+  }) async {
+    final lots = await _openLots(productUuid, batchNumber: batchNumber);
+    return lots.fold<double>(0, (s, b) => s + b.remainingQuantity);
+  }
+
+  /// Distinct open batch labels for a product (for consume pickers).
+  Future<List<String>> openBatchNumbers(String productUuid) async {
+    final lots = await _openLots(productUuid);
+    final set = <String>{};
+    for (final lot in lots) {
+      final n = lot.batchNumber.trim();
+      if (n.isNotEmpty) set.add(n);
+    }
+    final list = set.toList()..sort();
+    return list;
+  }
+
+  /// Distinct batch labels for a product (open or closed; for labeling pickers).
+  Future<List<String>> distinctBatchNumbers(String productUuid) async {
+    final lots = await (_db.select(_db.productBatches)
+          ..where((b) =>
+              b.productUuid.equals(productUuid) & b.isDeleted.equals(false)))
+        .get();
+    final set = <String>{};
+    for (final lot in lots) {
+      final n = lot.batchNumber.trim();
+      if (n.isNotEmpty) set.add(n);
+    }
+    final list = set.toList()..sort();
+    return list;
+  }
+
+  Future<List<ProductBatche>> _openLots(
+    String productUuid, {
+    String? batchNumber,
+  }) async {
+    final query = _db.select(_db.productBatches)
+      ..where((b) =>
+          b.productUuid.equals(productUuid) &
+          b.isDeleted.equals(false) &
+          b.totalQuantity.isBiggerThan(b.consumedQuantity))
+      ..orderBy([
+        (b) => OrderingTerm.asc(b.expiryDate),
+        (b) => OrderingTerm.asc(b.createdAt),
+      ]);
+    final lots = await query.get();
+    final scope = batchNumber?.trim();
+    if (scope == null || scope.isEmpty) return lots;
+    return lots.where((l) => l.batchNumber.trim() == scope).toList();
+  }
+
+  /// FEFO consume across lots. Optional [batchNumber] limits to that virtual batch.
   Future<List<BatchAllocation>> consumeFefo({
     required String productUuid,
     required double quantity,
+    String? batchNumber,
   }) async {
     if (quantity <= 0) return const [];
 
-    final batches = await (_db.select(_db.productBatches)
-          ..where((b) =>
-              b.productUuid.equals(productUuid) &
-              b.isDeleted.equals(false) &
-              b.totalQuantity.isBiggerThan(b.consumedQuantity))
-          ..orderBy([
-            (b) => OrderingTerm.asc(b.expiryDate),
-            (b) => OrderingTerm.asc(b.createdAt),
-          ]))
-        .get();
+    final batches =
+        await _openLots(productUuid, batchNumber: batchNumber);
 
     final available =
         batches.fold<double>(0, (s, b) => s + b.remainingQuantity);
     if (quantity > available + 1e-9) {
+      final scope = (batchNumber == null || batchNumber.trim().isEmpty)
+          ? 'all lots'
+          : 'batch "$batchNumber"';
       throw StateError(
-        'Insufficient stock for $productUuid: need $quantity, have $available',
+        'Insufficient stock for $productUuid ($scope): need $quantity, have $available',
       );
     }
 

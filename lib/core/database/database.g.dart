@@ -7093,6 +7093,12 @@ class $ProductBatchesTable extends ProductBatches
   late final GeneratedColumn<DateTime> expiryDate = GeneratedColumn<DateTime>(
       'expiry_date', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -7146,6 +7152,7 @@ class $ProductBatchesTable extends ProductBatches
         wholesalePriceOverride,
         manufactureDate,
         expiryDate,
+        description,
         createdAt,
         updatedAt,
         isDeleted,
@@ -7253,6 +7260,12 @@ class $ProductBatchesTable extends ProductBatches
           expiryDate.isAcceptableOrUnknown(
               data['expiry_date']!, _expiryDateMeta));
     }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -7311,6 +7324,8 @@ class $ProductBatchesTable extends ProductBatches
           DriftSqlType.dateTime, data['${effectivePrefix}manufacture_date']),
       expiryDate: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}expiry_date']),
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -7359,6 +7374,9 @@ class ProductBatche extends DataClass implements Insertable<ProductBatche> {
   final double? wholesalePriceOverride;
   final DateTime? manufactureDate;
   final DateTime? expiryDate;
+
+  /// Optional free-text note shown on lot cards when set.
+  final String? description;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
@@ -7379,6 +7397,7 @@ class ProductBatche extends DataClass implements Insertable<ProductBatche> {
       this.wholesalePriceOverride,
       this.manufactureDate,
       this.expiryDate,
+      this.description,
       required this.createdAt,
       required this.updatedAt,
       required this.isDeleted,
@@ -7417,6 +7436,9 @@ class ProductBatche extends DataClass implements Insertable<ProductBatche> {
     }
     if (!nullToAbsent || expiryDate != null) {
       map['expiry_date'] = Variable<DateTime>(expiryDate);
+    }
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -7458,6 +7480,9 @@ class ProductBatche extends DataClass implements Insertable<ProductBatche> {
       expiryDate: expiryDate == null && nullToAbsent
           ? const Value.absent()
           : Value(expiryDate),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       isDeleted: Value(isDeleted),
@@ -7486,6 +7511,7 @@ class ProductBatche extends DataClass implements Insertable<ProductBatche> {
           serializer.fromJson<double?>(json['wholesalePriceOverride']),
       manufactureDate: serializer.fromJson<DateTime?>(json['manufactureDate']),
       expiryDate: serializer.fromJson<DateTime?>(json['expiryDate']),
+      description: serializer.fromJson<String?>(json['description']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
@@ -7512,6 +7538,7 @@ class ProductBatche extends DataClass implements Insertable<ProductBatche> {
           serializer.toJson<double?>(wholesalePriceOverride),
       'manufactureDate': serializer.toJson<DateTime?>(manufactureDate),
       'expiryDate': serializer.toJson<DateTime?>(expiryDate),
+      'description': serializer.toJson<String?>(description),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'isDeleted': serializer.toJson<bool>(isDeleted),
@@ -7535,6 +7562,7 @@ class ProductBatche extends DataClass implements Insertable<ProductBatche> {
           Value<double?> wholesalePriceOverride = const Value.absent(),
           Value<DateTime?> manufactureDate = const Value.absent(),
           Value<DateTime?> expiryDate = const Value.absent(),
+          Value<String?> description = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt,
           bool? isDeleted,
@@ -7565,6 +7593,7 @@ class ProductBatche extends DataClass implements Insertable<ProductBatche> {
             ? manufactureDate.value
             : this.manufactureDate,
         expiryDate: expiryDate.present ? expiryDate.value : this.expiryDate,
+        description: description.present ? description.value : this.description,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         isDeleted: isDeleted ?? this.isDeleted,
@@ -7609,6 +7638,8 @@ class ProductBatche extends DataClass implements Insertable<ProductBatche> {
           : this.manufactureDate,
       expiryDate:
           data.expiryDate.present ? data.expiryDate.value : this.expiryDate,
+      description:
+          data.description.present ? data.description.value : this.description,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
@@ -7635,6 +7666,7 @@ class ProductBatche extends DataClass implements Insertable<ProductBatche> {
           ..write('wholesalePriceOverride: $wholesalePriceOverride, ')
           ..write('manufactureDate: $manufactureDate, ')
           ..write('expiryDate: $expiryDate, ')
+          ..write('description: $description, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -7660,6 +7692,7 @@ class ProductBatche extends DataClass implements Insertable<ProductBatche> {
       wholesalePriceOverride,
       manufactureDate,
       expiryDate,
+      description,
       createdAt,
       updatedAt,
       isDeleted,
@@ -7683,6 +7716,7 @@ class ProductBatche extends DataClass implements Insertable<ProductBatche> {
           other.wholesalePriceOverride == this.wholesalePriceOverride &&
           other.manufactureDate == this.manufactureDate &&
           other.expiryDate == this.expiryDate &&
+          other.description == this.description &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.isDeleted == this.isDeleted &&
@@ -7705,6 +7739,7 @@ class ProductBatchesCompanion extends UpdateCompanion<ProductBatche> {
   final Value<double?> wholesalePriceOverride;
   final Value<DateTime?> manufactureDate;
   final Value<DateTime?> expiryDate;
+  final Value<String?> description;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<bool> isDeleted;
@@ -7726,6 +7761,7 @@ class ProductBatchesCompanion extends UpdateCompanion<ProductBatche> {
     this.wholesalePriceOverride = const Value.absent(),
     this.manufactureDate = const Value.absent(),
     this.expiryDate = const Value.absent(),
+    this.description = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -7748,6 +7784,7 @@ class ProductBatchesCompanion extends UpdateCompanion<ProductBatche> {
     this.wholesalePriceOverride = const Value.absent(),
     this.manufactureDate = const Value.absent(),
     this.expiryDate = const Value.absent(),
+    this.description = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -7772,6 +7809,7 @@ class ProductBatchesCompanion extends UpdateCompanion<ProductBatche> {
     Expression<double>? wholesalePriceOverride,
     Expression<DateTime>? manufactureDate,
     Expression<DateTime>? expiryDate,
+    Expression<String>? description,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<bool>? isDeleted,
@@ -7796,6 +7834,7 @@ class ProductBatchesCompanion extends UpdateCompanion<ProductBatche> {
         'wholesale_price_override': wholesalePriceOverride,
       if (manufactureDate != null) 'manufacture_date': manufactureDate,
       if (expiryDate != null) 'expiry_date': expiryDate,
+      if (description != null) 'description': description,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isDeleted != null) 'is_deleted': isDeleted,
@@ -7820,6 +7859,7 @@ class ProductBatchesCompanion extends UpdateCompanion<ProductBatche> {
       Value<double?>? wholesalePriceOverride,
       Value<DateTime?>? manufactureDate,
       Value<DateTime?>? expiryDate,
+      Value<String?>? description,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<bool>? isDeleted,
@@ -7842,6 +7882,7 @@ class ProductBatchesCompanion extends UpdateCompanion<ProductBatche> {
           wholesalePriceOverride ?? this.wholesalePriceOverride,
       manufactureDate: manufactureDate ?? this.manufactureDate,
       expiryDate: expiryDate ?? this.expiryDate,
+      description: description ?? this.description,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
@@ -7900,6 +7941,9 @@ class ProductBatchesCompanion extends UpdateCompanion<ProductBatche> {
     if (expiryDate.present) {
       map['expiry_date'] = Variable<DateTime>(expiryDate.value);
     }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -7936,6 +7980,7 @@ class ProductBatchesCompanion extends UpdateCompanion<ProductBatche> {
           ..write('wholesalePriceOverride: $wholesalePriceOverride, ')
           ..write('manufactureDate: $manufactureDate, ')
           ..write('expiryDate: $expiryDate, ')
+          ..write('description: $description, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -9965,6 +10010,5141 @@ class GoodsReceiptLinesCompanion extends UpdateCompanion<GoodsReceiptLine> {
           ..write('manufactureDate: $manufactureDate, ')
           ..write('expiryDate: $expiryDate, ')
           ..write('lotUuid: $lotUuid, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RecipesTable extends Recipes with TableInfo<$RecipesTable, Recipe> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecipesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 200),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+      'notes', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [uuid, name, notes, createdAt, updatedAt, isDeleted, isNotSynced];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'recipes';
+  @override
+  VerificationContext validateIntegrity(Insertable<Recipe> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+          _notesMeta, notes.isAcceptableOrUnknown(data['notes']!, _notesMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  Recipe map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Recipe(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      notes: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}notes']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $RecipesTable createAlias(String alias) {
+    return $RecipesTable(attachedDatabase, alias);
+  }
+}
+
+class Recipe extends DataClass implements Insertable<Recipe> {
+  final String uuid;
+  final String name;
+  final String? notes;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const Recipe(
+      {required this.uuid,
+      required this.name,
+      this.notes,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  RecipesCompanion toCompanion(bool nullToAbsent) {
+    return RecipesCompanion(
+      uuid: Value(uuid),
+      name: Value(name),
+      notes:
+          notes == null && nullToAbsent ? const Value.absent() : Value(notes),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory Recipe.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Recipe(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      name: serializer.fromJson<String>(json['name']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'name': serializer.toJson<String>(name),
+      'notes': serializer.toJson<String?>(notes),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  Recipe copyWith(
+          {String? uuid,
+          String? name,
+          Value<String?> notes = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      Recipe(
+        uuid: uuid ?? this.uuid,
+        name: name ?? this.name,
+        notes: notes.present ? notes.value : this.notes,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  Recipe copyWithCompanion(RecipesCompanion data) {
+    return Recipe(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      name: data.name.present ? data.name.value : this.name,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Recipe(')
+          ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid, name, notes, createdAt, updatedAt, isDeleted, isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Recipe &&
+          other.uuid == this.uuid &&
+          other.name == this.name &&
+          other.notes == this.notes &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class RecipesCompanion extends UpdateCompanion<Recipe> {
+  final Value<String> uuid;
+  final Value<String> name;
+  final Value<String?> notes;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const RecipesCompanion({
+    this.uuid = const Value.absent(),
+    this.name = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RecipesCompanion.insert({
+    required String uuid,
+    required String name,
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        name = Value(name);
+  static Insertable<Recipe> custom({
+    Expression<String>? uuid,
+    Expression<String>? name,
+    Expression<String>? notes,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (name != null) 'name': name,
+      if (notes != null) 'notes': notes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RecipesCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? name,
+      Value<String?>? notes,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return RecipesCompanion(
+      uuid: uuid ?? this.uuid,
+      name: name ?? this.name,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecipesCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RecipeInputsTable extends RecipeInputs
+    with TableInfo<$RecipeInputsTable, RecipeInput> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecipeInputsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _recipeUuidMeta =
+      const VerificationMeta('recipeUuid');
+  @override
+  late final GeneratedColumn<String> recipeUuid = GeneratedColumn<String>(
+      'recipe_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES recipes (uuid)'));
+  static const VerificationMeta _productUuidMeta =
+      const VerificationMeta('productUuid');
+  @override
+  late final GeneratedColumn<String> productUuid = GeneratedColumn<String>(
+      'product_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES products (uuid)'));
+  static const VerificationMeta _productNameSnapshotMeta =
+      const VerificationMeta('productNameSnapshot');
+  @override
+  late final GeneratedColumn<String> productNameSnapshot =
+      GeneratedColumn<String>('product_name_snapshot', aliasedName, false,
+          type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _quantityMeta =
+      const VerificationMeta('quantity');
+  @override
+  late final GeneratedColumn<double> quantity = GeneratedColumn<double>(
+      'quantity', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _consumeModeMeta =
+      const VerificationMeta('consumeMode');
+  @override
+  late final GeneratedColumn<String> consumeMode = GeneratedColumn<String>(
+      'consume_mode', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('AUTO'));
+  static const VerificationMeta _batchNumberMeta =
+      const VerificationMeta('batchNumber');
+  @override
+  late final GeneratedColumn<String> batchNumber = GeneratedColumn<String>(
+      'batch_number', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+      'unit', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('Pcs'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        recipeUuid,
+        productUuid,
+        productNameSnapshot,
+        quantity,
+        consumeMode,
+        batchNumber,
+        unit,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'recipe_inputs';
+  @override
+  VerificationContext validateIntegrity(Insertable<RecipeInput> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('recipe_uuid')) {
+      context.handle(
+          _recipeUuidMeta,
+          recipeUuid.isAcceptableOrUnknown(
+              data['recipe_uuid']!, _recipeUuidMeta));
+    } else if (isInserting) {
+      context.missing(_recipeUuidMeta);
+    }
+    if (data.containsKey('product_uuid')) {
+      context.handle(
+          _productUuidMeta,
+          productUuid.isAcceptableOrUnknown(
+              data['product_uuid']!, _productUuidMeta));
+    } else if (isInserting) {
+      context.missing(_productUuidMeta);
+    }
+    if (data.containsKey('product_name_snapshot')) {
+      context.handle(
+          _productNameSnapshotMeta,
+          productNameSnapshot.isAcceptableOrUnknown(
+              data['product_name_snapshot']!, _productNameSnapshotMeta));
+    } else if (isInserting) {
+      context.missing(_productNameSnapshotMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(_quantityMeta,
+          quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta));
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    if (data.containsKey('consume_mode')) {
+      context.handle(
+          _consumeModeMeta,
+          consumeMode.isAcceptableOrUnknown(
+              data['consume_mode']!, _consumeModeMeta));
+    }
+    if (data.containsKey('batch_number')) {
+      context.handle(
+          _batchNumberMeta,
+          batchNumber.isAcceptableOrUnknown(
+              data['batch_number']!, _batchNumberMeta));
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+          _unitMeta, unit.isAcceptableOrUnknown(data['unit']!, _unitMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  RecipeInput map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RecipeInput(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      recipeUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}recipe_uuid'])!,
+      productUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}product_uuid'])!,
+      productNameSnapshot: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}product_name_snapshot'])!,
+      quantity: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}quantity'])!,
+      consumeMode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}consume_mode'])!,
+      batchNumber: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}batch_number']),
+      unit: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}unit'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $RecipeInputsTable createAlias(String alias) {
+    return $RecipeInputsTable(attachedDatabase, alias);
+  }
+}
+
+class RecipeInput extends DataClass implements Insertable<RecipeInput> {
+  final String uuid;
+  final String recipeUuid;
+  final String productUuid;
+  final String productNameSnapshot;
+  final double quantity;
+
+  /// Default consume mode copied onto production inputs (AUTO | BATCH).
+  final String consumeMode;
+
+  /// Preferred batch label when [consumeMode] is BATCH; copied onto draft POs.
+  final String? batchNumber;
+  final String unit;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const RecipeInput(
+      {required this.uuid,
+      required this.recipeUuid,
+      required this.productUuid,
+      required this.productNameSnapshot,
+      required this.quantity,
+      required this.consumeMode,
+      this.batchNumber,
+      required this.unit,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['recipe_uuid'] = Variable<String>(recipeUuid);
+    map['product_uuid'] = Variable<String>(productUuid);
+    map['product_name_snapshot'] = Variable<String>(productNameSnapshot);
+    map['quantity'] = Variable<double>(quantity);
+    map['consume_mode'] = Variable<String>(consumeMode);
+    if (!nullToAbsent || batchNumber != null) {
+      map['batch_number'] = Variable<String>(batchNumber);
+    }
+    map['unit'] = Variable<String>(unit);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  RecipeInputsCompanion toCompanion(bool nullToAbsent) {
+    return RecipeInputsCompanion(
+      uuid: Value(uuid),
+      recipeUuid: Value(recipeUuid),
+      productUuid: Value(productUuid),
+      productNameSnapshot: Value(productNameSnapshot),
+      quantity: Value(quantity),
+      consumeMode: Value(consumeMode),
+      batchNumber: batchNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(batchNumber),
+      unit: Value(unit),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory RecipeInput.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RecipeInput(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      recipeUuid: serializer.fromJson<String>(json['recipeUuid']),
+      productUuid: serializer.fromJson<String>(json['productUuid']),
+      productNameSnapshot:
+          serializer.fromJson<String>(json['productNameSnapshot']),
+      quantity: serializer.fromJson<double>(json['quantity']),
+      consumeMode: serializer.fromJson<String>(json['consumeMode']),
+      batchNumber: serializer.fromJson<String?>(json['batchNumber']),
+      unit: serializer.fromJson<String>(json['unit']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'recipeUuid': serializer.toJson<String>(recipeUuid),
+      'productUuid': serializer.toJson<String>(productUuid),
+      'productNameSnapshot': serializer.toJson<String>(productNameSnapshot),
+      'quantity': serializer.toJson<double>(quantity),
+      'consumeMode': serializer.toJson<String>(consumeMode),
+      'batchNumber': serializer.toJson<String?>(batchNumber),
+      'unit': serializer.toJson<String>(unit),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  RecipeInput copyWith(
+          {String? uuid,
+          String? recipeUuid,
+          String? productUuid,
+          String? productNameSnapshot,
+          double? quantity,
+          String? consumeMode,
+          Value<String?> batchNumber = const Value.absent(),
+          String? unit,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      RecipeInput(
+        uuid: uuid ?? this.uuid,
+        recipeUuid: recipeUuid ?? this.recipeUuid,
+        productUuid: productUuid ?? this.productUuid,
+        productNameSnapshot: productNameSnapshot ?? this.productNameSnapshot,
+        quantity: quantity ?? this.quantity,
+        consumeMode: consumeMode ?? this.consumeMode,
+        batchNumber: batchNumber.present ? batchNumber.value : this.batchNumber,
+        unit: unit ?? this.unit,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  RecipeInput copyWithCompanion(RecipeInputsCompanion data) {
+    return RecipeInput(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      recipeUuid:
+          data.recipeUuid.present ? data.recipeUuid.value : this.recipeUuid,
+      productUuid:
+          data.productUuid.present ? data.productUuid.value : this.productUuid,
+      productNameSnapshot: data.productNameSnapshot.present
+          ? data.productNameSnapshot.value
+          : this.productNameSnapshot,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      consumeMode:
+          data.consumeMode.present ? data.consumeMode.value : this.consumeMode,
+      batchNumber:
+          data.batchNumber.present ? data.batchNumber.value : this.batchNumber,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecipeInput(')
+          ..write('uuid: $uuid, ')
+          ..write('recipeUuid: $recipeUuid, ')
+          ..write('productUuid: $productUuid, ')
+          ..write('productNameSnapshot: $productNameSnapshot, ')
+          ..write('quantity: $quantity, ')
+          ..write('consumeMode: $consumeMode, ')
+          ..write('batchNumber: $batchNumber, ')
+          ..write('unit: $unit, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid,
+      recipeUuid,
+      productUuid,
+      productNameSnapshot,
+      quantity,
+      consumeMode,
+      batchNumber,
+      unit,
+      createdAt,
+      updatedAt,
+      isDeleted,
+      isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecipeInput &&
+          other.uuid == this.uuid &&
+          other.recipeUuid == this.recipeUuid &&
+          other.productUuid == this.productUuid &&
+          other.productNameSnapshot == this.productNameSnapshot &&
+          other.quantity == this.quantity &&
+          other.consumeMode == this.consumeMode &&
+          other.batchNumber == this.batchNumber &&
+          other.unit == this.unit &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class RecipeInputsCompanion extends UpdateCompanion<RecipeInput> {
+  final Value<String> uuid;
+  final Value<String> recipeUuid;
+  final Value<String> productUuid;
+  final Value<String> productNameSnapshot;
+  final Value<double> quantity;
+  final Value<String> consumeMode;
+  final Value<String?> batchNumber;
+  final Value<String> unit;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const RecipeInputsCompanion({
+    this.uuid = const Value.absent(),
+    this.recipeUuid = const Value.absent(),
+    this.productUuid = const Value.absent(),
+    this.productNameSnapshot = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.consumeMode = const Value.absent(),
+    this.batchNumber = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RecipeInputsCompanion.insert({
+    required String uuid,
+    required String recipeUuid,
+    required String productUuid,
+    required String productNameSnapshot,
+    required double quantity,
+    this.consumeMode = const Value.absent(),
+    this.batchNumber = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        recipeUuid = Value(recipeUuid),
+        productUuid = Value(productUuid),
+        productNameSnapshot = Value(productNameSnapshot),
+        quantity = Value(quantity);
+  static Insertable<RecipeInput> custom({
+    Expression<String>? uuid,
+    Expression<String>? recipeUuid,
+    Expression<String>? productUuid,
+    Expression<String>? productNameSnapshot,
+    Expression<double>? quantity,
+    Expression<String>? consumeMode,
+    Expression<String>? batchNumber,
+    Expression<String>? unit,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (recipeUuid != null) 'recipe_uuid': recipeUuid,
+      if (productUuid != null) 'product_uuid': productUuid,
+      if (productNameSnapshot != null)
+        'product_name_snapshot': productNameSnapshot,
+      if (quantity != null) 'quantity': quantity,
+      if (consumeMode != null) 'consume_mode': consumeMode,
+      if (batchNumber != null) 'batch_number': batchNumber,
+      if (unit != null) 'unit': unit,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RecipeInputsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? recipeUuid,
+      Value<String>? productUuid,
+      Value<String>? productNameSnapshot,
+      Value<double>? quantity,
+      Value<String>? consumeMode,
+      Value<String?>? batchNumber,
+      Value<String>? unit,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return RecipeInputsCompanion(
+      uuid: uuid ?? this.uuid,
+      recipeUuid: recipeUuid ?? this.recipeUuid,
+      productUuid: productUuid ?? this.productUuid,
+      productNameSnapshot: productNameSnapshot ?? this.productNameSnapshot,
+      quantity: quantity ?? this.quantity,
+      consumeMode: consumeMode ?? this.consumeMode,
+      batchNumber: batchNumber ?? this.batchNumber,
+      unit: unit ?? this.unit,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (recipeUuid.present) {
+      map['recipe_uuid'] = Variable<String>(recipeUuid.value);
+    }
+    if (productUuid.present) {
+      map['product_uuid'] = Variable<String>(productUuid.value);
+    }
+    if (productNameSnapshot.present) {
+      map['product_name_snapshot'] =
+          Variable<String>(productNameSnapshot.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<double>(quantity.value);
+    }
+    if (consumeMode.present) {
+      map['consume_mode'] = Variable<String>(consumeMode.value);
+    }
+    if (batchNumber.present) {
+      map['batch_number'] = Variable<String>(batchNumber.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecipeInputsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('recipeUuid: $recipeUuid, ')
+          ..write('productUuid: $productUuid, ')
+          ..write('productNameSnapshot: $productNameSnapshot, ')
+          ..write('quantity: $quantity, ')
+          ..write('consumeMode: $consumeMode, ')
+          ..write('batchNumber: $batchNumber, ')
+          ..write('unit: $unit, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RecipeOutputsTable extends RecipeOutputs
+    with TableInfo<$RecipeOutputsTable, RecipeOutput> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecipeOutputsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _recipeUuidMeta =
+      const VerificationMeta('recipeUuid');
+  @override
+  late final GeneratedColumn<String> recipeUuid = GeneratedColumn<String>(
+      'recipe_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES recipes (uuid)'));
+  static const VerificationMeta _productUuidMeta =
+      const VerificationMeta('productUuid');
+  @override
+  late final GeneratedColumn<String> productUuid = GeneratedColumn<String>(
+      'product_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES products (uuid)'));
+  static const VerificationMeta _productNameSnapshotMeta =
+      const VerificationMeta('productNameSnapshot');
+  @override
+  late final GeneratedColumn<String> productNameSnapshot =
+      GeneratedColumn<String>('product_name_snapshot', aliasedName, false,
+          type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _quantityMeta =
+      const VerificationMeta('quantity');
+  @override
+  late final GeneratedColumn<double> quantity = GeneratedColumn<double>(
+      'quantity', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _costWeightMeta =
+      const VerificationMeta('costWeight');
+  @override
+  late final GeneratedColumn<double> costWeight = GeneratedColumn<double>(
+      'cost_weight', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1.0));
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+      'unit', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('Pcs'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        recipeUuid,
+        productUuid,
+        productNameSnapshot,
+        quantity,
+        costWeight,
+        unit,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'recipe_outputs';
+  @override
+  VerificationContext validateIntegrity(Insertable<RecipeOutput> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('recipe_uuid')) {
+      context.handle(
+          _recipeUuidMeta,
+          recipeUuid.isAcceptableOrUnknown(
+              data['recipe_uuid']!, _recipeUuidMeta));
+    } else if (isInserting) {
+      context.missing(_recipeUuidMeta);
+    }
+    if (data.containsKey('product_uuid')) {
+      context.handle(
+          _productUuidMeta,
+          productUuid.isAcceptableOrUnknown(
+              data['product_uuid']!, _productUuidMeta));
+    } else if (isInserting) {
+      context.missing(_productUuidMeta);
+    }
+    if (data.containsKey('product_name_snapshot')) {
+      context.handle(
+          _productNameSnapshotMeta,
+          productNameSnapshot.isAcceptableOrUnknown(
+              data['product_name_snapshot']!, _productNameSnapshotMeta));
+    } else if (isInserting) {
+      context.missing(_productNameSnapshotMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(_quantityMeta,
+          quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta));
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    if (data.containsKey('cost_weight')) {
+      context.handle(
+          _costWeightMeta,
+          costWeight.isAcceptableOrUnknown(
+              data['cost_weight']!, _costWeightMeta));
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+          _unitMeta, unit.isAcceptableOrUnknown(data['unit']!, _unitMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  RecipeOutput map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RecipeOutput(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      recipeUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}recipe_uuid'])!,
+      productUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}product_uuid'])!,
+      productNameSnapshot: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}product_name_snapshot'])!,
+      quantity: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}quantity'])!,
+      costWeight: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}cost_weight'])!,
+      unit: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}unit'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $RecipeOutputsTable createAlias(String alias) {
+    return $RecipeOutputsTable(attachedDatabase, alias);
+  }
+}
+
+class RecipeOutput extends DataClass implements Insertable<RecipeOutput> {
+  final String uuid;
+  final String recipeUuid;
+  final String productUuid;
+  final String productNameSnapshot;
+  final double quantity;
+  final double costWeight;
+  final String unit;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const RecipeOutput(
+      {required this.uuid,
+      required this.recipeUuid,
+      required this.productUuid,
+      required this.productNameSnapshot,
+      required this.quantity,
+      required this.costWeight,
+      required this.unit,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['recipe_uuid'] = Variable<String>(recipeUuid);
+    map['product_uuid'] = Variable<String>(productUuid);
+    map['product_name_snapshot'] = Variable<String>(productNameSnapshot);
+    map['quantity'] = Variable<double>(quantity);
+    map['cost_weight'] = Variable<double>(costWeight);
+    map['unit'] = Variable<String>(unit);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  RecipeOutputsCompanion toCompanion(bool nullToAbsent) {
+    return RecipeOutputsCompanion(
+      uuid: Value(uuid),
+      recipeUuid: Value(recipeUuid),
+      productUuid: Value(productUuid),
+      productNameSnapshot: Value(productNameSnapshot),
+      quantity: Value(quantity),
+      costWeight: Value(costWeight),
+      unit: Value(unit),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory RecipeOutput.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RecipeOutput(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      recipeUuid: serializer.fromJson<String>(json['recipeUuid']),
+      productUuid: serializer.fromJson<String>(json['productUuid']),
+      productNameSnapshot:
+          serializer.fromJson<String>(json['productNameSnapshot']),
+      quantity: serializer.fromJson<double>(json['quantity']),
+      costWeight: serializer.fromJson<double>(json['costWeight']),
+      unit: serializer.fromJson<String>(json['unit']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'recipeUuid': serializer.toJson<String>(recipeUuid),
+      'productUuid': serializer.toJson<String>(productUuid),
+      'productNameSnapshot': serializer.toJson<String>(productNameSnapshot),
+      'quantity': serializer.toJson<double>(quantity),
+      'costWeight': serializer.toJson<double>(costWeight),
+      'unit': serializer.toJson<String>(unit),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  RecipeOutput copyWith(
+          {String? uuid,
+          String? recipeUuid,
+          String? productUuid,
+          String? productNameSnapshot,
+          double? quantity,
+          double? costWeight,
+          String? unit,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      RecipeOutput(
+        uuid: uuid ?? this.uuid,
+        recipeUuid: recipeUuid ?? this.recipeUuid,
+        productUuid: productUuid ?? this.productUuid,
+        productNameSnapshot: productNameSnapshot ?? this.productNameSnapshot,
+        quantity: quantity ?? this.quantity,
+        costWeight: costWeight ?? this.costWeight,
+        unit: unit ?? this.unit,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  RecipeOutput copyWithCompanion(RecipeOutputsCompanion data) {
+    return RecipeOutput(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      recipeUuid:
+          data.recipeUuid.present ? data.recipeUuid.value : this.recipeUuid,
+      productUuid:
+          data.productUuid.present ? data.productUuid.value : this.productUuid,
+      productNameSnapshot: data.productNameSnapshot.present
+          ? data.productNameSnapshot.value
+          : this.productNameSnapshot,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      costWeight:
+          data.costWeight.present ? data.costWeight.value : this.costWeight,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecipeOutput(')
+          ..write('uuid: $uuid, ')
+          ..write('recipeUuid: $recipeUuid, ')
+          ..write('productUuid: $productUuid, ')
+          ..write('productNameSnapshot: $productNameSnapshot, ')
+          ..write('quantity: $quantity, ')
+          ..write('costWeight: $costWeight, ')
+          ..write('unit: $unit, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid,
+      recipeUuid,
+      productUuid,
+      productNameSnapshot,
+      quantity,
+      costWeight,
+      unit,
+      createdAt,
+      updatedAt,
+      isDeleted,
+      isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecipeOutput &&
+          other.uuid == this.uuid &&
+          other.recipeUuid == this.recipeUuid &&
+          other.productUuid == this.productUuid &&
+          other.productNameSnapshot == this.productNameSnapshot &&
+          other.quantity == this.quantity &&
+          other.costWeight == this.costWeight &&
+          other.unit == this.unit &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class RecipeOutputsCompanion extends UpdateCompanion<RecipeOutput> {
+  final Value<String> uuid;
+  final Value<String> recipeUuid;
+  final Value<String> productUuid;
+  final Value<String> productNameSnapshot;
+  final Value<double> quantity;
+  final Value<double> costWeight;
+  final Value<String> unit;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const RecipeOutputsCompanion({
+    this.uuid = const Value.absent(),
+    this.recipeUuid = const Value.absent(),
+    this.productUuid = const Value.absent(),
+    this.productNameSnapshot = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.costWeight = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RecipeOutputsCompanion.insert({
+    required String uuid,
+    required String recipeUuid,
+    required String productUuid,
+    required String productNameSnapshot,
+    required double quantity,
+    this.costWeight = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        recipeUuid = Value(recipeUuid),
+        productUuid = Value(productUuid),
+        productNameSnapshot = Value(productNameSnapshot),
+        quantity = Value(quantity);
+  static Insertable<RecipeOutput> custom({
+    Expression<String>? uuid,
+    Expression<String>? recipeUuid,
+    Expression<String>? productUuid,
+    Expression<String>? productNameSnapshot,
+    Expression<double>? quantity,
+    Expression<double>? costWeight,
+    Expression<String>? unit,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (recipeUuid != null) 'recipe_uuid': recipeUuid,
+      if (productUuid != null) 'product_uuid': productUuid,
+      if (productNameSnapshot != null)
+        'product_name_snapshot': productNameSnapshot,
+      if (quantity != null) 'quantity': quantity,
+      if (costWeight != null) 'cost_weight': costWeight,
+      if (unit != null) 'unit': unit,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RecipeOutputsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? recipeUuid,
+      Value<String>? productUuid,
+      Value<String>? productNameSnapshot,
+      Value<double>? quantity,
+      Value<double>? costWeight,
+      Value<String>? unit,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return RecipeOutputsCompanion(
+      uuid: uuid ?? this.uuid,
+      recipeUuid: recipeUuid ?? this.recipeUuid,
+      productUuid: productUuid ?? this.productUuid,
+      productNameSnapshot: productNameSnapshot ?? this.productNameSnapshot,
+      quantity: quantity ?? this.quantity,
+      costWeight: costWeight ?? this.costWeight,
+      unit: unit ?? this.unit,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (recipeUuid.present) {
+      map['recipe_uuid'] = Variable<String>(recipeUuid.value);
+    }
+    if (productUuid.present) {
+      map['product_uuid'] = Variable<String>(productUuid.value);
+    }
+    if (productNameSnapshot.present) {
+      map['product_name_snapshot'] =
+          Variable<String>(productNameSnapshot.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<double>(quantity.value);
+    }
+    if (costWeight.present) {
+      map['cost_weight'] = Variable<double>(costWeight.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecipeOutputsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('recipeUuid: $recipeUuid, ')
+          ..write('productUuid: $productUuid, ')
+          ..write('productNameSnapshot: $productNameSnapshot, ')
+          ..write('quantity: $quantity, ')
+          ..write('costWeight: $costWeight, ')
+          ..write('unit: $unit, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $RecipeChargesTable extends RecipeCharges
+    with TableInfo<$RecipeChargesTable, RecipeCharge> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecipeChargesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _recipeUuidMeta =
+      const VerificationMeta('recipeUuid');
+  @override
+  late final GeneratedColumn<String> recipeUuid = GeneratedColumn<String>(
+      'recipe_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES recipes (uuid)'));
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+      'amount', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        recipeUuid,
+        description,
+        amount,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'recipe_charges';
+  @override
+  VerificationContext validateIntegrity(Insertable<RecipeCharge> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('recipe_uuid')) {
+      context.handle(
+          _recipeUuidMeta,
+          recipeUuid.isAcceptableOrUnknown(
+              data['recipe_uuid']!, _recipeUuidMeta));
+    } else if (isInserting) {
+      context.missing(_recipeUuidMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(_amountMeta,
+          amount.isAcceptableOrUnknown(data['amount']!, _amountMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  RecipeCharge map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RecipeCharge(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      recipeUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}recipe_uuid'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      amount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $RecipeChargesTable createAlias(String alias) {
+    return $RecipeChargesTable(attachedDatabase, alias);
+  }
+}
+
+class RecipeCharge extends DataClass implements Insertable<RecipeCharge> {
+  final String uuid;
+  final String recipeUuid;
+  final String description;
+  final double amount;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const RecipeCharge(
+      {required this.uuid,
+      required this.recipeUuid,
+      required this.description,
+      required this.amount,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['recipe_uuid'] = Variable<String>(recipeUuid);
+    map['description'] = Variable<String>(description);
+    map['amount'] = Variable<double>(amount);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  RecipeChargesCompanion toCompanion(bool nullToAbsent) {
+    return RecipeChargesCompanion(
+      uuid: Value(uuid),
+      recipeUuid: Value(recipeUuid),
+      description: Value(description),
+      amount: Value(amount),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory RecipeCharge.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RecipeCharge(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      recipeUuid: serializer.fromJson<String>(json['recipeUuid']),
+      description: serializer.fromJson<String>(json['description']),
+      amount: serializer.fromJson<double>(json['amount']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'recipeUuid': serializer.toJson<String>(recipeUuid),
+      'description': serializer.toJson<String>(description),
+      'amount': serializer.toJson<double>(amount),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  RecipeCharge copyWith(
+          {String? uuid,
+          String? recipeUuid,
+          String? description,
+          double? amount,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      RecipeCharge(
+        uuid: uuid ?? this.uuid,
+        recipeUuid: recipeUuid ?? this.recipeUuid,
+        description: description ?? this.description,
+        amount: amount ?? this.amount,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  RecipeCharge copyWithCompanion(RecipeChargesCompanion data) {
+    return RecipeCharge(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      recipeUuid:
+          data.recipeUuid.present ? data.recipeUuid.value : this.recipeUuid,
+      description:
+          data.description.present ? data.description.value : this.description,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecipeCharge(')
+          ..write('uuid: $uuid, ')
+          ..write('recipeUuid: $recipeUuid, ')
+          ..write('description: $description, ')
+          ..write('amount: $amount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(uuid, recipeUuid, description, amount,
+      createdAt, updatedAt, isDeleted, isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecipeCharge &&
+          other.uuid == this.uuid &&
+          other.recipeUuid == this.recipeUuid &&
+          other.description == this.description &&
+          other.amount == this.amount &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class RecipeChargesCompanion extends UpdateCompanion<RecipeCharge> {
+  final Value<String> uuid;
+  final Value<String> recipeUuid;
+  final Value<String> description;
+  final Value<double> amount;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const RecipeChargesCompanion({
+    this.uuid = const Value.absent(),
+    this.recipeUuid = const Value.absent(),
+    this.description = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  RecipeChargesCompanion.insert({
+    required String uuid,
+    required String recipeUuid,
+    required String description,
+    this.amount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        recipeUuid = Value(recipeUuid),
+        description = Value(description);
+  static Insertable<RecipeCharge> custom({
+    Expression<String>? uuid,
+    Expression<String>? recipeUuid,
+    Expression<String>? description,
+    Expression<double>? amount,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (recipeUuid != null) 'recipe_uuid': recipeUuid,
+      if (description != null) 'description': description,
+      if (amount != null) 'amount': amount,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  RecipeChargesCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? recipeUuid,
+      Value<String>? description,
+      Value<double>? amount,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return RecipeChargesCompanion(
+      uuid: uuid ?? this.uuid,
+      recipeUuid: recipeUuid ?? this.recipeUuid,
+      description: description ?? this.description,
+      amount: amount ?? this.amount,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (recipeUuid.present) {
+      map['recipe_uuid'] = Variable<String>(recipeUuid.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecipeChargesCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('recipeUuid: $recipeUuid, ')
+          ..write('description: $description, ')
+          ..write('amount: $amount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ProductionOrdersTable extends ProductionOrders
+    with TableInfo<$ProductionOrdersTable, ProductionOrder> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProductionOrdersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _productionNumberMeta =
+      const VerificationMeta('productionNumber');
+  @override
+  late final GeneratedColumn<String> productionNumber = GeneratedColumn<String>(
+      'production_number', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _productionDateMeta =
+      const VerificationMeta('productionDate');
+  @override
+  late final GeneratedColumn<DateTime> productionDate =
+      GeneratedColumn<DateTime>('production_date', aliasedName, false,
+          type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('DRAFT'));
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+      'notes', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _completedAtMeta =
+      const VerificationMeta('completedAt');
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+      'completed_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _recipeUuidMeta =
+      const VerificationMeta('recipeUuid');
+  @override
+  late final GeneratedColumn<String> recipeUuid = GeneratedColumn<String>(
+      'recipe_uuid', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES recipes (uuid)'));
+  static const VerificationMeta _recipeNameSnapshotMeta =
+      const VerificationMeta('recipeNameSnapshot');
+  @override
+  late final GeneratedColumn<String> recipeNameSnapshot =
+      GeneratedColumn<String>('recipe_name_snapshot', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _scaleFactorMeta =
+      const VerificationMeta('scaleFactor');
+  @override
+  late final GeneratedColumn<double> scaleFactor = GeneratedColumn<double>(
+      'scale_factor', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1.0));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        productionNumber,
+        productionDate,
+        status,
+        notes,
+        completedAt,
+        recipeUuid,
+        recipeNameSnapshot,
+        scaleFactor,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'production_orders';
+  @override
+  VerificationContext validateIntegrity(Insertable<ProductionOrder> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('production_number')) {
+      context.handle(
+          _productionNumberMeta,
+          productionNumber.isAcceptableOrUnknown(
+              data['production_number']!, _productionNumberMeta));
+    } else if (isInserting) {
+      context.missing(_productionNumberMeta);
+    }
+    if (data.containsKey('production_date')) {
+      context.handle(
+          _productionDateMeta,
+          productionDate.isAcceptableOrUnknown(
+              data['production_date']!, _productionDateMeta));
+    } else if (isInserting) {
+      context.missing(_productionDateMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+          _notesMeta, notes.isAcceptableOrUnknown(data['notes']!, _notesMeta));
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+          _completedAtMeta,
+          completedAt.isAcceptableOrUnknown(
+              data['completed_at']!, _completedAtMeta));
+    }
+    if (data.containsKey('recipe_uuid')) {
+      context.handle(
+          _recipeUuidMeta,
+          recipeUuid.isAcceptableOrUnknown(
+              data['recipe_uuid']!, _recipeUuidMeta));
+    }
+    if (data.containsKey('recipe_name_snapshot')) {
+      context.handle(
+          _recipeNameSnapshotMeta,
+          recipeNameSnapshot.isAcceptableOrUnknown(
+              data['recipe_name_snapshot']!, _recipeNameSnapshotMeta));
+    }
+    if (data.containsKey('scale_factor')) {
+      context.handle(
+          _scaleFactorMeta,
+          scaleFactor.isAcceptableOrUnknown(
+              data['scale_factor']!, _scaleFactorMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  ProductionOrder map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProductionOrder(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      productionNumber: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}production_number'])!,
+      productionDate: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}production_date'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      notes: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}notes']),
+      completedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}completed_at']),
+      recipeUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}recipe_uuid']),
+      recipeNameSnapshot: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}recipe_name_snapshot']),
+      scaleFactor: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}scale_factor'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $ProductionOrdersTable createAlias(String alias) {
+    return $ProductionOrdersTable(attachedDatabase, alias);
+  }
+}
+
+class ProductionOrder extends DataClass implements Insertable<ProductionOrder> {
+  final String uuid;
+  final String productionNumber;
+  final DateTime productionDate;
+
+  /// DRAFT | COMPLETED | CANCELLED
+  final String status;
+  final String? notes;
+  final DateTime? completedAt;
+
+  /// Optional recipe this run was created from (audit only; lines are copied).
+  final String? recipeUuid;
+  final String? recipeNameSnapshot;
+
+  /// Multiplier applied to recipe base quantities when creating this order.
+  final double scaleFactor;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const ProductionOrder(
+      {required this.uuid,
+      required this.productionNumber,
+      required this.productionDate,
+      required this.status,
+      this.notes,
+      this.completedAt,
+      this.recipeUuid,
+      this.recipeNameSnapshot,
+      required this.scaleFactor,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['production_number'] = Variable<String>(productionNumber);
+    map['production_date'] = Variable<DateTime>(productionDate);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
+    if (!nullToAbsent || recipeUuid != null) {
+      map['recipe_uuid'] = Variable<String>(recipeUuid);
+    }
+    if (!nullToAbsent || recipeNameSnapshot != null) {
+      map['recipe_name_snapshot'] = Variable<String>(recipeNameSnapshot);
+    }
+    map['scale_factor'] = Variable<double>(scaleFactor);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  ProductionOrdersCompanion toCompanion(bool nullToAbsent) {
+    return ProductionOrdersCompanion(
+      uuid: Value(uuid),
+      productionNumber: Value(productionNumber),
+      productionDate: Value(productionDate),
+      status: Value(status),
+      notes:
+          notes == null && nullToAbsent ? const Value.absent() : Value(notes),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
+      recipeUuid: recipeUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recipeUuid),
+      recipeNameSnapshot: recipeNameSnapshot == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recipeNameSnapshot),
+      scaleFactor: Value(scaleFactor),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory ProductionOrder.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProductionOrder(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      productionNumber: serializer.fromJson<String>(json['productionNumber']),
+      productionDate: serializer.fromJson<DateTime>(json['productionDate']),
+      status: serializer.fromJson<String>(json['status']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
+      recipeUuid: serializer.fromJson<String?>(json['recipeUuid']),
+      recipeNameSnapshot:
+          serializer.fromJson<String?>(json['recipeNameSnapshot']),
+      scaleFactor: serializer.fromJson<double>(json['scaleFactor']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'productionNumber': serializer.toJson<String>(productionNumber),
+      'productionDate': serializer.toJson<DateTime>(productionDate),
+      'status': serializer.toJson<String>(status),
+      'notes': serializer.toJson<String?>(notes),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
+      'recipeUuid': serializer.toJson<String?>(recipeUuid),
+      'recipeNameSnapshot': serializer.toJson<String?>(recipeNameSnapshot),
+      'scaleFactor': serializer.toJson<double>(scaleFactor),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  ProductionOrder copyWith(
+          {String? uuid,
+          String? productionNumber,
+          DateTime? productionDate,
+          String? status,
+          Value<String?> notes = const Value.absent(),
+          Value<DateTime?> completedAt = const Value.absent(),
+          Value<String?> recipeUuid = const Value.absent(),
+          Value<String?> recipeNameSnapshot = const Value.absent(),
+          double? scaleFactor,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      ProductionOrder(
+        uuid: uuid ?? this.uuid,
+        productionNumber: productionNumber ?? this.productionNumber,
+        productionDate: productionDate ?? this.productionDate,
+        status: status ?? this.status,
+        notes: notes.present ? notes.value : this.notes,
+        completedAt: completedAt.present ? completedAt.value : this.completedAt,
+        recipeUuid: recipeUuid.present ? recipeUuid.value : this.recipeUuid,
+        recipeNameSnapshot: recipeNameSnapshot.present
+            ? recipeNameSnapshot.value
+            : this.recipeNameSnapshot,
+        scaleFactor: scaleFactor ?? this.scaleFactor,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  ProductionOrder copyWithCompanion(ProductionOrdersCompanion data) {
+    return ProductionOrder(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      productionNumber: data.productionNumber.present
+          ? data.productionNumber.value
+          : this.productionNumber,
+      productionDate: data.productionDate.present
+          ? data.productionDate.value
+          : this.productionDate,
+      status: data.status.present ? data.status.value : this.status,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
+      recipeUuid:
+          data.recipeUuid.present ? data.recipeUuid.value : this.recipeUuid,
+      recipeNameSnapshot: data.recipeNameSnapshot.present
+          ? data.recipeNameSnapshot.value
+          : this.recipeNameSnapshot,
+      scaleFactor:
+          data.scaleFactor.present ? data.scaleFactor.value : this.scaleFactor,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductionOrder(')
+          ..write('uuid: $uuid, ')
+          ..write('productionNumber: $productionNumber, ')
+          ..write('productionDate: $productionDate, ')
+          ..write('status: $status, ')
+          ..write('notes: $notes, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('recipeUuid: $recipeUuid, ')
+          ..write('recipeNameSnapshot: $recipeNameSnapshot, ')
+          ..write('scaleFactor: $scaleFactor, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid,
+      productionNumber,
+      productionDate,
+      status,
+      notes,
+      completedAt,
+      recipeUuid,
+      recipeNameSnapshot,
+      scaleFactor,
+      createdAt,
+      updatedAt,
+      isDeleted,
+      isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProductionOrder &&
+          other.uuid == this.uuid &&
+          other.productionNumber == this.productionNumber &&
+          other.productionDate == this.productionDate &&
+          other.status == this.status &&
+          other.notes == this.notes &&
+          other.completedAt == this.completedAt &&
+          other.recipeUuid == this.recipeUuid &&
+          other.recipeNameSnapshot == this.recipeNameSnapshot &&
+          other.scaleFactor == this.scaleFactor &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class ProductionOrdersCompanion extends UpdateCompanion<ProductionOrder> {
+  final Value<String> uuid;
+  final Value<String> productionNumber;
+  final Value<DateTime> productionDate;
+  final Value<String> status;
+  final Value<String?> notes;
+  final Value<DateTime?> completedAt;
+  final Value<String?> recipeUuid;
+  final Value<String?> recipeNameSnapshot;
+  final Value<double> scaleFactor;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const ProductionOrdersCompanion({
+    this.uuid = const Value.absent(),
+    this.productionNumber = const Value.absent(),
+    this.productionDate = const Value.absent(),
+    this.status = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.recipeUuid = const Value.absent(),
+    this.recipeNameSnapshot = const Value.absent(),
+    this.scaleFactor = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProductionOrdersCompanion.insert({
+    required String uuid,
+    required String productionNumber,
+    required DateTime productionDate,
+    this.status = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.completedAt = const Value.absent(),
+    this.recipeUuid = const Value.absent(),
+    this.recipeNameSnapshot = const Value.absent(),
+    this.scaleFactor = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        productionNumber = Value(productionNumber),
+        productionDate = Value(productionDate);
+  static Insertable<ProductionOrder> custom({
+    Expression<String>? uuid,
+    Expression<String>? productionNumber,
+    Expression<DateTime>? productionDate,
+    Expression<String>? status,
+    Expression<String>? notes,
+    Expression<DateTime>? completedAt,
+    Expression<String>? recipeUuid,
+    Expression<String>? recipeNameSnapshot,
+    Expression<double>? scaleFactor,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (productionNumber != null) 'production_number': productionNumber,
+      if (productionDate != null) 'production_date': productionDate,
+      if (status != null) 'status': status,
+      if (notes != null) 'notes': notes,
+      if (completedAt != null) 'completed_at': completedAt,
+      if (recipeUuid != null) 'recipe_uuid': recipeUuid,
+      if (recipeNameSnapshot != null)
+        'recipe_name_snapshot': recipeNameSnapshot,
+      if (scaleFactor != null) 'scale_factor': scaleFactor,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProductionOrdersCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? productionNumber,
+      Value<DateTime>? productionDate,
+      Value<String>? status,
+      Value<String?>? notes,
+      Value<DateTime?>? completedAt,
+      Value<String?>? recipeUuid,
+      Value<String?>? recipeNameSnapshot,
+      Value<double>? scaleFactor,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return ProductionOrdersCompanion(
+      uuid: uuid ?? this.uuid,
+      productionNumber: productionNumber ?? this.productionNumber,
+      productionDate: productionDate ?? this.productionDate,
+      status: status ?? this.status,
+      notes: notes ?? this.notes,
+      completedAt: completedAt ?? this.completedAt,
+      recipeUuid: recipeUuid ?? this.recipeUuid,
+      recipeNameSnapshot: recipeNameSnapshot ?? this.recipeNameSnapshot,
+      scaleFactor: scaleFactor ?? this.scaleFactor,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (productionNumber.present) {
+      map['production_number'] = Variable<String>(productionNumber.value);
+    }
+    if (productionDate.present) {
+      map['production_date'] = Variable<DateTime>(productionDate.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
+    }
+    if (recipeUuid.present) {
+      map['recipe_uuid'] = Variable<String>(recipeUuid.value);
+    }
+    if (recipeNameSnapshot.present) {
+      map['recipe_name_snapshot'] = Variable<String>(recipeNameSnapshot.value);
+    }
+    if (scaleFactor.present) {
+      map['scale_factor'] = Variable<double>(scaleFactor.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductionOrdersCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('productionNumber: $productionNumber, ')
+          ..write('productionDate: $productionDate, ')
+          ..write('status: $status, ')
+          ..write('notes: $notes, ')
+          ..write('completedAt: $completedAt, ')
+          ..write('recipeUuid: $recipeUuid, ')
+          ..write('recipeNameSnapshot: $recipeNameSnapshot, ')
+          ..write('scaleFactor: $scaleFactor, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ProductionOrderInputsTable extends ProductionOrderInputs
+    with TableInfo<$ProductionOrderInputsTable, ProductionOrderInput> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProductionOrderInputsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _productionOrderUuidMeta =
+      const VerificationMeta('productionOrderUuid');
+  @override
+  late final GeneratedColumn<String> productionOrderUuid =
+      GeneratedColumn<String>('production_order_uuid', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: true,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES production_orders (uuid)'));
+  static const VerificationMeta _productUuidMeta =
+      const VerificationMeta('productUuid');
+  @override
+  late final GeneratedColumn<String> productUuid = GeneratedColumn<String>(
+      'product_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES products (uuid)'));
+  static const VerificationMeta _productNameSnapshotMeta =
+      const VerificationMeta('productNameSnapshot');
+  @override
+  late final GeneratedColumn<String> productNameSnapshot =
+      GeneratedColumn<String>('product_name_snapshot', aliasedName, false,
+          type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _plannedQuantityMeta =
+      const VerificationMeta('plannedQuantity');
+  @override
+  late final GeneratedColumn<double> plannedQuantity = GeneratedColumn<double>(
+      'planned_quantity', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _actualQuantityMeta =
+      const VerificationMeta('actualQuantity');
+  @override
+  late final GeneratedColumn<double> actualQuantity = GeneratedColumn<double>(
+      'actual_quantity', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _consumeModeMeta =
+      const VerificationMeta('consumeMode');
+  @override
+  late final GeneratedColumn<String> consumeMode = GeneratedColumn<String>(
+      'consume_mode', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('AUTO'));
+  static const VerificationMeta _batchNumberMeta =
+      const VerificationMeta('batchNumber');
+  @override
+  late final GeneratedColumn<String> batchNumber = GeneratedColumn<String>(
+      'batch_number', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+      'unit', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('Pcs'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        productionOrderUuid,
+        productUuid,
+        productNameSnapshot,
+        plannedQuantity,
+        actualQuantity,
+        consumeMode,
+        batchNumber,
+        unit,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'production_order_inputs';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<ProductionOrderInput> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('production_order_uuid')) {
+      context.handle(
+          _productionOrderUuidMeta,
+          productionOrderUuid.isAcceptableOrUnknown(
+              data['production_order_uuid']!, _productionOrderUuidMeta));
+    } else if (isInserting) {
+      context.missing(_productionOrderUuidMeta);
+    }
+    if (data.containsKey('product_uuid')) {
+      context.handle(
+          _productUuidMeta,
+          productUuid.isAcceptableOrUnknown(
+              data['product_uuid']!, _productUuidMeta));
+    } else if (isInserting) {
+      context.missing(_productUuidMeta);
+    }
+    if (data.containsKey('product_name_snapshot')) {
+      context.handle(
+          _productNameSnapshotMeta,
+          productNameSnapshot.isAcceptableOrUnknown(
+              data['product_name_snapshot']!, _productNameSnapshotMeta));
+    } else if (isInserting) {
+      context.missing(_productNameSnapshotMeta);
+    }
+    if (data.containsKey('planned_quantity')) {
+      context.handle(
+          _plannedQuantityMeta,
+          plannedQuantity.isAcceptableOrUnknown(
+              data['planned_quantity']!, _plannedQuantityMeta));
+    } else if (isInserting) {
+      context.missing(_plannedQuantityMeta);
+    }
+    if (data.containsKey('actual_quantity')) {
+      context.handle(
+          _actualQuantityMeta,
+          actualQuantity.isAcceptableOrUnknown(
+              data['actual_quantity']!, _actualQuantityMeta));
+    }
+    if (data.containsKey('consume_mode')) {
+      context.handle(
+          _consumeModeMeta,
+          consumeMode.isAcceptableOrUnknown(
+              data['consume_mode']!, _consumeModeMeta));
+    }
+    if (data.containsKey('batch_number')) {
+      context.handle(
+          _batchNumberMeta,
+          batchNumber.isAcceptableOrUnknown(
+              data['batch_number']!, _batchNumberMeta));
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+          _unitMeta, unit.isAcceptableOrUnknown(data['unit']!, _unitMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  ProductionOrderInput map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProductionOrderInput(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      productionOrderUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}production_order_uuid'])!,
+      productUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}product_uuid'])!,
+      productNameSnapshot: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}product_name_snapshot'])!,
+      plannedQuantity: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}planned_quantity'])!,
+      actualQuantity: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}actual_quantity'])!,
+      consumeMode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}consume_mode'])!,
+      batchNumber: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}batch_number']),
+      unit: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}unit'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $ProductionOrderInputsTable createAlias(String alias) {
+    return $ProductionOrderInputsTable(attachedDatabase, alias);
+  }
+}
+
+class ProductionOrderInput extends DataClass
+    implements Insertable<ProductionOrderInput> {
+  final String uuid;
+  final String productionOrderUuid;
+  final String productUuid;
+  final String productNameSnapshot;
+  final double plannedQuantity;
+
+  /// Qty actually consumed on complete (defaults to planned).
+  final double actualQuantity;
+
+  /// AUTO = FEFO across all lots; BATCH = FEFO within [batchNumber] only.
+  final String consumeMode;
+  final String? batchNumber;
+  final String unit;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const ProductionOrderInput(
+      {required this.uuid,
+      required this.productionOrderUuid,
+      required this.productUuid,
+      required this.productNameSnapshot,
+      required this.plannedQuantity,
+      required this.actualQuantity,
+      required this.consumeMode,
+      this.batchNumber,
+      required this.unit,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['production_order_uuid'] = Variable<String>(productionOrderUuid);
+    map['product_uuid'] = Variable<String>(productUuid);
+    map['product_name_snapshot'] = Variable<String>(productNameSnapshot);
+    map['planned_quantity'] = Variable<double>(plannedQuantity);
+    map['actual_quantity'] = Variable<double>(actualQuantity);
+    map['consume_mode'] = Variable<String>(consumeMode);
+    if (!nullToAbsent || batchNumber != null) {
+      map['batch_number'] = Variable<String>(batchNumber);
+    }
+    map['unit'] = Variable<String>(unit);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  ProductionOrderInputsCompanion toCompanion(bool nullToAbsent) {
+    return ProductionOrderInputsCompanion(
+      uuid: Value(uuid),
+      productionOrderUuid: Value(productionOrderUuid),
+      productUuid: Value(productUuid),
+      productNameSnapshot: Value(productNameSnapshot),
+      plannedQuantity: Value(plannedQuantity),
+      actualQuantity: Value(actualQuantity),
+      consumeMode: Value(consumeMode),
+      batchNumber: batchNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(batchNumber),
+      unit: Value(unit),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory ProductionOrderInput.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProductionOrderInput(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      productionOrderUuid:
+          serializer.fromJson<String>(json['productionOrderUuid']),
+      productUuid: serializer.fromJson<String>(json['productUuid']),
+      productNameSnapshot:
+          serializer.fromJson<String>(json['productNameSnapshot']),
+      plannedQuantity: serializer.fromJson<double>(json['plannedQuantity']),
+      actualQuantity: serializer.fromJson<double>(json['actualQuantity']),
+      consumeMode: serializer.fromJson<String>(json['consumeMode']),
+      batchNumber: serializer.fromJson<String?>(json['batchNumber']),
+      unit: serializer.fromJson<String>(json['unit']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'productionOrderUuid': serializer.toJson<String>(productionOrderUuid),
+      'productUuid': serializer.toJson<String>(productUuid),
+      'productNameSnapshot': serializer.toJson<String>(productNameSnapshot),
+      'plannedQuantity': serializer.toJson<double>(plannedQuantity),
+      'actualQuantity': serializer.toJson<double>(actualQuantity),
+      'consumeMode': serializer.toJson<String>(consumeMode),
+      'batchNumber': serializer.toJson<String?>(batchNumber),
+      'unit': serializer.toJson<String>(unit),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  ProductionOrderInput copyWith(
+          {String? uuid,
+          String? productionOrderUuid,
+          String? productUuid,
+          String? productNameSnapshot,
+          double? plannedQuantity,
+          double? actualQuantity,
+          String? consumeMode,
+          Value<String?> batchNumber = const Value.absent(),
+          String? unit,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      ProductionOrderInput(
+        uuid: uuid ?? this.uuid,
+        productionOrderUuid: productionOrderUuid ?? this.productionOrderUuid,
+        productUuid: productUuid ?? this.productUuid,
+        productNameSnapshot: productNameSnapshot ?? this.productNameSnapshot,
+        plannedQuantity: plannedQuantity ?? this.plannedQuantity,
+        actualQuantity: actualQuantity ?? this.actualQuantity,
+        consumeMode: consumeMode ?? this.consumeMode,
+        batchNumber: batchNumber.present ? batchNumber.value : this.batchNumber,
+        unit: unit ?? this.unit,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  ProductionOrderInput copyWithCompanion(ProductionOrderInputsCompanion data) {
+    return ProductionOrderInput(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      productionOrderUuid: data.productionOrderUuid.present
+          ? data.productionOrderUuid.value
+          : this.productionOrderUuid,
+      productUuid:
+          data.productUuid.present ? data.productUuid.value : this.productUuid,
+      productNameSnapshot: data.productNameSnapshot.present
+          ? data.productNameSnapshot.value
+          : this.productNameSnapshot,
+      plannedQuantity: data.plannedQuantity.present
+          ? data.plannedQuantity.value
+          : this.plannedQuantity,
+      actualQuantity: data.actualQuantity.present
+          ? data.actualQuantity.value
+          : this.actualQuantity,
+      consumeMode:
+          data.consumeMode.present ? data.consumeMode.value : this.consumeMode,
+      batchNumber:
+          data.batchNumber.present ? data.batchNumber.value : this.batchNumber,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductionOrderInput(')
+          ..write('uuid: $uuid, ')
+          ..write('productionOrderUuid: $productionOrderUuid, ')
+          ..write('productUuid: $productUuid, ')
+          ..write('productNameSnapshot: $productNameSnapshot, ')
+          ..write('plannedQuantity: $plannedQuantity, ')
+          ..write('actualQuantity: $actualQuantity, ')
+          ..write('consumeMode: $consumeMode, ')
+          ..write('batchNumber: $batchNumber, ')
+          ..write('unit: $unit, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid,
+      productionOrderUuid,
+      productUuid,
+      productNameSnapshot,
+      plannedQuantity,
+      actualQuantity,
+      consumeMode,
+      batchNumber,
+      unit,
+      createdAt,
+      updatedAt,
+      isDeleted,
+      isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProductionOrderInput &&
+          other.uuid == this.uuid &&
+          other.productionOrderUuid == this.productionOrderUuid &&
+          other.productUuid == this.productUuid &&
+          other.productNameSnapshot == this.productNameSnapshot &&
+          other.plannedQuantity == this.plannedQuantity &&
+          other.actualQuantity == this.actualQuantity &&
+          other.consumeMode == this.consumeMode &&
+          other.batchNumber == this.batchNumber &&
+          other.unit == this.unit &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class ProductionOrderInputsCompanion
+    extends UpdateCompanion<ProductionOrderInput> {
+  final Value<String> uuid;
+  final Value<String> productionOrderUuid;
+  final Value<String> productUuid;
+  final Value<String> productNameSnapshot;
+  final Value<double> plannedQuantity;
+  final Value<double> actualQuantity;
+  final Value<String> consumeMode;
+  final Value<String?> batchNumber;
+  final Value<String> unit;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const ProductionOrderInputsCompanion({
+    this.uuid = const Value.absent(),
+    this.productionOrderUuid = const Value.absent(),
+    this.productUuid = const Value.absent(),
+    this.productNameSnapshot = const Value.absent(),
+    this.plannedQuantity = const Value.absent(),
+    this.actualQuantity = const Value.absent(),
+    this.consumeMode = const Value.absent(),
+    this.batchNumber = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProductionOrderInputsCompanion.insert({
+    required String uuid,
+    required String productionOrderUuid,
+    required String productUuid,
+    required String productNameSnapshot,
+    required double plannedQuantity,
+    this.actualQuantity = const Value.absent(),
+    this.consumeMode = const Value.absent(),
+    this.batchNumber = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        productionOrderUuid = Value(productionOrderUuid),
+        productUuid = Value(productUuid),
+        productNameSnapshot = Value(productNameSnapshot),
+        plannedQuantity = Value(plannedQuantity);
+  static Insertable<ProductionOrderInput> custom({
+    Expression<String>? uuid,
+    Expression<String>? productionOrderUuid,
+    Expression<String>? productUuid,
+    Expression<String>? productNameSnapshot,
+    Expression<double>? plannedQuantity,
+    Expression<double>? actualQuantity,
+    Expression<String>? consumeMode,
+    Expression<String>? batchNumber,
+    Expression<String>? unit,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (productionOrderUuid != null)
+        'production_order_uuid': productionOrderUuid,
+      if (productUuid != null) 'product_uuid': productUuid,
+      if (productNameSnapshot != null)
+        'product_name_snapshot': productNameSnapshot,
+      if (plannedQuantity != null) 'planned_quantity': plannedQuantity,
+      if (actualQuantity != null) 'actual_quantity': actualQuantity,
+      if (consumeMode != null) 'consume_mode': consumeMode,
+      if (batchNumber != null) 'batch_number': batchNumber,
+      if (unit != null) 'unit': unit,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProductionOrderInputsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? productionOrderUuid,
+      Value<String>? productUuid,
+      Value<String>? productNameSnapshot,
+      Value<double>? plannedQuantity,
+      Value<double>? actualQuantity,
+      Value<String>? consumeMode,
+      Value<String?>? batchNumber,
+      Value<String>? unit,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return ProductionOrderInputsCompanion(
+      uuid: uuid ?? this.uuid,
+      productionOrderUuid: productionOrderUuid ?? this.productionOrderUuid,
+      productUuid: productUuid ?? this.productUuid,
+      productNameSnapshot: productNameSnapshot ?? this.productNameSnapshot,
+      plannedQuantity: plannedQuantity ?? this.plannedQuantity,
+      actualQuantity: actualQuantity ?? this.actualQuantity,
+      consumeMode: consumeMode ?? this.consumeMode,
+      batchNumber: batchNumber ?? this.batchNumber,
+      unit: unit ?? this.unit,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (productionOrderUuid.present) {
+      map['production_order_uuid'] =
+          Variable<String>(productionOrderUuid.value);
+    }
+    if (productUuid.present) {
+      map['product_uuid'] = Variable<String>(productUuid.value);
+    }
+    if (productNameSnapshot.present) {
+      map['product_name_snapshot'] =
+          Variable<String>(productNameSnapshot.value);
+    }
+    if (plannedQuantity.present) {
+      map['planned_quantity'] = Variable<double>(plannedQuantity.value);
+    }
+    if (actualQuantity.present) {
+      map['actual_quantity'] = Variable<double>(actualQuantity.value);
+    }
+    if (consumeMode.present) {
+      map['consume_mode'] = Variable<String>(consumeMode.value);
+    }
+    if (batchNumber.present) {
+      map['batch_number'] = Variable<String>(batchNumber.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductionOrderInputsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('productionOrderUuid: $productionOrderUuid, ')
+          ..write('productUuid: $productUuid, ')
+          ..write('productNameSnapshot: $productNameSnapshot, ')
+          ..write('plannedQuantity: $plannedQuantity, ')
+          ..write('actualQuantity: $actualQuantity, ')
+          ..write('consumeMode: $consumeMode, ')
+          ..write('batchNumber: $batchNumber, ')
+          ..write('unit: $unit, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ProductionOrderOutputsTable extends ProductionOrderOutputs
+    with TableInfo<$ProductionOrderOutputsTable, ProductionOrderOutput> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProductionOrderOutputsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _productionOrderUuidMeta =
+      const VerificationMeta('productionOrderUuid');
+  @override
+  late final GeneratedColumn<String> productionOrderUuid =
+      GeneratedColumn<String>('production_order_uuid', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: true,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES production_orders (uuid)'));
+  static const VerificationMeta _productUuidMeta =
+      const VerificationMeta('productUuid');
+  @override
+  late final GeneratedColumn<String> productUuid = GeneratedColumn<String>(
+      'product_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES products (uuid)'));
+  static const VerificationMeta _productNameSnapshotMeta =
+      const VerificationMeta('productNameSnapshot');
+  @override
+  late final GeneratedColumn<String> productNameSnapshot =
+      GeneratedColumn<String>('product_name_snapshot', aliasedName, false,
+          type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _plannedQuantityMeta =
+      const VerificationMeta('plannedQuantity');
+  @override
+  late final GeneratedColumn<double> plannedQuantity = GeneratedColumn<double>(
+      'planned_quantity', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _actualQuantityMeta =
+      const VerificationMeta('actualQuantity');
+  @override
+  late final GeneratedColumn<double> actualQuantity = GeneratedColumn<double>(
+      'actual_quantity', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _costWeightMeta =
+      const VerificationMeta('costWeight');
+  @override
+  late final GeneratedColumn<double> costWeight = GeneratedColumn<double>(
+      'cost_weight', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(1.0));
+  static const VerificationMeta _unitCostSnapshotMeta =
+      const VerificationMeta('unitCostSnapshot');
+  @override
+  late final GeneratedColumn<double> unitCostSnapshot = GeneratedColumn<double>(
+      'unit_cost_snapshot', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _outputLotUuidMeta =
+      const VerificationMeta('outputLotUuid');
+  @override
+  late final GeneratedColumn<String> outputLotUuid = GeneratedColumn<String>(
+      'output_lot_uuid', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _batchNumberMeta =
+      const VerificationMeta('batchNumber');
+  @override
+  late final GeneratedColumn<String> batchNumber = GeneratedColumn<String>(
+      'batch_number', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(''));
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+      'unit', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('Pcs'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        productionOrderUuid,
+        productUuid,
+        productNameSnapshot,
+        plannedQuantity,
+        actualQuantity,
+        costWeight,
+        unitCostSnapshot,
+        outputLotUuid,
+        batchNumber,
+        unit,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'production_order_outputs';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<ProductionOrderOutput> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('production_order_uuid')) {
+      context.handle(
+          _productionOrderUuidMeta,
+          productionOrderUuid.isAcceptableOrUnknown(
+              data['production_order_uuid']!, _productionOrderUuidMeta));
+    } else if (isInserting) {
+      context.missing(_productionOrderUuidMeta);
+    }
+    if (data.containsKey('product_uuid')) {
+      context.handle(
+          _productUuidMeta,
+          productUuid.isAcceptableOrUnknown(
+              data['product_uuid']!, _productUuidMeta));
+    } else if (isInserting) {
+      context.missing(_productUuidMeta);
+    }
+    if (data.containsKey('product_name_snapshot')) {
+      context.handle(
+          _productNameSnapshotMeta,
+          productNameSnapshot.isAcceptableOrUnknown(
+              data['product_name_snapshot']!, _productNameSnapshotMeta));
+    } else if (isInserting) {
+      context.missing(_productNameSnapshotMeta);
+    }
+    if (data.containsKey('planned_quantity')) {
+      context.handle(
+          _plannedQuantityMeta,
+          plannedQuantity.isAcceptableOrUnknown(
+              data['planned_quantity']!, _plannedQuantityMeta));
+    } else if (isInserting) {
+      context.missing(_plannedQuantityMeta);
+    }
+    if (data.containsKey('actual_quantity')) {
+      context.handle(
+          _actualQuantityMeta,
+          actualQuantity.isAcceptableOrUnknown(
+              data['actual_quantity']!, _actualQuantityMeta));
+    }
+    if (data.containsKey('cost_weight')) {
+      context.handle(
+          _costWeightMeta,
+          costWeight.isAcceptableOrUnknown(
+              data['cost_weight']!, _costWeightMeta));
+    }
+    if (data.containsKey('unit_cost_snapshot')) {
+      context.handle(
+          _unitCostSnapshotMeta,
+          unitCostSnapshot.isAcceptableOrUnknown(
+              data['unit_cost_snapshot']!, _unitCostSnapshotMeta));
+    }
+    if (data.containsKey('output_lot_uuid')) {
+      context.handle(
+          _outputLotUuidMeta,
+          outputLotUuid.isAcceptableOrUnknown(
+              data['output_lot_uuid']!, _outputLotUuidMeta));
+    }
+    if (data.containsKey('batch_number')) {
+      context.handle(
+          _batchNumberMeta,
+          batchNumber.isAcceptableOrUnknown(
+              data['batch_number']!, _batchNumberMeta));
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+          _unitMeta, unit.isAcceptableOrUnknown(data['unit']!, _unitMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  ProductionOrderOutput map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProductionOrderOutput(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      productionOrderUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}production_order_uuid'])!,
+      productUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}product_uuid'])!,
+      productNameSnapshot: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}product_name_snapshot'])!,
+      plannedQuantity: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}planned_quantity'])!,
+      actualQuantity: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}actual_quantity'])!,
+      costWeight: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}cost_weight'])!,
+      unitCostSnapshot: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}unit_cost_snapshot'])!,
+      outputLotUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}output_lot_uuid']),
+      batchNumber: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}batch_number'])!,
+      unit: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}unit'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $ProductionOrderOutputsTable createAlias(String alias) {
+    return $ProductionOrderOutputsTable(attachedDatabase, alias);
+  }
+}
+
+class ProductionOrderOutput extends DataClass
+    implements Insertable<ProductionOrderOutput> {
+  final String uuid;
+  final String productionOrderUuid;
+  final String productUuid;
+  final String productNameSnapshot;
+  final double plannedQuantity;
+  final double actualQuantity;
+
+  /// Cost allocation weight (relative). Normalized on complete.
+  final double costWeight;
+
+  /// Frozen unit cost after complete.
+  final double unitCostSnapshot;
+  final String? outputLotUuid;
+  final String batchNumber;
+  final String unit;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const ProductionOrderOutput(
+      {required this.uuid,
+      required this.productionOrderUuid,
+      required this.productUuid,
+      required this.productNameSnapshot,
+      required this.plannedQuantity,
+      required this.actualQuantity,
+      required this.costWeight,
+      required this.unitCostSnapshot,
+      this.outputLotUuid,
+      required this.batchNumber,
+      required this.unit,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['production_order_uuid'] = Variable<String>(productionOrderUuid);
+    map['product_uuid'] = Variable<String>(productUuid);
+    map['product_name_snapshot'] = Variable<String>(productNameSnapshot);
+    map['planned_quantity'] = Variable<double>(plannedQuantity);
+    map['actual_quantity'] = Variable<double>(actualQuantity);
+    map['cost_weight'] = Variable<double>(costWeight);
+    map['unit_cost_snapshot'] = Variable<double>(unitCostSnapshot);
+    if (!nullToAbsent || outputLotUuid != null) {
+      map['output_lot_uuid'] = Variable<String>(outputLotUuid);
+    }
+    map['batch_number'] = Variable<String>(batchNumber);
+    map['unit'] = Variable<String>(unit);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  ProductionOrderOutputsCompanion toCompanion(bool nullToAbsent) {
+    return ProductionOrderOutputsCompanion(
+      uuid: Value(uuid),
+      productionOrderUuid: Value(productionOrderUuid),
+      productUuid: Value(productUuid),
+      productNameSnapshot: Value(productNameSnapshot),
+      plannedQuantity: Value(plannedQuantity),
+      actualQuantity: Value(actualQuantity),
+      costWeight: Value(costWeight),
+      unitCostSnapshot: Value(unitCostSnapshot),
+      outputLotUuid: outputLotUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(outputLotUuid),
+      batchNumber: Value(batchNumber),
+      unit: Value(unit),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory ProductionOrderOutput.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProductionOrderOutput(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      productionOrderUuid:
+          serializer.fromJson<String>(json['productionOrderUuid']),
+      productUuid: serializer.fromJson<String>(json['productUuid']),
+      productNameSnapshot:
+          serializer.fromJson<String>(json['productNameSnapshot']),
+      plannedQuantity: serializer.fromJson<double>(json['plannedQuantity']),
+      actualQuantity: serializer.fromJson<double>(json['actualQuantity']),
+      costWeight: serializer.fromJson<double>(json['costWeight']),
+      unitCostSnapshot: serializer.fromJson<double>(json['unitCostSnapshot']),
+      outputLotUuid: serializer.fromJson<String?>(json['outputLotUuid']),
+      batchNumber: serializer.fromJson<String>(json['batchNumber']),
+      unit: serializer.fromJson<String>(json['unit']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'productionOrderUuid': serializer.toJson<String>(productionOrderUuid),
+      'productUuid': serializer.toJson<String>(productUuid),
+      'productNameSnapshot': serializer.toJson<String>(productNameSnapshot),
+      'plannedQuantity': serializer.toJson<double>(plannedQuantity),
+      'actualQuantity': serializer.toJson<double>(actualQuantity),
+      'costWeight': serializer.toJson<double>(costWeight),
+      'unitCostSnapshot': serializer.toJson<double>(unitCostSnapshot),
+      'outputLotUuid': serializer.toJson<String?>(outputLotUuid),
+      'batchNumber': serializer.toJson<String>(batchNumber),
+      'unit': serializer.toJson<String>(unit),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  ProductionOrderOutput copyWith(
+          {String? uuid,
+          String? productionOrderUuid,
+          String? productUuid,
+          String? productNameSnapshot,
+          double? plannedQuantity,
+          double? actualQuantity,
+          double? costWeight,
+          double? unitCostSnapshot,
+          Value<String?> outputLotUuid = const Value.absent(),
+          String? batchNumber,
+          String? unit,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      ProductionOrderOutput(
+        uuid: uuid ?? this.uuid,
+        productionOrderUuid: productionOrderUuid ?? this.productionOrderUuid,
+        productUuid: productUuid ?? this.productUuid,
+        productNameSnapshot: productNameSnapshot ?? this.productNameSnapshot,
+        plannedQuantity: plannedQuantity ?? this.plannedQuantity,
+        actualQuantity: actualQuantity ?? this.actualQuantity,
+        costWeight: costWeight ?? this.costWeight,
+        unitCostSnapshot: unitCostSnapshot ?? this.unitCostSnapshot,
+        outputLotUuid:
+            outputLotUuid.present ? outputLotUuid.value : this.outputLotUuid,
+        batchNumber: batchNumber ?? this.batchNumber,
+        unit: unit ?? this.unit,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  ProductionOrderOutput copyWithCompanion(
+      ProductionOrderOutputsCompanion data) {
+    return ProductionOrderOutput(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      productionOrderUuid: data.productionOrderUuid.present
+          ? data.productionOrderUuid.value
+          : this.productionOrderUuid,
+      productUuid:
+          data.productUuid.present ? data.productUuid.value : this.productUuid,
+      productNameSnapshot: data.productNameSnapshot.present
+          ? data.productNameSnapshot.value
+          : this.productNameSnapshot,
+      plannedQuantity: data.plannedQuantity.present
+          ? data.plannedQuantity.value
+          : this.plannedQuantity,
+      actualQuantity: data.actualQuantity.present
+          ? data.actualQuantity.value
+          : this.actualQuantity,
+      costWeight:
+          data.costWeight.present ? data.costWeight.value : this.costWeight,
+      unitCostSnapshot: data.unitCostSnapshot.present
+          ? data.unitCostSnapshot.value
+          : this.unitCostSnapshot,
+      outputLotUuid: data.outputLotUuid.present
+          ? data.outputLotUuid.value
+          : this.outputLotUuid,
+      batchNumber:
+          data.batchNumber.present ? data.batchNumber.value : this.batchNumber,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductionOrderOutput(')
+          ..write('uuid: $uuid, ')
+          ..write('productionOrderUuid: $productionOrderUuid, ')
+          ..write('productUuid: $productUuid, ')
+          ..write('productNameSnapshot: $productNameSnapshot, ')
+          ..write('plannedQuantity: $plannedQuantity, ')
+          ..write('actualQuantity: $actualQuantity, ')
+          ..write('costWeight: $costWeight, ')
+          ..write('unitCostSnapshot: $unitCostSnapshot, ')
+          ..write('outputLotUuid: $outputLotUuid, ')
+          ..write('batchNumber: $batchNumber, ')
+          ..write('unit: $unit, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid,
+      productionOrderUuid,
+      productUuid,
+      productNameSnapshot,
+      plannedQuantity,
+      actualQuantity,
+      costWeight,
+      unitCostSnapshot,
+      outputLotUuid,
+      batchNumber,
+      unit,
+      createdAt,
+      updatedAt,
+      isDeleted,
+      isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProductionOrderOutput &&
+          other.uuid == this.uuid &&
+          other.productionOrderUuid == this.productionOrderUuid &&
+          other.productUuid == this.productUuid &&
+          other.productNameSnapshot == this.productNameSnapshot &&
+          other.plannedQuantity == this.plannedQuantity &&
+          other.actualQuantity == this.actualQuantity &&
+          other.costWeight == this.costWeight &&
+          other.unitCostSnapshot == this.unitCostSnapshot &&
+          other.outputLotUuid == this.outputLotUuid &&
+          other.batchNumber == this.batchNumber &&
+          other.unit == this.unit &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class ProductionOrderOutputsCompanion
+    extends UpdateCompanion<ProductionOrderOutput> {
+  final Value<String> uuid;
+  final Value<String> productionOrderUuid;
+  final Value<String> productUuid;
+  final Value<String> productNameSnapshot;
+  final Value<double> plannedQuantity;
+  final Value<double> actualQuantity;
+  final Value<double> costWeight;
+  final Value<double> unitCostSnapshot;
+  final Value<String?> outputLotUuid;
+  final Value<String> batchNumber;
+  final Value<String> unit;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const ProductionOrderOutputsCompanion({
+    this.uuid = const Value.absent(),
+    this.productionOrderUuid = const Value.absent(),
+    this.productUuid = const Value.absent(),
+    this.productNameSnapshot = const Value.absent(),
+    this.plannedQuantity = const Value.absent(),
+    this.actualQuantity = const Value.absent(),
+    this.costWeight = const Value.absent(),
+    this.unitCostSnapshot = const Value.absent(),
+    this.outputLotUuid = const Value.absent(),
+    this.batchNumber = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProductionOrderOutputsCompanion.insert({
+    required String uuid,
+    required String productionOrderUuid,
+    required String productUuid,
+    required String productNameSnapshot,
+    required double plannedQuantity,
+    this.actualQuantity = const Value.absent(),
+    this.costWeight = const Value.absent(),
+    this.unitCostSnapshot = const Value.absent(),
+    this.outputLotUuid = const Value.absent(),
+    this.batchNumber = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        productionOrderUuid = Value(productionOrderUuid),
+        productUuid = Value(productUuid),
+        productNameSnapshot = Value(productNameSnapshot),
+        plannedQuantity = Value(plannedQuantity);
+  static Insertable<ProductionOrderOutput> custom({
+    Expression<String>? uuid,
+    Expression<String>? productionOrderUuid,
+    Expression<String>? productUuid,
+    Expression<String>? productNameSnapshot,
+    Expression<double>? plannedQuantity,
+    Expression<double>? actualQuantity,
+    Expression<double>? costWeight,
+    Expression<double>? unitCostSnapshot,
+    Expression<String>? outputLotUuid,
+    Expression<String>? batchNumber,
+    Expression<String>? unit,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (productionOrderUuid != null)
+        'production_order_uuid': productionOrderUuid,
+      if (productUuid != null) 'product_uuid': productUuid,
+      if (productNameSnapshot != null)
+        'product_name_snapshot': productNameSnapshot,
+      if (plannedQuantity != null) 'planned_quantity': plannedQuantity,
+      if (actualQuantity != null) 'actual_quantity': actualQuantity,
+      if (costWeight != null) 'cost_weight': costWeight,
+      if (unitCostSnapshot != null) 'unit_cost_snapshot': unitCostSnapshot,
+      if (outputLotUuid != null) 'output_lot_uuid': outputLotUuid,
+      if (batchNumber != null) 'batch_number': batchNumber,
+      if (unit != null) 'unit': unit,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProductionOrderOutputsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? productionOrderUuid,
+      Value<String>? productUuid,
+      Value<String>? productNameSnapshot,
+      Value<double>? plannedQuantity,
+      Value<double>? actualQuantity,
+      Value<double>? costWeight,
+      Value<double>? unitCostSnapshot,
+      Value<String?>? outputLotUuid,
+      Value<String>? batchNumber,
+      Value<String>? unit,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return ProductionOrderOutputsCompanion(
+      uuid: uuid ?? this.uuid,
+      productionOrderUuid: productionOrderUuid ?? this.productionOrderUuid,
+      productUuid: productUuid ?? this.productUuid,
+      productNameSnapshot: productNameSnapshot ?? this.productNameSnapshot,
+      plannedQuantity: plannedQuantity ?? this.plannedQuantity,
+      actualQuantity: actualQuantity ?? this.actualQuantity,
+      costWeight: costWeight ?? this.costWeight,
+      unitCostSnapshot: unitCostSnapshot ?? this.unitCostSnapshot,
+      outputLotUuid: outputLotUuid ?? this.outputLotUuid,
+      batchNumber: batchNumber ?? this.batchNumber,
+      unit: unit ?? this.unit,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (productionOrderUuid.present) {
+      map['production_order_uuid'] =
+          Variable<String>(productionOrderUuid.value);
+    }
+    if (productUuid.present) {
+      map['product_uuid'] = Variable<String>(productUuid.value);
+    }
+    if (productNameSnapshot.present) {
+      map['product_name_snapshot'] =
+          Variable<String>(productNameSnapshot.value);
+    }
+    if (plannedQuantity.present) {
+      map['planned_quantity'] = Variable<double>(plannedQuantity.value);
+    }
+    if (actualQuantity.present) {
+      map['actual_quantity'] = Variable<double>(actualQuantity.value);
+    }
+    if (costWeight.present) {
+      map['cost_weight'] = Variable<double>(costWeight.value);
+    }
+    if (unitCostSnapshot.present) {
+      map['unit_cost_snapshot'] = Variable<double>(unitCostSnapshot.value);
+    }
+    if (outputLotUuid.present) {
+      map['output_lot_uuid'] = Variable<String>(outputLotUuid.value);
+    }
+    if (batchNumber.present) {
+      map['batch_number'] = Variable<String>(batchNumber.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductionOrderOutputsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('productionOrderUuid: $productionOrderUuid, ')
+          ..write('productUuid: $productUuid, ')
+          ..write('productNameSnapshot: $productNameSnapshot, ')
+          ..write('plannedQuantity: $plannedQuantity, ')
+          ..write('actualQuantity: $actualQuantity, ')
+          ..write('costWeight: $costWeight, ')
+          ..write('unitCostSnapshot: $unitCostSnapshot, ')
+          ..write('outputLotUuid: $outputLotUuid, ')
+          ..write('batchNumber: $batchNumber, ')
+          ..write('unit: $unit, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ProductionOrderChargesTable extends ProductionOrderCharges
+    with TableInfo<$ProductionOrderChargesTable, ProductionOrderCharge> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProductionOrderChargesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _productionOrderUuidMeta =
+      const VerificationMeta('productionOrderUuid');
+  @override
+  late final GeneratedColumn<String> productionOrderUuid =
+      GeneratedColumn<String>('production_order_uuid', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: true,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES production_orders (uuid)'));
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+      'amount', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        productionOrderUuid,
+        description,
+        amount,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'production_order_charges';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<ProductionOrderCharge> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('production_order_uuid')) {
+      context.handle(
+          _productionOrderUuidMeta,
+          productionOrderUuid.isAcceptableOrUnknown(
+              data['production_order_uuid']!, _productionOrderUuidMeta));
+    } else if (isInserting) {
+      context.missing(_productionOrderUuidMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    } else if (isInserting) {
+      context.missing(_descriptionMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(_amountMeta,
+          amount.isAcceptableOrUnknown(data['amount']!, _amountMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  ProductionOrderCharge map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProductionOrderCharge(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      productionOrderUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}production_order_uuid'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description'])!,
+      amount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $ProductionOrderChargesTable createAlias(String alias) {
+    return $ProductionOrderChargesTable(attachedDatabase, alias);
+  }
+}
+
+class ProductionOrderCharge extends DataClass
+    implements Insertable<ProductionOrderCharge> {
+  final String uuid;
+  final String productionOrderUuid;
+  final String description;
+  final double amount;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const ProductionOrderCharge(
+      {required this.uuid,
+      required this.productionOrderUuid,
+      required this.description,
+      required this.amount,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['production_order_uuid'] = Variable<String>(productionOrderUuid);
+    map['description'] = Variable<String>(description);
+    map['amount'] = Variable<double>(amount);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  ProductionOrderChargesCompanion toCompanion(bool nullToAbsent) {
+    return ProductionOrderChargesCompanion(
+      uuid: Value(uuid),
+      productionOrderUuid: Value(productionOrderUuid),
+      description: Value(description),
+      amount: Value(amount),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory ProductionOrderCharge.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProductionOrderCharge(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      productionOrderUuid:
+          serializer.fromJson<String>(json['productionOrderUuid']),
+      description: serializer.fromJson<String>(json['description']),
+      amount: serializer.fromJson<double>(json['amount']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'productionOrderUuid': serializer.toJson<String>(productionOrderUuid),
+      'description': serializer.toJson<String>(description),
+      'amount': serializer.toJson<double>(amount),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  ProductionOrderCharge copyWith(
+          {String? uuid,
+          String? productionOrderUuid,
+          String? description,
+          double? amount,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      ProductionOrderCharge(
+        uuid: uuid ?? this.uuid,
+        productionOrderUuid: productionOrderUuid ?? this.productionOrderUuid,
+        description: description ?? this.description,
+        amount: amount ?? this.amount,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  ProductionOrderCharge copyWithCompanion(
+      ProductionOrderChargesCompanion data) {
+    return ProductionOrderCharge(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      productionOrderUuid: data.productionOrderUuid.present
+          ? data.productionOrderUuid.value
+          : this.productionOrderUuid,
+      description:
+          data.description.present ? data.description.value : this.description,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductionOrderCharge(')
+          ..write('uuid: $uuid, ')
+          ..write('productionOrderUuid: $productionOrderUuid, ')
+          ..write('description: $description, ')
+          ..write('amount: $amount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(uuid, productionOrderUuid, description,
+      amount, createdAt, updatedAt, isDeleted, isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProductionOrderCharge &&
+          other.uuid == this.uuid &&
+          other.productionOrderUuid == this.productionOrderUuid &&
+          other.description == this.description &&
+          other.amount == this.amount &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class ProductionOrderChargesCompanion
+    extends UpdateCompanion<ProductionOrderCharge> {
+  final Value<String> uuid;
+  final Value<String> productionOrderUuid;
+  final Value<String> description;
+  final Value<double> amount;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const ProductionOrderChargesCompanion({
+    this.uuid = const Value.absent(),
+    this.productionOrderUuid = const Value.absent(),
+    this.description = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProductionOrderChargesCompanion.insert({
+    required String uuid,
+    required String productionOrderUuid,
+    required String description,
+    this.amount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        productionOrderUuid = Value(productionOrderUuid),
+        description = Value(description);
+  static Insertable<ProductionOrderCharge> custom({
+    Expression<String>? uuid,
+    Expression<String>? productionOrderUuid,
+    Expression<String>? description,
+    Expression<double>? amount,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (productionOrderUuid != null)
+        'production_order_uuid': productionOrderUuid,
+      if (description != null) 'description': description,
+      if (amount != null) 'amount': amount,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProductionOrderChargesCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? productionOrderUuid,
+      Value<String>? description,
+      Value<double>? amount,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return ProductionOrderChargesCompanion(
+      uuid: uuid ?? this.uuid,
+      productionOrderUuid: productionOrderUuid ?? this.productionOrderUuid,
+      description: description ?? this.description,
+      amount: amount ?? this.amount,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (productionOrderUuid.present) {
+      map['production_order_uuid'] =
+          Variable<String>(productionOrderUuid.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<double>(amount.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductionOrderChargesCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('productionOrderUuid: $productionOrderUuid, ')
+          ..write('description: $description, ')
+          ..write('amount: $amount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ProductionConsumptionsTable extends ProductionConsumptions
+    with TableInfo<$ProductionConsumptionsTable, ProductionConsumption> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProductionConsumptionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _productionOrderUuidMeta =
+      const VerificationMeta('productionOrderUuid');
+  @override
+  late final GeneratedColumn<String> productionOrderUuid =
+      GeneratedColumn<String>('production_order_uuid', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: true,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES production_orders (uuid)'));
+  static const VerificationMeta _inputLineUuidMeta =
+      const VerificationMeta('inputLineUuid');
+  @override
+  late final GeneratedColumn<String> inputLineUuid = GeneratedColumn<String>(
+      'input_line_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES production_order_inputs (uuid)'));
+  static const VerificationMeta _lotUuidMeta =
+      const VerificationMeta('lotUuid');
+  @override
+  late final GeneratedColumn<String> lotUuid = GeneratedColumn<String>(
+      'lot_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES product_batches (uuid)'));
+  static const VerificationMeta _quantityMeta =
+      const VerificationMeta('quantity');
+  @override
+  late final GeneratedColumn<double> quantity = GeneratedColumn<double>(
+      'quantity', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _effectiveCostMeta =
+      const VerificationMeta('effectiveCost');
+  @override
+  late final GeneratedColumn<double> effectiveCost = GeneratedColumn<double>(
+      'effective_cost', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        productionOrderUuid,
+        inputLineUuid,
+        lotUuid,
+        quantity,
+        effectiveCost,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'production_consumptions';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<ProductionConsumption> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('production_order_uuid')) {
+      context.handle(
+          _productionOrderUuidMeta,
+          productionOrderUuid.isAcceptableOrUnknown(
+              data['production_order_uuid']!, _productionOrderUuidMeta));
+    } else if (isInserting) {
+      context.missing(_productionOrderUuidMeta);
+    }
+    if (data.containsKey('input_line_uuid')) {
+      context.handle(
+          _inputLineUuidMeta,
+          inputLineUuid.isAcceptableOrUnknown(
+              data['input_line_uuid']!, _inputLineUuidMeta));
+    } else if (isInserting) {
+      context.missing(_inputLineUuidMeta);
+    }
+    if (data.containsKey('lot_uuid')) {
+      context.handle(_lotUuidMeta,
+          lotUuid.isAcceptableOrUnknown(data['lot_uuid']!, _lotUuidMeta));
+    } else if (isInserting) {
+      context.missing(_lotUuidMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(_quantityMeta,
+          quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta));
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    if (data.containsKey('effective_cost')) {
+      context.handle(
+          _effectiveCostMeta,
+          effectiveCost.isAcceptableOrUnknown(
+              data['effective_cost']!, _effectiveCostMeta));
+    } else if (isInserting) {
+      context.missing(_effectiveCostMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  ProductionConsumption map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProductionConsumption(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      productionOrderUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}production_order_uuid'])!,
+      inputLineUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}input_line_uuid'])!,
+      lotUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}lot_uuid'])!,
+      quantity: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}quantity'])!,
+      effectiveCost: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}effective_cost'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $ProductionConsumptionsTable createAlias(String alias) {
+    return $ProductionConsumptionsTable(attachedDatabase, alias);
+  }
+}
+
+class ProductionConsumption extends DataClass
+    implements Insertable<ProductionConsumption> {
+  final String uuid;
+  final String productionOrderUuid;
+  final String inputLineUuid;
+  final String lotUuid;
+  final double quantity;
+  final double effectiveCost;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const ProductionConsumption(
+      {required this.uuid,
+      required this.productionOrderUuid,
+      required this.inputLineUuid,
+      required this.lotUuid,
+      required this.quantity,
+      required this.effectiveCost,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['production_order_uuid'] = Variable<String>(productionOrderUuid);
+    map['input_line_uuid'] = Variable<String>(inputLineUuid);
+    map['lot_uuid'] = Variable<String>(lotUuid);
+    map['quantity'] = Variable<double>(quantity);
+    map['effective_cost'] = Variable<double>(effectiveCost);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  ProductionConsumptionsCompanion toCompanion(bool nullToAbsent) {
+    return ProductionConsumptionsCompanion(
+      uuid: Value(uuid),
+      productionOrderUuid: Value(productionOrderUuid),
+      inputLineUuid: Value(inputLineUuid),
+      lotUuid: Value(lotUuid),
+      quantity: Value(quantity),
+      effectiveCost: Value(effectiveCost),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory ProductionConsumption.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProductionConsumption(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      productionOrderUuid:
+          serializer.fromJson<String>(json['productionOrderUuid']),
+      inputLineUuid: serializer.fromJson<String>(json['inputLineUuid']),
+      lotUuid: serializer.fromJson<String>(json['lotUuid']),
+      quantity: serializer.fromJson<double>(json['quantity']),
+      effectiveCost: serializer.fromJson<double>(json['effectiveCost']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'productionOrderUuid': serializer.toJson<String>(productionOrderUuid),
+      'inputLineUuid': serializer.toJson<String>(inputLineUuid),
+      'lotUuid': serializer.toJson<String>(lotUuid),
+      'quantity': serializer.toJson<double>(quantity),
+      'effectiveCost': serializer.toJson<double>(effectiveCost),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  ProductionConsumption copyWith(
+          {String? uuid,
+          String? productionOrderUuid,
+          String? inputLineUuid,
+          String? lotUuid,
+          double? quantity,
+          double? effectiveCost,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      ProductionConsumption(
+        uuid: uuid ?? this.uuid,
+        productionOrderUuid: productionOrderUuid ?? this.productionOrderUuid,
+        inputLineUuid: inputLineUuid ?? this.inputLineUuid,
+        lotUuid: lotUuid ?? this.lotUuid,
+        quantity: quantity ?? this.quantity,
+        effectiveCost: effectiveCost ?? this.effectiveCost,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  ProductionConsumption copyWithCompanion(
+      ProductionConsumptionsCompanion data) {
+    return ProductionConsumption(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      productionOrderUuid: data.productionOrderUuid.present
+          ? data.productionOrderUuid.value
+          : this.productionOrderUuid,
+      inputLineUuid: data.inputLineUuid.present
+          ? data.inputLineUuid.value
+          : this.inputLineUuid,
+      lotUuid: data.lotUuid.present ? data.lotUuid.value : this.lotUuid,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      effectiveCost: data.effectiveCost.present
+          ? data.effectiveCost.value
+          : this.effectiveCost,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductionConsumption(')
+          ..write('uuid: $uuid, ')
+          ..write('productionOrderUuid: $productionOrderUuid, ')
+          ..write('inputLineUuid: $inputLineUuid, ')
+          ..write('lotUuid: $lotUuid, ')
+          ..write('quantity: $quantity, ')
+          ..write('effectiveCost: $effectiveCost, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid,
+      productionOrderUuid,
+      inputLineUuid,
+      lotUuid,
+      quantity,
+      effectiveCost,
+      createdAt,
+      updatedAt,
+      isDeleted,
+      isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProductionConsumption &&
+          other.uuid == this.uuid &&
+          other.productionOrderUuid == this.productionOrderUuid &&
+          other.inputLineUuid == this.inputLineUuid &&
+          other.lotUuid == this.lotUuid &&
+          other.quantity == this.quantity &&
+          other.effectiveCost == this.effectiveCost &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class ProductionConsumptionsCompanion
+    extends UpdateCompanion<ProductionConsumption> {
+  final Value<String> uuid;
+  final Value<String> productionOrderUuid;
+  final Value<String> inputLineUuid;
+  final Value<String> lotUuid;
+  final Value<double> quantity;
+  final Value<double> effectiveCost;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const ProductionConsumptionsCompanion({
+    this.uuid = const Value.absent(),
+    this.productionOrderUuid = const Value.absent(),
+    this.inputLineUuid = const Value.absent(),
+    this.lotUuid = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.effectiveCost = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProductionConsumptionsCompanion.insert({
+    required String uuid,
+    required String productionOrderUuid,
+    required String inputLineUuid,
+    required String lotUuid,
+    required double quantity,
+    required double effectiveCost,
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        productionOrderUuid = Value(productionOrderUuid),
+        inputLineUuid = Value(inputLineUuid),
+        lotUuid = Value(lotUuid),
+        quantity = Value(quantity),
+        effectiveCost = Value(effectiveCost);
+  static Insertable<ProductionConsumption> custom({
+    Expression<String>? uuid,
+    Expression<String>? productionOrderUuid,
+    Expression<String>? inputLineUuid,
+    Expression<String>? lotUuid,
+    Expression<double>? quantity,
+    Expression<double>? effectiveCost,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (productionOrderUuid != null)
+        'production_order_uuid': productionOrderUuid,
+      if (inputLineUuid != null) 'input_line_uuid': inputLineUuid,
+      if (lotUuid != null) 'lot_uuid': lotUuid,
+      if (quantity != null) 'quantity': quantity,
+      if (effectiveCost != null) 'effective_cost': effectiveCost,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProductionConsumptionsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? productionOrderUuid,
+      Value<String>? inputLineUuid,
+      Value<String>? lotUuid,
+      Value<double>? quantity,
+      Value<double>? effectiveCost,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return ProductionConsumptionsCompanion(
+      uuid: uuid ?? this.uuid,
+      productionOrderUuid: productionOrderUuid ?? this.productionOrderUuid,
+      inputLineUuid: inputLineUuid ?? this.inputLineUuid,
+      lotUuid: lotUuid ?? this.lotUuid,
+      quantity: quantity ?? this.quantity,
+      effectiveCost: effectiveCost ?? this.effectiveCost,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (productionOrderUuid.present) {
+      map['production_order_uuid'] =
+          Variable<String>(productionOrderUuid.value);
+    }
+    if (inputLineUuid.present) {
+      map['input_line_uuid'] = Variable<String>(inputLineUuid.value);
+    }
+    if (lotUuid.present) {
+      map['lot_uuid'] = Variable<String>(lotUuid.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<double>(quantity.value);
+    }
+    if (effectiveCost.present) {
+      map['effective_cost'] = Variable<double>(effectiveCost.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProductionConsumptionsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('productionOrderUuid: $productionOrderUuid, ')
+          ..write('inputLineUuid: $inputLineUuid, ')
+          ..write('lotUuid: $lotUuid, ')
+          ..write('quantity: $quantity, ')
+          ..write('effectiveCost: $effectiveCost, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -13026,6 +18206,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $GoodsReceiptsTable goodsReceipts = $GoodsReceiptsTable(this);
   late final $GoodsReceiptLinesTable goodsReceiptLines =
       $GoodsReceiptLinesTable(this);
+  late final $RecipesTable recipes = $RecipesTable(this);
+  late final $RecipeInputsTable recipeInputs = $RecipeInputsTable(this);
+  late final $RecipeOutputsTable recipeOutputs = $RecipeOutputsTable(this);
+  late final $RecipeChargesTable recipeCharges = $RecipeChargesTable(this);
+  late final $ProductionOrdersTable productionOrders =
+      $ProductionOrdersTable(this);
+  late final $ProductionOrderInputsTable productionOrderInputs =
+      $ProductionOrderInputsTable(this);
+  late final $ProductionOrderOutputsTable productionOrderOutputs =
+      $ProductionOrderOutputsTable(this);
+  late final $ProductionOrderChargesTable productionOrderCharges =
+      $ProductionOrderChargesTable(this);
+  late final $ProductionConsumptionsTable productionConsumptions =
+      $ProductionConsumptionsTable(this);
   late final $OrderReturnsTable orderReturns = $OrderReturnsTable(this);
   late final $OrderReturnItemsTable orderReturnItems =
       $OrderReturnItemsTable(this);
@@ -13055,6 +18249,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         orderItems,
         goodsReceipts,
         goodsReceiptLines,
+        recipes,
+        recipeInputs,
+        recipeOutputs,
+        recipeCharges,
+        productionOrders,
+        productionOrderInputs,
+        productionOrderOutputs,
+        productionOrderCharges,
+        productionConsumptions,
         orderReturns,
         orderReturnItems,
         catalogs,
@@ -17483,6 +22686,78 @@ final class $$ProductsTableReferences
         manager.$state.copyWith(prefetchedData: cache));
   }
 
+  static MultiTypedResultKey<$RecipeInputsTable, List<RecipeInput>>
+      _recipeInputsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.recipeInputs,
+              aliasName: $_aliasNameGenerator(
+                  db.products.uuid, db.recipeInputs.productUuid));
+
+  $$RecipeInputsTableProcessedTableManager get recipeInputsRefs {
+    final manager = $$RecipeInputsTableTableManager($_db, $_db.recipeInputs)
+        .filter(
+            (f) => f.productUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache = $_typedResult.readTableOrNull(_recipeInputsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$RecipeOutputsTable, List<RecipeOutput>>
+      _recipeOutputsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.recipeOutputs,
+              aliasName: $_aliasNameGenerator(
+                  db.products.uuid, db.recipeOutputs.productUuid));
+
+  $$RecipeOutputsTableProcessedTableManager get recipeOutputsRefs {
+    final manager = $$RecipeOutputsTableTableManager($_db, $_db.recipeOutputs)
+        .filter(
+            (f) => f.productUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache = $_typedResult.readTableOrNull(_recipeOutputsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$ProductionOrderInputsTable,
+      List<ProductionOrderInput>> _productionOrderInputsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.productionOrderInputs,
+          aliasName: $_aliasNameGenerator(
+              db.products.uuid, db.productionOrderInputs.productUuid));
+
+  $$ProductionOrderInputsTableProcessedTableManager
+      get productionOrderInputsRefs {
+    final manager = $$ProductionOrderInputsTableTableManager(
+            $_db, $_db.productionOrderInputs)
+        .filter(
+            (f) => f.productUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_productionOrderInputsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$ProductionOrderOutputsTable,
+      List<ProductionOrderOutput>> _productionOrderOutputsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.productionOrderOutputs,
+          aliasName: $_aliasNameGenerator(
+              db.products.uuid, db.productionOrderOutputs.productUuid));
+
+  $$ProductionOrderOutputsTableProcessedTableManager
+      get productionOrderOutputsRefs {
+    final manager = $$ProductionOrderOutputsTableTableManager(
+            $_db, $_db.productionOrderOutputs)
+        .filter(
+            (f) => f.productUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_productionOrderOutputsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
   static MultiTypedResultKey<$OrderReturnItemsTable, List<OrderReturnItem>>
       _orderReturnItemsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.orderReturnItems,
@@ -17652,6 +22927,94 @@ class $$ProductsTableFilterComposer
               $removeJoinBuilderFromRootComposer:
                   $removeJoinBuilderFromRootComposer,
             ));
+    return f(composer);
+  }
+
+  Expression<bool> recipeInputsRefs(
+      Expression<bool> Function($$RecipeInputsTableFilterComposer f) f) {
+    final $$RecipeInputsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.recipeInputs,
+        getReferencedColumn: (t) => t.productUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipeInputsTableFilterComposer(
+              $db: $db,
+              $table: $db.recipeInputs,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> recipeOutputsRefs(
+      Expression<bool> Function($$RecipeOutputsTableFilterComposer f) f) {
+    final $$RecipeOutputsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.recipeOutputs,
+        getReferencedColumn: (t) => t.productUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipeOutputsTableFilterComposer(
+              $db: $db,
+              $table: $db.recipeOutputs,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> productionOrderInputsRefs(
+      Expression<bool> Function($$ProductionOrderInputsTableFilterComposer f)
+          f) {
+    final $$ProductionOrderInputsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionOrderInputs,
+            getReferencedColumn: (t) => t.productUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionOrderInputsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.productionOrderInputs,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> productionOrderOutputsRefs(
+      Expression<bool> Function($$ProductionOrderOutputsTableFilterComposer f)
+          f) {
+    final $$ProductionOrderOutputsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionOrderOutputs,
+            getReferencedColumn: (t) => t.productUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionOrderOutputsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.productionOrderOutputs,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
     return f(composer);
   }
 
@@ -17916,6 +23279,94 @@ class $$ProductsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> recipeInputsRefs<T extends Object>(
+      Expression<T> Function($$RecipeInputsTableAnnotationComposer a) f) {
+    final $$RecipeInputsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.recipeInputs,
+        getReferencedColumn: (t) => t.productUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipeInputsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.recipeInputs,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> recipeOutputsRefs<T extends Object>(
+      Expression<T> Function($$RecipeOutputsTableAnnotationComposer a) f) {
+    final $$RecipeOutputsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.recipeOutputs,
+        getReferencedColumn: (t) => t.productUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipeOutputsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.recipeOutputs,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> productionOrderInputsRefs<T extends Object>(
+      Expression<T> Function($$ProductionOrderInputsTableAnnotationComposer a)
+          f) {
+    final $$ProductionOrderInputsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionOrderInputs,
+            getReferencedColumn: (t) => t.productUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionOrderInputsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.productionOrderInputs,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> productionOrderOutputsRefs<T extends Object>(
+      Expression<T> Function($$ProductionOrderOutputsTableAnnotationComposer a)
+          f) {
+    final $$ProductionOrderOutputsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionOrderOutputs,
+            getReferencedColumn: (t) => t.productUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionOrderOutputsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.productionOrderOutputs,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
   Expression<T> orderReturnItemsRefs<T extends Object>(
       Expression<T> Function($$OrderReturnItemsTableAnnotationComposer a) f) {
     final $$OrderReturnItemsTableAnnotationComposer composer = $composerBuilder(
@@ -17975,6 +23426,10 @@ class $$ProductsTableTableManager extends RootTableManager<
         bool productBatchesRefs,
         bool orderItemsRefs,
         bool goodsReceiptLinesRefs,
+        bool recipeInputsRefs,
+        bool recipeOutputsRefs,
+        bool productionOrderInputsRefs,
+        bool productionOrderOutputsRefs,
         bool orderReturnItemsRefs,
         bool catalogItemsRefs})> {
   $$ProductsTableTableManager(_$AppDatabase db, $ProductsTable table)
@@ -18072,6 +23527,10 @@ class $$ProductsTableTableManager extends RootTableManager<
               productBatchesRefs = false,
               orderItemsRefs = false,
               goodsReceiptLinesRefs = false,
+              recipeInputsRefs = false,
+              recipeOutputsRefs = false,
+              productionOrderInputsRefs = false,
+              productionOrderOutputsRefs = false,
               orderReturnItemsRefs = false,
               catalogItemsRefs = false}) {
             return PrefetchHooks(
@@ -18080,6 +23539,10 @@ class $$ProductsTableTableManager extends RootTableManager<
                 if (productBatchesRefs) db.productBatches,
                 if (orderItemsRefs) db.orderItems,
                 if (goodsReceiptLinesRefs) db.goodsReceiptLines,
+                if (recipeInputsRefs) db.recipeInputs,
+                if (recipeOutputsRefs) db.recipeOutputs,
+                if (productionOrderInputsRefs) db.productionOrderInputs,
+                if (productionOrderOutputsRefs) db.productionOrderOutputs,
                 if (orderReturnItemsRefs) db.orderReturnItems,
                 if (catalogItemsRefs) db.catalogItems
               ],
@@ -18150,6 +23613,58 @@ class $$ProductsTableTableManager extends RootTableManager<
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.productUuid == item.uuid),
                         typedResults: items),
+                  if (recipeInputsRefs)
+                    await $_getPrefetchedData<Product, $ProductsTable,
+                            RecipeInput>(
+                        currentTable: table,
+                        referencedTable: $$ProductsTableReferences
+                            ._recipeInputsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductsTableReferences(db, table, p0)
+                                .recipeInputsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.productUuid == item.uuid),
+                        typedResults: items),
+                  if (recipeOutputsRefs)
+                    await $_getPrefetchedData<Product, $ProductsTable,
+                            RecipeOutput>(
+                        currentTable: table,
+                        referencedTable: $$ProductsTableReferences
+                            ._recipeOutputsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductsTableReferences(db, table, p0)
+                                .recipeOutputsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.productUuid == item.uuid),
+                        typedResults: items),
+                  if (productionOrderInputsRefs)
+                    await $_getPrefetchedData<Product, $ProductsTable,
+                            ProductionOrderInput>(
+                        currentTable: table,
+                        referencedTable: $$ProductsTableReferences
+                            ._productionOrderInputsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductsTableReferences(db, table, p0)
+                                .productionOrderInputsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.productUuid == item.uuid),
+                        typedResults: items),
+                  if (productionOrderOutputsRefs)
+                    await $_getPrefetchedData<Product, $ProductsTable,
+                            ProductionOrderOutput>(
+                        currentTable: table,
+                        referencedTable: $$ProductsTableReferences
+                            ._productionOrderOutputsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductsTableReferences(db, table, p0)
+                                .productionOrderOutputsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.productUuid == item.uuid),
+                        typedResults: items),
                   if (orderReturnItemsRefs)
                     await $_getPrefetchedData<Product, $ProductsTable,
                             OrderReturnItem>(
@@ -18199,6 +23714,10 @@ typedef $$ProductsTableProcessedTableManager = ProcessedTableManager<
         bool productBatchesRefs,
         bool orderItemsRefs,
         bool goodsReceiptLinesRefs,
+        bool recipeInputsRefs,
+        bool recipeOutputsRefs,
+        bool productionOrderInputsRefs,
+        bool productionOrderOutputsRefs,
         bool orderReturnItemsRefs,
         bool catalogItemsRefs})>;
 typedef $$ProductBatchesTableCreateCompanionBuilder = ProductBatchesCompanion
@@ -18218,6 +23737,7 @@ typedef $$ProductBatchesTableCreateCompanionBuilder = ProductBatchesCompanion
   Value<double?> wholesalePriceOverride,
   Value<DateTime?> manufactureDate,
   Value<DateTime?> expiryDate,
+  Value<String?> description,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -18241,6 +23761,7 @@ typedef $$ProductBatchesTableUpdateCompanionBuilder = ProductBatchesCompanion
   Value<double?> wholesalePriceOverride,
   Value<DateTime?> manufactureDate,
   Value<DateTime?> expiryDate,
+  Value<String?> description,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -18279,6 +23800,25 @@ final class $$ProductBatchesTableReferences
         (f) => f.batchUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
 
     final cache = $_typedResult.readTableOrNull(_orderItemsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$ProductionConsumptionsTable,
+      List<ProductionConsumption>> _productionConsumptionsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.productionConsumptions,
+          aliasName: $_aliasNameGenerator(
+              db.productBatches.uuid, db.productionConsumptions.lotUuid));
+
+  $$ProductionConsumptionsTableProcessedTableManager
+      get productionConsumptionsRefs {
+    final manager = $$ProductionConsumptionsTableTableManager(
+            $_db, $_db.productionConsumptions)
+        .filter((f) => f.lotUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_productionConsumptionsRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -18373,6 +23913,9 @@ class $$ProductBatchesTableFilterComposer
   ColumnFilters<DateTime> get expiryDate => $composableBuilder(
       column: $table.expiryDate, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
 
@@ -18423,6 +23966,29 @@ class $$ProductBatchesTableFilterComposer
               $removeJoinBuilderFromRootComposer:
                   $removeJoinBuilderFromRootComposer,
             ));
+    return f(composer);
+  }
+
+  Expression<bool> productionConsumptionsRefs(
+      Expression<bool> Function($$ProductionConsumptionsTableFilterComposer f)
+          f) {
+    final $$ProductionConsumptionsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionConsumptions,
+            getReferencedColumn: (t) => t.lotUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionConsumptionsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.productionConsumptions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
     return f(composer);
   }
 
@@ -18529,6 +24095,9 @@ class $$ProductBatchesTableOrderingComposer
   ColumnOrderings<DateTime> get expiryDate => $composableBuilder(
       column: $table.expiryDate, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -18613,6 +24182,9 @@ class $$ProductBatchesTableAnnotationComposer
   GeneratedColumn<DateTime> get expiryDate => $composableBuilder(
       column: $table.expiryDate, builder: (column) => column);
 
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -18663,6 +24235,29 @@ class $$ProductBatchesTableAnnotationComposer
               $removeJoinBuilderFromRootComposer:
                   $removeJoinBuilderFromRootComposer,
             ));
+    return f(composer);
+  }
+
+  Expression<T> productionConsumptionsRefs<T extends Object>(
+      Expression<T> Function($$ProductionConsumptionsTableAnnotationComposer a)
+          f) {
+    final $$ProductionConsumptionsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionConsumptions,
+            getReferencedColumn: (t) => t.lotUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionConsumptionsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.productionConsumptions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
     return f(composer);
   }
 
@@ -18723,6 +24318,7 @@ class $$ProductBatchesTableTableManager extends RootTableManager<
     PrefetchHooks Function(
         {bool productUuid,
         bool orderItemsRefs,
+        bool productionConsumptionsRefs,
         bool orderReturnItemsRefs,
         bool catalogItemsRefs})> {
   $$ProductBatchesTableTableManager(
@@ -18752,6 +24348,7 @@ class $$ProductBatchesTableTableManager extends RootTableManager<
             Value<double?> wholesalePriceOverride = const Value.absent(),
             Value<DateTime?> manufactureDate = const Value.absent(),
             Value<DateTime?> expiryDate = const Value.absent(),
+            Value<String?> description = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -18774,6 +24371,7 @@ class $$ProductBatchesTableTableManager extends RootTableManager<
             wholesalePriceOverride: wholesalePriceOverride,
             manufactureDate: manufactureDate,
             expiryDate: expiryDate,
+            description: description,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,
@@ -18796,6 +24394,7 @@ class $$ProductBatchesTableTableManager extends RootTableManager<
             Value<double?> wholesalePriceOverride = const Value.absent(),
             Value<DateTime?> manufactureDate = const Value.absent(),
             Value<DateTime?> expiryDate = const Value.absent(),
+            Value<String?> description = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -18818,6 +24417,7 @@ class $$ProductBatchesTableTableManager extends RootTableManager<
             wholesalePriceOverride: wholesalePriceOverride,
             manufactureDate: manufactureDate,
             expiryDate: expiryDate,
+            description: description,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,
@@ -18833,12 +24433,14 @@ class $$ProductBatchesTableTableManager extends RootTableManager<
           prefetchHooksCallback: (
               {productUuid = false,
               orderItemsRefs = false,
+              productionConsumptionsRefs = false,
               orderReturnItemsRefs = false,
               catalogItemsRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (orderItemsRefs) db.orderItems,
+                if (productionConsumptionsRefs) db.productionConsumptions,
                 if (orderReturnItemsRefs) db.orderReturnItems,
                 if (catalogItemsRefs) db.catalogItems
               ],
@@ -18883,6 +24485,19 @@ class $$ProductBatchesTableTableManager extends RootTableManager<
                         referencedItemsForCurrentItem:
                             (item, referencedItems) => referencedItems
                                 .where((e) => e.batchUuid == item.uuid),
+                        typedResults: items),
+                  if (productionConsumptionsRefs)
+                    await $_getPrefetchedData<ProductBatche,
+                            $ProductBatchesTable, ProductionConsumption>(
+                        currentTable: table,
+                        referencedTable: $$ProductBatchesTableReferences
+                            ._productionConsumptionsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductBatchesTableReferences(db, table, p0)
+                                .productionConsumptionsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.lotUuid == item.uuid),
                         typedResults: items),
                   if (orderReturnItemsRefs)
                     await $_getPrefetchedData<ProductBatche,
@@ -18931,6 +24546,7 @@ typedef $$ProductBatchesTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function(
         {bool productUuid,
         bool orderItemsRefs,
+        bool productionConsumptionsRefs,
         bool orderReturnItemsRefs,
         bool catalogItemsRefs})>;
 typedef $$OrderItemsTableCreateCompanionBuilder = OrderItemsCompanion Function({
@@ -20627,6 +26243,4440 @@ typedef $$GoodsReceiptLinesTableProcessedTableManager = ProcessedTableManager<
     GoodsReceiptLine,
     PrefetchHooks Function(
         {bool receiptUuid, bool orderItemUuid, bool productUuid})>;
+typedef $$RecipesTableCreateCompanionBuilder = RecipesCompanion Function({
+  required String uuid,
+  required String name,
+  Value<String?> notes,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$RecipesTableUpdateCompanionBuilder = RecipesCompanion Function({
+  Value<String> uuid,
+  Value<String> name,
+  Value<String?> notes,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$RecipesTableReferences
+    extends BaseReferences<_$AppDatabase, $RecipesTable, Recipe> {
+  $$RecipesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$RecipeInputsTable, List<RecipeInput>>
+      _recipeInputsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.recipeInputs,
+              aliasName: $_aliasNameGenerator(
+                  db.recipes.uuid, db.recipeInputs.recipeUuid));
+
+  $$RecipeInputsTableProcessedTableManager get recipeInputsRefs {
+    final manager = $$RecipeInputsTableTableManager($_db, $_db.recipeInputs)
+        .filter(
+            (f) => f.recipeUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache = $_typedResult.readTableOrNull(_recipeInputsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$RecipeOutputsTable, List<RecipeOutput>>
+      _recipeOutputsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.recipeOutputs,
+              aliasName: $_aliasNameGenerator(
+                  db.recipes.uuid, db.recipeOutputs.recipeUuid));
+
+  $$RecipeOutputsTableProcessedTableManager get recipeOutputsRefs {
+    final manager = $$RecipeOutputsTableTableManager($_db, $_db.recipeOutputs)
+        .filter(
+            (f) => f.recipeUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache = $_typedResult.readTableOrNull(_recipeOutputsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$RecipeChargesTable, List<RecipeCharge>>
+      _recipeChargesRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.recipeCharges,
+              aliasName: $_aliasNameGenerator(
+                  db.recipes.uuid, db.recipeCharges.recipeUuid));
+
+  $$RecipeChargesTableProcessedTableManager get recipeChargesRefs {
+    final manager = $$RecipeChargesTableTableManager($_db, $_db.recipeCharges)
+        .filter(
+            (f) => f.recipeUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache = $_typedResult.readTableOrNull(_recipeChargesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$ProductionOrdersTable, List<ProductionOrder>>
+      _productionOrdersRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.productionOrders,
+              aliasName: $_aliasNameGenerator(
+                  db.recipes.uuid, db.productionOrders.recipeUuid));
+
+  $$ProductionOrdersTableProcessedTableManager get productionOrdersRefs {
+    final manager =
+        $$ProductionOrdersTableTableManager($_db, $_db.productionOrders).filter(
+            (f) => f.recipeUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_productionOrdersRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$RecipesTableFilterComposer
+    extends Composer<_$AppDatabase, $RecipesTable> {
+  $$RecipesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get notes => $composableBuilder(
+      column: $table.notes, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> recipeInputsRefs(
+      Expression<bool> Function($$RecipeInputsTableFilterComposer f) f) {
+    final $$RecipeInputsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.recipeInputs,
+        getReferencedColumn: (t) => t.recipeUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipeInputsTableFilterComposer(
+              $db: $db,
+              $table: $db.recipeInputs,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> recipeOutputsRefs(
+      Expression<bool> Function($$RecipeOutputsTableFilterComposer f) f) {
+    final $$RecipeOutputsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.recipeOutputs,
+        getReferencedColumn: (t) => t.recipeUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipeOutputsTableFilterComposer(
+              $db: $db,
+              $table: $db.recipeOutputs,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> recipeChargesRefs(
+      Expression<bool> Function($$RecipeChargesTableFilterComposer f) f) {
+    final $$RecipeChargesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.recipeCharges,
+        getReferencedColumn: (t) => t.recipeUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipeChargesTableFilterComposer(
+              $db: $db,
+              $table: $db.recipeCharges,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> productionOrdersRefs(
+      Expression<bool> Function($$ProductionOrdersTableFilterComposer f) f) {
+    final $$ProductionOrdersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.productionOrders,
+        getReferencedColumn: (t) => t.recipeUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductionOrdersTableFilterComposer(
+              $db: $db,
+              $table: $db.productionOrders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$RecipesTableOrderingComposer
+    extends Composer<_$AppDatabase, $RecipesTable> {
+  $$RecipesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+      column: $table.notes, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+}
+
+class $$RecipesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RecipesTable> {
+  $$RecipesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  Expression<T> recipeInputsRefs<T extends Object>(
+      Expression<T> Function($$RecipeInputsTableAnnotationComposer a) f) {
+    final $$RecipeInputsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.recipeInputs,
+        getReferencedColumn: (t) => t.recipeUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipeInputsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.recipeInputs,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> recipeOutputsRefs<T extends Object>(
+      Expression<T> Function($$RecipeOutputsTableAnnotationComposer a) f) {
+    final $$RecipeOutputsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.recipeOutputs,
+        getReferencedColumn: (t) => t.recipeUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipeOutputsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.recipeOutputs,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> recipeChargesRefs<T extends Object>(
+      Expression<T> Function($$RecipeChargesTableAnnotationComposer a) f) {
+    final $$RecipeChargesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.recipeCharges,
+        getReferencedColumn: (t) => t.recipeUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipeChargesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.recipeCharges,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> productionOrdersRefs<T extends Object>(
+      Expression<T> Function($$ProductionOrdersTableAnnotationComposer a) f) {
+    final $$ProductionOrdersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.productionOrders,
+        getReferencedColumn: (t) => t.recipeUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductionOrdersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.productionOrders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$RecipesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $RecipesTable,
+    Recipe,
+    $$RecipesTableFilterComposer,
+    $$RecipesTableOrderingComposer,
+    $$RecipesTableAnnotationComposer,
+    $$RecipesTableCreateCompanionBuilder,
+    $$RecipesTableUpdateCompanionBuilder,
+    (Recipe, $$RecipesTableReferences),
+    Recipe,
+    PrefetchHooks Function(
+        {bool recipeInputsRefs,
+        bool recipeOutputsRefs,
+        bool recipeChargesRefs,
+        bool productionOrdersRefs})> {
+  $$RecipesTableTableManager(_$AppDatabase db, $RecipesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecipesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecipesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RecipesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> notes = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              RecipesCompanion(
+            uuid: uuid,
+            name: name,
+            notes: notes,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String name,
+            Value<String?> notes = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              RecipesCompanion.insert(
+            uuid: uuid,
+            name: name,
+            notes: notes,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) =>
+                  (e.readTable(table), $$RecipesTableReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: (
+              {recipeInputsRefs = false,
+              recipeOutputsRefs = false,
+              recipeChargesRefs = false,
+              productionOrdersRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (recipeInputsRefs) db.recipeInputs,
+                if (recipeOutputsRefs) db.recipeOutputs,
+                if (recipeChargesRefs) db.recipeCharges,
+                if (productionOrdersRefs) db.productionOrders
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (recipeInputsRefs)
+                    await $_getPrefetchedData<Recipe, $RecipesTable,
+                            RecipeInput>(
+                        currentTable: table,
+                        referencedTable:
+                            $$RecipesTableReferences._recipeInputsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$RecipesTableReferences(db, table, p0)
+                                .recipeInputsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.recipeUuid == item.uuid),
+                        typedResults: items),
+                  if (recipeOutputsRefs)
+                    await $_getPrefetchedData<Recipe, $RecipesTable,
+                            RecipeOutput>(
+                        currentTable: table,
+                        referencedTable: $$RecipesTableReferences
+                            ._recipeOutputsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$RecipesTableReferences(db, table, p0)
+                                .recipeOutputsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.recipeUuid == item.uuid),
+                        typedResults: items),
+                  if (recipeChargesRefs)
+                    await $_getPrefetchedData<Recipe, $RecipesTable,
+                            RecipeCharge>(
+                        currentTable: table,
+                        referencedTable: $$RecipesTableReferences
+                            ._recipeChargesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$RecipesTableReferences(db, table, p0)
+                                .recipeChargesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.recipeUuid == item.uuid),
+                        typedResults: items),
+                  if (productionOrdersRefs)
+                    await $_getPrefetchedData<Recipe, $RecipesTable,
+                            ProductionOrder>(
+                        currentTable: table,
+                        referencedTable: $$RecipesTableReferences
+                            ._productionOrdersRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$RecipesTableReferences(db, table, p0)
+                                .productionOrdersRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.recipeUuid == item.uuid),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$RecipesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $RecipesTable,
+    Recipe,
+    $$RecipesTableFilterComposer,
+    $$RecipesTableOrderingComposer,
+    $$RecipesTableAnnotationComposer,
+    $$RecipesTableCreateCompanionBuilder,
+    $$RecipesTableUpdateCompanionBuilder,
+    (Recipe, $$RecipesTableReferences),
+    Recipe,
+    PrefetchHooks Function(
+        {bool recipeInputsRefs,
+        bool recipeOutputsRefs,
+        bool recipeChargesRefs,
+        bool productionOrdersRefs})>;
+typedef $$RecipeInputsTableCreateCompanionBuilder = RecipeInputsCompanion
+    Function({
+  required String uuid,
+  required String recipeUuid,
+  required String productUuid,
+  required String productNameSnapshot,
+  required double quantity,
+  Value<String> consumeMode,
+  Value<String?> batchNumber,
+  Value<String> unit,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$RecipeInputsTableUpdateCompanionBuilder = RecipeInputsCompanion
+    Function({
+  Value<String> uuid,
+  Value<String> recipeUuid,
+  Value<String> productUuid,
+  Value<String> productNameSnapshot,
+  Value<double> quantity,
+  Value<String> consumeMode,
+  Value<String?> batchNumber,
+  Value<String> unit,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$RecipeInputsTableReferences
+    extends BaseReferences<_$AppDatabase, $RecipeInputsTable, RecipeInput> {
+  $$RecipeInputsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $RecipesTable _recipeUuidTable(_$AppDatabase db) =>
+      db.recipes.createAlias(
+          $_aliasNameGenerator(db.recipeInputs.recipeUuid, db.recipes.uuid));
+
+  $$RecipesTableProcessedTableManager get recipeUuid {
+    final $_column = $_itemColumn<String>('recipe_uuid')!;
+
+    final manager = $$RecipesTableTableManager($_db, $_db.recipes)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_recipeUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ProductsTable _productUuidTable(_$AppDatabase db) =>
+      db.products.createAlias(
+          $_aliasNameGenerator(db.recipeInputs.productUuid, db.products.uuid));
+
+  $$ProductsTableProcessedTableManager get productUuid {
+    final $_column = $_itemColumn<String>('product_uuid')!;
+
+    final manager = $$ProductsTableTableManager($_db, $_db.products)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$RecipeInputsTableFilterComposer
+    extends Composer<_$AppDatabase, $RecipeInputsTable> {
+  $$RecipeInputsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get productNameSnapshot => $composableBuilder(
+      column: $table.productNameSnapshot,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get consumeMode => $composableBuilder(
+      column: $table.consumeMode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$RecipesTableFilterComposer get recipeUuid {
+    final $$RecipesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.recipeUuid,
+        referencedTable: $db.recipes,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipesTableFilterComposer(
+              $db: $db,
+              $table: $db.recipes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableFilterComposer get productUuid {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableFilterComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$RecipeInputsTableOrderingComposer
+    extends Composer<_$AppDatabase, $RecipeInputsTable> {
+  $$RecipeInputsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get productNameSnapshot => $composableBuilder(
+      column: $table.productNameSnapshot,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get consumeMode => $composableBuilder(
+      column: $table.consumeMode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$RecipesTableOrderingComposer get recipeUuid {
+    final $$RecipesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.recipeUuid,
+        referencedTable: $db.recipes,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipesTableOrderingComposer(
+              $db: $db,
+              $table: $db.recipes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableOrderingComposer get productUuid {
+    final $$ProductsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableOrderingComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$RecipeInputsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RecipeInputsTable> {
+  $$RecipeInputsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get productNameSnapshot => $composableBuilder(
+      column: $table.productNameSnapshot, builder: (column) => column);
+
+  GeneratedColumn<double> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<String> get consumeMode => $composableBuilder(
+      column: $table.consumeMode, builder: (column) => column);
+
+  GeneratedColumn<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$RecipesTableAnnotationComposer get recipeUuid {
+    final $$RecipesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.recipeUuid,
+        referencedTable: $db.recipes,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.recipes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableAnnotationComposer get productUuid {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$RecipeInputsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $RecipeInputsTable,
+    RecipeInput,
+    $$RecipeInputsTableFilterComposer,
+    $$RecipeInputsTableOrderingComposer,
+    $$RecipeInputsTableAnnotationComposer,
+    $$RecipeInputsTableCreateCompanionBuilder,
+    $$RecipeInputsTableUpdateCompanionBuilder,
+    (RecipeInput, $$RecipeInputsTableReferences),
+    RecipeInput,
+    PrefetchHooks Function({bool recipeUuid, bool productUuid})> {
+  $$RecipeInputsTableTableManager(_$AppDatabase db, $RecipeInputsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecipeInputsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecipeInputsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RecipeInputsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> recipeUuid = const Value.absent(),
+            Value<String> productUuid = const Value.absent(),
+            Value<String> productNameSnapshot = const Value.absent(),
+            Value<double> quantity = const Value.absent(),
+            Value<String> consumeMode = const Value.absent(),
+            Value<String?> batchNumber = const Value.absent(),
+            Value<String> unit = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              RecipeInputsCompanion(
+            uuid: uuid,
+            recipeUuid: recipeUuid,
+            productUuid: productUuid,
+            productNameSnapshot: productNameSnapshot,
+            quantity: quantity,
+            consumeMode: consumeMode,
+            batchNumber: batchNumber,
+            unit: unit,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String recipeUuid,
+            required String productUuid,
+            required String productNameSnapshot,
+            required double quantity,
+            Value<String> consumeMode = const Value.absent(),
+            Value<String?> batchNumber = const Value.absent(),
+            Value<String> unit = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              RecipeInputsCompanion.insert(
+            uuid: uuid,
+            recipeUuid: recipeUuid,
+            productUuid: productUuid,
+            productNameSnapshot: productNameSnapshot,
+            quantity: quantity,
+            consumeMode: consumeMode,
+            batchNumber: batchNumber,
+            unit: unit,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$RecipeInputsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({recipeUuid = false, productUuid = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (recipeUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.recipeUuid,
+                    referencedTable:
+                        $$RecipeInputsTableReferences._recipeUuidTable(db),
+                    referencedColumn:
+                        $$RecipeInputsTableReferences._recipeUuidTable(db).uuid,
+                  ) as T;
+                }
+                if (productUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.productUuid,
+                    referencedTable:
+                        $$RecipeInputsTableReferences._productUuidTable(db),
+                    referencedColumn: $$RecipeInputsTableReferences
+                        ._productUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$RecipeInputsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $RecipeInputsTable,
+    RecipeInput,
+    $$RecipeInputsTableFilterComposer,
+    $$RecipeInputsTableOrderingComposer,
+    $$RecipeInputsTableAnnotationComposer,
+    $$RecipeInputsTableCreateCompanionBuilder,
+    $$RecipeInputsTableUpdateCompanionBuilder,
+    (RecipeInput, $$RecipeInputsTableReferences),
+    RecipeInput,
+    PrefetchHooks Function({bool recipeUuid, bool productUuid})>;
+typedef $$RecipeOutputsTableCreateCompanionBuilder = RecipeOutputsCompanion
+    Function({
+  required String uuid,
+  required String recipeUuid,
+  required String productUuid,
+  required String productNameSnapshot,
+  required double quantity,
+  Value<double> costWeight,
+  Value<String> unit,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$RecipeOutputsTableUpdateCompanionBuilder = RecipeOutputsCompanion
+    Function({
+  Value<String> uuid,
+  Value<String> recipeUuid,
+  Value<String> productUuid,
+  Value<String> productNameSnapshot,
+  Value<double> quantity,
+  Value<double> costWeight,
+  Value<String> unit,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$RecipeOutputsTableReferences
+    extends BaseReferences<_$AppDatabase, $RecipeOutputsTable, RecipeOutput> {
+  $$RecipeOutputsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $RecipesTable _recipeUuidTable(_$AppDatabase db) =>
+      db.recipes.createAlias(
+          $_aliasNameGenerator(db.recipeOutputs.recipeUuid, db.recipes.uuid));
+
+  $$RecipesTableProcessedTableManager get recipeUuid {
+    final $_column = $_itemColumn<String>('recipe_uuid')!;
+
+    final manager = $$RecipesTableTableManager($_db, $_db.recipes)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_recipeUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ProductsTable _productUuidTable(_$AppDatabase db) =>
+      db.products.createAlias(
+          $_aliasNameGenerator(db.recipeOutputs.productUuid, db.products.uuid));
+
+  $$ProductsTableProcessedTableManager get productUuid {
+    final $_column = $_itemColumn<String>('product_uuid')!;
+
+    final manager = $$ProductsTableTableManager($_db, $_db.products)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$RecipeOutputsTableFilterComposer
+    extends Composer<_$AppDatabase, $RecipeOutputsTable> {
+  $$RecipeOutputsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get productNameSnapshot => $composableBuilder(
+      column: $table.productNameSnapshot,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get costWeight => $composableBuilder(
+      column: $table.costWeight, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$RecipesTableFilterComposer get recipeUuid {
+    final $$RecipesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.recipeUuid,
+        referencedTable: $db.recipes,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipesTableFilterComposer(
+              $db: $db,
+              $table: $db.recipes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableFilterComposer get productUuid {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableFilterComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$RecipeOutputsTableOrderingComposer
+    extends Composer<_$AppDatabase, $RecipeOutputsTable> {
+  $$RecipeOutputsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get productNameSnapshot => $composableBuilder(
+      column: $table.productNameSnapshot,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get costWeight => $composableBuilder(
+      column: $table.costWeight, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$RecipesTableOrderingComposer get recipeUuid {
+    final $$RecipesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.recipeUuid,
+        referencedTable: $db.recipes,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipesTableOrderingComposer(
+              $db: $db,
+              $table: $db.recipes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableOrderingComposer get productUuid {
+    final $$ProductsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableOrderingComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$RecipeOutputsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RecipeOutputsTable> {
+  $$RecipeOutputsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get productNameSnapshot => $composableBuilder(
+      column: $table.productNameSnapshot, builder: (column) => column);
+
+  GeneratedColumn<double> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<double> get costWeight => $composableBuilder(
+      column: $table.costWeight, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$RecipesTableAnnotationComposer get recipeUuid {
+    final $$RecipesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.recipeUuid,
+        referencedTable: $db.recipes,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.recipes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableAnnotationComposer get productUuid {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$RecipeOutputsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $RecipeOutputsTable,
+    RecipeOutput,
+    $$RecipeOutputsTableFilterComposer,
+    $$RecipeOutputsTableOrderingComposer,
+    $$RecipeOutputsTableAnnotationComposer,
+    $$RecipeOutputsTableCreateCompanionBuilder,
+    $$RecipeOutputsTableUpdateCompanionBuilder,
+    (RecipeOutput, $$RecipeOutputsTableReferences),
+    RecipeOutput,
+    PrefetchHooks Function({bool recipeUuid, bool productUuid})> {
+  $$RecipeOutputsTableTableManager(_$AppDatabase db, $RecipeOutputsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecipeOutputsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecipeOutputsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RecipeOutputsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> recipeUuid = const Value.absent(),
+            Value<String> productUuid = const Value.absent(),
+            Value<String> productNameSnapshot = const Value.absent(),
+            Value<double> quantity = const Value.absent(),
+            Value<double> costWeight = const Value.absent(),
+            Value<String> unit = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              RecipeOutputsCompanion(
+            uuid: uuid,
+            recipeUuid: recipeUuid,
+            productUuid: productUuid,
+            productNameSnapshot: productNameSnapshot,
+            quantity: quantity,
+            costWeight: costWeight,
+            unit: unit,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String recipeUuid,
+            required String productUuid,
+            required String productNameSnapshot,
+            required double quantity,
+            Value<double> costWeight = const Value.absent(),
+            Value<String> unit = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              RecipeOutputsCompanion.insert(
+            uuid: uuid,
+            recipeUuid: recipeUuid,
+            productUuid: productUuid,
+            productNameSnapshot: productNameSnapshot,
+            quantity: quantity,
+            costWeight: costWeight,
+            unit: unit,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$RecipeOutputsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({recipeUuid = false, productUuid = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (recipeUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.recipeUuid,
+                    referencedTable:
+                        $$RecipeOutputsTableReferences._recipeUuidTable(db),
+                    referencedColumn: $$RecipeOutputsTableReferences
+                        ._recipeUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (productUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.productUuid,
+                    referencedTable:
+                        $$RecipeOutputsTableReferences._productUuidTable(db),
+                    referencedColumn: $$RecipeOutputsTableReferences
+                        ._productUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$RecipeOutputsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $RecipeOutputsTable,
+    RecipeOutput,
+    $$RecipeOutputsTableFilterComposer,
+    $$RecipeOutputsTableOrderingComposer,
+    $$RecipeOutputsTableAnnotationComposer,
+    $$RecipeOutputsTableCreateCompanionBuilder,
+    $$RecipeOutputsTableUpdateCompanionBuilder,
+    (RecipeOutput, $$RecipeOutputsTableReferences),
+    RecipeOutput,
+    PrefetchHooks Function({bool recipeUuid, bool productUuid})>;
+typedef $$RecipeChargesTableCreateCompanionBuilder = RecipeChargesCompanion
+    Function({
+  required String uuid,
+  required String recipeUuid,
+  required String description,
+  Value<double> amount,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$RecipeChargesTableUpdateCompanionBuilder = RecipeChargesCompanion
+    Function({
+  Value<String> uuid,
+  Value<String> recipeUuid,
+  Value<String> description,
+  Value<double> amount,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$RecipeChargesTableReferences
+    extends BaseReferences<_$AppDatabase, $RecipeChargesTable, RecipeCharge> {
+  $$RecipeChargesTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $RecipesTable _recipeUuidTable(_$AppDatabase db) =>
+      db.recipes.createAlias(
+          $_aliasNameGenerator(db.recipeCharges.recipeUuid, db.recipes.uuid));
+
+  $$RecipesTableProcessedTableManager get recipeUuid {
+    final $_column = $_itemColumn<String>('recipe_uuid')!;
+
+    final manager = $$RecipesTableTableManager($_db, $_db.recipes)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_recipeUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$RecipeChargesTableFilterComposer
+    extends Composer<_$AppDatabase, $RecipeChargesTable> {
+  $$RecipeChargesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$RecipesTableFilterComposer get recipeUuid {
+    final $$RecipesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.recipeUuid,
+        referencedTable: $db.recipes,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipesTableFilterComposer(
+              $db: $db,
+              $table: $db.recipes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$RecipeChargesTableOrderingComposer
+    extends Composer<_$AppDatabase, $RecipeChargesTable> {
+  $$RecipeChargesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$RecipesTableOrderingComposer get recipeUuid {
+    final $$RecipesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.recipeUuid,
+        referencedTable: $db.recipes,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipesTableOrderingComposer(
+              $db: $db,
+              $table: $db.recipes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$RecipeChargesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $RecipeChargesTable> {
+  $$RecipeChargesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$RecipesTableAnnotationComposer get recipeUuid {
+    final $$RecipesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.recipeUuid,
+        referencedTable: $db.recipes,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.recipes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$RecipeChargesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $RecipeChargesTable,
+    RecipeCharge,
+    $$RecipeChargesTableFilterComposer,
+    $$RecipeChargesTableOrderingComposer,
+    $$RecipeChargesTableAnnotationComposer,
+    $$RecipeChargesTableCreateCompanionBuilder,
+    $$RecipeChargesTableUpdateCompanionBuilder,
+    (RecipeCharge, $$RecipeChargesTableReferences),
+    RecipeCharge,
+    PrefetchHooks Function({bool recipeUuid})> {
+  $$RecipeChargesTableTableManager(_$AppDatabase db, $RecipeChargesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecipeChargesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecipeChargesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RecipeChargesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> recipeUuid = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<double> amount = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              RecipeChargesCompanion(
+            uuid: uuid,
+            recipeUuid: recipeUuid,
+            description: description,
+            amount: amount,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String recipeUuid,
+            required String description,
+            Value<double> amount = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              RecipeChargesCompanion.insert(
+            uuid: uuid,
+            recipeUuid: recipeUuid,
+            description: description,
+            amount: amount,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$RecipeChargesTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({recipeUuid = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (recipeUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.recipeUuid,
+                    referencedTable:
+                        $$RecipeChargesTableReferences._recipeUuidTable(db),
+                    referencedColumn: $$RecipeChargesTableReferences
+                        ._recipeUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$RecipeChargesTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $RecipeChargesTable,
+    RecipeCharge,
+    $$RecipeChargesTableFilterComposer,
+    $$RecipeChargesTableOrderingComposer,
+    $$RecipeChargesTableAnnotationComposer,
+    $$RecipeChargesTableCreateCompanionBuilder,
+    $$RecipeChargesTableUpdateCompanionBuilder,
+    (RecipeCharge, $$RecipeChargesTableReferences),
+    RecipeCharge,
+    PrefetchHooks Function({bool recipeUuid})>;
+typedef $$ProductionOrdersTableCreateCompanionBuilder
+    = ProductionOrdersCompanion Function({
+  required String uuid,
+  required String productionNumber,
+  required DateTime productionDate,
+  Value<String> status,
+  Value<String?> notes,
+  Value<DateTime?> completedAt,
+  Value<String?> recipeUuid,
+  Value<String?> recipeNameSnapshot,
+  Value<double> scaleFactor,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$ProductionOrdersTableUpdateCompanionBuilder
+    = ProductionOrdersCompanion Function({
+  Value<String> uuid,
+  Value<String> productionNumber,
+  Value<DateTime> productionDate,
+  Value<String> status,
+  Value<String?> notes,
+  Value<DateTime?> completedAt,
+  Value<String?> recipeUuid,
+  Value<String?> recipeNameSnapshot,
+  Value<double> scaleFactor,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$ProductionOrdersTableReferences extends BaseReferences<
+    _$AppDatabase, $ProductionOrdersTable, ProductionOrder> {
+  $$ProductionOrdersTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $RecipesTable _recipeUuidTable(_$AppDatabase db) =>
+      db.recipes.createAlias($_aliasNameGenerator(
+          db.productionOrders.recipeUuid, db.recipes.uuid));
+
+  $$RecipesTableProcessedTableManager? get recipeUuid {
+    final $_column = $_itemColumn<String>('recipe_uuid');
+    if ($_column == null) return null;
+    final manager = $$RecipesTableTableManager($_db, $_db.recipes)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_recipeUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$ProductionOrderInputsTable,
+      List<ProductionOrderInput>> _productionOrderInputsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.productionOrderInputs,
+          aliasName: $_aliasNameGenerator(db.productionOrders.uuid,
+              db.productionOrderInputs.productionOrderUuid));
+
+  $$ProductionOrderInputsTableProcessedTableManager
+      get productionOrderInputsRefs {
+    final manager = $$ProductionOrderInputsTableTableManager(
+            $_db, $_db.productionOrderInputs)
+        .filter((f) => f.productionOrderUuid.uuid
+            .sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_productionOrderInputsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$ProductionOrderOutputsTable,
+      List<ProductionOrderOutput>> _productionOrderOutputsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.productionOrderOutputs,
+          aliasName: $_aliasNameGenerator(db.productionOrders.uuid,
+              db.productionOrderOutputs.productionOrderUuid));
+
+  $$ProductionOrderOutputsTableProcessedTableManager
+      get productionOrderOutputsRefs {
+    final manager = $$ProductionOrderOutputsTableTableManager(
+            $_db, $_db.productionOrderOutputs)
+        .filter((f) => f.productionOrderUuid.uuid
+            .sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_productionOrderOutputsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$ProductionOrderChargesTable,
+      List<ProductionOrderCharge>> _productionOrderChargesRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.productionOrderCharges,
+          aliasName: $_aliasNameGenerator(db.productionOrders.uuid,
+              db.productionOrderCharges.productionOrderUuid));
+
+  $$ProductionOrderChargesTableProcessedTableManager
+      get productionOrderChargesRefs {
+    final manager = $$ProductionOrderChargesTableTableManager(
+            $_db, $_db.productionOrderCharges)
+        .filter((f) => f.productionOrderUuid.uuid
+            .sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_productionOrderChargesRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$ProductionConsumptionsTable,
+      List<ProductionConsumption>> _productionConsumptionsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.productionConsumptions,
+          aliasName: $_aliasNameGenerator(db.productionOrders.uuid,
+              db.productionConsumptions.productionOrderUuid));
+
+  $$ProductionConsumptionsTableProcessedTableManager
+      get productionConsumptionsRefs {
+    final manager = $$ProductionConsumptionsTableTableManager(
+            $_db, $_db.productionConsumptions)
+        .filter((f) => f.productionOrderUuid.uuid
+            .sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_productionConsumptionsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$ProductionOrdersTableFilterComposer
+    extends Composer<_$AppDatabase, $ProductionOrdersTable> {
+  $$ProductionOrdersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get productionNumber => $composableBuilder(
+      column: $table.productionNumber,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get productionDate => $composableBuilder(
+      column: $table.productionDate,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get notes => $composableBuilder(
+      column: $table.notes, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get recipeNameSnapshot => $composableBuilder(
+      column: $table.recipeNameSnapshot,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get scaleFactor => $composableBuilder(
+      column: $table.scaleFactor, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$RecipesTableFilterComposer get recipeUuid {
+    final $$RecipesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.recipeUuid,
+        referencedTable: $db.recipes,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipesTableFilterComposer(
+              $db: $db,
+              $table: $db.recipes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> productionOrderInputsRefs(
+      Expression<bool> Function($$ProductionOrderInputsTableFilterComposer f)
+          f) {
+    final $$ProductionOrderInputsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionOrderInputs,
+            getReferencedColumn: (t) => t.productionOrderUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionOrderInputsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.productionOrderInputs,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> productionOrderOutputsRefs(
+      Expression<bool> Function($$ProductionOrderOutputsTableFilterComposer f)
+          f) {
+    final $$ProductionOrderOutputsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionOrderOutputs,
+            getReferencedColumn: (t) => t.productionOrderUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionOrderOutputsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.productionOrderOutputs,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> productionOrderChargesRefs(
+      Expression<bool> Function($$ProductionOrderChargesTableFilterComposer f)
+          f) {
+    final $$ProductionOrderChargesTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionOrderCharges,
+            getReferencedColumn: (t) => t.productionOrderUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionOrderChargesTableFilterComposer(
+                  $db: $db,
+                  $table: $db.productionOrderCharges,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> productionConsumptionsRefs(
+      Expression<bool> Function($$ProductionConsumptionsTableFilterComposer f)
+          f) {
+    final $$ProductionConsumptionsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionConsumptions,
+            getReferencedColumn: (t) => t.productionOrderUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionConsumptionsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.productionConsumptions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$ProductionOrdersTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProductionOrdersTable> {
+  $$ProductionOrdersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get productionNumber => $composableBuilder(
+      column: $table.productionNumber,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get productionDate => $composableBuilder(
+      column: $table.productionDate,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+      column: $table.notes, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get recipeNameSnapshot => $composableBuilder(
+      column: $table.recipeNameSnapshot,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get scaleFactor => $composableBuilder(
+      column: $table.scaleFactor, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$RecipesTableOrderingComposer get recipeUuid {
+    final $$RecipesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.recipeUuid,
+        referencedTable: $db.recipes,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipesTableOrderingComposer(
+              $db: $db,
+              $table: $db.recipes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ProductionOrdersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProductionOrdersTable> {
+  $$ProductionOrdersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get productionNumber => $composableBuilder(
+      column: $table.productionNumber, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get productionDate => $composableBuilder(
+      column: $table.productionDate, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get recipeNameSnapshot => $composableBuilder(
+      column: $table.recipeNameSnapshot, builder: (column) => column);
+
+  GeneratedColumn<double> get scaleFactor => $composableBuilder(
+      column: $table.scaleFactor, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$RecipesTableAnnotationComposer get recipeUuid {
+    final $$RecipesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.recipeUuid,
+        referencedTable: $db.recipes,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$RecipesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.recipes,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<T> productionOrderInputsRefs<T extends Object>(
+      Expression<T> Function($$ProductionOrderInputsTableAnnotationComposer a)
+          f) {
+    final $$ProductionOrderInputsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionOrderInputs,
+            getReferencedColumn: (t) => t.productionOrderUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionOrderInputsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.productionOrderInputs,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> productionOrderOutputsRefs<T extends Object>(
+      Expression<T> Function($$ProductionOrderOutputsTableAnnotationComposer a)
+          f) {
+    final $$ProductionOrderOutputsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionOrderOutputs,
+            getReferencedColumn: (t) => t.productionOrderUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionOrderOutputsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.productionOrderOutputs,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> productionOrderChargesRefs<T extends Object>(
+      Expression<T> Function($$ProductionOrderChargesTableAnnotationComposer a)
+          f) {
+    final $$ProductionOrderChargesTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionOrderCharges,
+            getReferencedColumn: (t) => t.productionOrderUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionOrderChargesTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.productionOrderCharges,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> productionConsumptionsRefs<T extends Object>(
+      Expression<T> Function($$ProductionConsumptionsTableAnnotationComposer a)
+          f) {
+    final $$ProductionConsumptionsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionConsumptions,
+            getReferencedColumn: (t) => t.productionOrderUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionConsumptionsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.productionConsumptions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$ProductionOrdersTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ProductionOrdersTable,
+    ProductionOrder,
+    $$ProductionOrdersTableFilterComposer,
+    $$ProductionOrdersTableOrderingComposer,
+    $$ProductionOrdersTableAnnotationComposer,
+    $$ProductionOrdersTableCreateCompanionBuilder,
+    $$ProductionOrdersTableUpdateCompanionBuilder,
+    (ProductionOrder, $$ProductionOrdersTableReferences),
+    ProductionOrder,
+    PrefetchHooks Function(
+        {bool recipeUuid,
+        bool productionOrderInputsRefs,
+        bool productionOrderOutputsRefs,
+        bool productionOrderChargesRefs,
+        bool productionConsumptionsRefs})> {
+  $$ProductionOrdersTableTableManager(
+      _$AppDatabase db, $ProductionOrdersTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProductionOrdersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProductionOrdersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProductionOrdersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> productionNumber = const Value.absent(),
+            Value<DateTime> productionDate = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<String?> notes = const Value.absent(),
+            Value<DateTime?> completedAt = const Value.absent(),
+            Value<String?> recipeUuid = const Value.absent(),
+            Value<String?> recipeNameSnapshot = const Value.absent(),
+            Value<double> scaleFactor = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ProductionOrdersCompanion(
+            uuid: uuid,
+            productionNumber: productionNumber,
+            productionDate: productionDate,
+            status: status,
+            notes: notes,
+            completedAt: completedAt,
+            recipeUuid: recipeUuid,
+            recipeNameSnapshot: recipeNameSnapshot,
+            scaleFactor: scaleFactor,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String productionNumber,
+            required DateTime productionDate,
+            Value<String> status = const Value.absent(),
+            Value<String?> notes = const Value.absent(),
+            Value<DateTime?> completedAt = const Value.absent(),
+            Value<String?> recipeUuid = const Value.absent(),
+            Value<String?> recipeNameSnapshot = const Value.absent(),
+            Value<double> scaleFactor = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ProductionOrdersCompanion.insert(
+            uuid: uuid,
+            productionNumber: productionNumber,
+            productionDate: productionDate,
+            status: status,
+            notes: notes,
+            completedAt: completedAt,
+            recipeUuid: recipeUuid,
+            recipeNameSnapshot: recipeNameSnapshot,
+            scaleFactor: scaleFactor,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$ProductionOrdersTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {recipeUuid = false,
+              productionOrderInputsRefs = false,
+              productionOrderOutputsRefs = false,
+              productionOrderChargesRefs = false,
+              productionConsumptionsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (productionOrderInputsRefs) db.productionOrderInputs,
+                if (productionOrderOutputsRefs) db.productionOrderOutputs,
+                if (productionOrderChargesRefs) db.productionOrderCharges,
+                if (productionConsumptionsRefs) db.productionConsumptions
+              ],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (recipeUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.recipeUuid,
+                    referencedTable:
+                        $$ProductionOrdersTableReferences._recipeUuidTable(db),
+                    referencedColumn: $$ProductionOrdersTableReferences
+                        ._recipeUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (productionOrderInputsRefs)
+                    await $_getPrefetchedData<ProductionOrder,
+                            $ProductionOrdersTable, ProductionOrderInput>(
+                        currentTable: table,
+                        referencedTable: $$ProductionOrdersTableReferences
+                            ._productionOrderInputsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductionOrdersTableReferences(db, table, p0)
+                                .productionOrderInputsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems.where(
+                                (e) => e.productionOrderUuid == item.uuid),
+                        typedResults: items),
+                  if (productionOrderOutputsRefs)
+                    await $_getPrefetchedData<ProductionOrder,
+                            $ProductionOrdersTable, ProductionOrderOutput>(
+                        currentTable: table,
+                        referencedTable: $$ProductionOrdersTableReferences
+                            ._productionOrderOutputsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductionOrdersTableReferences(db, table, p0)
+                                .productionOrderOutputsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems.where(
+                                (e) => e.productionOrderUuid == item.uuid),
+                        typedResults: items),
+                  if (productionOrderChargesRefs)
+                    await $_getPrefetchedData<ProductionOrder,
+                            $ProductionOrdersTable, ProductionOrderCharge>(
+                        currentTable: table,
+                        referencedTable: $$ProductionOrdersTableReferences
+                            ._productionOrderChargesRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductionOrdersTableReferences(db, table, p0)
+                                .productionOrderChargesRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems.where(
+                                (e) => e.productionOrderUuid == item.uuid),
+                        typedResults: items),
+                  if (productionConsumptionsRefs)
+                    await $_getPrefetchedData<ProductionOrder,
+                            $ProductionOrdersTable, ProductionConsumption>(
+                        currentTable: table,
+                        referencedTable: $$ProductionOrdersTableReferences
+                            ._productionConsumptionsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductionOrdersTableReferences(db, table, p0)
+                                .productionConsumptionsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems.where(
+                                (e) => e.productionOrderUuid == item.uuid),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$ProductionOrdersTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $ProductionOrdersTable,
+    ProductionOrder,
+    $$ProductionOrdersTableFilterComposer,
+    $$ProductionOrdersTableOrderingComposer,
+    $$ProductionOrdersTableAnnotationComposer,
+    $$ProductionOrdersTableCreateCompanionBuilder,
+    $$ProductionOrdersTableUpdateCompanionBuilder,
+    (ProductionOrder, $$ProductionOrdersTableReferences),
+    ProductionOrder,
+    PrefetchHooks Function(
+        {bool recipeUuid,
+        bool productionOrderInputsRefs,
+        bool productionOrderOutputsRefs,
+        bool productionOrderChargesRefs,
+        bool productionConsumptionsRefs})>;
+typedef $$ProductionOrderInputsTableCreateCompanionBuilder
+    = ProductionOrderInputsCompanion Function({
+  required String uuid,
+  required String productionOrderUuid,
+  required String productUuid,
+  required String productNameSnapshot,
+  required double plannedQuantity,
+  Value<double> actualQuantity,
+  Value<String> consumeMode,
+  Value<String?> batchNumber,
+  Value<String> unit,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$ProductionOrderInputsTableUpdateCompanionBuilder
+    = ProductionOrderInputsCompanion Function({
+  Value<String> uuid,
+  Value<String> productionOrderUuid,
+  Value<String> productUuid,
+  Value<String> productNameSnapshot,
+  Value<double> plannedQuantity,
+  Value<double> actualQuantity,
+  Value<String> consumeMode,
+  Value<String?> batchNumber,
+  Value<String> unit,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$ProductionOrderInputsTableReferences extends BaseReferences<
+    _$AppDatabase, $ProductionOrderInputsTable, ProductionOrderInput> {
+  $$ProductionOrderInputsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProductionOrdersTable _productionOrderUuidTable(_$AppDatabase db) =>
+      db.productionOrders.createAlias($_aliasNameGenerator(
+          db.productionOrderInputs.productionOrderUuid,
+          db.productionOrders.uuid));
+
+  $$ProductionOrdersTableProcessedTableManager get productionOrderUuid {
+    final $_column = $_itemColumn<String>('production_order_uuid')!;
+
+    final manager =
+        $$ProductionOrdersTableTableManager($_db, $_db.productionOrders)
+            .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productionOrderUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ProductsTable _productUuidTable(_$AppDatabase db) =>
+      db.products.createAlias($_aliasNameGenerator(
+          db.productionOrderInputs.productUuid, db.products.uuid));
+
+  $$ProductsTableProcessedTableManager get productUuid {
+    final $_column = $_itemColumn<String>('product_uuid')!;
+
+    final manager = $$ProductsTableTableManager($_db, $_db.products)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$ProductionConsumptionsTable,
+      List<ProductionConsumption>> _productionConsumptionsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.productionConsumptions,
+          aliasName: $_aliasNameGenerator(db.productionOrderInputs.uuid,
+              db.productionConsumptions.inputLineUuid));
+
+  $$ProductionConsumptionsTableProcessedTableManager
+      get productionConsumptionsRefs {
+    final manager = $$ProductionConsumptionsTableTableManager(
+            $_db, $_db.productionConsumptions)
+        .filter((f) =>
+            f.inputLineUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_productionConsumptionsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$ProductionOrderInputsTableFilterComposer
+    extends Composer<_$AppDatabase, $ProductionOrderInputsTable> {
+  $$ProductionOrderInputsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get productNameSnapshot => $composableBuilder(
+      column: $table.productNameSnapshot,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get plannedQuantity => $composableBuilder(
+      column: $table.plannedQuantity,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get actualQuantity => $composableBuilder(
+      column: $table.actualQuantity,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get consumeMode => $composableBuilder(
+      column: $table.consumeMode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$ProductionOrdersTableFilterComposer get productionOrderUuid {
+    final $$ProductionOrdersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productionOrderUuid,
+        referencedTable: $db.productionOrders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductionOrdersTableFilterComposer(
+              $db: $db,
+              $table: $db.productionOrders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableFilterComposer get productUuid {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableFilterComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> productionConsumptionsRefs(
+      Expression<bool> Function($$ProductionConsumptionsTableFilterComposer f)
+          f) {
+    final $$ProductionConsumptionsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionConsumptions,
+            getReferencedColumn: (t) => t.inputLineUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionConsumptionsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.productionConsumptions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$ProductionOrderInputsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProductionOrderInputsTable> {
+  $$ProductionOrderInputsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get productNameSnapshot => $composableBuilder(
+      column: $table.productNameSnapshot,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get plannedQuantity => $composableBuilder(
+      column: $table.plannedQuantity,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get actualQuantity => $composableBuilder(
+      column: $table.actualQuantity,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get consumeMode => $composableBuilder(
+      column: $table.consumeMode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$ProductionOrdersTableOrderingComposer get productionOrderUuid {
+    final $$ProductionOrdersTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productionOrderUuid,
+        referencedTable: $db.productionOrders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductionOrdersTableOrderingComposer(
+              $db: $db,
+              $table: $db.productionOrders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableOrderingComposer get productUuid {
+    final $$ProductsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableOrderingComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ProductionOrderInputsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProductionOrderInputsTable> {
+  $$ProductionOrderInputsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get productNameSnapshot => $composableBuilder(
+      column: $table.productNameSnapshot, builder: (column) => column);
+
+  GeneratedColumn<double> get plannedQuantity => $composableBuilder(
+      column: $table.plannedQuantity, builder: (column) => column);
+
+  GeneratedColumn<double> get actualQuantity => $composableBuilder(
+      column: $table.actualQuantity, builder: (column) => column);
+
+  GeneratedColumn<String> get consumeMode => $composableBuilder(
+      column: $table.consumeMode, builder: (column) => column);
+
+  GeneratedColumn<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$ProductionOrdersTableAnnotationComposer get productionOrderUuid {
+    final $$ProductionOrdersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productionOrderUuid,
+        referencedTable: $db.productionOrders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductionOrdersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.productionOrders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableAnnotationComposer get productUuid {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<T> productionConsumptionsRefs<T extends Object>(
+      Expression<T> Function($$ProductionConsumptionsTableAnnotationComposer a)
+          f) {
+    final $$ProductionConsumptionsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.productionConsumptions,
+            getReferencedColumn: (t) => t.inputLineUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionConsumptionsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.productionConsumptions,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$ProductionOrderInputsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ProductionOrderInputsTable,
+    ProductionOrderInput,
+    $$ProductionOrderInputsTableFilterComposer,
+    $$ProductionOrderInputsTableOrderingComposer,
+    $$ProductionOrderInputsTableAnnotationComposer,
+    $$ProductionOrderInputsTableCreateCompanionBuilder,
+    $$ProductionOrderInputsTableUpdateCompanionBuilder,
+    (ProductionOrderInput, $$ProductionOrderInputsTableReferences),
+    ProductionOrderInput,
+    PrefetchHooks Function(
+        {bool productionOrderUuid,
+        bool productUuid,
+        bool productionConsumptionsRefs})> {
+  $$ProductionOrderInputsTableTableManager(
+      _$AppDatabase db, $ProductionOrderInputsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProductionOrderInputsTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProductionOrderInputsTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProductionOrderInputsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> productionOrderUuid = const Value.absent(),
+            Value<String> productUuid = const Value.absent(),
+            Value<String> productNameSnapshot = const Value.absent(),
+            Value<double> plannedQuantity = const Value.absent(),
+            Value<double> actualQuantity = const Value.absent(),
+            Value<String> consumeMode = const Value.absent(),
+            Value<String?> batchNumber = const Value.absent(),
+            Value<String> unit = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ProductionOrderInputsCompanion(
+            uuid: uuid,
+            productionOrderUuid: productionOrderUuid,
+            productUuid: productUuid,
+            productNameSnapshot: productNameSnapshot,
+            plannedQuantity: plannedQuantity,
+            actualQuantity: actualQuantity,
+            consumeMode: consumeMode,
+            batchNumber: batchNumber,
+            unit: unit,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String productionOrderUuid,
+            required String productUuid,
+            required String productNameSnapshot,
+            required double plannedQuantity,
+            Value<double> actualQuantity = const Value.absent(),
+            Value<String> consumeMode = const Value.absent(),
+            Value<String?> batchNumber = const Value.absent(),
+            Value<String> unit = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ProductionOrderInputsCompanion.insert(
+            uuid: uuid,
+            productionOrderUuid: productionOrderUuid,
+            productUuid: productUuid,
+            productNameSnapshot: productNameSnapshot,
+            plannedQuantity: plannedQuantity,
+            actualQuantity: actualQuantity,
+            consumeMode: consumeMode,
+            batchNumber: batchNumber,
+            unit: unit,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$ProductionOrderInputsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {productionOrderUuid = false,
+              productUuid = false,
+              productionConsumptionsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (productionConsumptionsRefs) db.productionConsumptions
+              ],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (productionOrderUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.productionOrderUuid,
+                    referencedTable: $$ProductionOrderInputsTableReferences
+                        ._productionOrderUuidTable(db),
+                    referencedColumn: $$ProductionOrderInputsTableReferences
+                        ._productionOrderUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (productUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.productUuid,
+                    referencedTable: $$ProductionOrderInputsTableReferences
+                        ._productUuidTable(db),
+                    referencedColumn: $$ProductionOrderInputsTableReferences
+                        ._productUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (productionConsumptionsRefs)
+                    await $_getPrefetchedData<ProductionOrderInput,
+                            $ProductionOrderInputsTable, ProductionConsumption>(
+                        currentTable: table,
+                        referencedTable: $$ProductionOrderInputsTableReferences
+                            ._productionConsumptionsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductionOrderInputsTableReferences(
+                                    db, table, p0)
+                                .productionConsumptionsRefs,
+                        referencedItemsForCurrentItem:
+                            (item, referencedItems) => referencedItems
+                                .where((e) => e.inputLineUuid == item.uuid),
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$ProductionOrderInputsTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $ProductionOrderInputsTable,
+        ProductionOrderInput,
+        $$ProductionOrderInputsTableFilterComposer,
+        $$ProductionOrderInputsTableOrderingComposer,
+        $$ProductionOrderInputsTableAnnotationComposer,
+        $$ProductionOrderInputsTableCreateCompanionBuilder,
+        $$ProductionOrderInputsTableUpdateCompanionBuilder,
+        (ProductionOrderInput, $$ProductionOrderInputsTableReferences),
+        ProductionOrderInput,
+        PrefetchHooks Function(
+            {bool productionOrderUuid,
+            bool productUuid,
+            bool productionConsumptionsRefs})>;
+typedef $$ProductionOrderOutputsTableCreateCompanionBuilder
+    = ProductionOrderOutputsCompanion Function({
+  required String uuid,
+  required String productionOrderUuid,
+  required String productUuid,
+  required String productNameSnapshot,
+  required double plannedQuantity,
+  Value<double> actualQuantity,
+  Value<double> costWeight,
+  Value<double> unitCostSnapshot,
+  Value<String?> outputLotUuid,
+  Value<String> batchNumber,
+  Value<String> unit,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$ProductionOrderOutputsTableUpdateCompanionBuilder
+    = ProductionOrderOutputsCompanion Function({
+  Value<String> uuid,
+  Value<String> productionOrderUuid,
+  Value<String> productUuid,
+  Value<String> productNameSnapshot,
+  Value<double> plannedQuantity,
+  Value<double> actualQuantity,
+  Value<double> costWeight,
+  Value<double> unitCostSnapshot,
+  Value<String?> outputLotUuid,
+  Value<String> batchNumber,
+  Value<String> unit,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$ProductionOrderOutputsTableReferences extends BaseReferences<
+    _$AppDatabase, $ProductionOrderOutputsTable, ProductionOrderOutput> {
+  $$ProductionOrderOutputsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProductionOrdersTable _productionOrderUuidTable(_$AppDatabase db) =>
+      db.productionOrders.createAlias($_aliasNameGenerator(
+          db.productionOrderOutputs.productionOrderUuid,
+          db.productionOrders.uuid));
+
+  $$ProductionOrdersTableProcessedTableManager get productionOrderUuid {
+    final $_column = $_itemColumn<String>('production_order_uuid')!;
+
+    final manager =
+        $$ProductionOrdersTableTableManager($_db, $_db.productionOrders)
+            .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productionOrderUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ProductsTable _productUuidTable(_$AppDatabase db) =>
+      db.products.createAlias($_aliasNameGenerator(
+          db.productionOrderOutputs.productUuid, db.products.uuid));
+
+  $$ProductsTableProcessedTableManager get productUuid {
+    final $_column = $_itemColumn<String>('product_uuid')!;
+
+    final manager = $$ProductsTableTableManager($_db, $_db.products)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$ProductionOrderOutputsTableFilterComposer
+    extends Composer<_$AppDatabase, $ProductionOrderOutputsTable> {
+  $$ProductionOrderOutputsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get productNameSnapshot => $composableBuilder(
+      column: $table.productNameSnapshot,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get plannedQuantity => $composableBuilder(
+      column: $table.plannedQuantity,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get actualQuantity => $composableBuilder(
+      column: $table.actualQuantity,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get costWeight => $composableBuilder(
+      column: $table.costWeight, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get unitCostSnapshot => $composableBuilder(
+      column: $table.unitCostSnapshot,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get outputLotUuid => $composableBuilder(
+      column: $table.outputLotUuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$ProductionOrdersTableFilterComposer get productionOrderUuid {
+    final $$ProductionOrdersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productionOrderUuid,
+        referencedTable: $db.productionOrders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductionOrdersTableFilterComposer(
+              $db: $db,
+              $table: $db.productionOrders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableFilterComposer get productUuid {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableFilterComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ProductionOrderOutputsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProductionOrderOutputsTable> {
+  $$ProductionOrderOutputsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get productNameSnapshot => $composableBuilder(
+      column: $table.productNameSnapshot,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get plannedQuantity => $composableBuilder(
+      column: $table.plannedQuantity,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get actualQuantity => $composableBuilder(
+      column: $table.actualQuantity,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get costWeight => $composableBuilder(
+      column: $table.costWeight, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get unitCostSnapshot => $composableBuilder(
+      column: $table.unitCostSnapshot,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get outputLotUuid => $composableBuilder(
+      column: $table.outputLotUuid,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$ProductionOrdersTableOrderingComposer get productionOrderUuid {
+    final $$ProductionOrdersTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productionOrderUuid,
+        referencedTable: $db.productionOrders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductionOrdersTableOrderingComposer(
+              $db: $db,
+              $table: $db.productionOrders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableOrderingComposer get productUuid {
+    final $$ProductsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableOrderingComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ProductionOrderOutputsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProductionOrderOutputsTable> {
+  $$ProductionOrderOutputsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get productNameSnapshot => $composableBuilder(
+      column: $table.productNameSnapshot, builder: (column) => column);
+
+  GeneratedColumn<double> get plannedQuantity => $composableBuilder(
+      column: $table.plannedQuantity, builder: (column) => column);
+
+  GeneratedColumn<double> get actualQuantity => $composableBuilder(
+      column: $table.actualQuantity, builder: (column) => column);
+
+  GeneratedColumn<double> get costWeight => $composableBuilder(
+      column: $table.costWeight, builder: (column) => column);
+
+  GeneratedColumn<double> get unitCostSnapshot => $composableBuilder(
+      column: $table.unitCostSnapshot, builder: (column) => column);
+
+  GeneratedColumn<String> get outputLotUuid => $composableBuilder(
+      column: $table.outputLotUuid, builder: (column) => column);
+
+  GeneratedColumn<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$ProductionOrdersTableAnnotationComposer get productionOrderUuid {
+    final $$ProductionOrdersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productionOrderUuid,
+        referencedTable: $db.productionOrders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductionOrdersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.productionOrders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableAnnotationComposer get productUuid {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ProductionOrderOutputsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ProductionOrderOutputsTable,
+    ProductionOrderOutput,
+    $$ProductionOrderOutputsTableFilterComposer,
+    $$ProductionOrderOutputsTableOrderingComposer,
+    $$ProductionOrderOutputsTableAnnotationComposer,
+    $$ProductionOrderOutputsTableCreateCompanionBuilder,
+    $$ProductionOrderOutputsTableUpdateCompanionBuilder,
+    (ProductionOrderOutput, $$ProductionOrderOutputsTableReferences),
+    ProductionOrderOutput,
+    PrefetchHooks Function({bool productionOrderUuid, bool productUuid})> {
+  $$ProductionOrderOutputsTableTableManager(
+      _$AppDatabase db, $ProductionOrderOutputsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProductionOrderOutputsTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProductionOrderOutputsTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProductionOrderOutputsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> productionOrderUuid = const Value.absent(),
+            Value<String> productUuid = const Value.absent(),
+            Value<String> productNameSnapshot = const Value.absent(),
+            Value<double> plannedQuantity = const Value.absent(),
+            Value<double> actualQuantity = const Value.absent(),
+            Value<double> costWeight = const Value.absent(),
+            Value<double> unitCostSnapshot = const Value.absent(),
+            Value<String?> outputLotUuid = const Value.absent(),
+            Value<String> batchNumber = const Value.absent(),
+            Value<String> unit = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ProductionOrderOutputsCompanion(
+            uuid: uuid,
+            productionOrderUuid: productionOrderUuid,
+            productUuid: productUuid,
+            productNameSnapshot: productNameSnapshot,
+            plannedQuantity: plannedQuantity,
+            actualQuantity: actualQuantity,
+            costWeight: costWeight,
+            unitCostSnapshot: unitCostSnapshot,
+            outputLotUuid: outputLotUuid,
+            batchNumber: batchNumber,
+            unit: unit,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String productionOrderUuid,
+            required String productUuid,
+            required String productNameSnapshot,
+            required double plannedQuantity,
+            Value<double> actualQuantity = const Value.absent(),
+            Value<double> costWeight = const Value.absent(),
+            Value<double> unitCostSnapshot = const Value.absent(),
+            Value<String?> outputLotUuid = const Value.absent(),
+            Value<String> batchNumber = const Value.absent(),
+            Value<String> unit = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ProductionOrderOutputsCompanion.insert(
+            uuid: uuid,
+            productionOrderUuid: productionOrderUuid,
+            productUuid: productUuid,
+            productNameSnapshot: productNameSnapshot,
+            plannedQuantity: plannedQuantity,
+            actualQuantity: actualQuantity,
+            costWeight: costWeight,
+            unitCostSnapshot: unitCostSnapshot,
+            outputLotUuid: outputLotUuid,
+            batchNumber: batchNumber,
+            unit: unit,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$ProductionOrderOutputsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {productionOrderUuid = false, productUuid = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (productionOrderUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.productionOrderUuid,
+                    referencedTable: $$ProductionOrderOutputsTableReferences
+                        ._productionOrderUuidTable(db),
+                    referencedColumn: $$ProductionOrderOutputsTableReferences
+                        ._productionOrderUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (productUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.productUuid,
+                    referencedTable: $$ProductionOrderOutputsTableReferences
+                        ._productUuidTable(db),
+                    referencedColumn: $$ProductionOrderOutputsTableReferences
+                        ._productUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$ProductionOrderOutputsTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $ProductionOrderOutputsTable,
+        ProductionOrderOutput,
+        $$ProductionOrderOutputsTableFilterComposer,
+        $$ProductionOrderOutputsTableOrderingComposer,
+        $$ProductionOrderOutputsTableAnnotationComposer,
+        $$ProductionOrderOutputsTableCreateCompanionBuilder,
+        $$ProductionOrderOutputsTableUpdateCompanionBuilder,
+        (ProductionOrderOutput, $$ProductionOrderOutputsTableReferences),
+        ProductionOrderOutput,
+        PrefetchHooks Function({bool productionOrderUuid, bool productUuid})>;
+typedef $$ProductionOrderChargesTableCreateCompanionBuilder
+    = ProductionOrderChargesCompanion Function({
+  required String uuid,
+  required String productionOrderUuid,
+  required String description,
+  Value<double> amount,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$ProductionOrderChargesTableUpdateCompanionBuilder
+    = ProductionOrderChargesCompanion Function({
+  Value<String> uuid,
+  Value<String> productionOrderUuid,
+  Value<String> description,
+  Value<double> amount,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$ProductionOrderChargesTableReferences extends BaseReferences<
+    _$AppDatabase, $ProductionOrderChargesTable, ProductionOrderCharge> {
+  $$ProductionOrderChargesTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProductionOrdersTable _productionOrderUuidTable(_$AppDatabase db) =>
+      db.productionOrders.createAlias($_aliasNameGenerator(
+          db.productionOrderCharges.productionOrderUuid,
+          db.productionOrders.uuid));
+
+  $$ProductionOrdersTableProcessedTableManager get productionOrderUuid {
+    final $_column = $_itemColumn<String>('production_order_uuid')!;
+
+    final manager =
+        $$ProductionOrdersTableTableManager($_db, $_db.productionOrders)
+            .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productionOrderUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$ProductionOrderChargesTableFilterComposer
+    extends Composer<_$AppDatabase, $ProductionOrderChargesTable> {
+  $$ProductionOrderChargesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$ProductionOrdersTableFilterComposer get productionOrderUuid {
+    final $$ProductionOrdersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productionOrderUuid,
+        referencedTable: $db.productionOrders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductionOrdersTableFilterComposer(
+              $db: $db,
+              $table: $db.productionOrders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ProductionOrderChargesTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProductionOrderChargesTable> {
+  $$ProductionOrderChargesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get amount => $composableBuilder(
+      column: $table.amount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$ProductionOrdersTableOrderingComposer get productionOrderUuid {
+    final $$ProductionOrdersTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productionOrderUuid,
+        referencedTable: $db.productionOrders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductionOrdersTableOrderingComposer(
+              $db: $db,
+              $table: $db.productionOrders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ProductionOrderChargesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProductionOrderChargesTable> {
+  $$ProductionOrderChargesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<double> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$ProductionOrdersTableAnnotationComposer get productionOrderUuid {
+    final $$ProductionOrdersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productionOrderUuid,
+        referencedTable: $db.productionOrders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductionOrdersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.productionOrders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ProductionOrderChargesTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ProductionOrderChargesTable,
+    ProductionOrderCharge,
+    $$ProductionOrderChargesTableFilterComposer,
+    $$ProductionOrderChargesTableOrderingComposer,
+    $$ProductionOrderChargesTableAnnotationComposer,
+    $$ProductionOrderChargesTableCreateCompanionBuilder,
+    $$ProductionOrderChargesTableUpdateCompanionBuilder,
+    (ProductionOrderCharge, $$ProductionOrderChargesTableReferences),
+    ProductionOrderCharge,
+    PrefetchHooks Function({bool productionOrderUuid})> {
+  $$ProductionOrderChargesTableTableManager(
+      _$AppDatabase db, $ProductionOrderChargesTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProductionOrderChargesTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProductionOrderChargesTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProductionOrderChargesTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> productionOrderUuid = const Value.absent(),
+            Value<String> description = const Value.absent(),
+            Value<double> amount = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ProductionOrderChargesCompanion(
+            uuid: uuid,
+            productionOrderUuid: productionOrderUuid,
+            description: description,
+            amount: amount,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String productionOrderUuid,
+            required String description,
+            Value<double> amount = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ProductionOrderChargesCompanion.insert(
+            uuid: uuid,
+            productionOrderUuid: productionOrderUuid,
+            description: description,
+            amount: amount,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$ProductionOrderChargesTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({productionOrderUuid = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (productionOrderUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.productionOrderUuid,
+                    referencedTable: $$ProductionOrderChargesTableReferences
+                        ._productionOrderUuidTable(db),
+                    referencedColumn: $$ProductionOrderChargesTableReferences
+                        ._productionOrderUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$ProductionOrderChargesTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $ProductionOrderChargesTable,
+        ProductionOrderCharge,
+        $$ProductionOrderChargesTableFilterComposer,
+        $$ProductionOrderChargesTableOrderingComposer,
+        $$ProductionOrderChargesTableAnnotationComposer,
+        $$ProductionOrderChargesTableCreateCompanionBuilder,
+        $$ProductionOrderChargesTableUpdateCompanionBuilder,
+        (ProductionOrderCharge, $$ProductionOrderChargesTableReferences),
+        ProductionOrderCharge,
+        PrefetchHooks Function({bool productionOrderUuid})>;
+typedef $$ProductionConsumptionsTableCreateCompanionBuilder
+    = ProductionConsumptionsCompanion Function({
+  required String uuid,
+  required String productionOrderUuid,
+  required String inputLineUuid,
+  required String lotUuid,
+  required double quantity,
+  required double effectiveCost,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$ProductionConsumptionsTableUpdateCompanionBuilder
+    = ProductionConsumptionsCompanion Function({
+  Value<String> uuid,
+  Value<String> productionOrderUuid,
+  Value<String> inputLineUuid,
+  Value<String> lotUuid,
+  Value<double> quantity,
+  Value<double> effectiveCost,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$ProductionConsumptionsTableReferences extends BaseReferences<
+    _$AppDatabase, $ProductionConsumptionsTable, ProductionConsumption> {
+  $$ProductionConsumptionsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProductionOrdersTable _productionOrderUuidTable(_$AppDatabase db) =>
+      db.productionOrders.createAlias($_aliasNameGenerator(
+          db.productionConsumptions.productionOrderUuid,
+          db.productionOrders.uuid));
+
+  $$ProductionOrdersTableProcessedTableManager get productionOrderUuid {
+    final $_column = $_itemColumn<String>('production_order_uuid')!;
+
+    final manager =
+        $$ProductionOrdersTableTableManager($_db, $_db.productionOrders)
+            .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productionOrderUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ProductionOrderInputsTable _inputLineUuidTable(_$AppDatabase db) =>
+      db.productionOrderInputs.createAlias($_aliasNameGenerator(
+          db.productionConsumptions.inputLineUuid,
+          db.productionOrderInputs.uuid));
+
+  $$ProductionOrderInputsTableProcessedTableManager get inputLineUuid {
+    final $_column = $_itemColumn<String>('input_line_uuid')!;
+
+    final manager = $$ProductionOrderInputsTableTableManager(
+            $_db, $_db.productionOrderInputs)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_inputLineUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ProductBatchesTable _lotUuidTable(_$AppDatabase db) =>
+      db.productBatches.createAlias($_aliasNameGenerator(
+          db.productionConsumptions.lotUuid, db.productBatches.uuid));
+
+  $$ProductBatchesTableProcessedTableManager get lotUuid {
+    final $_column = $_itemColumn<String>('lot_uuid')!;
+
+    final manager = $$ProductBatchesTableTableManager($_db, $_db.productBatches)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_lotUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$ProductionConsumptionsTableFilterComposer
+    extends Composer<_$AppDatabase, $ProductionConsumptionsTable> {
+  $$ProductionConsumptionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get effectiveCost => $composableBuilder(
+      column: $table.effectiveCost, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$ProductionOrdersTableFilterComposer get productionOrderUuid {
+    final $$ProductionOrdersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productionOrderUuid,
+        referencedTable: $db.productionOrders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductionOrdersTableFilterComposer(
+              $db: $db,
+              $table: $db.productionOrders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductionOrderInputsTableFilterComposer get inputLineUuid {
+    final $$ProductionOrderInputsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.inputLineUuid,
+            referencedTable: $db.productionOrderInputs,
+            getReferencedColumn: (t) => t.uuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionOrderInputsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.productionOrderInputs,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+
+  $$ProductBatchesTableFilterComposer get lotUuid {
+    final $$ProductBatchesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.lotUuid,
+        referencedTable: $db.productBatches,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductBatchesTableFilterComposer(
+              $db: $db,
+              $table: $db.productBatches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ProductionConsumptionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProductionConsumptionsTable> {
+  $$ProductionConsumptionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get effectiveCost => $composableBuilder(
+      column: $table.effectiveCost,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$ProductionOrdersTableOrderingComposer get productionOrderUuid {
+    final $$ProductionOrdersTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productionOrderUuid,
+        referencedTable: $db.productionOrders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductionOrdersTableOrderingComposer(
+              $db: $db,
+              $table: $db.productionOrders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductionOrderInputsTableOrderingComposer get inputLineUuid {
+    final $$ProductionOrderInputsTableOrderingComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.inputLineUuid,
+            referencedTable: $db.productionOrderInputs,
+            getReferencedColumn: (t) => t.uuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionOrderInputsTableOrderingComposer(
+                  $db: $db,
+                  $table: $db.productionOrderInputs,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+
+  $$ProductBatchesTableOrderingComposer get lotUuid {
+    final $$ProductBatchesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.lotUuid,
+        referencedTable: $db.productBatches,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductBatchesTableOrderingComposer(
+              $db: $db,
+              $table: $db.productBatches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ProductionConsumptionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProductionConsumptionsTable> {
+  $$ProductionConsumptionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<double> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<double> get effectiveCost => $composableBuilder(
+      column: $table.effectiveCost, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$ProductionOrdersTableAnnotationComposer get productionOrderUuid {
+    final $$ProductionOrdersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productionOrderUuid,
+        referencedTable: $db.productionOrders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductionOrdersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.productionOrders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductionOrderInputsTableAnnotationComposer get inputLineUuid {
+    final $$ProductionOrderInputsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.inputLineUuid,
+            referencedTable: $db.productionOrderInputs,
+            getReferencedColumn: (t) => t.uuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductionOrderInputsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.productionOrderInputs,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+
+  $$ProductBatchesTableAnnotationComposer get lotUuid {
+    final $$ProductBatchesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.lotUuid,
+        referencedTable: $db.productBatches,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductBatchesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.productBatches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$ProductionConsumptionsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $ProductionConsumptionsTable,
+    ProductionConsumption,
+    $$ProductionConsumptionsTableFilterComposer,
+    $$ProductionConsumptionsTableOrderingComposer,
+    $$ProductionConsumptionsTableAnnotationComposer,
+    $$ProductionConsumptionsTableCreateCompanionBuilder,
+    $$ProductionConsumptionsTableUpdateCompanionBuilder,
+    (ProductionConsumption, $$ProductionConsumptionsTableReferences),
+    ProductionConsumption,
+    PrefetchHooks Function(
+        {bool productionOrderUuid, bool inputLineUuid, bool lotUuid})> {
+  $$ProductionConsumptionsTableTableManager(
+      _$AppDatabase db, $ProductionConsumptionsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProductionConsumptionsTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProductionConsumptionsTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProductionConsumptionsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> productionOrderUuid = const Value.absent(),
+            Value<String> inputLineUuid = const Value.absent(),
+            Value<String> lotUuid = const Value.absent(),
+            Value<double> quantity = const Value.absent(),
+            Value<double> effectiveCost = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ProductionConsumptionsCompanion(
+            uuid: uuid,
+            productionOrderUuid: productionOrderUuid,
+            inputLineUuid: inputLineUuid,
+            lotUuid: lotUuid,
+            quantity: quantity,
+            effectiveCost: effectiveCost,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String productionOrderUuid,
+            required String inputLineUuid,
+            required String lotUuid,
+            required double quantity,
+            required double effectiveCost,
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              ProductionConsumptionsCompanion.insert(
+            uuid: uuid,
+            productionOrderUuid: productionOrderUuid,
+            inputLineUuid: inputLineUuid,
+            lotUuid: lotUuid,
+            quantity: quantity,
+            effectiveCost: effectiveCost,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable(table),
+                    $$ProductionConsumptionsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {productionOrderUuid = false,
+              inputLineUuid = false,
+              lotUuid = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (productionOrderUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.productionOrderUuid,
+                    referencedTable: $$ProductionConsumptionsTableReferences
+                        ._productionOrderUuidTable(db),
+                    referencedColumn: $$ProductionConsumptionsTableReferences
+                        ._productionOrderUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (inputLineUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.inputLineUuid,
+                    referencedTable: $$ProductionConsumptionsTableReferences
+                        ._inputLineUuidTable(db),
+                    referencedColumn: $$ProductionConsumptionsTableReferences
+                        ._inputLineUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (lotUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.lotUuid,
+                    referencedTable: $$ProductionConsumptionsTableReferences
+                        ._lotUuidTable(db),
+                    referencedColumn: $$ProductionConsumptionsTableReferences
+                        ._lotUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$ProductionConsumptionsTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $ProductionConsumptionsTable,
+        ProductionConsumption,
+        $$ProductionConsumptionsTableFilterComposer,
+        $$ProductionConsumptionsTableOrderingComposer,
+        $$ProductionConsumptionsTableAnnotationComposer,
+        $$ProductionConsumptionsTableCreateCompanionBuilder,
+        $$ProductionConsumptionsTableUpdateCompanionBuilder,
+        (ProductionConsumption, $$ProductionConsumptionsTableReferences),
+        ProductionConsumption,
+        PrefetchHooks Function(
+            {bool productionOrderUuid, bool inputLineUuid, bool lotUuid})>;
 typedef $$OrderReturnsTableCreateCompanionBuilder = OrderReturnsCompanion
     Function({
   required String uuid,
@@ -23420,6 +33470,27 @@ class $AppDatabaseManager {
       $$GoodsReceiptsTableTableManager(_db, _db.goodsReceipts);
   $$GoodsReceiptLinesTableTableManager get goodsReceiptLines =>
       $$GoodsReceiptLinesTableTableManager(_db, _db.goodsReceiptLines);
+  $$RecipesTableTableManager get recipes =>
+      $$RecipesTableTableManager(_db, _db.recipes);
+  $$RecipeInputsTableTableManager get recipeInputs =>
+      $$RecipeInputsTableTableManager(_db, _db.recipeInputs);
+  $$RecipeOutputsTableTableManager get recipeOutputs =>
+      $$RecipeOutputsTableTableManager(_db, _db.recipeOutputs);
+  $$RecipeChargesTableTableManager get recipeCharges =>
+      $$RecipeChargesTableTableManager(_db, _db.recipeCharges);
+  $$ProductionOrdersTableTableManager get productionOrders =>
+      $$ProductionOrdersTableTableManager(_db, _db.productionOrders);
+  $$ProductionOrderInputsTableTableManager get productionOrderInputs =>
+      $$ProductionOrderInputsTableTableManager(_db, _db.productionOrderInputs);
+  $$ProductionOrderOutputsTableTableManager get productionOrderOutputs =>
+      $$ProductionOrderOutputsTableTableManager(
+          _db, _db.productionOrderOutputs);
+  $$ProductionOrderChargesTableTableManager get productionOrderCharges =>
+      $$ProductionOrderChargesTableTableManager(
+          _db, _db.productionOrderCharges);
+  $$ProductionConsumptionsTableTableManager get productionConsumptions =>
+      $$ProductionConsumptionsTableTableManager(
+          _db, _db.productionConsumptions);
   $$OrderReturnsTableTableManager get orderReturns =>
       $$OrderReturnsTableTableManager(_db, _db.orderReturns);
   $$OrderReturnItemsTableTableManager get orderReturnItems =>

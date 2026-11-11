@@ -9,6 +9,7 @@ import 'package:flowpaisa/features/inventory/presentation/screens/add_product_sc
 import 'package:flowpaisa/features/inventory/presentation/screens/product_details_screen.dart';
 import 'package:flowpaisa/features/orders/presentation/widgets/order_entity_pickers.dart';
 import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dart';
+import 'package:flowpaisa/features/production/presentation/screens/production_orders_list_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
@@ -123,7 +124,23 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
     final categoriesAsync = ref.watch(productCategoriesStreamProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.products)),
+      appBar: AppBar(
+        title: Text(l10n.products),
+        actions: [
+          IconButton(
+            tooltip: l10n.productionOrders,
+            icon: const Icon(Icons.precision_manufacturing_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ProductionOrdersListScreen(),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: productsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(l10n.errorOccurred(e.toString()))),

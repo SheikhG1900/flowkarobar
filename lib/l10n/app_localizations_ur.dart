@@ -356,6 +356,156 @@ class AppLocalizationsUr extends AppLocalizations {
   String get sectionCosting => 'لاگت';
 
   @override
+  String get productionOrders => 'پیداوار';
+
+  @override
+  String get productionOrder => 'پیداوار آرڈر';
+
+  @override
+  String get newProductionOrder => 'نئی پیداوار';
+
+  @override
+  String get recipes => 'ریسیپیز';
+
+  @override
+  String get recipe => 'ریسیپی';
+
+  @override
+  String get newRecipe => 'نئی ریسیپی';
+
+  @override
+  String get editRecipe => 'ریسیپی میں ترمیم';
+
+  @override
+  String get noRecipesYet => 'ابھی کوئی ریسیپی نہیں';
+
+  @override
+  String get recipeName => 'ریسیپی کا نام';
+
+  @override
+  String get recipeSaved => 'ریسیپی محفوظ ہو گئی';
+
+  @override
+  String get recipeDeleted => 'ریسیپی حذف ہو گئی';
+
+  @override
+  String get produceFromRecipe => 'تیار کریں';
+
+  @override
+  String get scaleFactor => 'بیچ / اسکیل';
+
+  @override
+  String get scaleFactorHint => 'ریسیپی مقدار کو ضرب دیں (مثلاً 2 = دوگنا بیچ)';
+
+  @override
+  String get productionFromRecipe => 'ریسیپی سے پیداوار';
+
+  @override
+  String get adhocProduction => 'خالی آرڈر';
+
+  @override
+  String recipeScaledNote(String scale, String recipe) {
+    return '$recipe سے ×$scale اسکیل';
+  }
+
+  @override
+  String get noProductionOrdersYet => 'ابھی کوئی پیداوار آرڈر نہیں';
+
+  @override
+  String get productionDraft => 'ڈرافٹ';
+
+  @override
+  String get productionCompleted => 'مکمل';
+
+  @override
+  String get productionCancelled => 'منسوخ';
+
+  @override
+  String get sectionInputs => 'ان پٹ';
+
+  @override
+  String get sectionOutputs => 'آؤٹ پٹ';
+
+  @override
+  String get sectionCharges => 'دیگر اخراجات';
+
+  @override
+  String get addInput => 'ان پٹ شامل کریں';
+
+  @override
+  String get addOutput => 'آؤٹ پٹ شامل کریں';
+
+  @override
+  String get addCharge => 'اخراجات شامل کریں';
+
+  @override
+  String get consumeModeAuto => 'آٹو (تمام لاٹس)';
+
+  @override
+  String get consumeModeBatch => 'بیچ';
+
+  @override
+  String get selectBatch => 'بیچ منتخب کریں';
+
+  @override
+  String get costWeight => 'لاگت کا حصہ';
+
+  @override
+  String get costWeightHint => 'آؤٹ پٹس میں کل لاگت تقسیم کرنے کا نسبتی وزن';
+
+  @override
+  String get plannedQty => 'منصوبہ مقدار';
+
+  @override
+  String get chargeDescription => 'اخراجات کی تفصیل';
+
+  @override
+  String get completeProduction => 'پیداوار مکمل کریں';
+
+  @override
+  String get completeProductionConfirm =>
+      'اسٹاک استعمال ہوگا اور آؤٹ پٹ لاٹس بنیں گے۔ جاری رکھیں؟';
+
+  @override
+  String get productionCompletedToast => 'پیداوار مکمل ہو گئی';
+
+  @override
+  String get productionSaved => 'پیداوار آرڈر محفوظ ہو گیا';
+
+  @override
+  String get productionCancelledToast => 'پیداوار منسوخ ہو گئی';
+
+  @override
+  String get insufficientStockToComplete => 'مکمل کرنے کے لیے کافی اسٹاک نہیں';
+
+  @override
+  String get cancelProduction => 'آرڈر منسوخ کریں';
+
+  @override
+  String get editProductionOrder => 'پیداوار میں ترمیم';
+
+  @override
+  String get productionDate => 'پیداوار کی تاریخ';
+
+  @override
+  String get outputBatchNumber => 'آؤٹ پٹ بیچ #';
+
+  @override
+  String get atLeastOneInput => 'کم از کم ایک ان پٹ شامل کریں';
+
+  @override
+  String get atLeastOneOutput => 'کم از کم ایک آؤٹ پٹ شامل کریں';
+
+  @override
+  String get stockAvailable => 'دستیاب';
+
+  @override
+  String get inputsRequired => 'درکار ان پٹ';
+
+  @override
+  String get outputsProduced => 'آؤٹ پٹ';
+
+  @override
   String get productDetails => 'پروڈکٹ تفصیلات';
 
   @override
@@ -431,6 +581,12 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get lotBatchNumber => 'بیچ نمبر';
+
+  @override
+  String get lotDescription => 'تفصیل';
+
+  @override
+  String get lotDescriptionHint => 'اس لاٹ کے لیے اختیاری نوٹس';
 
   @override
   String get lotExpiry => 'میعاد';

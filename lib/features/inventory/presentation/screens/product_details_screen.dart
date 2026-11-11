@@ -837,6 +837,8 @@ class _QtyFocusCard extends ConsumerWidget {
   final int? countBadge;
   /// Footer: batch label (single lot or batch header).
   final String? footerBatch;
+  /// Optional lot note; shown only when non-empty.
+  final String? description;
   /// Manual lots: edit affordance next to remaining qty.
   final bool showEditIcon;
 
@@ -858,6 +860,7 @@ class _QtyFocusCard extends ConsumerWidget {
     this.badgeTooltip,
     this.countBadge,
     this.footerBatch,
+    this.description,
     this.showEditIcon = false,
   });
 
@@ -873,6 +876,7 @@ class _QtyFocusCard extends ConsumerWidget {
       builder: (context) {
         final l10n = AppLocalizations.of(context)!;
         final accent = _lotAccent(context, lot);
+        final desc = lot.description?.trim();
         return _QtyFocusCard(
           total: lot.totalQuantity,
           consumed: lot.consumedQuantity,
@@ -890,6 +894,7 @@ class _QtyFocusCard extends ConsumerWidget {
           footerBatch: showBatchInFooter && lot.batchNumber.isNotEmpty
               ? lot.batchNumber
               : null,
+          description: desc == null || desc.isEmpty ? null : desc,
           showEditIcon: lot.isManual,
         );
       },
@@ -911,6 +916,8 @@ class _QtyFocusCard extends ConsumerWidget {
 
     final expiryWarn = earliestExpiry != null &&
         earliestExpiry!.difference(DateTime.now()).inDays <= 60;
+    final hasDescription =
+        description != null && description!.trim().isNotEmpty;
     final hasFooter = (footerBatch != null && footerBatch!.isNotEmpty) ||
         earliestExpiry != null ||
         (orderHint != null && orderHint!.isNotEmpty);
@@ -993,6 +1000,18 @@ class _QtyFocusCard extends ConsumerWidget {
                             ),
                           ],
                         ),
+                        if (hasDescription) ...[
+                          SizedBox(height: dense ? 8 : 10),
+                          Text(
+                            description!,
+                            maxLines: dense ? 2 : 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: muted,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
                         if (hasFooter) ...[
                           SizedBox(height: dense ? 8 : 10),
                           _ItemFooter(
@@ -1532,6 +1551,7 @@ class _ManualLotSheetState extends ConsumerState<_ManualLotSheet> {
   late final TextEditingController _qty;
   late final TextEditingController _cost;
   late final TextEditingController _batch;
+  late final TextEditingController _description;
   late String _manualType;
   DateTime? _expiry;
   DateTime? _mfg;
@@ -1552,6 +1572,7 @@ class _ManualLotSheetState extends ConsumerState<_ManualLotSheet> {
       text: lot == null ? '' : AmountFormatter.formatQuantity(lot.effectiveCost),
     );
     _batch = TextEditingController(text: lot?.batchNumber ?? '');
+    _description = TextEditingController(text: lot?.description ?? '');
     _manualType = lot?.manualType ?? ManualBatchType.opening;
     if (_manualType.isEmpty || !ManualBatchType.all.contains(_manualType)) {
       _manualType = ManualBatchType.opening;
@@ -1565,6 +1586,7 @@ class _ManualLotSheetState extends ConsumerState<_ManualLotSheet> {
     _qty.dispose();
     _cost.dispose();
     _batch.dispose();
+    _description.dispose();
     super.dispose();
   }
 
@@ -1587,6 +1609,36 @@ class _ManualLotSheetState extends ConsumerState<_ManualLotSheet> {
     });
   }
 
+  Future<void> _pickBatchNumber() async {
+    final l10n = AppLocalizations.of(context)!;
+    final batches = await ref
+        .read(inventoryRepositoryProvider)
+        .distinctBatchNumbers(widget.product.uuid);
+    if (!mounted) return;
+    if (batches.isEmpty) {
+      ToastUtils.showErrorToast(context, ref, l10n.noOpenLots);
+      return;
+    }
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            ListTile(title: Text(l10n.selectBatch)),
+            for (final b in batches)
+              ListTile(
+                title: Text(b),
+                onTap: () => Navigator.pop(context, b),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked == null) return;
+    setState(() => _batch.text = picked);
+  }
+
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
@@ -1601,6 +1653,7 @@ class _ManualLotSheetState extends ConsumerState<_ManualLotSheet> {
     try {
       final repo = ref.read(inventoryRepositoryProvider);
       final existing = widget.existing;
+      final description = _description.text.trim();
       if (existing == null) {
         await repo.receiveIntoBatch(
           productUuid: widget.product.uuid,
@@ -1611,6 +1664,7 @@ class _ManualLotSheetState extends ConsumerState<_ManualLotSheet> {
           manualType: _manualType,
           manufactureDate: _mfg,
           expiryDate: _expiry,
+          description: description.isEmpty ? null : description,
         );
       } else {
         await repo.updateManualLot(
@@ -1621,6 +1675,7 @@ class _ManualLotSheetState extends ConsumerState<_ManualLotSheet> {
           manualType: _manualType,
           manufactureDate: _mfg,
           expiryDate: _expiry,
+          description: description.isEmpty ? null : description,
         );
       }
       if (mounted) Navigator.pop(context, true);
@@ -1797,6 +1852,22 @@ class _ManualLotSheetState extends ConsumerState<_ManualLotSheet> {
                   textCapitalization: TextCapitalization.characters,
                   decoration: InputDecoration(
                     labelText: l10n.lotBatchNumber,
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      tooltip: l10n.selectBatch,
+                      onPressed: _pickBatchNumber,
+                      icon: const Icon(Icons.list_alt_outlined),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _description,
+                  maxLines: 2,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                    labelText: l10n.lotDescription,
+                    hintText: l10n.lotDescriptionHint,
                     border: const OutlineInputBorder(),
                   ),
                 ),

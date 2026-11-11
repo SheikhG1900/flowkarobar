@@ -772,6 +772,300 @@ abstract class AppLocalizations {
   /// **'Costing'**
   String get sectionCosting;
 
+  /// No description provided for @productionOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Production'**
+  String get productionOrders;
+
+  /// No description provided for @productionOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Production order'**
+  String get productionOrder;
+
+  /// No description provided for @newProductionOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'New production'**
+  String get newProductionOrder;
+
+  /// No description provided for @recipes.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipes'**
+  String get recipes;
+
+  /// No description provided for @recipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe'**
+  String get recipe;
+
+  /// No description provided for @newRecipe.
+  ///
+  /// In en, this message translates to:
+  /// **'New recipe'**
+  String get newRecipe;
+
+  /// No description provided for @editRecipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit recipe'**
+  String get editRecipe;
+
+  /// No description provided for @noRecipesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No recipes yet'**
+  String get noRecipesYet;
+
+  /// No description provided for @recipeName.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe name'**
+  String get recipeName;
+
+  /// No description provided for @recipeSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe saved'**
+  String get recipeSaved;
+
+  /// No description provided for @recipeDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe deleted'**
+  String get recipeDeleted;
+
+  /// No description provided for @produceFromRecipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Produce'**
+  String get produceFromRecipe;
+
+  /// No description provided for @scaleFactor.
+  ///
+  /// In en, this message translates to:
+  /// **'Batches / scale'**
+  String get scaleFactor;
+
+  /// No description provided for @scaleFactorHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Multiplies recipe quantities (e.g. 2 = double batch)'**
+  String get scaleFactorHint;
+
+  /// No description provided for @productionFromRecipe.
+  ///
+  /// In en, this message translates to:
+  /// **'Production from recipe'**
+  String get productionFromRecipe;
+
+  /// No description provided for @adhocProduction.
+  ///
+  /// In en, this message translates to:
+  /// **'Blank order'**
+  String get adhocProduction;
+
+  /// No description provided for @recipeScaledNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Scaled ×{scale} from {recipe}'**
+  String recipeScaledNote(String scale, String recipe);
+
+  /// No description provided for @noProductionOrdersYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No production orders yet'**
+  String get noProductionOrdersYet;
+
+  /// No description provided for @productionDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get productionDraft;
+
+  /// No description provided for @productionCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed'**
+  String get productionCompleted;
+
+  /// No description provided for @productionCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get productionCancelled;
+
+  /// No description provided for @sectionInputs.
+  ///
+  /// In en, this message translates to:
+  /// **'Inputs'**
+  String get sectionInputs;
+
+  /// No description provided for @sectionOutputs.
+  ///
+  /// In en, this message translates to:
+  /// **'Outputs'**
+  String get sectionOutputs;
+
+  /// No description provided for @sectionCharges.
+  ///
+  /// In en, this message translates to:
+  /// **'Other charges'**
+  String get sectionCharges;
+
+  /// No description provided for @addInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Add input'**
+  String get addInput;
+
+  /// No description provided for @addOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Add output'**
+  String get addOutput;
+
+  /// No description provided for @addCharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Add charge'**
+  String get addCharge;
+
+  /// No description provided for @consumeModeAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto (all lots)'**
+  String get consumeModeAuto;
+
+  /// No description provided for @consumeModeBatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch'**
+  String get consumeModeBatch;
+
+  /// No description provided for @selectBatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Select batch'**
+  String get selectBatch;
+
+  /// No description provided for @costWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost share'**
+  String get costWeight;
+
+  /// No description provided for @costWeightHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Relative weight for splitting total cost across outputs'**
+  String get costWeightHint;
+
+  /// No description provided for @plannedQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned qty'**
+  String get plannedQty;
+
+  /// No description provided for @chargeDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Charge description'**
+  String get chargeDescription;
+
+  /// No description provided for @completeProduction.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete production'**
+  String get completeProduction;
+
+  /// No description provided for @completeProductionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock will be consumed and output lots created. Continue?'**
+  String get completeProductionConfirm;
+
+  /// No description provided for @productionCompletedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Production completed'**
+  String get productionCompletedToast;
+
+  /// No description provided for @productionSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Production order saved'**
+  String get productionSaved;
+
+  /// No description provided for @productionCancelledToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Production cancelled'**
+  String get productionCancelledToast;
+
+  /// No description provided for @insufficientStockToComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough stock to complete'**
+  String get insufficientStockToComplete;
+
+  /// No description provided for @cancelProduction.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel order'**
+  String get cancelProduction;
+
+  /// No description provided for @editProductionOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit production'**
+  String get editProductionOrder;
+
+  /// No description provided for @productionDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Production date'**
+  String get productionDate;
+
+  /// No description provided for @outputBatchNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Output batch #'**
+  String get outputBatchNumber;
+
+  /// No description provided for @atLeastOneInput.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one input'**
+  String get atLeastOneInput;
+
+  /// No description provided for @atLeastOneOutput.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one output'**
+  String get atLeastOneOutput;
+
+  /// No description provided for @stockAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get stockAvailable;
+
+  /// No description provided for @inputsRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Inputs required'**
+  String get inputsRequired;
+
+  /// No description provided for @outputsProduced.
+  ///
+  /// In en, this message translates to:
+  /// **'Outputs'**
+  String get outputsProduced;
+
   /// No description provided for @productDetails.
   ///
   /// In en, this message translates to:
@@ -915,6 +1209,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Batch number'**
   String get lotBatchNumber;
+
+  /// No description provided for @lotDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get lotDescription;
+
+  /// No description provided for @lotDescriptionHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional notes for this lot'**
+  String get lotDescriptionHint;
 
   /// No description provided for @lotExpiry.
   ///

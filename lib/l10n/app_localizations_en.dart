@@ -358,6 +358,158 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionCosting => 'Costing';
 
   @override
+  String get productionOrders => 'Production';
+
+  @override
+  String get productionOrder => 'Production order';
+
+  @override
+  String get newProductionOrder => 'New production';
+
+  @override
+  String get recipes => 'Recipes';
+
+  @override
+  String get recipe => 'Recipe';
+
+  @override
+  String get newRecipe => 'New recipe';
+
+  @override
+  String get editRecipe => 'Edit recipe';
+
+  @override
+  String get noRecipesYet => 'No recipes yet';
+
+  @override
+  String get recipeName => 'Recipe name';
+
+  @override
+  String get recipeSaved => 'Recipe saved';
+
+  @override
+  String get recipeDeleted => 'Recipe deleted';
+
+  @override
+  String get produceFromRecipe => 'Produce';
+
+  @override
+  String get scaleFactor => 'Batches / scale';
+
+  @override
+  String get scaleFactorHint =>
+      'Multiplies recipe quantities (e.g. 2 = double batch)';
+
+  @override
+  String get productionFromRecipe => 'Production from recipe';
+
+  @override
+  String get adhocProduction => 'Blank order';
+
+  @override
+  String recipeScaledNote(String scale, String recipe) {
+    return 'Scaled ×$scale from $recipe';
+  }
+
+  @override
+  String get noProductionOrdersYet => 'No production orders yet';
+
+  @override
+  String get productionDraft => 'Draft';
+
+  @override
+  String get productionCompleted => 'Completed';
+
+  @override
+  String get productionCancelled => 'Cancelled';
+
+  @override
+  String get sectionInputs => 'Inputs';
+
+  @override
+  String get sectionOutputs => 'Outputs';
+
+  @override
+  String get sectionCharges => 'Other charges';
+
+  @override
+  String get addInput => 'Add input';
+
+  @override
+  String get addOutput => 'Add output';
+
+  @override
+  String get addCharge => 'Add charge';
+
+  @override
+  String get consumeModeAuto => 'Auto (all lots)';
+
+  @override
+  String get consumeModeBatch => 'Batch';
+
+  @override
+  String get selectBatch => 'Select batch';
+
+  @override
+  String get costWeight => 'Cost share';
+
+  @override
+  String get costWeightHint =>
+      'Relative weight for splitting total cost across outputs';
+
+  @override
+  String get plannedQty => 'Planned qty';
+
+  @override
+  String get chargeDescription => 'Charge description';
+
+  @override
+  String get completeProduction => 'Complete production';
+
+  @override
+  String get completeProductionConfirm =>
+      'Stock will be consumed and output lots created. Continue?';
+
+  @override
+  String get productionCompletedToast => 'Production completed';
+
+  @override
+  String get productionSaved => 'Production order saved';
+
+  @override
+  String get productionCancelledToast => 'Production cancelled';
+
+  @override
+  String get insufficientStockToComplete => 'Not enough stock to complete';
+
+  @override
+  String get cancelProduction => 'Cancel order';
+
+  @override
+  String get editProductionOrder => 'Edit production';
+
+  @override
+  String get productionDate => 'Production date';
+
+  @override
+  String get outputBatchNumber => 'Output batch #';
+
+  @override
+  String get atLeastOneInput => 'Add at least one input';
+
+  @override
+  String get atLeastOneOutput => 'Add at least one output';
+
+  @override
+  String get stockAvailable => 'Available';
+
+  @override
+  String get inputsRequired => 'Inputs required';
+
+  @override
+  String get outputsProduced => 'Outputs';
+
+  @override
   String get productDetails => 'Product Details';
 
   @override
@@ -433,6 +585,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lotBatchNumber => 'Batch number';
+
+  @override
+  String get lotDescription => 'Description';
+
+  @override
+  String get lotDescriptionHint => 'Optional notes for this lot';
 
   @override
   String get lotExpiry => 'Expiry';
