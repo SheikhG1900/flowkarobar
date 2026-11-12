@@ -217,6 +217,9 @@
   "manualLotSaved": "Lot added successfully",
   "editManualLot": "Edit manual lot",
   "manualLotUpdated": "Lot updated successfully",
+  "changeLotBatch": "Change batch",
+  "lotBatchUpdated": "Batch updated",
+  "changeLotBatchHint": "Move this lot to another batch for your own organization (e.g. short-expiry). Stock qty and cost stay the same.",
   "manualLotCostSplitHint": "This lot is partly used. Changing unit cost will move remaining qty to a new lot.",
   "consumedQtyHint": "Already consumed: {quantity}",
   "@consumedQtyHint": {

@@ -217,6 +217,9 @@
   "manualLotSaved": "लॉट सफलतापूर्वक जोड़ा गया",
   "editManualLot": "मैन्युअल लॉट संपादित करें",
   "manualLotUpdated": "लॉट सफलतापूर्वक अपडेट हुआ",
+  "changeLotBatch": "बैच बदलें",
+  "lotBatchUpdated": "बैच अपडेट हुआ",
+  "changeLotBatchHint": "इस लॉट को अपने संगठन के लिए दूसरे बैच में ले जाएँ (जैसे short-expiry)। स्टॉक मात्रा और लागत वही रहेंगी।",
   "manualLotCostSplitHint": "यह लॉट आंशिक उपयोग हुआ है। यूनिट लागत बदलने पर शेष मात्रा नए लॉट में चली जाएगी।",
   "consumedQtyHint": "पहले से उपयोग: {quantity}",
   "@consumedQtyHint": {

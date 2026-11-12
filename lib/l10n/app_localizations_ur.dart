@@ -618,6 +618,16 @@ class AppLocalizationsUr extends AppLocalizations {
   String get manualLotUpdated => 'لاٹ کامیابی سے اپڈیٹ ہو گیا';
 
   @override
+  String get changeLotBatch => 'بیچ تبدیل کریں';
+
+  @override
+  String get lotBatchUpdated => 'بیچ اپڈیٹ ہو گیا';
+
+  @override
+  String get changeLotBatchHint =>
+      'اس لاٹ کو اپنے کاروبار کی تنظیم کے لیے دوسرے بیچ میں لے جائیں (جیسے short-expiry)۔ اسٹاک مقدار اور لاگت وہی رہیں گی۔';
+
+  @override
   String get manualLotCostSplitHint =>
       'یہ لاٹ جزوی طور پر استعمال ہو چکا ہے۔ یونٹ لاگت بدلنے پر باقی مقدار نئے لاٹ میں چلی جائے گی۔';
 

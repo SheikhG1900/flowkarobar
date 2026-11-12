@@ -72,15 +72,83 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     }
   }
 
-  VoidCallback? _lotTap({
+  Future<void> _openChangeBatchSheet(
+    Product product,
+    ProductBatche lot,
+  ) async {
+    final saved = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _ChangeLotBatchSheet(
+        product: product,
+        lot: lot,
+      ),
+    );
+    if (!mounted) return;
+    if (saved == true) {
+      ref.invalidate(productBatchesStreamProvider(widget.productUuid));
+      ref.invalidate(productLotSourcesProvider(widget.productUuid));
+      final l10n = AppLocalizations.of(context)!;
+      ToastUtils.showSuccessToast(context, ref, l10n.lotBatchUpdated);
+    }
+  }
+
+  Future<void> _onPurchaseLotTap({
+    required Product product,
+    required ProductBatche lot,
+    LotPurchaseContext? source,
+  }) async {
+    if (source == null) {
+      await _openChangeBatchSheet(product, lot);
+      return;
+    }
+    final l10n = AppLocalizations.of(context)!;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.drive_file_move_outline),
+              title: Text(l10n.changeLotBatch),
+              onTap: () => Navigator.pop(context, 'batch'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.receipt_long_outlined),
+              title: Text(l10n.viewPurchaseOrder),
+              subtitle: Text(source.orderNumber),
+              onTap: () => Navigator.pop(context, 'order'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || action == null) return;
+    if (action == 'batch') {
+      await _openChangeBatchSheet(product, lot);
+    } else if (action == 'order') {
+      await Navigator.push<void>(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OrderDetailScreen(orderUuid: source.orderUuid),
+        ),
+      );
+    }
+  }
+
+  void _handleLotTap({
     required Product product,
     required ProductBatche lot,
     LotPurchaseContext? source,
   }) {
     if (lot.isManual) {
-      return () => _openManualLotSheet(product, existing: lot);
+      _openManualLotSheet(product, existing: lot);
+    } else {
+      _onPurchaseLotTap(product: product, lot: lot, source: source);
     }
-    return _orderOpener(context, source);
   }
 
   List<ProductBatche> _applyFilter(List<ProductBatche> lots) {
@@ -102,21 +170,6 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
     return map;
   }
 
-  VoidCallback? _orderOpener(
-    BuildContext context,
-    LotPurchaseContext? source,
-  ) {
-    if (source == null) return null;
-    return () {
-      Navigator.push<void>(
-        context,
-        MaterialPageRoute(
-          builder: (_) => OrderDetailScreen(orderUuid: source.orderUuid),
-        ),
-      );
-    };
-  }
-
   Widget _lotOrBatchCard({
     required Product product,
     required String batchKey,
@@ -133,7 +186,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
         source: lotSource,
         dateFormat: dateFormat,
         showBatchInFooter: true,
-        onOpenOrder: _lotTap(
+        onOpenOrder: () => _handleLotTap(
           product: product,
           lot: lot,
           source: lotSource,
@@ -146,7 +199,11 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
       lots: groupLots,
       sources: sources,
       dateFormat: dateFormat,
-      onEditManualLot: (lot) => _openManualLotSheet(product, existing: lot),
+      onLotTap: (lot) => _handleLotTap(
+        product: product,
+        lot: lot,
+        source: sources[lot.uuid],
+      ),
     );
   }
 
@@ -995,7 +1052,7 @@ class _QtyFocusCard extends ConsumerWidget {
   final String? footerBatch;
   /// Optional lot note; shown only when non-empty.
   final String? description;
-  /// Manual lots: edit affordance next to remaining qty.
+  /// Edit / change-batch affordance next to remaining qty.
   final bool showEditIcon;
   final bool showPendingSync;
 
@@ -1056,7 +1113,7 @@ class _QtyFocusCard extends ConsumerWidget {
               ? lot.batchNumber
               : null,
           description: desc == null || desc.isEmpty ? null : desc,
-          showEditIcon: lot.isManual,
+          showEditIcon: true,
           showPendingSync: lot.isNotSynced == true,
         );
       },
@@ -1612,7 +1669,7 @@ class _BatchLotPanel extends StatefulWidget {
   final List<ProductBatche> lots;
   final Map<String, LotPurchaseContext> sources;
   final String dateFormat;
-  final ValueChanged<ProductBatche> onEditManualLot;
+  final ValueChanged<ProductBatche> onLotTap;
 
   const _BatchLotPanel({
     required this.product,
@@ -1620,7 +1677,7 @@ class _BatchLotPanel extends StatefulWidget {
     required this.lots,
     required this.sources,
     required this.dateFormat,
-    required this.onEditManualLot,
+    required this.onLotTap,
   });
 
   @override
@@ -1707,21 +1764,7 @@ class _BatchLotPanelState extends State<_BatchLotPanel> {
                                 dateFormat: widget.dateFormat,
                                 showBatchInFooter: false,
                                 dense: true,
-                                onOpenOrder: lot.isManual
-                                    ? () => widget.onEditManualLot(lot)
-                                    : src == null
-                                        ? null
-                                        : () {
-                                            Navigator.push<void>(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) =>
-                                                    OrderDetailScreen(
-                                                  orderUuid: src.orderUuid,
-                                                ),
-                                              ),
-                                            );
-                                          },
+                                onOpenOrder: () => widget.onLotTap(lot),
                               );
                             },
                           ),
@@ -1731,6 +1774,173 @@ class _BatchLotPanelState extends State<_BatchLotPanel> {
                   ),
                 ],
               ),
+      ),
+    );
+  }
+}
+
+class _ChangeLotBatchSheet extends ConsumerStatefulWidget {
+  final Product product;
+  final ProductBatche lot;
+
+  const _ChangeLotBatchSheet({
+    required this.product,
+    required this.lot,
+  });
+
+  @override
+  ConsumerState<_ChangeLotBatchSheet> createState() =>
+      _ChangeLotBatchSheetState();
+}
+
+class _ChangeLotBatchSheetState extends ConsumerState<_ChangeLotBatchSheet> {
+  late final TextEditingController _batch;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _batch = TextEditingController(text: widget.lot.batchNumber);
+  }
+
+  @override
+  void dispose() {
+    _batch.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickBatchNumber() async {
+    final l10n = AppLocalizations.of(context)!;
+    final batches = await ref
+        .read(inventoryRepositoryProvider)
+        .distinctBatchNumbers(widget.product.uuid);
+    if (!mounted) return;
+    if (batches.isEmpty) {
+      ToastUtils.showErrorToast(context, ref, l10n.noOpenLots);
+      return;
+    }
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            ListTile(title: Text(l10n.selectBatch)),
+            for (final b in batches)
+              ListTile(
+                title: Text(b),
+                onTap: () => Navigator.pop(context, b),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked == null) return;
+    setState(() => _batch.text = picked);
+  }
+
+  Future<void> _save() async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() => _saving = true);
+    try {
+      await ref.read(inventoryRepositoryProvider).updateLotBatchNumber(
+            lotUuid: widget.lot.uuid,
+            batchNumber: _batch.text.trim().isEmpty ? null : _batch.text.trim(),
+          );
+      if (mounted) Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        ToastUtils.showErrorToast(
+          context,
+          ref,
+          l10n.errorOccurred(e.toString()),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottom),
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          12,
+          16,
+          16 + MediaQuery.of(context).padding.bottom,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 14),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.onSurfaceVariant
+                      .withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+            Text(
+              l10n.changeLotBatch,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              widget.product.name,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              l10n.changeLotBatchHint,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _batch,
+              textCapitalization: TextCapitalization.characters,
+              autofocus: true,
+              decoration: InputDecoration(
+                labelText: l10n.lotBatchNumber,
+                border: const OutlineInputBorder(),
+                suffixIcon: IconButton(
+                  tooltip: l10n.selectBatch,
+                  onPressed: _pickBatchNumber,
+                  icon: const Icon(Icons.list_alt_outlined),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            GradientButton(
+              label: l10n.save,
+              isLoading: _saving,
+              width: double.infinity,
+              gradient: AppColors.getPrimaryGradient(AppColors.info),
+              onPressed: _saving ? null : _save,
+            ),
+          ],
+        ),
       ),
     );
   }

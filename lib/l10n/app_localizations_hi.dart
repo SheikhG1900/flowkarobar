@@ -619,6 +619,16 @@ class AppLocalizationsHi extends AppLocalizations {
   String get manualLotUpdated => 'लॉट सफलतापूर्वक अपडेट हुआ';
 
   @override
+  String get changeLotBatch => 'बैच बदलें';
+
+  @override
+  String get lotBatchUpdated => 'बैच अपडेट हुआ';
+
+  @override
+  String get changeLotBatchHint =>
+      'इस लॉट को अपने संगठन के लिए दूसरे बैच में ले जाएँ (जैसे short-expiry)। स्टॉक मात्रा और लागत वही रहेंगी।';
+
+  @override
   String get manualLotCostSplitHint =>
       'यह लॉट आंशिक उपयोग हुआ है। यूनिट लागत बदलने पर शेष मात्रा नए लॉट में चली जाएगी।';
 

@@ -1288,6 +1288,24 @@ abstract class AppLocalizations {
   /// **'Lot updated successfully'**
   String get manualLotUpdated;
 
+  /// No description provided for @changeLotBatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Change batch'**
+  String get changeLotBatch;
+
+  /// No description provided for @lotBatchUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Batch updated'**
+  String get lotBatchUpdated;
+
+  /// No description provided for @changeLotBatchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Move this lot to another batch for your own organization (e.g. short-expiry). Stock qty and cost stay the same.'**
+  String get changeLotBatchHint;
+
   /// No description provided for @manualLotCostSplitHint.
   ///
   /// In en, this message translates to:

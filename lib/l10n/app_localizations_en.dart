@@ -622,6 +622,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manualLotUpdated => 'Lot updated successfully';
 
   @override
+  String get changeLotBatch => 'Change batch';
+
+  @override
+  String get lotBatchUpdated => 'Batch updated';
+
+  @override
+  String get changeLotBatchHint =>
+      'Move this lot to another batch for your own organization (e.g. short-expiry). Stock qty and cost stay the same.';
+
+  @override
   String get manualLotCostSplitHint =>
       'This lot is partly used. Changing unit cost will move remaining qty to a new lot.';
 

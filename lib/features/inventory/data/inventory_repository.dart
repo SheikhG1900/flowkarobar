@@ -381,6 +381,29 @@ class InventoryRepository {
     return ok;
   }
 
+  /// Move any lot (purchase or manual) to another virtual batch label.
+  /// Batch is organizational only — qty/cost/lineage stay unchanged.
+  /// Empty [batchNumber] clears the label (ungroups the lot).
+  Future<void> updateLotBatchNumber({
+    required String lotUuid,
+    String? batchNumber,
+  }) async {
+    final lot = await getBatch(lotUuid);
+    if (lot == null) throw StateError('Lot not found: $lotUuid');
+
+    final batchNum = (batchNumber ?? '').trim();
+    if (batchNum == lot.batchNumber.trim()) return;
+
+    await (_db.update(_db.productBatches)..where((b) => b.uuid.equals(lotUuid)))
+        .write(
+      ProductBatchesCompanion(
+        batchNumber: Value(batchNum),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
   /// Update a manual lot's remaining qty / cost / labels / dates.
   /// [remainingQuantity] is on-hand for this lot (total becomes consumed + remaining).
   /// Qty/labels are applied first so a fully consumed lot can regain remaining

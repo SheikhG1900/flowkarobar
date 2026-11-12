@@ -217,6 +217,9 @@
   "manualLotSaved": "لاٹ کامیابی سے شامل ہو گیا",
   "editManualLot": "مینوئل لاٹ میں ترمیم",
   "manualLotUpdated": "لاٹ کامیابی سے اپڈیٹ ہو گیا",
+  "changeLotBatch": "بیچ تبدیل کریں",
+  "lotBatchUpdated": "بیچ اپڈیٹ ہو گیا",
+  "changeLotBatchHint": "اس لاٹ کو اپنے کاروبار کی تنظیم کے لیے دوسرے بیچ میں لے جائیں (جیسے short-expiry)۔ اسٹاک مقدار اور لاگت وہی رہیں گی۔",
   "manualLotCostSplitHint": "یہ لاٹ جزوی طور پر استعمال ہو چکا ہے۔ یونٹ لاگت بدلنے پر باقی مقدار نئے لاٹ میں چلی جائے گی۔",
   "consumedQtyHint": "پہلے سے استعمال شدہ: {quantity}",
   "@consumedQtyHint": {
