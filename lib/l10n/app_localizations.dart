@@ -3353,6 +3353,12 @@ abstract class AppLocalizations {
   /// **'Unsynced Changes'**
   String get unsyncedChanges;
 
+  /// No description provided for @pendingSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending sync'**
+  String get pendingSync;
+
   /// No description provided for @reminders.
   ///
   /// In en, this message translates to:

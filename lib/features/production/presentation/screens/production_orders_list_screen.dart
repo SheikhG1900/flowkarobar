@@ -14,6 +14,7 @@ import 'package:flowpaisa/features/settings/presentation/providers/settings_prov
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 import 'package:flowpaisa/shared/widgets/hover_border_card.dart';
+import 'package:flowpaisa/shared/widgets/pending_sync_badge.dart';
 
 class ProductionOrdersListScreen extends ConsumerWidget {
   /// 0 = production orders, 1 = recipes.
@@ -259,6 +260,13 @@ class _ProductionOrderCard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 8),
+              if (order.isNotSynced == true) ...[
+                Tooltip(
+                  message: l10n.pendingSync,
+                  child: const PendingSyncCornerBadge(iconSize: 12),
+                ),
+                const SizedBox(width: 8),
+              ],
               _StatusBadge(
                 label: statusLabel,
                 color: statusColor,

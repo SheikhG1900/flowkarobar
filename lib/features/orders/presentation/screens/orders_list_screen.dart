@@ -11,6 +11,7 @@ import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dar
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
+import 'package:flowpaisa/shared/widgets/pending_sync_badge.dart';
 
 class OrdersListScreen extends ConsumerStatefulWidget {
   final int initialTab;
@@ -181,6 +182,13 @@ class _OrderCard extends ConsumerWidget {
                         ),
                       ),
                     ),
+                    if (order.isNotSynced == true) ...[
+                      Tooltip(
+                        message: l10n.pendingSync,
+                        child: const PendingSyncCornerBadge(iconSize: 12),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                     Text(
                       formatOrderAmount(ref, order.totalAmount),
                       style: theme.textTheme.titleMedium?.copyWith(

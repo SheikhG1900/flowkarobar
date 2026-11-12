@@ -17,6 +17,7 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/form_section_card.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/shared/widgets/pending_sync_badge.dart';
 
 class OrderDetailScreen extends ConsumerStatefulWidget {
   final String orderUuid;
@@ -174,48 +175,59 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
-        FormSectionCard(
-          title: order.orderNumber,
-          icon: isSale
-              ? Icons.point_of_sale_rounded
-              : Icons.shopping_cart_outlined,
-          accentColor: typeColor,
-          trailing: OrderStatusChip(
-            label: isSale ? l10n.sale : l10n.purchase,
-            color: typeColor,
-          ),
+        Stack(
+          clipBehavior: Clip.none,
           children: [
-            _InfoRow(
-              icon: Icons.person_outline,
-              text: contact?.name ?? l10n.walkInCustomer,
-            ),
-            _InfoRow(
-              icon: Icons.event_outlined,
-              text: AppDateFormatter.formatDate(
-                order.orderDate,
-                pattern: dateFormat,
+            FormSectionCard(
+              title: order.orderNumber,
+              icon: isSale
+                  ? Icons.point_of_sale_rounded
+                  : Icons.shopping_cart_outlined,
+              accentColor: typeColor,
+              trailing: OrderStatusChip(
+                label: isSale ? l10n.sale : l10n.purchase,
+                color: typeColor,
               ),
-            ),
-            if (order.notes != null && order.notes!.isNotEmpty)
-              _InfoRow(icon: Icons.notes_outlined, text: order.notes!),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
               children: [
-                OrderStatusChip(
-                  label: paymentStatusLabel(l10n, order.paymentStatus),
-                  color: paymentStatusColor(
-                    order.orderType,
-                    order.paymentStatus,
+                _InfoRow(
+                  icon: Icons.person_outline,
+                  text: contact?.name ?? l10n.walkInCustomer,
+                ),
+                _InfoRow(
+                  icon: Icons.event_outlined,
+                  text: AppDateFormatter.formatDate(
+                    order.orderDate,
+                    pattern: dateFormat,
                   ),
                 ),
-                OrderStatusChip(
-                  label: deliveryStatusLabel(l10n, order.deliveryStatus),
-                  color: deliveryStatusColor(order.deliveryStatus),
-                  icon: Icons.local_shipping_outlined,
+                if (order.notes != null && order.notes!.isNotEmpty)
+                  _InfoRow(icon: Icons.notes_outlined, text: order.notes!),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    OrderStatusChip(
+                      label: paymentStatusLabel(l10n, order.paymentStatus),
+                      color: paymentStatusColor(
+                        order.orderType,
+                        order.paymentStatus,
+                      ),
+                    ),
+                    OrderStatusChip(
+                      label: deliveryStatusLabel(l10n, order.deliveryStatus),
+                      color: deliveryStatusColor(order.deliveryStatus),
+                      icon: Icons.local_shipping_outlined,
+                    ),
+                  ],
                 ),
               ],
             ),
+            if (order.isNotSynced == true)
+              const PositionedDirectional(
+                top: -6,
+                end: -6,
+                child: PendingSyncDetailBadge(),
+              ),
           ],
         ),
         FormSectionCard(

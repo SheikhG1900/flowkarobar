@@ -1760,6 +1760,9 @@ class AppLocalizationsHi extends AppLocalizations {
   String get unsyncedChanges => 'असिंक किए गए परिवर्तन';
 
   @override
+  String get pendingSync => 'सिंक बाकी';
+
+  @override
   String get reminders => 'रिमाइंडर';
 
   @override

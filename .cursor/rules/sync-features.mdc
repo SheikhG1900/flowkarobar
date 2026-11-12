@@ -1,0 +1,49 @@
+---
+description: Checklist for cloud sync whenever adding or changing business data entities
+alwaysApply: true
+---
+
+# Sync feature checklist
+
+When adding or changing a **business entity** (new Drift table, new fields, CRUD, list/detail UI), complete the sync-related items below. Pattern reference: transactions + `SyncTables` / `PendingSyncCornerBadge` / `PendingSyncDetailBadge`.
+
+## Data model
+
+- Add `isNotSynced` (default `true`) and soft-delete via `isDeleted` — **never hard-delete** synced business rows.
+- On create/update/soft-delete, set `isNotSynced: true` (and `updatedAt`).
+- Prefer **update in place** by stable UUID. Soft-delete a child line only when the user explicitly removes it — do not replace-all lines on every save.
+
+## Sync engine wiring
+
+Canonical list: `lib/features/backup/data/sync/sync_tables.dart` (`SyncTables`).
+
+- Register new tables in `SyncTables.ordered` in **FK-safe** order.
+- Map table → Drift `TableInfo` in `SyncTables.tableInfo` / `allKnownTableInfos`.
+- Add datetime columns to `SyncTables.dateFields` if needed.
+- Remap legacy/alias names via `sqlTableName` when SQL name ≠ payload name.
+- Ensure push (`_getLocalChanges`), apply, mark-synced, unsynced counts, and reset-local-sync all use `SyncTables` (do not maintain a separate table list).
+
+## Dashboard “changes to push”
+
+- Group the new table under a feature group in `_groupUnsyncedBreakdown` (`sync_status_section.dart`).
+- Add localized table label in `_syncTableLabel` (EN / HI / UR).
+- Drill-down must still show **per-table** counts (group total + expand).
+- Navigation should open the correct screen (AppBar/back or parent tab with `initialTab` when embedded).
+
+## UI pending-sync indicators
+
+- **List items**: `PendingSyncCornerBadge` when `isNotSynced == true` (same as transaction list).
+- **Detail heroes/headers**: `PendingSyncDetailBadge` as a **corner overlay** on a full-width card (`width: double.infinity` if content would otherwise shrink-wrap). Do not use a text chip in the header.
+- Use `l10n.pendingSync` for tooltips.
+
+## Watchers / refresh
+
+- Include the table in backup unsynced-count watch streams when relevant.
+- After sync apply, Drift `markTablesUpdated` must cover the new table via `SyncTables.allKnownTableInfos`.
+
+## Quick anti-patterns
+
+- ❌ Soft-delete all children then insert new UUIDs on every edit
+- ❌ Hard-delete rows “because they were never synced”
+- ❌ New table in DB but missing from `SyncTables.ordered`
+- ❌ Detail pending-sync chip instead of corner badge; shrink-wrapped hero with badge at screen edge

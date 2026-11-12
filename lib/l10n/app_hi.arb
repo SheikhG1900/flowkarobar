@@ -664,6 +664,7 @@
   "clearAllNotifications": "सभी सूचनाएं साफ़ करें?",
   "clearAllNotificationsMessage": "क्या आप वाकई सभी सूचनाएं हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",
   "unsyncedChanges": "असिंक किए गए परिवर्तन",
+  "pendingSync": "सिंक बाकी",
   "reminders": "रिमाइंडर",
   "notificationsCleared": "सभी सूचनाएं साफ़ कर दी गईं",
   "noNotifications": "कोई सूचना नहीं",

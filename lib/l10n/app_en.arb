@@ -907,6 +907,7 @@
   "clearAllNotifications": "Clear all notifications?",
   "clearAllNotificationsMessage": "Are you sure you want to delete all notifications? This action cannot be undone.",
   "unsyncedChanges": "Unsynced Changes",
+  "pendingSync": "Pending sync",
   "reminders": "Reminders",
   "notificationsCleared": "All notifications cleared",
   "noNotifications": "No Notifications",

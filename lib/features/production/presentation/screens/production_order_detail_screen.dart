@@ -14,6 +14,7 @@ import 'package:flowpaisa/features/settings/presentation/providers/settings_prov
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/form_section_card.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/shared/widgets/pending_sync_badge.dart';
 
 class ProductionOrderDetailScreen extends ConsumerStatefulWidget {
   final String orderUuid;
@@ -287,6 +288,7 @@ class _ProductionOrderDetailScreenState
                     notes: order.notes?.trim().isNotEmpty == true
                         ? order.notes!.trim()
                         : null,
+                    showPendingSync: order.isNotSynced == true,
                   ),
                   AnimatedSize(
                     duration: const Duration(milliseconds: 280),
@@ -568,6 +570,7 @@ class _ProductionHero extends StatelessWidget {
   final String dateText;
   final String? recipeText;
   final String? notes;
+  final bool showPendingSync;
 
   const _ProductionHero({
     required this.productionNumber,
@@ -576,6 +579,7 @@ class _ProductionHero extends StatelessWidget {
     required this.dateText,
     this.recipeText,
     this.notes,
+    this.showPendingSync = false,
   });
 
   @override
@@ -585,92 +589,104 @@ class _ProductionHero extends StatelessWidget {
     const onGradient = Colors.white;
     final muted = Colors.white.withValues(alpha: 0.88);
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: gradient,
-        boxShadow: [
-          BoxShadow(
-            color: statusColor.withValues(alpha: 0.42),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: gradient,
+            boxShadow: [
+              BoxShadow(
+                color: statusColor.withValues(alpha: 0.42),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            PositionedDirectional(
-              end: -18,
-              bottom: -22,
-              child: Icon(
-                Icons.precision_manufacturing_outlined,
-                size: 128,
-                color: Colors.white.withValues(alpha: 0.14),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    statusLabel.toUpperCase(),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: muted,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.8,
-                    ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              children: [
+                PositionedDirectional(
+                  end: -18,
+                  bottom: -22,
+                  child: Icon(
+                    Icons.precision_manufacturing_outlined,
+                    size: 128,
+                    color: Colors.white.withValues(alpha: 0.14),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    productionNumber,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      color: onGradient,
-                      fontWeight: FontWeight.w800,
-                      height: 1.15,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    dateText,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: muted,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  if (recipeText != null) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      recipeText!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: muted,
-                        fontWeight: FontWeight.w500,
-                        height: 1.3,
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        statusLabel.toUpperCase(),
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: muted,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.8,
+                        ),
                       ),
-                    ),
-                  ],
-                  if (notes != null) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      notes!,
-                      maxLines: 3,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.82),
-                        height: 1.35,
+                      const SizedBox(height: 6),
+                      Text(
+                        productionNumber,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: onGradient,
+                          fontWeight: FontWeight.w800,
+                          height: 1.15,
+                        ),
                       ),
-                    ),
-                  ],
-                ],
-              ),
+                      const SizedBox(height: 8),
+                      Text(
+                        dateText,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: muted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (recipeText != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          recipeText!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: muted,
+                            fontWeight: FontWeight.w500,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                      if (notes != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          notes!,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.82),
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+        if (showPendingSync)
+          const PositionedDirectional(
+            top: -6,
+            end: -6,
+            child: PendingSyncDetailBadge(),
+          ),
+      ],
     );
   }
 }

@@ -12,6 +12,7 @@ import 'package:flowpaisa/features/production/presentation/screens/production_or
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 import 'package:flowpaisa/shared/widgets/hover_border_card.dart';
+import 'package:flowpaisa/shared/widgets/pending_sync_badge.dart';
 
 class RecipesListScreen extends ConsumerWidget {
   /// When false, used as a tab body under [ProductionOrdersListScreen].
@@ -205,6 +206,13 @@ class _RecipeCard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 8),
+              if (recipe.isNotSynced == true) ...[
+                Tooltip(
+                  message: l10n.pendingSync,
+                  child: const PendingSyncCornerBadge(iconSize: 12),
+                ),
+                const SizedBox(width: 8),
+              ],
               _CountBadge(
                 count: outputs.length,
                 accent: accent,

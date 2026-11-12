@@ -1760,6 +1760,9 @@ class AppLocalizationsUr extends AppLocalizations {
   String get unsyncedChanges => 'غیر مطابقت پذیر تبدیلیاں';
 
   @override
+  String get pendingSync => 'سینک باقی';
+
+  @override
   String get reminders => 'یاد دہانیاں';
 
   @override

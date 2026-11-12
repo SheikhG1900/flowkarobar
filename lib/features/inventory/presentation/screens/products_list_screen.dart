@@ -13,6 +13,7 @@ import 'package:flowpaisa/features/production/presentation/screens/production_or
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 import 'package:flowpaisa/shared/widgets/hover_border_card.dart';
+import 'package:flowpaisa/shared/widgets/pending_sync_badge.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -405,20 +406,20 @@ class _ProductLeading extends StatelessWidget {
       product: product,
       category: category,
     );
+    final showSync = product.isNotSynced == true;
+    final showService = product.isService;
 
-    if (!product.isService) return avatar;
+    if (!showService && !showSync) return avatar;
 
     final badgeColor = theme.colorScheme.primary;
-    return Tooltip(
-      message: serviceTooltip,
-      child: SizedBox(
-        width: 44,
-        height: 44,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // Keep category (or default) icon; service shown as corner badge.
-            Positioned.fill(child: Center(child: avatar)),
+    Widget body = SizedBox(
+      width: 44,
+      height: 44,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned.fill(child: Center(child: avatar)),
+          if (showService)
             Positioned(
               right: -2,
               bottom: -2,
@@ -447,10 +448,21 @@ class _ProductLeading extends StatelessWidget {
                 ),
               ),
             ),
-          ],
-        ),
+          if (showSync)
+            Positioned(
+              right: showService ? -2 : -3,
+              top: showService ? -2 : null,
+              bottom: showService ? null : -3,
+              child: const PendingSyncCornerBadge(iconSize: 11),
+            ),
+        ],
       ),
     );
+
+    if (showService) {
+      body = Tooltip(message: serviceTooltip, child: body);
+    }
+    return body;
   }
 }
 

@@ -664,6 +664,7 @@
   "clearAllNotifications": "تمام اطلاعات صاف کریں؟",
   "clearAllNotificationsMessage": "کیا آپ واقعی تمام اطلاعات کو حذف کرنا چاہتے ہیں؟ یہ عمل واپس نہیں کیا جا سکتا۔",
   "unsyncedChanges": "غیر مطابقت پذیر تبدیلیاں",
+  "pendingSync": "سینک باقی",
   "reminders": "یاد دہانیاں",
   "notificationsCleared": "تمام اطلاعات صاف کر دی گئیں",
   "noNotifications": "کوئی اطلاع نہیں",

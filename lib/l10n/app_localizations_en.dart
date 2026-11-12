@@ -1758,6 +1758,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unsyncedChanges => 'Unsynced Changes';
 
   @override
+  String get pendingSync => 'Pending sync';
+
+  @override
   String get reminders => 'Reminders';
 
   @override

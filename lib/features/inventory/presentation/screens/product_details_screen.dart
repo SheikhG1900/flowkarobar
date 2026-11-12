@@ -18,6 +18,7 @@ import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/form_section_card.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/shared/widgets/hover_border_card.dart';
+import 'package:flowpaisa/shared/widgets/pending_sync_badge.dart';
 
 enum _LotFilter { open, all, consumed }
 
@@ -464,111 +465,122 @@ class _ProductHero extends StatelessWidget {
     const onGradient = Colors.white;
     final muted = Colors.white.withValues(alpha: 0.88);
 
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: gradient,
-        boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: 0.42),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            PositionedDirectional(
-              end: -24,
-              top: -28,
-              child: Container(
-                width: 110,
-                height: 110,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.12),
-                ),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: gradient,
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: 0.42),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
-              child: Row(
-                children: [
-                  _HeroIcon(
-                    category: category,
-                    product: product,
-                    accent: accent,
-                    serviceTooltip: l10n.serviceProduct,
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          product.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            color: onGradient,
-                            fontWeight: FontWeight.w800,
-                            height: 1.15,
-                          ),
-                        ),
-                        if (product.sku != null &&
-                            product.sku!.trim().isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            product.sku!,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: muted,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 6,
-                          children: [
-                            if (!product.isService)
-                              _HeroPill(
-                                icon: Icons.straighten_outlined,
-                                label: product.unit,
-                              ),
-                            if (category != null)
-                              _HeroPill(
-                                icon: categoryIconData(category),
-                                label: category!.name,
-                              ),
-                            if (isLowStock)
-                              _HeroPill(
-                                icon: Icons.warning_amber_rounded,
-                                label: l10n.lowStock,
-                              ),
-                            if (!product.isService &&
-                                product.minStockAlert != null)
-                              _HeroPill(
-                                icon: Icons.notifications_active_outlined,
-                                label: l10n.minStockLabel(
-                                  AmountFormatter.formatQuantity(
-                                    product.minStockAlert!,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ],
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              children: [
+                PositionedDirectional(
+                  end: -24,
+                  top: -28,
+                  child: Container(
+                    width: 110,
+                    height: 110,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.12),
                     ),
                   ),
-                ],
-              ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+                  child: Row(
+                    children: [
+                      _HeroIcon(
+                        category: category,
+                        product: product,
+                        accent: accent,
+                        serviceTooltip: l10n.serviceProduct,
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              product.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                color: onGradient,
+                                fontWeight: FontWeight.w800,
+                                height: 1.15,
+                              ),
+                            ),
+                            if (product.sku != null &&
+                                product.sku!.trim().isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                product.sku!,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: muted,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 6,
+                              children: [
+                                if (!product.isService)
+                                  _HeroPill(
+                                    icon: Icons.straighten_outlined,
+                                    label: product.unit,
+                                  ),
+                                if (category != null)
+                                  _HeroPill(
+                                    icon: categoryIconData(category),
+                                    label: category!.name,
+                                  ),
+                                if (isLowStock)
+                                  _HeroPill(
+                                    icon: Icons.warning_amber_rounded,
+                                    label: l10n.lowStock,
+                                  ),
+                                if (!product.isService &&
+                                    product.minStockAlert != null)
+                                  _HeroPill(
+                                    icon: Icons.notifications_active_outlined,
+                                    label: l10n.minStockLabel(
+                                      AmountFormatter.formatQuantity(
+                                        product.minStockAlert!,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+        if (product.isNotSynced == true)
+          const PositionedDirectional(
+            top: -6,
+            end: -6,
+            child: PendingSyncDetailBadge(),
+          ),
+      ],
     );
   }
 }
@@ -985,6 +997,7 @@ class _QtyFocusCard extends ConsumerWidget {
   final String? description;
   /// Manual lots: edit affordance next to remaining qty.
   final bool showEditIcon;
+  final bool showPendingSync;
 
   const _QtyFocusCard({
     required this.total,
@@ -1007,6 +1020,7 @@ class _QtyFocusCard extends ConsumerWidget {
     this.footerBatch,
     this.description,
     this.showEditIcon = false,
+    this.showPendingSync = false,
   });
 
   static Widget lot({
@@ -1043,6 +1057,7 @@ class _QtyFocusCard extends ConsumerWidget {
               : null,
           description: desc == null || desc.isEmpty ? null : desc,
           showEditIcon: lot.isManual,
+          showPendingSync: lot.isNotSynced == true,
         );
       },
     );
@@ -1177,6 +1192,15 @@ class _QtyFocusCard extends ConsumerWidget {
                     (countBadge != null
                         ? l10n.lotsInBatch(countBadge!)
                         : null),
+              ),
+            ),
+          if (showPendingSync)
+            PositionedDirectional(
+              top: -2,
+              end: -2,
+              child: Tooltip(
+                message: l10n.pendingSync,
+                child: const PendingSyncCornerBadge(iconSize: 11),
               ),
             ),
         ],
