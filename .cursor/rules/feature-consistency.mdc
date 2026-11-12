@@ -1,0 +1,48 @@
+---
+description: Checklist for consistent UI and backend when adding or changing features
+alwaysApply: true
+---
+
+# Feature consistency checklist
+
+Use when adding or changing a **screen, entity, or CRUD flow**. Complements `app-rule.mdc` (theme/format/l10n) and `sync-features.mdc` (cloud sync). Prefer existing shared widgets over new one-offs.
+
+## Backend / domain
+
+- Prefer `lib/features/<feature>/{data,domain,presentation}` layout.
+- Persist with **UUID** primary keys; soft-delete via `isDeleted`; bump `updatedAt` on writes.
+- Repository owns DB writes; UI calls repository/providers — no raw SQL in widgets.
+- Child lines (order/recipe/production inputs): **update in place** by UUID; soft-delete only when the user removes a line (no replace-all).
+- Stock moves go through inventory helpers (FEFO / receive / restore) — don’t invent parallel qty math in the UI.
+- Amounts/dates: `AmountFormatter` / `AppDateFormatter` only; success/error: `ToastUtils`.
+- New/changed user-facing strings: EN + HI + UR (`flutter gen-l10n`).
+- If the entity syncs: follow **`sync-features.mdc`** end-to-end.
+
+## List UI
+
+- Tappable cards: `HoverBorderCard` (border hover only; no background flash).
+- Pending sync: `PendingSyncCornerBadge` when `isNotSynced`.
+- Empty states: reuse existing empty-state pattern (e.g. `OrderEmptyState`), not a one-off column of text.
+- Destructive swipe/delete: `SwipeableListItem` where lists already use it.
+- FAB: `AppFloatingActionButton` with a unique `heroTag` per screen.
+- Standalone routes need an **AppBar** (or parent tab with back); embedded tab bodies use `showAppBar: false` / equivalent.
+
+## Detail / form UI
+
+- Sections: `FormSectionCard`; full forms: `FormPageScaffold` / `FormBottomBar` / `GradientButton` where the feature already does.
+- Detail hero: full-width card (`width: double.infinity` if content would shrink-wrap); pending sync = `PendingSyncDetailBadge` corner overlay — not a text chip.
+- Status pills: reuse `OrderStatusChip` (or same visual language); colors from `AppColors` (income/expense/payable/receivable/warning/info).
+- Loading/error: centered progress + localized error via `l10n.errorOccurred`.
+
+## Extract shared UI (small upfront, not a design system)
+
+- Extract to `lib/shared/widgets/` only when the **same pattern appears in 3+ places** or you are about to copy-paste.
+- Good candidates: list card chrome, gradient hero shell, pending-sync badges (already shared).
+- Do **not** wrap every Text/Icon “for consistency.”
+
+## Anti-patterns
+
+- ❌ Hard-coded currency/date strings; raw `Colors.green` instead of `AppColors` / theme
+- ❌ List InkWell default grey hover; detail chip for sync instead of corner badge
+- ❌ Screen without back when pushed from dashboard/sync
+- ❌ Duplicating FEFO/receive/cost logic outside inventory/orders/production repositories
