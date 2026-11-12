@@ -17,6 +17,7 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/form_section_card.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/shared/widgets/hover_border_card.dart';
 
 enum _LotFilter { open, all, consumed }
 
@@ -1069,126 +1070,116 @@ class _QtyFocusCard extends ConsumerWidget {
         earliestExpiry != null ||
         (orderHint != null && orderHint!.isNotEmpty);
 
-    return Container(
-      decoration: dense
-          ? BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: accent.withValues(alpha: 0.18)),
-            )
-          : AppColors.transactionListItemDecoration(theme, accent),
+    return HoverBorderCard(
+      accent: accent,
+      borderRadius: dense ? 14 : 20,
+      fillColor: dense
+          ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
+          : null,
       clipBehavior: Clip.none,
-      child: Material(
-        color: Colors.transparent,
+      onTap: onOpenOrder,
+      child: Stack(
         clipBehavior: Clip.none,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                InkWell(
-                  onTap: onOpenOrder,
-                  borderRadius: BorderRadius.circular(dense ? 14 : 20),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      pad,
-                      pad + ((badgeIcon != null || countBadge != null) ? 4 : 0),
-                      pad,
-                      pad,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  pad,
+                  pad + ((badgeIcon != null || countBadge != null) ? 4 : 0),
+                  pad,
+                  pad,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _StatusCluster(
+                      trailing: trailing,
+                      remainingLabel: l10n.lotRemaining,
+                      remainingValue:
+                          AmountFormatter.formatQuantity(remaining),
+                      unit: unit,
+                      remainingColor: remaining <= 0
+                          ? muted
+                          : life <= 0.25
+                              ? AppColors.warning
+                              : AppColors.incomeColor,
+                      life: life,
+                      lifeColor: lifeColor,
+                      dense: dense,
+                      showEditIcon: showEditIcon,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                    SizedBox(height: dense ? 10 : 12),
+                    _MetricStrip(
                       children: [
-                        _StatusCluster(
-                          trailing: trailing,
-                          remainingLabel: l10n.lotRemaining,
-                          remainingValue:
-                              AmountFormatter.formatQuantity(remaining),
+                        _QtyStat(
+                          label: l10n.lotTotal,
+                          value: AmountFormatter.formatQuantity(total),
                           unit: unit,
-                          remainingColor: remaining <= 0
-                              ? muted
-                              : life <= 0.25
-                                  ? AppColors.warning
-                                  : AppColors.incomeColor,
-                          life: life,
-                          lifeColor: lifeColor,
-                          dense: dense,
-                          showEditIcon: showEditIcon,
+                          valueColor: theme.colorScheme.onSurface,
                         ),
-                        SizedBox(height: dense ? 10 : 12),
-                        _MetricStrip(
-                          children: [
-                            _QtyStat(
-                              label: l10n.lotTotal,
-                              value: AmountFormatter.formatQuantity(total),
-                              unit: unit,
-                              valueColor: theme.colorScheme.onSurface,
-                            ),
-                            _QtyStat(
-                              label: l10n.lotConsumed,
-                              value: AmountFormatter.formatQuantity(consumed),
-                              unit: unit,
-                              valueColor: AppColors.expenseColor,
-                            ),
-                          ],
+                        _QtyStat(
+                          label: l10n.lotConsumed,
+                          value: AmountFormatter.formatQuantity(consumed),
+                          unit: unit,
+                          valueColor: AppColors.expenseColor,
                         ),
-                        SizedBox(height: dense ? 8 : 10),
-                        _MetricStrip(
-                          children: [
-                            _QtyStat(
-                              label: l10n.lotUnitCost,
-                              value: formatOrderAmount(ref, unitCost),
-                              valueColor: AppColors.payableColor,
-                            ),
-                            _QtyStat(
-                              label: l10n.lotInventoryCost,
-                              value: formatOrderAmount(ref, inventoryValue),
-                              valueColor: AppColors.receivableColor,
-                              emphasize: true,
-                            ),
-                          ],
-                        ),
-                        if (hasFooter) ...[
-                          SizedBox(height: dense ? 8 : 10),
-                          _ItemFooter(
-                            batch: footerBatch,
-                            expiryText: earliestExpiry == null
-                                ? null
-                                : AppDateFormatter.formatDate(
-                                    earliestExpiry!,
-                                    pattern: dateFormat,
-                                  ),
-                            expiryWarn: expiryWarn,
-                            orderHint: orderHint,
-                            description: hasDescription ? description : null,
-                            dense: dense,
-                          ),
-                        ],
                       ],
                     ),
-                  ),
-                ),
-                if (bottom != null) bottom!,
-              ],
-            ),
-            if (badgeIcon != null || countBadge != null)
-              PositionedDirectional(
-                top: -2,
-                start: -2,
-                child: _CornerBadge(
-                  icon: badgeIcon,
-                  count: countBadge,
-                  color: accent,
-                  tooltip: badgeTooltip ??
-                      (countBadge != null
-                          ? l10n.lotsInBatch(countBadge!)
-                          : null),
+                    SizedBox(height: dense ? 8 : 10),
+                    _MetricStrip(
+                      children: [
+                        _QtyStat(
+                          label: l10n.lotUnitCost,
+                          value: formatOrderAmount(ref, unitCost),
+                          valueColor: AppColors.payableColor,
+                        ),
+                        _QtyStat(
+                          label: l10n.lotInventoryCost,
+                          value: formatOrderAmount(ref, inventoryValue),
+                          valueColor: AppColors.receivableColor,
+                          emphasize: true,
+                        ),
+                      ],
+                    ),
+                    if (hasFooter) ...[
+                      SizedBox(height: dense ? 8 : 10),
+                      _ItemFooter(
+                        batch: footerBatch,
+                        expiryText: earliestExpiry == null
+                            ? null
+                            : AppDateFormatter.formatDate(
+                                earliestExpiry!,
+                                pattern: dateFormat,
+                              ),
+                        expiryWarn: expiryWarn,
+                        orderHint: orderHint,
+                        description: hasDescription ? description : null,
+                        dense: dense,
+                      ),
+                    ],
+                  ],
                 ),
               ),
-          ],
-        ),
+              if (bottom != null) bottom!,
+            ],
+          ),
+          if (badgeIcon != null || countBadge != null)
+            PositionedDirectional(
+              top: -2,
+              start: -2,
+              child: _CornerBadge(
+                icon: badgeIcon,
+                count: countBadge,
+                color: accent,
+                tooltip: badgeTooltip ??
+                    (countBadge != null
+                        ? l10n.lotsInBatch(countBadge!)
+                        : null),
+              ),
+            ),
+        ],
       ),
     );
   }

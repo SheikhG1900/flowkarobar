@@ -13,9 +13,13 @@ import 'package:flowpaisa/features/production/presentation/screens/recipes_list_
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
+import 'package:flowpaisa/shared/widgets/hover_border_card.dart';
 
 class ProductionOrdersListScreen extends ConsumerWidget {
-  const ProductionOrdersListScreen({super.key});
+  /// 0 = production orders, 1 = recipes.
+  final int initialTab;
+
+  const ProductionOrdersListScreen({super.key, this.initialTab = 0});
 
   Color _statusColor(String status) {
     switch (status) {
@@ -45,8 +49,10 @@ class ProductionOrdersListScreen extends ConsumerWidget {
     final ordersAsync = ref.watch(productionOrdersStreamProvider);
     final dateFormat = ref.watch(userProfileProvider).dateFormat;
 
+    final tabIndex = initialTab.clamp(0, 1);
     return DefaultTabController(
       length: 2,
+      initialIndex: tabIndex,
       child: Builder(
         builder: (context) {
           final tab = DefaultTabController.of(context);
@@ -169,7 +175,7 @@ class ProductionOrdersListScreen extends ConsumerWidget {
                     );
                   },
                 ),
-                const RecipesListScreen(),
+                const RecipesListScreen(showAppBar: false),
               ],
             ),
           );
@@ -208,143 +214,135 @@ class _ProductionOrderCard extends ConsumerWidget {
     final inputs = inputsAsync.value ?? const <ProductionOrderInput>[];
     final recipeLabel = order.recipeNameSnapshot?.trim();
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onOpen,
-        child: Container(
-          decoration:
-              AppColors.transactionListItemDecoration(theme, statusColor),
-          clipBehavior: Clip.none,
-          padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return HoverBorderCard(
+      accent: statusColor,
+      onTap: onOpen,
+      clipBehavior: Clip.none,
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          order.productionNumber,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          [
-                            AppDateFormatter.formatDate(
-                              order.productionDate,
-                              pattern: dateFormat,
-                            ),
-                            if (recipeLabel != null && recipeLabel.isNotEmpty)
-                              l10n.recipeScaledNote(
-                                AmountFormatter.formatQuantity(
-                                    order.scaleFactor),
-                                recipeLabel,
-                              ),
-                          ].join(' · '),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: muted,
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  _StatusBadge(
-                    label: statusLabel,
-                    color: statusColor,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Text(
-                    l10n.sectionOutputs,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: muted,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  _CountBadge(
-                    count: outputs.length,
-                    accent: AppColors.incomeColor,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              if (outputsAsync.isLoading && outputs.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: Center(
-                    child: SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
-                )
-              else if (outputs.isEmpty)
-                Text(
-                  l10n.noResultsFound,
-                  style: theme.textTheme.bodySmall?.copyWith(color: muted),
-                )
-              else
-                for (var i = 0; i < outputs.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 6),
-                  _OutputQtyRow(
-                    name: outputs[i].productNameSnapshot,
-                    quantity: order.status == ProductionStatus.completed &&
-                            outputs[i].actualQuantity > 0
-                        ? outputs[i].actualQuantity
-                        : outputs[i].plannedQuantity,
-                    unit: outputs[i].unit,
-                    accent: AppColors.incomeColor,
-                  ),
-                ],
-              if (inputs.isNotEmpty) ...[
-                const SizedBox(height: 12),
-                Text(
-                  '${l10n.sectionInputs}: ${inputs.length}',
-                  style: theme.textTheme.bodySmall?.copyWith(color: muted),
-                ),
-              ],
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  if (onEdit != null) ...[
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: onEdit,
-                        child: Text(l10n.editProductionOrder),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      order.productionNumber,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(height: 4),
+                    Text(
+                      [
+                        AppDateFormatter.formatDate(
+                          order.productionDate,
+                          pattern: dateFormat,
+                        ),
+                        if (recipeLabel != null && recipeLabel.isNotEmpty)
+                          l10n.recipeScaledNote(
+                            AmountFormatter.formatQuantity(order.scaleFactor),
+                            recipeLabel,
+                          ),
+                      ].join(' · '),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: muted,
+                        height: 1.3,
+                      ),
+                    ),
                   ],
-                  Expanded(
-                    child: FilledButton(
-                      onPressed: onOpen,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: statusColor,
-                      ),
-                      child: Text(l10n.orderDetails),
-                    ),
-                  ),
-                ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              _StatusBadge(
+                label: statusLabel,
+                color: statusColor,
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text(
+                l10n.sectionOutputs,
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: muted,
+                ),
+              ),
+              const SizedBox(width: 8),
+              _CountBadge(
+                count: outputs.length,
+                accent: AppColors.incomeColor,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (outputsAsync.isLoading && outputs.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else if (outputs.isEmpty)
+            Text(
+              l10n.noResultsFound,
+              style: theme.textTheme.bodySmall?.copyWith(color: muted),
+            )
+          else
+            for (var i = 0; i < outputs.length; i++) ...[
+              if (i > 0) const SizedBox(height: 6),
+              _OutputQtyRow(
+                name: outputs[i].productNameSnapshot,
+                quantity: order.status == ProductionStatus.completed &&
+                        outputs[i].actualQuantity > 0
+                    ? outputs[i].actualQuantity
+                    : outputs[i].plannedQuantity,
+                unit: outputs[i].unit,
+                accent: AppColors.incomeColor,
+              ),
+            ],
+          if (inputs.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              '${l10n.sectionInputs}: ${inputs.length}',
+              style: theme.textTheme.bodySmall?.copyWith(color: muted),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              if (onEdit != null) ...[
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onEdit,
+                    child: Text(l10n.editProductionOrder),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Expanded(
+                child: FilledButton(
+                  onPressed: onOpen,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: statusColor,
+                  ),
+                  child: Text(l10n.orderDetails),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

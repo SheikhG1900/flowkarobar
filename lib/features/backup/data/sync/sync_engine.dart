@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/backup/data/google_drive_service.dart';
+import 'package:flowpaisa/features/backup/data/sync/sync_tables.dart';
 import 'package:flowpaisa/features/backup/domain/models/sync_manifest.dart';
 import 'package:flowpaisa/features/backup/domain/models/sync_version_file.dart';
 import 'package:flowpaisa/features/businesses/domain/models/business.dart';
@@ -150,18 +151,9 @@ class SyncEngine {
             deviceId, localMetadata.version, manifest.version,
             markAsSuccess: false);
 
-        // CRITICAL: Notify Drift after catch-up so UI components like Recent Transactions refresh
+        // CRITICAL: Notify Drift after catch-up so UI components refresh
         // even if the push phase is still pending or skipped.
-        _db.markTablesUpdated({
-          _db.transactions,
-          _db.categories,
-          _db.contacts,
-          _db.accounts,
-          _db.accountTransfers,
-          _db.orders,
-          _db.orderItems,
-          _db.products,
-        });
+        _db.markTablesUpdated(SyncTables.allKnownTableInfos(_db));
       }
 
       // Step 2: Lock Assessment
@@ -681,18 +673,7 @@ class SyncEngine {
     }
 
     // Notify Drift once after ALL catch-up versions are applied
-    _db.markTablesUpdated({
-      _db.transactions,
-      _db.categories,
-      _db.contacts,
-      _db.accounts,
-      _db.accountTransfers,
-      _db.orders,
-      _db.orderItems,
-      _db.products,
-      _db.appCurrencies,
-      _db.userPreferences,
-    });
+    _db.markTablesUpdated(SyncTables.allKnownTableInfos(_db));
   }
 
   Future<void> _applyChanges(
@@ -708,35 +689,18 @@ class SyncEngine {
 
     // CRITICAL: Use a transaction for the entire batch of changes
     await _db.transaction(() async {
-      // Contacts and Categories should be first, then Accounts, then Transactions,
-      // then transfers and linked tables, then preferences
-      final tableOrder = [
-        'categories',
-        'contacts',
-        'app_currencies',
-        'accounts',
-        'transactions',
-        'account_transfers',
-        'products',
-        'product_batches',
-        'catalogs',
-        'catalog_items',
-        'catalog_assignments',
-        'catalog_tiered_discounts',
-        'orders',
-        'order_items',
-        'order_returns',
-        'order_return_items',
-        'user_preferences',
-      ];
-
       // CRITICAL: Filter out metadata keys like '_summary' BEFORE processing
       final sortedEntries =
           changes.entries.where((e) => !e.key.startsWith('_')).toList()
             ..sort((a, b) {
-              final indexA = tableOrder.indexOf(a.key);
-              final indexB = tableOrder.indexOf(b.key);
-              return indexA.compareTo(indexB);
+              final indexA =
+                  SyncTables.ordered.indexOf(SyncTables.sqlTableName(a.key));
+              final indexB =
+                  SyncTables.ordered.indexOf(SyncTables.sqlTableName(b.key));
+              // Unknown tables sort last, preserving relative order.
+              final safeA = indexA < 0 ? SyncTables.ordered.length : indexA;
+              final safeB = indexB < 0 ? SyncTables.ordered.length : indexB;
+              return safeA.compareTo(safeB);
             });
 
       if (kDebugMode) {
@@ -753,26 +717,25 @@ class SyncEngine {
 
         for (final row in rows) {
           // Special handling for categories and currencies to avoid duplicates
-          if (tableName == 'categories' || tableName == 'app_currencies') {
+          final sqlName = SyncTables.sqlTableName(tableName);
+          if (sqlName == 'product_categories' ||
+              tableName == 'app_currencies') {
             final isDefault =
                 row['is_default'] == 1 || row['isDefault'] == true;
             if (isDefault) {
               // For default categories/currencies, we still want to update their fields
-              // (like budget fields) if they already exist, but skip INSERT to avoid duplicates.
+              // if they already exist, but avoid duplicate INSERTs.
               final uuid = row['uuid'];
               final existing = await _db.customSelect(
-                'SELECT COUNT(*) as count FROM $tableName WHERE uuid = ?',
+                'SELECT COUNT(*) as count FROM $sqlName WHERE uuid = ?',
                 variables: [Variable.withString(uuid)],
               ).getSingle();
 
               if ((existing.data['count'] as num).toInt() > 0) {
                 if (kDebugMode) {
                   print(
-                      'SyncEngine: Updating existing default $tableName entry with UUID $uuid');
+                      'SyncEngine: Updating existing default $sqlName entry with UUID $uuid');
                 }
-                // Fall through to _upsertRow which handles ON CONFLICT DO UPDATE
-              } else {
-                // If it doesn't exist, we let _upsertRow handle the INSERT
               }
             }
           }
@@ -790,48 +753,8 @@ class SyncEngine {
         print(
             'SyncEngine: Marking tables as updated: ${updatedTableNames.join(', ')}');
       }
-      // We map string table names to Drift's TableInfo objects
       final tableInfos = updatedTableNames
-          .map((name) {
-            switch (name) {
-              case 'categories':
-                return _db.categories;
-              case 'contacts':
-                return _db.contacts;
-              case 'accounts':
-                return _db.accounts;
-              case 'transactions':
-                return _db.transactions;
-              case 'account_transfers':
-                return _db.accountTransfers;
-              case 'products':
-                return _db.products;
-              case 'product_batches':
-                return _db.productBatches;
-              case 'catalogs':
-                return _db.catalogs;
-              case 'catalog_items':
-                return _db.catalogItems;
-              case 'catalog_assignments':
-                return _db.catalogAssignments;
-              case 'catalog_tiered_discounts':
-                return _db.catalogTieredDiscounts;
-              case 'orders':
-                return _db.orders;
-              case 'order_items':
-                return _db.orderItems;
-              case 'order_returns':
-                return _db.orderReturns;
-              case 'order_return_items':
-                return _db.orderReturnItems;
-              case 'app_currencies':
-                return _db.appCurrencies;
-              case 'user_preferences':
-                return _db.userPreferences;
-              default:
-                return null;
-            }
-          })
+          .map((name) => SyncTables.tableInfo(_db, name))
           .whereType<TableInfo>()
           .toSet();
 
@@ -861,22 +784,7 @@ class SyncEngine {
 
     final changes = <String, List<Map<String, dynamic>>>{};
 
-    final tables = [
-      'categories',
-      'contacts',
-      'app_currencies',
-      'accounts',
-      'tags',
-      'transactions',
-      'transaction_tags',
-      'account_transfers',
-      'receivables',
-      'payables',
-      'reminders',
-      'transaction_schedules',
-      'transaction_documents',
-      'user_preferences',
-    ];
+    final tables = SyncTables.ordered;
 
     if (kDebugMode) {
       print(
@@ -912,7 +820,11 @@ class SyncEngine {
           // Create a deep copy and ensure types are JSON-compatible
           changes[tableName] = rows.map((r) {
             final data = Map<String, dynamic>.from(r.data);
-            // Ensure any non-standard types are converted
+            data.updateAll((_, value) {
+              if (value is DateTime) return value.toUtc().toIso8601String();
+              if (value is bool) return value ? 1 : 0;
+              return value;
+            });
             return data;
           }).toList();
         }
@@ -962,11 +874,12 @@ class SyncEngine {
               [tUuid, tagUuid],
             );
           } else {
-            final idColumn = tableName == 'user_preferences' ? 'key' : 'uuid';
+            final sqlName = SyncTables.sqlTableName(tableName);
+            final idColumn = sqlName == 'user_preferences' ? 'key' : 'uuid';
             final idValue =
-                tableName == 'user_preferences' ? row['key'] : row['uuid'];
+                sqlName == 'user_preferences' ? row['key'] : row['uuid'];
             await _db.customStatement(
-              'UPDATE $tableName SET is_not_synced = 0 WHERE $idColumn = ?',
+              'UPDATE $sqlName SET is_not_synced = 0 WHERE $idColumn = ?',
               [idValue],
             );
           }
@@ -977,46 +890,7 @@ class SyncEngine {
     // Notify drift of the changes so stream listeners update
     if (updatedTables.isNotEmpty) {
       final tableInfos = updatedTables
-          .map((name) {
-            switch (name) {
-              case 'categories':
-                return _db.categories;
-              case 'contacts':
-                return _db.contacts;
-              case 'accounts':
-                return _db.accounts;
-              case 'transactions':
-                return _db.transactions;
-              case 'account_transfers':
-                return _db.accountTransfers;
-              case 'products':
-                return _db.products;
-              case 'product_batches':
-                return _db.productBatches;
-              case 'catalogs':
-                return _db.catalogs;
-              case 'catalog_items':
-                return _db.catalogItems;
-              case 'catalog_assignments':
-                return _db.catalogAssignments;
-              case 'catalog_tiered_discounts':
-                return _db.catalogTieredDiscounts;
-              case 'orders':
-                return _db.orders;
-              case 'order_items':
-                return _db.orderItems;
-              case 'order_returns':
-                return _db.orderReturns;
-              case 'order_return_items':
-                return _db.orderReturnItems;
-              case 'app_currencies':
-                return _db.appCurrencies;
-              case 'user_preferences':
-                return _db.userPreferences;
-              default:
-                return null;
-            }
-          })
+          .map((name) => SyncTables.tableInfo(_db, name))
           .whereType<TableInfo>()
           .toSet();
 
@@ -1051,24 +925,7 @@ class SyncEngine {
     });
 
     // CRITICAL: Handle date fields. SQLite expects ISO8601 strings or integers.
-    final dateFields = [
-      'date',
-      'due_date',
-      'received_date',
-      'paid_date',
-      'processed_date',
-      'opening_date',
-      'created_at',
-      'updated_at',
-      'last_sync_at',
-      'reminder_date',
-      'last_used',
-      'last_generated_date',
-      'start_date',
-      'end_date'
-    ];
-    for (final field in dateFields) {
-      // Map JSON snake_case to potential camelCase if needed, though Drift uses snake_case for customSelect
+    for (final field in SyncTables.dateFields) {
       if (rowData.containsKey(field) && rowData[field] != null) {
         if (rowData[field] is DateTime) {
           rowData[field] = (rowData[field] as DateTime).toIso8601String();
@@ -1087,29 +944,33 @@ class SyncEngine {
       sqlData[snakeKey] = value;
     });
 
+    final sqlTable = SyncTables.sqlTableName(tableName);
+
     // user_preferences uses key as sync identity; id is auto-increment and differs per device.
     // Excluding id avoids UNIQUE constraint on id when applying remote rows.
-    if (tableName == 'user_preferences') {
+    if (sqlTable == 'user_preferences') {
       sqlData.remove('id');
     }
 
     final columns = sqlData.keys.join(', ');
     final placeholders = List.filled(sqlData.length, '?').join(', ');
     final updates = sqlData.keys.map((k) => '$k = EXCLUDED.$k').join(', ');
-    final conflictColumn = tableName == 'user_preferences'
+    final conflictColumn = sqlTable == 'user_preferences'
         ? 'key'
-        : (tableName == 'transaction_tags' ? 'transaction_uuid, tag_uuid' : 'uuid');
+        : (sqlTable == 'transaction_tags'
+            ? 'transaction_uuid, tag_uuid'
+            : 'uuid');
 
     await _runWithRetryOnBusy(() async {
       try {
         await _db.customStatement(
-          'INSERT INTO $tableName ($columns) VALUES ($placeholders) '
+          'INSERT INTO $sqlTable ($columns) VALUES ($placeholders) '
           'ON CONFLICT($conflictColumn) DO UPDATE SET $updates',
           sqlData.values.toList(),
         );
       } catch (e) {
         if (kDebugMode) {
-          print('SyncEngine: Error upserting row into $tableName: $e');
+          print('SyncEngine: Error upserting row into $sqlTable: $e');
           print('SyncEngine: Row data: $sqlData');
         }
         rethrow;

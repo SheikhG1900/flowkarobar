@@ -299,66 +299,148 @@ class ProductionRepository {
         ),
       );
 
-      await (_db.update(_db.productionOrderInputs)
-            ..where((i) => i.productionOrderUuid.equals(orderUuid)))
-          .write(
-        const ProductionOrderInputsCompanion(
-          isDeleted: Value(true),
-          isNotSynced: Value(true),
-        ),
-      );
-      await (_db.update(_db.productionOrderOutputs)
-            ..where((o) => o.productionOrderUuid.equals(orderUuid)))
-          .write(
-        const ProductionOrderOutputsCompanion(
-          isDeleted: Value(true),
-          isNotSynced: Value(true),
-        ),
-      );
-      await (_db.update(_db.productionOrderCharges)
-            ..where((c) => c.productionOrderUuid.equals(orderUuid)))
-          .write(
-        const ProductionOrderChargesCompanion(
-          isDeleted: Value(true),
-          isNotSynced: Value(true),
-        ),
-      );
-
-      for (final input in inputs) {
-        final id = input.uuid.present ? input.uuid.value : const Uuid().v4();
-        await _db.into(_db.productionOrderInputs).insert(
-              input.copyWith(
-                uuid: Value(id),
-                productionOrderUuid: Value(orderUuid),
-                isDeleted: const Value(false),
-                isNotSynced: const Value(true),
-              ),
-            );
-      }
-      for (final output in outputs) {
-        final id = output.uuid.present ? output.uuid.value : const Uuid().v4();
-        await _db.into(_db.productionOrderOutputs).insert(
-              output.copyWith(
-                uuid: Value(id),
-                productionOrderUuid: Value(orderUuid),
-                isDeleted: const Value(false),
-                isNotSynced: const Value(true),
-              ),
-            );
-      }
-      for (final charge in charges) {
-        final id = charge.uuid.present ? charge.uuid.value : const Uuid().v4();
-        await _db.into(_db.productionOrderCharges).insert(
-              charge.copyWith(
-                uuid: Value(id),
-                productionOrderUuid: Value(orderUuid),
-                isDeleted: const Value(false),
-                isNotSynced: const Value(true),
-              ),
-            );
-      }
+      await _syncDraftInputs(orderUuid, inputs);
+      await _syncDraftOutputs(orderUuid, outputs);
+      await _syncDraftCharges(orderUuid, charges);
     });
   }
+
+  /// Update existing line rows in place; soft-delete only lines explicitly removed.
+  Future<void> _syncDraftInputs(
+    String orderUuid,
+    List<ProductionOrderInputsCompanion> inputs,
+  ) async {
+    final existing = await (_db.select(_db.productionOrderInputs)
+          ..where((i) =>
+              i.productionOrderUuid.equals(orderUuid) &
+              i.isDeleted.equals(false)))
+        .get();
+    final keep = <String>{};
+
+    for (final input in inputs) {
+      final id = input.uuid.present ? input.uuid.value : const Uuid().v4();
+      keep.add(id);
+      final match = existing.where((e) => e.uuid == id).toList();
+      final row = input.copyWith(
+        uuid: Value(id),
+        productionOrderUuid: Value(orderUuid),
+        isDeleted: const Value(false),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      );
+      if (match.isNotEmpty) {
+        await (_db.update(_db.productionOrderInputs)
+              ..where((i) => i.uuid.equals(id)))
+            .write(row);
+      } else {
+        await _db.into(_db.productionOrderInputs).insert(row);
+      }
+    }
+
+    for (final old in existing) {
+      if (keep.contains(old.uuid)) continue;
+      await (_db.update(_db.productionOrderInputs)
+            ..where((i) => i.uuid.equals(old.uuid)))
+          .write(
+        ProductionOrderInputsCompanion(
+          isDeleted: const Value(true),
+          isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+    }
+  }
+
+  Future<void> _syncDraftOutputs(
+    String orderUuid,
+    List<ProductionOrderOutputsCompanion> outputs,
+  ) async {
+    final existing = await (_db.select(_db.productionOrderOutputs)
+          ..where((o) =>
+              o.productionOrderUuid.equals(orderUuid) &
+              o.isDeleted.equals(false)))
+        .get();
+    final keep = <String>{};
+
+    for (final output in outputs) {
+      final id = output.uuid.present ? output.uuid.value : const Uuid().v4();
+      keep.add(id);
+      final match = existing.where((e) => e.uuid == id).toList();
+      final row = output.copyWith(
+        uuid: Value(id),
+        productionOrderUuid: Value(orderUuid),
+        isDeleted: const Value(false),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      );
+      if (match.isNotEmpty) {
+        await (_db.update(_db.productionOrderOutputs)
+              ..where((o) => o.uuid.equals(id)))
+            .write(row);
+      } else {
+        await _db.into(_db.productionOrderOutputs).insert(row);
+      }
+    }
+
+    for (final old in existing) {
+      if (keep.contains(old.uuid)) continue;
+      await (_db.update(_db.productionOrderOutputs)
+            ..where((o) => o.uuid.equals(old.uuid)))
+          .write(
+        ProductionOrderOutputsCompanion(
+          isDeleted: const Value(true),
+          isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+    }
+  }
+
+  Future<void> _syncDraftCharges(
+    String orderUuid,
+    List<ProductionOrderChargesCompanion> charges,
+  ) async {
+    final existing = await (_db.select(_db.productionOrderCharges)
+          ..where((c) =>
+              c.productionOrderUuid.equals(orderUuid) &
+              c.isDeleted.equals(false)))
+        .get();
+    final keep = <String>{};
+
+    for (final charge in charges) {
+      final id = charge.uuid.present ? charge.uuid.value : const Uuid().v4();
+      keep.add(id);
+      final match = existing.where((e) => e.uuid == id).toList();
+      final row = charge.copyWith(
+        uuid: Value(id),
+        productionOrderUuid: Value(orderUuid),
+        isDeleted: const Value(false),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      );
+      if (match.isNotEmpty) {
+        await (_db.update(_db.productionOrderCharges)
+              ..where((c) => c.uuid.equals(id)))
+            .write(row);
+      } else {
+        await _db.into(_db.productionOrderCharges).insert(row);
+      }
+    }
+
+    for (final old in existing) {
+      if (keep.contains(old.uuid)) continue;
+      await (_db.update(_db.productionOrderCharges)
+            ..where((c) => c.uuid.equals(old.uuid)))
+          .write(
+        ProductionOrderChargesCompanion(
+          isDeleted: const Value(true),
+          isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+    }
+  }
+
 
   Future<void> cancel(String orderUuid) async {
     final order = await getOrder(orderUuid);

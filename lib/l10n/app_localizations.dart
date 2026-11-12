@@ -136,6 +136,90 @@ abstract class AppLocalizations {
   /// **'Batch'**
   String get batch;
 
+  /// No description provided for @orderItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Order Items'**
+  String get orderItems;
+
+  /// No description provided for @goodsReceipts.
+  ///
+  /// In en, this message translates to:
+  /// **'Goods Receipts'**
+  String get goodsReceipts;
+
+  /// No description provided for @goodsReceiptLines.
+  ///
+  /// In en, this message translates to:
+  /// **'Goods Receipt Lines'**
+  String get goodsReceiptLines;
+
+  /// No description provided for @orderReturnItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Return Items'**
+  String get orderReturnItems;
+
+  /// No description provided for @recipeInputs.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe Inputs'**
+  String get recipeInputs;
+
+  /// No description provided for @recipeOutputs.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe Outputs'**
+  String get recipeOutputs;
+
+  /// No description provided for @recipeCharges.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipe Charges'**
+  String get recipeCharges;
+
+  /// No description provided for @productionOrderInputs.
+  ///
+  /// In en, this message translates to:
+  /// **'Production Inputs'**
+  String get productionOrderInputs;
+
+  /// No description provided for @productionOrderOutputs.
+  ///
+  /// In en, this message translates to:
+  /// **'Production Outputs'**
+  String get productionOrderOutputs;
+
+  /// No description provided for @productionOrderCharges.
+  ///
+  /// In en, this message translates to:
+  /// **'Production Charges'**
+  String get productionOrderCharges;
+
+  /// No description provided for @productionConsumptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Production Consumptions'**
+  String get productionConsumptions;
+
+  /// No description provided for @catalogItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog Items'**
+  String get catalogItems;
+
+  /// No description provided for @catalogAssignments.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog Assignments'**
+  String get catalogAssignments;
+
+  /// No description provided for @catalogTieredDiscounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog Discounts'**
+  String get catalogTieredDiscounts;
+
   /// No description provided for @expiryDate.
   ///
   /// In en, this message translates to:
@@ -865,7 +949,7 @@ abstract class AppLocalizations {
   /// No description provided for @scaleAdjustHint.
   ///
   /// In en, this message translates to:
-  /// **'Updates input, output, and charge quantities to the new scale'**
+  /// **'With a linked recipe, resets lines from recipe × scale; otherwise scales current quantities'**
   String get scaleAdjustHint;
 
   /// No description provided for @productionFromRecipe.

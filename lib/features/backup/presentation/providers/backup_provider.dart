@@ -1,5 +1,6 @@
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/backup/data/sync/sync_engine.dart';
+import 'package:flowpaisa/features/backup/data/sync/sync_tables.dart';
 import 'package:flowpaisa/features/premium/domain/premium_provider.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'dart:convert';
@@ -641,6 +642,27 @@ class BackupNotifier extends Notifier<BackupState> {
         db.select(db.accountTransfers).watch(),
         db.select(db.appCurrencies).watch(),
         db.select(db.userPreferences).watch(),
+        db.select(db.products).watch(),
+        db.select(db.productBatches).watch(),
+        db.select(db.catalogs).watch(),
+        db.select(db.catalogItems).watch(),
+        db.select(db.catalogAssignments).watch(),
+        db.select(db.catalogTieredDiscounts).watch(),
+        db.select(db.recipes).watch(),
+        db.select(db.recipeInputs).watch(),
+        db.select(db.recipeOutputs).watch(),
+        db.select(db.recipeCharges).watch(),
+        db.select(db.orders).watch(),
+        db.select(db.orderItems).watch(),
+        db.select(db.goodsReceipts).watch(),
+        db.select(db.goodsReceiptLines).watch(),
+        db.select(db.orderReturns).watch(),
+        db.select(db.orderReturnItems).watch(),
+        db.select(db.productionOrders).watch(),
+        db.select(db.productionOrderInputs).watch(),
+        db.select(db.productionOrderOutputs).watch(),
+        db.select(db.productionOrderCharges).watch(),
+        db.select(db.productionConsumptions).watch(),
       ];
 
       for (final stream in streams) {
@@ -770,22 +792,7 @@ class BackupNotifier extends Notifier<BackupState> {
   Future<void> _updateTotalUnsyncedCount() async {
     final db = ref.read(databaseProvider);
     int total = 0;
-    final tables = [
-      'categories',
-      'contacts',
-      'accounts',
-      'transactions',
-      'account_transfers',
-      'receivables',
-      'payables',
-      'reminders',
-      'app_currencies',
-      'transaction_schedules',
-      'user_preferences',
-      'transaction_documents',
-      'tags',
-      'transaction_tags',
-    ];
+    final tables = SyncTables.ordered;
     for (final table in tables) {
       try {
         // Use a more robust check for table existence
@@ -818,22 +825,7 @@ class BackupNotifier extends Notifier<BackupState> {
   Future<Map<String, int>> getUnsyncedBreakdown() async {
     final db = ref.read(databaseProvider);
     final breakdown = <String, int>{};
-    final tables = [
-      'categories',
-      'contacts',
-      'accounts',
-      'transactions',
-      'account_transfers',
-      'receivables',
-      'payables',
-      'reminders',
-      'app_currencies',
-      'transaction_schedules',
-      'user_preferences',
-      'transaction_documents',
-      'tags',
-      'transaction_tags',
-    ];
+    final tables = SyncTables.ordered;
     for (final table in tables) {
       try {
         final countResult = await db
@@ -941,14 +933,7 @@ class BackupNotifier extends Notifier<BackupState> {
           // CRITICAL: Notify Drift that tables might have changed in the background.
           // Stream-based providers (dashboard, recent transactions) will re-query and
           // emit new data without invalidating Riverpod state, avoiding dashboard flicker.
-    db.markTablesUpdated({
-      db.productCategories,
-      db.contacts,
-      db.accounts,
-      db.transactions,
-      db.accountTransfers,
-      db.appCurrencies,
-    });
+    db.markTablesUpdated(SyncTables.allKnownTableInfos(db));
 
           // If we just finished a sync (transitioned from syncing to success), trigger refresh
           if (wasSyncing && isNowSuccess) {
@@ -1023,14 +1008,7 @@ class BackupNotifier extends Notifier<BackupState> {
       print(
           'BackupNotifier: Notifying main isolate about background updates...');
     }
-    db.markTablesUpdated({
-      db.productCategories,
-      db.contacts,
-      db.accounts,
-      db.transactions,
-      db.accountTransfers,
-      db.appCurrencies,
-    });
+    db.markTablesUpdated(SyncTables.allKnownTableInfos(db));
 
     // Do NOT invalidate StreamProviders or paginated Notifiers here: Drift streams
     // re-query after [markTablesUpdated], and invalidating (e.g.
@@ -1693,23 +1671,19 @@ class BackupNotifier extends Notifier<BackupState> {
       final db = ref.read(databaseProvider);
 
       // 1. Mark all records in all tables as unsynced
-      final tables = [
-        'categories',
-        'contacts',
-        'accounts',
-        'transactions',
-        'account_transfers',
-        'receivables',
-        'payables',
-        'reminders',
-        'app_currencies',
-        'transaction_schedules',
-        'transaction_documents',
-        'user_preferences'
-      ];
-
-      for (final table in tables) {
-        await db.customStatement('UPDATE $table SET is_not_synced = 1');
+      for (final table in SyncTables.ordered) {
+        try {
+          final exists = await db
+              .customSelect(
+                  "SELECT COUNT(*) as count FROM sqlite_master WHERE type='table' AND name='$table'")
+              .getSingle();
+          if ((exists.data['count'] as num).toInt() == 0) continue;
+          await db.customStatement('UPDATE $table SET is_not_synced = 1');
+        } catch (e) {
+          if (kDebugMode) {
+            print('BackupNotifier: resetLocalSyncState skip $table: $e');
+          }
+        }
       }
 
       // 2. Reset local version to 0

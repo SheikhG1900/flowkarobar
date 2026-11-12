@@ -126,37 +126,9 @@ class RecipeRepository {
         ),
       );
 
-      await (_db.update(_db.recipeInputs)
-            ..where((i) => i.recipeUuid.equals(recipeUuid)))
-          .write(
-        const RecipeInputsCompanion(
-          isDeleted: Value(true),
-          isNotSynced: Value(true),
-        ),
-      );
-      await (_db.update(_db.recipeOutputs)
-            ..where((o) => o.recipeUuid.equals(recipeUuid)))
-          .write(
-        const RecipeOutputsCompanion(
-          isDeleted: Value(true),
-          isNotSynced: Value(true),
-        ),
-      );
-      await (_db.update(_db.recipeCharges)
-            ..where((c) => c.recipeUuid.equals(recipeUuid)))
-          .write(
-        const RecipeChargesCompanion(
-          isDeleted: Value(true),
-          isNotSynced: Value(true),
-        ),
-      );
-
-      await _insertLines(
-        recipeUuid: recipeUuid,
-        inputs: inputs,
-        outputs: outputs,
-        charges: charges,
-      );
+      await _syncRecipeInputs(recipeUuid, inputs);
+      await _syncRecipeOutputs(recipeUuid, outputs);
+      await _syncRecipeCharges(recipeUuid, charges);
     });
   }
 
@@ -198,6 +170,134 @@ class RecipeRepository {
               isNotSynced: const Value(true),
             ),
           );
+    }
+  }
+
+  Future<void> _syncRecipeInputs(
+    String recipeUuid,
+    List<RecipeInputsCompanion> inputs,
+  ) async {
+    final existing = await (_db.select(_db.recipeInputs)
+          ..where(
+              (i) => i.recipeUuid.equals(recipeUuid) & i.isDeleted.equals(false)))
+        .get();
+    final keep = <String>{};
+
+    for (final input in inputs) {
+      final id = input.uuid.present ? input.uuid.value : const Uuid().v4();
+      keep.add(id);
+      final match = existing.where((e) => e.uuid == id).toList();
+      final row = input.copyWith(
+        uuid: Value(id),
+        recipeUuid: Value(recipeUuid),
+        isDeleted: const Value(false),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      );
+      if (match.isNotEmpty) {
+        await (_db.update(_db.recipeInputs)..where((i) => i.uuid.equals(id)))
+            .write(row);
+      } else {
+        await _db.into(_db.recipeInputs).insert(row);
+      }
+    }
+
+    for (final old in existing) {
+      if (keep.contains(old.uuid)) continue;
+      await (_db.update(_db.recipeInputs)..where((i) => i.uuid.equals(old.uuid)))
+          .write(
+        RecipeInputsCompanion(
+          isDeleted: const Value(true),
+          isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+    }
+  }
+
+  Future<void> _syncRecipeOutputs(
+    String recipeUuid,
+    List<RecipeOutputsCompanion> outputs,
+  ) async {
+    final existing = await (_db.select(_db.recipeOutputs)
+          ..where((o) =>
+              o.recipeUuid.equals(recipeUuid) & o.isDeleted.equals(false)))
+        .get();
+    final keep = <String>{};
+
+    for (final output in outputs) {
+      final id = output.uuid.present ? output.uuid.value : const Uuid().v4();
+      keep.add(id);
+      final match = existing.where((e) => e.uuid == id).toList();
+      final row = output.copyWith(
+        uuid: Value(id),
+        recipeUuid: Value(recipeUuid),
+        isDeleted: const Value(false),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      );
+      if (match.isNotEmpty) {
+        await (_db.update(_db.recipeOutputs)..where((o) => o.uuid.equals(id)))
+            .write(row);
+      } else {
+        await _db.into(_db.recipeOutputs).insert(row);
+      }
+    }
+
+    for (final old in existing) {
+      if (keep.contains(old.uuid)) continue;
+      await (_db.update(_db.recipeOutputs)
+            ..where((o) => o.uuid.equals(old.uuid)))
+          .write(
+        RecipeOutputsCompanion(
+          isDeleted: const Value(true),
+          isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+    }
+  }
+
+  Future<void> _syncRecipeCharges(
+    String recipeUuid,
+    List<RecipeChargesCompanion> charges,
+  ) async {
+    final existing = await (_db.select(_db.recipeCharges)
+          ..where((c) =>
+              c.recipeUuid.equals(recipeUuid) & c.isDeleted.equals(false)))
+        .get();
+    final keep = <String>{};
+
+    for (final charge in charges) {
+      final id = charge.uuid.present ? charge.uuid.value : const Uuid().v4();
+      keep.add(id);
+      final match = existing.where((e) => e.uuid == id).toList();
+      final row = charge.copyWith(
+        uuid: Value(id),
+        recipeUuid: Value(recipeUuid),
+        isDeleted: const Value(false),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      );
+      if (match.isNotEmpty) {
+        await (_db.update(_db.recipeCharges)..where((c) => c.uuid.equals(id)))
+            .write(row);
+      } else {
+        await _db.into(_db.recipeCharges).insert(row);
+      }
+    }
+
+    for (final old in existing) {
+      if (keep.contains(old.uuid)) continue;
+      await (_db.update(_db.recipeCharges)
+            ..where((c) => c.uuid.equals(old.uuid)))
+          .write(
+        RecipeChargesCompanion(
+          isDeleted: const Value(true),
+          isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     }
   }
 

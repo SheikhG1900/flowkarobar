@@ -27,6 +27,48 @@ class AppLocalizationsHi extends AppLocalizations {
   String get batch => 'बैच';
 
   @override
+  String get orderItems => 'ऑर्डर आइटम';
+
+  @override
+  String get goodsReceipts => 'माल प्राप्ति';
+
+  @override
+  String get goodsReceiptLines => 'माल प्राप्ति पंक्तियाँ';
+
+  @override
+  String get orderReturnItems => 'वापसी आइटम';
+
+  @override
+  String get recipeInputs => 'रेसिपी इनपुट';
+
+  @override
+  String get recipeOutputs => 'रेसिपी आउटपुट';
+
+  @override
+  String get recipeCharges => 'रेसिपी शुल्क';
+
+  @override
+  String get productionOrderInputs => 'उत्पादन इनपुट';
+
+  @override
+  String get productionOrderOutputs => 'उत्पादन आउटपुट';
+
+  @override
+  String get productionOrderCharges => 'उत्पादन शुल्क';
+
+  @override
+  String get productionConsumptions => 'उत्पादन खपत';
+
+  @override
+  String get catalogItems => 'कैटलॉग आइटम';
+
+  @override
+  String get catalogAssignments => 'कैटलॉग असाइनमेंट';
+
+  @override
+  String get catalogTieredDiscounts => 'कैटलॉग छूट';
+
+  @override
   String get expiryDate => 'समाप्ति तिथि';
 
   @override
@@ -402,7 +444,7 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get scaleAdjustHint =>
-      'इनपुट, आउटपुट और शुल्क मात्रा नई स्केल के अनुसार अपडेट होती है';
+      'लिंक रेसिपी होने पर रेसिपी × स्केल से लाइनें रीसेट; अन्यथा वर्तमान मात्रा स्केल होती है';
 
   @override
   String get productionFromRecipe => 'रेसिपी से उत्पादन';

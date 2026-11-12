@@ -12,6 +12,7 @@ import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dar
 import 'package:flowpaisa/features/production/presentation/screens/production_orders_list_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
+import 'package:flowpaisa/shared/widgets/hover_border_card.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -481,88 +482,80 @@ class _ProductCard extends StatelessWidget {
         ? AppColors.warning
         : theme.colorScheme.onSurface;
 
-    return Material(
-      color: Colors.transparent,
-      child: Ink(
-        decoration: AppColors.transactionListItemDecoration(theme, accent),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+    return HoverBorderCard(
+      accent: accent,
+      onTap: onTap,
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          _ProductLeading(
+            product: product,
+            category: category,
+            serviceTooltip: l10n.serviceProduct,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ProductLeading(
-                  product: product,
-                  category: category,
-                  serviceTooltip: l10n.serviceProduct,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        product.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      if (product.sku != null &&
-                          product.sku!.trim().isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          product.sku!,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                      if (isLowStock) ...[
-                        const SizedBox(height: 6),
-                        OrderStatusChip(
-                          label: l10n.lowStock,
-                          color: AppColors.warning,
-                          icon: Icons.warning_amber_rounded,
-                        ),
-                      ],
-                    ],
+                Text(
+                  product.name,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                if (!product.isService) ...[
-                  const SizedBox(width: 8),
-                  Directionality(
-                    textDirection: TextDirection.ltr,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(
-                          AmountFormatter.formatQuantity(product.stockQuantity),
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: stockColor,
-                            fontWeight: FontWeight.w700,
-                            height: 1,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          product.unit,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: isLowStock ? AppColors.warning : muted,
-                            fontWeight: FontWeight.w600,
-                            height: 1,
-                          ),
-                        ),
-                      ],
+                if (product.sku != null &&
+                    product.sku!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    product.sku!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
+                  ),
+                ],
+                if (isLowStock) ...[
+                  const SizedBox(height: 6),
+                  OrderStatusChip(
+                    label: l10n.lowStock,
+                    color: AppColors.warning,
+                    icon: Icons.warning_amber_rounded,
                   ),
                 ],
               ],
             ),
           ),
-        ),
+          if (!product.isService) ...[
+            const SizedBox(width: 8),
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    AmountFormatter.formatQuantity(product.stockQuantity),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: stockColor,
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    product.unit,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: isLowStock ? AppColors.warning : muted,
+                      fontWeight: FontWeight.w600,
+                      height: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

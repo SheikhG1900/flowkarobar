@@ -27,6 +27,48 @@ class AppLocalizationsUr extends AppLocalizations {
   String get batch => 'بیچ';
 
   @override
+  String get orderItems => 'آرڈر آئٹمز';
+
+  @override
+  String get goodsReceipts => 'مال وصولی';
+
+  @override
+  String get goodsReceiptLines => 'مال وصولی لائنز';
+
+  @override
+  String get orderReturnItems => 'واپسی آئٹمز';
+
+  @override
+  String get recipeInputs => 'ریسیپی ان پٹس';
+
+  @override
+  String get recipeOutputs => 'ریسیپی آؤٹ پٹس';
+
+  @override
+  String get recipeCharges => 'ریسیپی چارجز';
+
+  @override
+  String get productionOrderInputs => 'پیداوار ان پٹس';
+
+  @override
+  String get productionOrderOutputs => 'پیداوار آؤٹ پٹس';
+
+  @override
+  String get productionOrderCharges => 'پیداوار چارجز';
+
+  @override
+  String get productionConsumptions => 'پیداوار کی کھپت';
+
+  @override
+  String get catalogItems => 'کیٹلاگ آئٹمز';
+
+  @override
+  String get catalogAssignments => 'کیٹلاگ اسائنمنٹس';
+
+  @override
+  String get catalogTieredDiscounts => 'کیٹلاگ ڈسکاؤنٹس';
+
+  @override
   String get expiryDate => 'تاریخِ معیاد';
 
   @override
@@ -402,7 +444,7 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get scaleAdjustHint =>
-      'ان پٹ، آؤٹ پٹ اور چارجز کی مقدار نئی اسکیل کے مطابق اپ ڈیٹ ہوتی ہے';
+      'لنکڈ ریسیپی ہو تو ریسیپی × اسکیل سے لائنز ری سیٹ؛ ورنہ موجودہ مقدار اسکیل ہوتی ہے';
 
   @override
   String get productionFromRecipe => 'ریسیپی سے پیداوار';

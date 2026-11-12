@@ -27,6 +27,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get batch => 'Batch';
 
   @override
+  String get orderItems => 'Order Items';
+
+  @override
+  String get goodsReceipts => 'Goods Receipts';
+
+  @override
+  String get goodsReceiptLines => 'Goods Receipt Lines';
+
+  @override
+  String get orderReturnItems => 'Return Items';
+
+  @override
+  String get recipeInputs => 'Recipe Inputs';
+
+  @override
+  String get recipeOutputs => 'Recipe Outputs';
+
+  @override
+  String get recipeCharges => 'Recipe Charges';
+
+  @override
+  String get productionOrderInputs => 'Production Inputs';
+
+  @override
+  String get productionOrderOutputs => 'Production Outputs';
+
+  @override
+  String get productionOrderCharges => 'Production Charges';
+
+  @override
+  String get productionConsumptions => 'Production Consumptions';
+
+  @override
+  String get catalogItems => 'Catalog Items';
+
+  @override
+  String get catalogAssignments => 'Catalog Assignments';
+
+  @override
+  String get catalogTieredDiscounts => 'Catalog Discounts';
+
+  @override
   String get expiryDate => 'Expiry Date';
 
   @override
@@ -405,7 +447,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get scaleAdjustHint =>
-      'Updates input, output, and charge quantities to the new scale';
+      'With a linked recipe, resets lines from recipe × scale; otherwise scales current quantities';
 
   @override
   String get productionFromRecipe => 'Production from recipe';

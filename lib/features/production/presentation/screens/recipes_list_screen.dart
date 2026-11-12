@@ -11,9 +11,13 @@ import 'package:flowpaisa/features/production/presentation/screens/add_recipe_sc
 import 'package:flowpaisa/features/production/presentation/screens/production_order_detail_screen.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
+import 'package:flowpaisa/shared/widgets/hover_border_card.dart';
 
 class RecipesListScreen extends ConsumerWidget {
-  const RecipesListScreen({super.key});
+  /// When false, used as a tab body under [ProductionOrdersListScreen].
+  final bool showAppBar;
+
+  const RecipesListScreen({super.key, this.showAppBar = true});
 
   Future<void> _produce(
     BuildContext context,
@@ -55,6 +59,11 @@ class RecipesListScreen extends ConsumerWidget {
     final recipesAsync = ref.watch(recipesStreamProvider);
 
     return Scaffold(
+      appBar: showAppBar
+          ? AppBar(
+              title: Text(l10n.recipes),
+            )
+          : null,
       floatingActionButton: AppFloatingActionButton(
         heroTag: 'recipes_fab',
         backgroundColor: AppColors.info,
@@ -160,118 +169,116 @@ class _RecipeCard extends ConsumerWidget {
     final inputs = inputsAsync.value ?? const <RecipeInput>[];
     final notes = recipe.notes?.trim();
 
-    return Container(
-      decoration: AppColors.transactionListItemDecoration(theme, accent),
+    return HoverBorderCard(
+      accent: accent,
       clipBehavior: Clip.none,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      recipe.name,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    if (notes != null && notes.isNotEmpty) ...[
+                      const SizedBox(height: 4),
                       Text(
-                        recipe.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
+                        notes,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: muted,
+                          height: 1.3,
                         ),
                       ),
-                      if (notes != null && notes.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          notes,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: muted,
-                            height: 1.3,
-                          ),
-                        ),
-                      ],
                     ],
-                  ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                _CountBadge(
-                  count: outputs.length,
-                  accent: accent,
-                  tooltip: l10n.sectionOutputs,
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              l10n.sectionOutputs,
-              style: theme.textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: muted,
               ),
-            ),
-            const SizedBox(height: 8),
-            if (outputsAsync.isLoading && outputs.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: Center(
-                  child: SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
-              )
-            else if (outputs.isEmpty)
-              Text(
-                l10n.noResultsFound,
-                style: theme.textTheme.bodySmall?.copyWith(color: muted),
-              )
-            else
-              ...[
-                for (var i = 0; i < outputs.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 6),
-                  _LineQtyRow(
-                    name: outputs[i].productNameSnapshot,
-                    quantity: outputs[i].quantity,
-                    unit: outputs[i].unit,
-                    accent: AppColors.incomeColor,
-                  ),
-                ],
-              ],
-            if (inputs.isNotEmpty) ...[
-              const SizedBox(height: 12),
-              Text(
-                '${l10n.sectionInputs}: ${inputs.length}',
-                style: theme.textTheme.bodySmall?.copyWith(color: muted),
+              const SizedBox(width: 8),
+              _CountBadge(
+                count: outputs.length,
+                accent: accent,
+                tooltip: l10n.sectionOutputs,
               ),
             ],
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onEdit,
-                    child: Text(l10n.editRecipe),
-                  ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l10n.sectionOutputs,
+            style: theme.textTheme.labelLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: muted,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (outputsAsync.isLoading && outputs.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Center(
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: onProduce,
-                    icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                    label: Text(l10n.produceFromRecipe),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.incomeColor,
-                    ),
-                  ),
+              ),
+            )
+          else if (outputs.isEmpty)
+            Text(
+              l10n.noResultsFound,
+              style: theme.textTheme.bodySmall?.copyWith(color: muted),
+            )
+          else
+            ...[
+              for (var i = 0; i < outputs.length; i++) ...[
+                if (i > 0) const SizedBox(height: 6),
+                _LineQtyRow(
+                  name: outputs[i].productNameSnapshot,
+                  quantity: outputs[i].quantity,
+                  unit: outputs[i].unit,
+                  accent: AppColors.incomeColor,
                 ),
               ],
+            ],
+          if (inputs.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              '${l10n.sectionInputs}: ${inputs.length}',
+              style: theme.textTheme.bodySmall?.copyWith(color: muted),
             ),
           ],
-        ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onEdit,
+                  child: Text(l10n.editRecipe),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onProduce,
+                  icon: const Icon(Icons.play_arrow_rounded, size: 18),
+                  label: Text(l10n.produceFromRecipe),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.incomeColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

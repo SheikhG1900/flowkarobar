@@ -26,13 +26,18 @@ double _parse(TextEditingController c) =>
     double.tryParse(c.text.trim()) ?? 0;
 
 class _InputLine {
+  /// Persisted row uuid when editing; null for newly added lines.
+  String? lineUuid;
   Product product;
   final TextEditingController qty;
   String consumeMode;
   String? batchNumber;
 
-  _InputLine({required this.product, double quantity = 1})
-      : qty = TextEditingController(
+  _InputLine({
+    required this.product,
+    double quantity = 1,
+    this.lineUuid,
+  })  : qty = TextEditingController(
           text: AmountFormatter.formatQuantity(quantity),
         ),
         consumeMode = ProductionConsumeMode.auto;
@@ -41,13 +46,18 @@ class _InputLine {
 }
 
 class _OutputLine {
+  String? lineUuid;
   Product product;
   final TextEditingController qty;
   final TextEditingController weight;
   final TextEditingController batch;
 
-  _OutputLine({required this.product, double quantity = 1, double costWeight = 1})
-      : qty = TextEditingController(
+  _OutputLine({
+    required this.product,
+    double quantity = 1,
+    double costWeight = 1,
+    this.lineUuid,
+  })  : qty = TextEditingController(
           text: AmountFormatter.formatQuantity(quantity),
         ),
         weight = TextEditingController(
@@ -63,11 +73,15 @@ class _OutputLine {
 }
 
 class _ChargeLine {
+  String? lineUuid;
   final TextEditingController description;
   final TextEditingController amount;
 
-  _ChargeLine({String desc = '', double amountValue = 0})
-      : description = TextEditingController(text: desc),
+  _ChargeLine({
+    String desc = '',
+    double amountValue = 0,
+    this.lineUuid,
+  })  : description = TextEditingController(text: desc),
         amount = TextEditingController(
           text: amountValue <= 0
               ? ''
@@ -103,9 +117,11 @@ class _AddProductionOrderScreenState
   DateTime _date = DateTime.now();
   /// Scale that current line quantities currently correspond to.
   double _appliedScale = 1;
+  String? _recipeUuid;
   String? _recipeName;
   bool _saving = false;
   bool _loading = false;
+  bool _scaling = false;
 
   bool get _isEditing => widget.existingUuid != null;
 
@@ -137,7 +153,11 @@ class _AddProductionOrderScreenState
     for (final i in inputs) {
       final p = await inv.getProduct(i.productUuid);
       if (p == null) continue;
-      final line = _InputLine(product: p, quantity: i.plannedQuantity);
+      final line = _InputLine(
+        product: p,
+        quantity: i.plannedQuantity,
+        lineUuid: i.uuid,
+      );
       line.consumeMode = i.consumeMode;
       line.batchNumber = i.batchNumber;
       _inputs.add(line);
@@ -149,18 +169,28 @@ class _AddProductionOrderScreenState
         product: p,
         quantity: o.plannedQuantity,
         costWeight: o.costWeight,
+        lineUuid: o.uuid,
       );
       line.batch.text = o.batchNumber;
       _outputs.add(line);
     }
     for (final c in charges) {
-      _charges.add(_ChargeLine(desc: c.description, amountValue: c.amount));
+      _charges.add(
+        _ChargeLine(
+          desc: c.description,
+          amountValue: c.amount,
+          lineUuid: c.uuid,
+        ),
+      );
     }
     _notes.text = order.notes ?? '';
     _date = order.productionDate;
     final scale = order.scaleFactor <= 0 ? 1.0 : order.scaleFactor;
     _appliedScale = scale;
     _scale.text = AmountFormatter.formatQuantity(scale);
+    final recipeUuid = order.recipeUuid?.trim();
+    _recipeUuid =
+        (recipeUuid == null || recipeUuid.isEmpty) ? null : recipeUuid;
     final recipe = order.recipeNameSnapshot?.trim();
     _recipeName = (recipe == null || recipe.isEmpty) ? null : recipe;
     if (mounted) setState(() => _loading = false);
@@ -182,7 +212,7 @@ class _AddProductionOrderScreenState
     super.dispose();
   }
 
-  void _applyScale() {
+  Future<void> _applyScale() async {
     final l10n = AppLocalizations.of(context)!;
     final next = double.tryParse(_scale.text.trim());
     if (next == null || next <= 0) {
@@ -190,6 +220,29 @@ class _AddProductionOrderScreenState
       return;
     }
     final prev = _appliedScale <= 0 ? 1.0 : _appliedScale;
+
+    // Linked recipe: always rebuild from recipe × scale (even if scale
+    // unchanged — resets manual qty edits back to the recipe).
+    final recipeUuid = _recipeUuid;
+    if (recipeUuid != null) {
+      setState(() => _scaling = true);
+      try {
+        await _applyRecipeScale(recipeUuid, next);
+      } catch (e) {
+        if (mounted) {
+          ToastUtils.showErrorToast(
+            context,
+            ref,
+            l10n.errorOccurred(e.toString()),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _scaling = false);
+      }
+      return;
+    }
+
+    // Blank order: only rescale when the factor actually changed.
     if ((next - prev).abs() < 1e-12) return;
     final ratio = next / prev;
     setState(() {
@@ -213,6 +266,125 @@ class _AddProductionOrderScreenState
       }
       _appliedScale = next;
       _scale.text = AmountFormatter.formatQuantity(next);
+    });
+  }
+
+  Future<void> _applyRecipeScale(String recipeUuid, double scale) async {
+    final recipeRepo = ref.read(recipeRepositoryProvider);
+    final inv = ref.read(inventoryRepositoryProvider);
+    final recipe = await recipeRepo.getRecipe(recipeUuid);
+    final rInputs = await recipeRepo.getInputs(recipeUuid);
+    final rOutputs = await recipeRepo.getOutputs(recipeUuid);
+    final rCharges = await recipeRepo.getCharges(recipeUuid);
+    if (rInputs.isEmpty || rOutputs.isEmpty) {
+      throw StateError('Recipe must have inputs and outputs');
+    }
+
+    // Keep user batch picks / line uuids by product when possible.
+    final prevInputBatch = <String, String?>{
+      for (final i in _inputs) i.product.uuid: i.batchNumber,
+    };
+    final prevInputUuid = <String, String?>{
+      for (final i in _inputs) i.product.uuid: i.lineUuid,
+    };
+    final prevOutputBatch = <String, String>{
+      for (final o in _outputs) o.product.uuid: o.batch.text,
+    };
+    final prevOutputUuid = <String, String?>{
+      for (final o in _outputs) o.product.uuid: o.lineUuid,
+    };
+    final prevChargeUuids = [
+      for (final c in _charges) c.lineUuid,
+    ];
+
+    final newInputs = <_InputLine>[];
+    for (final ri in rInputs) {
+      final product = await inv.getProduct(ri.productUuid);
+      if (product == null) continue;
+      final mode = ProductionConsumeMode.all.contains(ri.consumeMode)
+          ? ri.consumeMode
+          : ProductionConsumeMode.auto;
+      final recipeBatch = ri.batchNumber?.trim();
+      final line = _InputLine(
+        product: product,
+        quantity: ri.quantity * scale,
+        lineUuid: prevInputUuid[product.uuid],
+      );
+      line.consumeMode = mode;
+      if (mode == ProductionConsumeMode.batch) {
+        final kept = prevInputBatch[product.uuid]?.trim();
+        line.batchNumber = (kept != null && kept.isNotEmpty)
+            ? kept
+            : (recipeBatch != null && recipeBatch.isNotEmpty
+                ? recipeBatch
+                : null);
+      } else {
+        line.batchNumber = null;
+      }
+      newInputs.add(line);
+    }
+
+    final newOutputs = <_OutputLine>[];
+    for (final ro in rOutputs) {
+      final product = await inv.getProduct(ro.productUuid);
+      if (product == null) continue;
+      final line = _OutputLine(
+        product: product,
+        quantity: ro.quantity * scale,
+        costWeight: ro.costWeight <= 0 ? 1.0 : ro.costWeight,
+        lineUuid: prevOutputUuid[product.uuid],
+      );
+      final keptBatch = prevOutputBatch[product.uuid]?.trim() ?? '';
+      line.batch.text = keptBatch;
+      newOutputs.add(line);
+    }
+
+    final newCharges = <_ChargeLine>[
+      for (var i = 0; i < rCharges.length; i++)
+        _ChargeLine(
+          desc: rCharges[i].description,
+          amountValue: rCharges[i].amount * scale,
+          lineUuid: i < prevChargeUuids.length ? prevChargeUuids[i] : null,
+        ),
+    ];
+
+    if (!mounted) {
+      for (final i in newInputs) {
+        i.dispose();
+      }
+      for (final o in newOutputs) {
+        o.dispose();
+      }
+      for (final c in newCharges) {
+        c.dispose();
+      }
+      return;
+    }
+
+    setState(() {
+      for (final i in _inputs) {
+        i.dispose();
+      }
+      for (final o in _outputs) {
+        o.dispose();
+      }
+      for (final c in _charges) {
+        c.dispose();
+      }
+      _inputs
+        ..clear()
+        ..addAll(newInputs);
+      _outputs
+        ..clear()
+        ..addAll(newOutputs);
+      _charges
+        ..clear()
+        ..addAll(newCharges);
+      _appliedScale = scale;
+      _scale.text = AmountFormatter.formatQuantity(scale);
+      if (recipe != null) {
+        _recipeName = recipe.name;
+      }
     });
   }
 
@@ -309,7 +481,7 @@ class _AddProductionOrderScreenState
       final inputRows = _inputs
           .map(
             (i) => ProductionOrderInputsCompanion.insert(
-              uuid: const Uuid().v4(),
+              uuid: i.lineUuid ?? const Uuid().v4(),
               productionOrderUuid: '',
               productUuid: i.product.uuid,
               productNameSnapshot: i.product.name,
@@ -327,7 +499,7 @@ class _AddProductionOrderScreenState
       final outputRows = _outputs
           .map(
             (o) => ProductionOrderOutputsCompanion.insert(
-              uuid: const Uuid().v4(),
+              uuid: o.lineUuid ?? const Uuid().v4(),
               productionOrderUuid: '',
               productUuid: o.product.uuid,
               productNameSnapshot: o.product.name,
@@ -344,7 +516,7 @@ class _AddProductionOrderScreenState
           .where((c) => c.description.text.trim().isNotEmpty)
           .map(
             (c) => ProductionOrderChargesCompanion.insert(
-              uuid: const Uuid().v4(),
+              uuid: c.lineUuid ?? const Uuid().v4(),
               productionOrderUuid: '',
               description: c.description.text.trim(),
               amount: drift.Value(_parse(c.amount)),
@@ -423,15 +595,25 @@ class _AddProductionOrderScreenState
             isLoading: _saving,
             width: double.infinity,
             gradient: AppColors.getPrimaryGradient(accent),
-            onPressed: _saving ? null : _save,
+            onPressed: (_saving || _scaling) ? null : _save,
           ),
         ),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          children: [
+      body: AnimatedOpacity(
+        opacity: _scaling ? 0.36 : 1,
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOutCubic,
+        child: AnimatedSlide(
+          offset: _scaling ? const Offset(0, 0.012) : Offset.zero,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutCubic,
+          child: IgnorePointer(
+            ignoring: _scaling,
+            child: Form(
+              key: _formKey,
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                children: [
             FormSectionCard(
               title: l10n.sectionDetails,
               subtitle: _recipeName == null
@@ -522,7 +704,7 @@ class _AddProductionOrderScreenState
                         ),
                         const SizedBox(width: 8),
                         FilledButton.tonal(
-                          onPressed: _applyScale,
+                          onPressed: _scaling ? null : _applyScale,
                           child: Text(l10n.applyScale),
                         ),
                       ],
@@ -647,7 +829,10 @@ class _AddProductionOrderScreenState
                 ],
               ],
             ),
-          ],
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

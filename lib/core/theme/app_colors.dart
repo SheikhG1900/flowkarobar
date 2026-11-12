@@ -84,15 +84,19 @@ class AppColors {
   /// Card border + shadow matching [TransactionsListScreen] list rows.
   static BoxDecoration transactionListItemDecoration(
     ThemeData theme,
-    Color accentColor,
-  ) {
+    Color accentColor, {
+    bool hovered = false,
+    double borderRadius = 20,
+  }) {
     final isDark = theme.brightness == Brightness.dark;
     return BoxDecoration(
       color: theme.cardColor,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(borderRadius),
       border: Border.all(
-        color: accentColor.withValues(alpha: isDark ? 0.2 : 0.1),
-        width: 0,
+        color: hovered
+            ? accentColor
+            : accentColor.withValues(alpha: isDark ? 0.2 : 0.1),
+        width: 1,
       ),
       boxShadow: [
         BoxShadow(

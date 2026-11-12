@@ -24,13 +24,17 @@ double _parse(TextEditingController c) =>
     double.tryParse(c.text.trim()) ?? 0;
 
 class _RInput {
+  String? lineUuid;
   Product product;
   final TextEditingController qty;
   String consumeMode;
   String? batchNumber;
 
-  _RInput({required this.product, double quantity = 1})
-      : qty = TextEditingController(
+  _RInput({
+    required this.product,
+    double quantity = 1,
+    this.lineUuid,
+  })  : qty = TextEditingController(
           text: AmountFormatter.formatQuantity(quantity),
         ),
         consumeMode = ProductionConsumeMode.auto;
@@ -39,6 +43,7 @@ class _RInput {
 }
 
 class _ROutput {
+  String? lineUuid;
   Product product;
   final TextEditingController qty;
   final TextEditingController weight;
@@ -47,6 +52,7 @@ class _ROutput {
     required this.product,
     double quantity = 1,
     double costWeight = 1,
+    this.lineUuid,
   })  : qty = TextEditingController(
           text: AmountFormatter.formatQuantity(quantity),
         ),
@@ -61,11 +67,15 @@ class _ROutput {
 }
 
 class _RCharge {
+  String? lineUuid;
   final TextEditingController description;
   final TextEditingController amount;
 
-  _RCharge({String desc = '', double amountValue = 0})
-      : description = TextEditingController(text: desc),
+  _RCharge({
+    String desc = '',
+    double amountValue = 0,
+    this.lineUuid,
+  })  : description = TextEditingController(text: desc),
         amount = TextEditingController(
           text: amountValue <= 0
               ? ''
@@ -130,7 +140,11 @@ class _AddRecipeScreenState extends ConsumerState<AddRecipeScreen> {
     for (final i in inputs) {
       final p = await inv.getProduct(i.productUuid);
       if (p == null) continue;
-      final line = _RInput(product: p, quantity: i.quantity);
+      final line = _RInput(
+        product: p,
+        quantity: i.quantity,
+        lineUuid: i.uuid,
+      );
       line.consumeMode = ProductionConsumeMode.all.contains(i.consumeMode)
           ? i.consumeMode
           : ProductionConsumeMode.auto;
@@ -151,11 +165,18 @@ class _AddRecipeScreenState extends ConsumerState<AddRecipeScreen> {
           product: p,
           quantity: o.quantity,
           costWeight: o.costWeight,
+          lineUuid: o.uuid,
         ),
       );
     }
     for (final c in charges) {
-      _charges.add(_RCharge(desc: c.description, amountValue: c.amount));
+      _charges.add(
+        _RCharge(
+          desc: c.description,
+          amountValue: c.amount,
+          lineUuid: c.uuid,
+        ),
+      );
     }
     if (mounted) setState(() => _loading = false);
   }
@@ -259,7 +280,7 @@ class _AddRecipeScreenState extends ConsumerState<AddRecipeScreen> {
       final inputRows = _inputs
           .map(
             (i) => RecipeInputsCompanion.insert(
-              uuid: const Uuid().v4(),
+              uuid: i.lineUuid ?? const Uuid().v4(),
               recipeUuid: '',
               productUuid: i.product.uuid,
               productNameSnapshot: i.product.name,
@@ -277,7 +298,7 @@ class _AddRecipeScreenState extends ConsumerState<AddRecipeScreen> {
       final outputRows = _outputs
           .map(
             (o) => RecipeOutputsCompanion.insert(
-              uuid: const Uuid().v4(),
+              uuid: o.lineUuid ?? const Uuid().v4(),
               recipeUuid: '',
               productUuid: o.product.uuid,
               productNameSnapshot: o.product.name,
@@ -293,7 +314,7 @@ class _AddRecipeScreenState extends ConsumerState<AddRecipeScreen> {
           .where((c) => c.description.text.trim().isNotEmpty)
           .map(
             (c) => RecipeChargesCompanion.insert(
-              uuid: const Uuid().v4(),
+              uuid: c.lineUuid ?? const Uuid().v4(),
               recipeUuid: '',
               description: c.description.text.trim(),
               amount: drift.Value(_parse(c.amount)),

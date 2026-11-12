@@ -19,6 +19,9 @@ import 'package:flowpaisa/features/payables/presentation/screens/payables_list_s
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/categories_list_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contacts_list_screen.dart';
+import 'package:flowpaisa/features/inventory/presentation/screens/products_list_screen.dart';
+import 'package:flowpaisa/features/orders/presentation/screens/orders_list_screen.dart';
+import 'package:flowpaisa/features/production/presentation/screens/production_orders_list_screen.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 bool _isDatabaseLockedError(String status) {
@@ -26,6 +29,249 @@ bool _isDatabaseLockedError(String status) {
       status.contains('1555') ||
       status.contains('code 5') ||
       status.contains('SQLITE_BUSY');
+}
+
+class _SyncTableDetail {
+  final String table;
+  final String label;
+  final int count;
+
+  const _SyncTableDetail({
+    required this.table,
+    required this.label,
+    required this.count,
+  });
+}
+
+class _SyncChangeGroup {
+  final String id;
+  final String label;
+  final IconData icon;
+  final int count;
+  final List<_SyncTableDetail> details;
+
+  const _SyncChangeGroup({
+    required this.id,
+    required this.label,
+    required this.icon,
+    required this.count,
+    required this.details,
+  });
+}
+
+String _syncTableLabel(String table, AppLocalizations l10n) {
+  switch (table) {
+    case 'categories':
+    case 'product_categories':
+      return l10n.categories;
+    case 'contacts':
+      return l10n.contacts;
+    case 'accounts':
+      return l10n.accounts;
+    case 'account_transfers':
+      return l10n.transfers;
+    case 'transactions':
+      return l10n.transactions;
+    case 'transaction_tags':
+      return l10n.transactionTags;
+    case 'transaction_documents':
+      return l10n.documents;
+    case 'transaction_schedules':
+      return l10n.schedules;
+    case 'receivables':
+      return l10n.receivables;
+    case 'payables':
+      return l10n.payables;
+    case 'reminders':
+      return l10n.reminders;
+    case 'app_currencies':
+      return l10n.currencies;
+    case 'user_preferences':
+      return l10n.preferences;
+    case 'tags':
+      return l10n.tags;
+    case 'products':
+      return l10n.products;
+    case 'product_batches':
+      return l10n.batches;
+    case 'catalogs':
+      return l10n.catalogs;
+    case 'catalog_items':
+      return l10n.catalogItems;
+    case 'catalog_assignments':
+      return l10n.catalogAssignments;
+    case 'catalog_tiered_discounts':
+      return l10n.catalogTieredDiscounts;
+    case 'orders':
+      return l10n.orders;
+    case 'order_items':
+      return l10n.orderItems;
+    case 'goods_receipts':
+      return l10n.goodsReceipts;
+    case 'goods_receipt_lines':
+      return l10n.goodsReceiptLines;
+    case 'order_returns':
+      return l10n.returns;
+    case 'order_return_items':
+      return l10n.orderReturnItems;
+    case 'recipes':
+      return l10n.recipes;
+    case 'recipe_inputs':
+      return l10n.recipeInputs;
+    case 'recipe_outputs':
+      return l10n.recipeOutputs;
+    case 'recipe_charges':
+      return l10n.recipeCharges;
+    case 'production_orders':
+      return l10n.productionOrders;
+    case 'production_order_inputs':
+      return l10n.productionOrderInputs;
+    case 'production_order_outputs':
+      return l10n.productionOrderOutputs;
+    case 'production_order_charges':
+      return l10n.productionOrderCharges;
+    case 'production_consumptions':
+      return l10n.productionConsumptions;
+    default:
+      return table;
+  }
+}
+
+/// Maps raw table counts into user-facing feature groups (with drill-down rows).
+List<_SyncChangeGroup> _groupUnsyncedBreakdown(
+  Map<String, int> breakdown,
+  AppLocalizations l10n,
+) {
+  String groupIdFor(String table) {
+    switch (table) {
+      case 'categories':
+      case 'product_categories':
+        return 'categories';
+      case 'contacts':
+        return 'contacts';
+      case 'accounts':
+      case 'account_transfers':
+        return 'accounts';
+      case 'transactions':
+      case 'transaction_tags':
+        return 'transactions';
+      case 'transaction_documents':
+        return 'documents';
+      case 'transaction_schedules':
+        return 'schedules';
+      case 'receivables':
+        return 'receivables';
+      case 'payables':
+        return 'payables';
+      case 'reminders':
+        return 'reminders';
+      case 'app_currencies':
+        return 'currencies';
+      case 'user_preferences':
+        return 'preferences';
+      case 'tags':
+        return 'tags';
+      case 'products':
+      case 'product_batches':
+        return 'products';
+      case 'catalogs':
+      case 'catalog_items':
+      case 'catalog_assignments':
+      case 'catalog_tiered_discounts':
+        return 'catalogs';
+      case 'orders':
+      case 'order_items':
+      case 'goods_receipts':
+      case 'goods_receipt_lines':
+      case 'order_returns':
+      case 'order_return_items':
+        return 'orders';
+      case 'recipes':
+      case 'recipe_inputs':
+      case 'recipe_outputs':
+      case 'recipe_charges':
+        return 'recipes';
+      case 'production_orders':
+      case 'production_order_inputs':
+      case 'production_order_outputs':
+      case 'production_order_charges':
+      case 'production_consumptions':
+        return 'production';
+      default:
+        return table;
+    }
+  }
+
+  (String label, IconData icon) metaFor(String groupId) {
+    switch (groupId) {
+      case 'categories':
+        return (l10n.categories, Icons.category_rounded);
+      case 'contacts':
+        return (l10n.contacts, Icons.people_rounded);
+      case 'accounts':
+        return (l10n.accounts, Icons.account_balance_wallet_rounded);
+      case 'transactions':
+        return (l10n.transactions, Icons.receipt_long_rounded);
+      case 'documents':
+        return (l10n.documents, Icons.insert_drive_file_rounded);
+      case 'schedules':
+        return (l10n.schedules, Icons.schedule_rounded);
+      case 'receivables':
+        return (l10n.receivables, Icons.call_received_rounded);
+      case 'payables':
+        return (l10n.payables, Icons.call_made_rounded);
+      case 'reminders':
+        return (l10n.reminders, Icons.notifications_active_rounded);
+      case 'currencies':
+        return (l10n.currencies, Icons.monetization_on_rounded);
+      case 'preferences':
+        return (l10n.preferences, Icons.settings_rounded);
+      case 'tags':
+        return (l10n.tags, Icons.local_offer_rounded);
+      case 'products':
+        return (l10n.products, Icons.inventory_2_rounded);
+      case 'catalogs':
+        return (l10n.catalogs, Icons.price_change_rounded);
+      case 'orders':
+        return (l10n.orders, Icons.shopping_cart_rounded);
+      case 'recipes':
+        return (l10n.recipes, Icons.menu_book_rounded);
+      case 'production':
+        return (l10n.productionOrders, Icons.precision_manufacturing_rounded);
+      default:
+        return (groupId, Icons.info_outline_rounded);
+    }
+  }
+
+  final grouped = <String, List<_SyncTableDetail>>{};
+  for (final entry in breakdown.entries) {
+    if (entry.value <= 0) continue;
+    final id = groupIdFor(entry.key);
+    (grouped[id] ??= []).add(
+      _SyncTableDetail(
+        table: entry.key,
+        label: _syncTableLabel(entry.key, l10n),
+        count: entry.value,
+      ),
+    );
+  }
+
+  final groups = grouped.entries.map((e) {
+    final details = e.value.toList()
+      ..sort((a, b) => b.count.compareTo(a.count));
+    final meta = metaFor(e.key);
+    final total = details.fold<int>(0, (sum, d) => sum + d.count);
+    return _SyncChangeGroup(
+      id: e.key,
+      label: meta.$1,
+      icon: meta.$2,
+      count: total,
+      details: details,
+    );
+  }).toList()
+    ..sort((a, b) => b.count.compareTo(a.count));
+
+  return groups;
 }
 
 class SyncStatusSection extends ConsumerStatefulWidget {
@@ -96,7 +342,6 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
   void _showUnsyncedBreakdownSheet(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final localeCode = Localizations.localeOf(context).languageCode;
 
     showModalBottomSheet(
       context: context,
@@ -128,78 +373,87 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
               );
             }
 
-            IconData getTableIcon(String table) {
-              switch (table) {
+            final groups = _groupUnsyncedBreakdown(breakdown, l10n);
+            VoidCallback? groupNavigation(_SyncChangeGroup group) {
+              switch (group.id) {
                 case 'categories':
-                  return Icons.category_rounded;
+                  return () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const CategoriesListScreen()),
+                      );
                 case 'contacts':
-                  return Icons.people_rounded;
+                  return () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const ContactsListScreen()),
+                      );
                 case 'accounts':
-                  return Icons.account_balance_wallet_rounded;
+                  return () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const AccountsScreen()),
+                      );
                 case 'transactions':
-                  return Icons.receipt_long_rounded;
-                case 'account_transfers':
-                  return Icons.compare_arrows_rounded;
+                  return () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => TransactionsListScreen(
+                            initialFilters: TransactionFilters(
+                              statusCodes: ['CHANGES'],
+                            ),
+                          ),
+                        ),
+                      );
                 case 'receivables':
-                  return Icons.call_received_rounded;
+                  return () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const ReceivablesListScreen()),
+                      );
                 case 'payables':
-                  return Icons.call_made_rounded;
-                case 'reminders':
-                  return Icons.notifications_active_rounded;
-                case 'app_currencies':
-                  return Icons.monetization_on_rounded;
-                case 'transaction_schedules':
-                  return Icons.schedule_rounded;
-                case 'user_preferences':
-                  return Icons.settings_rounded;
-                case 'transaction_documents':
-                  return Icons.insert_drive_file_rounded;
-                case 'tags':
-                  return Icons.local_offer_rounded;
-                case 'transaction_tags':
-                  return Icons.tag_rounded;
+                  return () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const PayablesListScreen()),
+                      );
+                case 'documents':
+                  return () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const DocumentsScreen()),
+                      );
+                case 'products':
+                case 'catalogs':
+                  return () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const ProductsListScreen()),
+                      );
+                case 'orders':
+                  return () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const OrdersListScreen()),
+                      );
+                case 'recipes':
+                  return () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              const ProductionOrdersListScreen(initialTab: 1),
+                        ),
+                      );
+                case 'production':
+                  return () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) =>
+                                const ProductionOrdersListScreen()),
+                      );
                 default:
-                  return Icons.info_outline_rounded;
+                  return null;
               }
             }
-
-            String getTableNameLocalized(String table) {
-              switch (table) {
-                case 'categories':
-                  return l10n.categories;
-                case 'contacts':
-                  return l10n.contacts;
-                case 'accounts':
-                  return l10n.accounts;
-                case 'transactions':
-                  return l10n.transactions;
-                case 'account_transfers':
-                  return l10n.transfers;
-                case 'receivables':
-                  return l10n.receivables;
-                case 'payables':
-                  return l10n.payables;
-                case 'reminders':
-                  return l10n.reminders;
-                case 'app_currencies':
-                  return l10n.currencies;
-                case 'transaction_schedules':
-                  return l10n.schedules;
-                case 'user_preferences':
-                  return l10n.preferences;
-                case 'transaction_documents':
-                  return l10n.documents;
-                case 'tags':
-                  return l10n.tags;
-                case 'transaction_tags':
-                  return l10n.transactionTags;
-                default:
-                  return table;
-              }
-            }
-
-            final sortedEntries = breakdown.entries.toList()
-              ..sort((a, b) => b.value.compareTo(a.value));
 
             return SafeArea(
               child: Padding(
@@ -235,63 +489,29 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                     Flexible(
                       child: ListView.builder(
                         shrinkWrap: true,
-                        itemCount: sortedEntries.length,
+                        itemCount: groups.length,
                         itemBuilder: (context, index) {
-                          final entry = sortedEntries[index];
-                          final label = getTableNameLocalized(entry.key);
-                          final count = entry.value;
-                          final icon = getTableIcon(entry.key);
+                          final group = groups[index];
+                          final navigationAction = groupNavigation(group);
+                          final muted = theme.colorScheme.onSurfaceVariant;
 
-                          VoidCallback? getNavigationAction(String table) {
-                            switch (table) {
-                              case 'categories':
-                                return () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const CategoriesListScreen()),
-                                    );
-                              case 'contacts':
-                                return () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const ContactsListScreen()),
-                                    );
-                              case 'accounts':
-                              case 'account_transfers':
-                                return () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const AccountsScreen()),
-                                    );
-                              case 'transactions':
-                                return () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => TransactionsListScreen(
-                                          initialFilters: TransactionFilters(
-                                            statusCodes: ['CHANGES'],
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                              case 'receivables':
-                                return () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const ReceivablesListScreen()),
-                                    );
-                              case 'payables':
-                                return () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const PayablesListScreen()),
-                                    );
-                              case 'transaction_documents':
-                                return () => Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const DocumentsScreen()),
-                                    );
-                              default:
-                                return null;
-                            }
-                          }
-
-                          final navigationAction = getNavigationAction(entry.key);
+                          Widget countBadge(int count) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.orange.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  '$count',
+                                  style: theme.textTheme.labelMedium?.copyWith(
+                                    color: Colors.orange,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              );
 
                           return Container(
                             margin: const EdgeInsets.only(bottom: 8),
@@ -299,49 +519,74 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                               color: theme.colorScheme.surfaceContainerLow,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                                color: theme.colorScheme.outlineVariant
+                                    .withValues(alpha: 0.5),
                               ),
                             ),
-                            child: ListTile(
-                              leading: Icon(icon, color: theme.colorScheme.primary),
-                              title: Text(
-                                label,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
+                            clipBehavior: Clip.antiAlias,
+                            child: Theme(
+                              data: theme.copyWith(dividerColor: Colors.transparent),
+                              child: ExpansionTile(
+                                leading: Icon(
+                                  group.icon,
+                                  color: theme.colorScheme.primary,
                                 ),
-                              ),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.orange.withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      '$count',
-                                      style: theme.textTheme.labelMedium?.copyWith(
-                                        color: Colors.orange,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
+                                title: Text(
+                                  group.label,
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
                                   ),
-                                  if (navigationAction != null) ...[
-                                    const SizedBox(width: 8),
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    countBadge(group.count),
+                                    if (navigationAction != null)
+                                      IconButton(
+                                        tooltip: group.label,
+                                        visualDensity: VisualDensity.compact,
+                                        icon: Icon(
+                                          Icons.open_in_new_rounded,
+                                          size: 18,
+                                          color: muted.withValues(alpha: 0.8),
+                                        ),
+                                        onPressed: () {
+                                          Navigator.pop(sheetContext);
+                                          navigationAction();
+                                        },
+                                      ),
                                     Icon(
-                                      Icons.chevron_right_rounded,
-                                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                                      Icons.expand_more_rounded,
+                                      color: muted.withValues(alpha: 0.7),
                                     ),
                                   ],
+                                ),
+                                children: [
+                                  for (final detail in group.details)
+                                    ListTile(
+                                      dense: true,
+                                      contentPadding:
+                                          const EdgeInsets.fromLTRB(72, 0, 16, 0),
+                                      title: Text(
+                                        detail.label,
+                                        style:
+                                            theme.textTheme.bodySmall?.copyWith(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      subtitle: Text(
+                                        detail.table,
+                                        style: theme.textTheme.labelSmall
+                                            ?.copyWith(
+                                          color: muted.withValues(alpha: 0.75),
+                                          fontFamily: 'monospace',
+                                          fontSize: 10,
+                                        ),
+                                      ),
+                                      trailing: countBadge(detail.count),
+                                    ),
                                 ],
                               ),
-                              onTap: navigationAction != null
-                                  ? () {
-                                      Navigator.pop(sheetContext); // Dismiss modal sheet first
-                                      navigationAction();
-                                    }
-                                  : null,
                             ),
                           );
                         },
