@@ -93,7 +93,24 @@ class _ProductionOrderDetailScreenState
 
     setState(() => _busy = true);
     try {
-      await repo.complete(widget.orderUuid);
+      final order =
+          await repo.getOrder(widget.orderUuid);
+      final recipe = order?.recipeNameSnapshot?.trim();
+      final lotDescription = order == null
+          ? null
+          : (recipe == null || recipe.isEmpty)
+              ? l10n.productionLotDescription(order.productionNumber)
+              : l10n.productionLotDescriptionWithRecipe(
+                  order.productionNumber,
+                  recipe,
+                  AmountFormatter.formatQuantity(
+                    order.scaleFactor <= 0 ? 1 : order.scaleFactor,
+                  ),
+                );
+      await repo.complete(
+        widget.orderUuid,
+        outputLotDescription: lotDescription,
+      );
       if (!mounted) return;
       ToastUtils.showSuccessToast(
           context, ref, l10n.productionCompletedToast);
@@ -243,11 +260,11 @@ class _ProductionOrderDetailScreenState
           ),
           body: AnimatedOpacity(
             opacity: revealed ? 1 : 0.34,
-            duration: const Duration(milliseconds: 480),
+            duration: const Duration(milliseconds: 900),
             curve: Curves.easeOutCubic,
             child: AnimatedSlide(
               offset: revealed ? Offset.zero : const Offset(0, 0.02),
-              duration: const Duration(milliseconds: 480),
+              duration: const Duration(milliseconds: 900),
               curve: Curves.easeOutCubic,
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -358,11 +375,14 @@ class _ProductionOrderDetailScreenState
                                             ? formatOrderAmount(
                                                 ref, impact.consumeUnitCost)
                                             : null,
-                                        resultCost: showInputCosts &&
+                                        resultCost: !showInputCosts
+                                            ? null
+                                            : formatOrderAmount(
+                                                ref,
                                                 impact.remainingAfter > 1e-9
-                                            ? formatOrderAmount(
-                                                ref, impact.unitCostAfter)
-                                            : null,
+                                                    ? impact.unitCostAfter
+                                                    : 0,
+                                              ),
                                       ),
                                 warn: impact?.insufficient == true,
                               );
@@ -458,20 +478,26 @@ class _ProductionOrderDetailScreenState
                                   ? output.actualQuantity
                                   : output.plannedQuantity;
                               final batch = output.batchNumber.trim();
+                              final isCompleted =
+                                  order.status == ProductionStatus.completed;
                               final String? costLbl;
                               final String? costAmt;
-                              if (order.status ==
-                                  ProductionStatus.completed) {
-                                costLbl = l10n.effectiveCostLabel;
-                                costAmt = formatOrderAmount(
+                              final String? qtyCost;
+                              if (isCompleted) {
+                                // Actual landed unit cost beside qty (draft style).
+                                costLbl = null;
+                                costAmt = null;
+                                qtyCost = formatOrderAmount(
                                     ref, output.unitCostSnapshot);
                               } else if (impact == null) {
                                 costLbl = l10n.costWeight;
                                 costAmt = AmountFormatter.formatQuantity(
                                     output.costWeight);
+                                qtyCost = null;
                               } else {
                                 costLbl = null;
                                 costAmt = null;
+                                qtyCost = null;
                               }
                               return _ProductionLineCard(
                                 name: output.productNameSnapshot,
@@ -483,6 +509,7 @@ class _ProductionOrderDetailScreenState
                                 costAmount: costAmt,
                                 accent: AppColors.incomeColor,
                                 quantity: impact == null ? qty : null,
+                                quantityCost: qtyCost,
                                 stockMath: impact == null
                                     ? null
                                     : (
@@ -936,6 +963,8 @@ class _ProductionLineCard extends StatelessWidget {
   final String? costAmount;
   final Color accent;
   final double? quantity;
+  /// Unit cost shown beside [quantity] (completed outputs).
+  final String? quantityCost;
   final ({
     double base,
     double delta,
@@ -955,6 +984,7 @@ class _ProductionLineCard extends StatelessWidget {
     this.costLabel,
     this.costAmount,
     this.quantity,
+    this.quantityCost,
     this.stockMath,
     this.warn = false,
   });
@@ -1115,16 +1145,45 @@ class _ProductionLineCard extends StatelessWidget {
                     )
                   : quantity != null
                       ? KeyedSubtree(
-                          key: ValueKey('qty-$quantity'),
+                          key: ValueKey(
+                            'qty-$quantity-${quantityCost ?? ''}',
+                          ),
                           child: Align(
                             alignment: Alignment.centerRight,
-                            child: Text(
-                              AmountFormatter.formatQuantity(quantity!),
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                color: lineColor,
-                                height: 1.1,
-                              ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              textDirection: TextDirection.ltr,
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  AmountFormatter.formatQuantity(quantity!),
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    color: lineColor,
+                                    height: 1,
+                                    fontFeatures: const [
+                                      FontFeature.tabularFigures(),
+                                    ],
+                                  ),
+                                ),
+                                if (quantityCost != null &&
+                                    quantityCost!.trim().isNotEmpty) ...[
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    quantityCost!,
+                                    textDirection: TextDirection.ltr,
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: muted,
+                                      height: 1,
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures(),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                         )

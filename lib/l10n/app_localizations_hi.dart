@@ -547,6 +547,15 @@ class AppLocalizationsHi extends AppLocalizations {
   String get inventoryValue => 'इन्वेंटरी मूल्य';
 
   @override
+  String get avgUnitCost => 'औसत यूनिट लागत';
+
+  @override
+  String get consumedStock => 'उपयोग हुआ';
+
+  @override
+  String get consumedValue => 'उपयोग मूल्य';
+
+  @override
   String get lotsSection => 'लॉट';
 
   @override
@@ -616,6 +625,17 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get lotDescriptionHint => 'इस लॉट के लिए वैकल्पिक नोट्स';
+
+  @override
+  String productionLotDescription(String number) {
+    return 'उत्पादन $number से';
+  }
+
+  @override
+  String productionLotDescriptionWithRecipe(
+      String number, String recipe, String scale) {
+    return 'उत्पादन $number से ($recipe ×$scale)';
+  }
 
   @override
   String get lotExpiry => 'समाप्ति';

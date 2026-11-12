@@ -127,6 +127,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
       final lotSource = sources[lot.uuid];
       return _QtyFocusCard.lot(
         lot: lot,
+        unit: product.unit,
         source: lotSource,
         dateFormat: dateFormat,
         showBatchInFooter: true,
@@ -235,9 +236,24 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
         final lots = batchesAsync.value ?? const <ProductBatche>[];
         final sources = sourcesAsync.value ?? const <String, LotPurchaseContext>{};
         final openLots = lots.where((l) => l.isOpen).toList();
+        final onHandQty = openLots.fold<double>(
+          0,
+          (sum, l) => sum + l.remainingQuantity,
+        );
         final inventoryValue = openLots.fold<double>(
           0,
           (sum, l) => sum + (l.remainingQuantity * l.effectiveCost),
+        );
+        final avgUnitCost =
+            onHandQty > 1e-9 ? inventoryValue / onHandQty : 0.0;
+        final consumedQty = lots.fold<double>(
+          0,
+          (sum, l) => sum + l.consumedQuantity,
+        );
+        // Estimate of stock cost already used (lot effective cost × consumed).
+        final consumedValue = lots.fold<double>(
+          0,
+          (sum, l) => sum + (l.consumedQuantity * l.effectiveCost),
         );
         final filtered = _applyFilter(lots);
         final grouped = _groupByBatch(filtered);
@@ -270,21 +286,36 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
               ),
               if (!product.isService) ...[
                 const SizedBox(height: 14),
-                _StockSnapshotRow(
+                _StockSummaryPanel(
                   onHandLabel: l10n.onHandStock,
                   onHandValue: AmountFormatter.formatQuantity(
                     product.stockQuantity,
                   ),
+                  onHandUnit: product.unit,
                   onHandColor: isLowStock
                       ? AppColors.warning
                       : AppColors.incomeColor,
+                  avgUnitCostLabel: l10n.avgUnitCost,
+                  avgUnitCostValue: onHandQty > 1e-9
+                      ? formatOrderAmount(ref, avgUnitCost)
+                      : '—',
+                  avgUnitCostColor: AppColors.payableColor,
+                  inventoryValueLabel: l10n.inventoryValue,
+                  inventoryValueAmount:
+                      formatOrderAmount(ref, inventoryValue),
+                  inventoryValueColor: AppColors.receivableColor,
+                  consumedLabel: l10n.consumedStock,
+                  consumedValue:
+                      AmountFormatter.formatQuantity(consumedQty),
+                  consumedUnit: product.unit,
+                  consumedColor: AppColors.expenseColor,
+                  consumedWorthLabel: l10n.consumedValue,
+                  consumedWorthAmount:
+                      formatOrderAmount(ref, consumedValue),
+                  consumedWorthColor: AppColors.payableColor,
                   openLotsLabel: l10n.openLots,
                   openLotsValue: '${openLots.length}',
                   openLotsColor: theme.colorScheme.primary,
-                  valueLabel: l10n.inventoryValue,
-                  valueAmount: formatOrderAmount(ref, inventoryValue),
-                  valueColor: AppColors.receivableColor,
-                  accent: isLowStock ? AppColors.warning : accent,
                 ),
                 const SizedBox(height: 18),
                 Row(
@@ -637,60 +668,117 @@ class _HeroPill extends StatelessWidget {
   }
 }
 
-class _StockSnapshotRow extends StatelessWidget {
+class _StockSummaryPanel extends StatelessWidget {
   final String onHandLabel;
   final String onHandValue;
+  final String? onHandUnit;
   final Color onHandColor;
+  final String avgUnitCostLabel;
+  final String avgUnitCostValue;
+  final Color avgUnitCostColor;
+  final String inventoryValueLabel;
+  final String inventoryValueAmount;
+  final Color inventoryValueColor;
+  final String consumedLabel;
+  final String consumedValue;
+  final String? consumedUnit;
+  final Color consumedColor;
+  final String consumedWorthLabel;
+  final String consumedWorthAmount;
+  final Color consumedWorthColor;
   final String openLotsLabel;
   final String openLotsValue;
   final Color openLotsColor;
-  final String valueLabel;
-  final String valueAmount;
-  final Color valueColor;
-  final Color accent;
 
-  const _StockSnapshotRow({
+  const _StockSummaryPanel({
     required this.onHandLabel,
     required this.onHandValue,
     required this.onHandColor,
+    required this.avgUnitCostLabel,
+    required this.avgUnitCostValue,
+    required this.avgUnitCostColor,
+    required this.inventoryValueLabel,
+    required this.inventoryValueAmount,
+    required this.inventoryValueColor,
+    required this.consumedLabel,
+    required this.consumedValue,
+    required this.consumedColor,
+    required this.consumedWorthLabel,
+    required this.consumedWorthAmount,
+    required this.consumedWorthColor,
     required this.openLotsLabel,
     required this.openLotsValue,
     required this.openLotsColor,
-    required this.valueLabel,
-    required this.valueAmount,
-    required this.valueColor,
-    required this.accent,
+    this.onHandUnit,
+    this.consumedUnit,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _MetricTile(
-            label: onHandLabel,
-            value: onHandValue,
-            valueColor: onHandColor,
-            accent: onHandColor,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _MetricTile(
+                label: onHandLabel,
+                value: onHandValue,
+                unit: onHandUnit,
+                valueColor: onHandColor,
+                accent: onHandColor,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _MetricTile(
+                label: avgUnitCostLabel,
+                value: avgUnitCostValue,
+                valueColor: avgUnitCostColor,
+                accent: avgUnitCostColor,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _MetricTile(
+                label: inventoryValueLabel,
+                value: inventoryValueAmount,
+                valueColor: inventoryValueColor,
+                accent: inventoryValueColor,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _MetricTile(
-            label: openLotsLabel,
-            value: openLotsValue,
-            valueColor: openLotsColor,
-            accent: openLotsColor,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _MetricTile(
-            label: valueLabel,
-            value: valueAmount,
-            valueColor: valueColor,
-            accent: valueColor,
-          ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _MetricTile(
+                label: consumedLabel,
+                value: consumedValue,
+                unit: consumedUnit,
+                valueColor: consumedColor,
+                accent: consumedColor,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _MetricTile(
+                label: consumedWorthLabel,
+                value: consumedWorthAmount,
+                valueColor: consumedWorthColor,
+                accent: consumedWorthColor,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _MetricTile(
+                label: openLotsLabel,
+                value: openLotsValue,
+                valueColor: openLotsColor,
+                accent: openLotsColor,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -700,6 +788,7 @@ class _StockSnapshotRow extends StatelessWidget {
 class _MetricTile extends StatelessWidget {
   final String label;
   final String value;
+  final String? unit;
   final Color valueColor;
   final Color accent;
 
@@ -708,6 +797,7 @@ class _MetricTile extends StatelessWidget {
     required this.value,
     required this.valueColor,
     required this.accent,
+    this.unit,
   });
 
   @override
@@ -729,14 +819,15 @@ class _MetricTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleSmall?.copyWith(
+          _QtyWithUnit(
+            quantity: value,
+            unit: unit,
+            quantityStyle: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w800,
               color: valueColor,
+              height: 1,
             ),
+            unitColor: valueColor.withValues(alpha: 0.75),
           ),
         ],
       ),
@@ -815,6 +906,57 @@ IconData _lotTypeIcon(ProductBatche lot) {
 }
 
 /// Shared value-first card for a single lot or a multi-lot batch summary.
+class _QtyWithUnit extends StatelessWidget {
+  final String quantity;
+  final String? unit;
+  final TextStyle? quantityStyle;
+  final Color? unitColor;
+
+  const _QtyWithUnit({
+    required this.quantity,
+    this.unit,
+    this.quantityStyle,
+    this.unitColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final hasUnit = unit != null && unit!.trim().isNotEmpty;
+
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Text(
+            quantity,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: quantityStyle,
+          ),
+          if (hasUnit) ...[
+            const SizedBox(width: 4),
+            Text(
+              unit!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: unitColor ?? muted,
+                fontWeight: FontWeight.w600,
+                height: 1,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _QtyFocusCard extends ConsumerWidget {
   final double total;
   final double consumed;
@@ -825,6 +967,7 @@ class _QtyFocusCard extends ConsumerWidget {
   final String? orderHint;
   final String dateFormat;
   final Color accent;
+  final String unit;
   final bool dense;
   final VoidCallback? onOpenOrder;
   final Widget? bottom;
@@ -850,6 +993,7 @@ class _QtyFocusCard extends ConsumerWidget {
     required this.inventoryValue,
     required this.dateFormat,
     required this.accent,
+    required this.unit,
     this.earliestExpiry,
     this.orderHint,
     this.dense = false,
@@ -866,6 +1010,7 @@ class _QtyFocusCard extends ConsumerWidget {
 
   static Widget lot({
     required ProductBatche lot,
+    required String unit,
     required LotPurchaseContext? source,
     required String dateFormat,
     required bool showBatchInFooter,
@@ -887,6 +1032,7 @@ class _QtyFocusCard extends ConsumerWidget {
           orderHint: source?.orderNumber,
           dateFormat: dateFormat,
           accent: accent,
+          unit: unit,
           dense: dense,
           onOpenOrder: onOpenOrder,
           badgeIcon: _lotTypeIcon(lot),
@@ -960,6 +1106,7 @@ class _QtyFocusCard extends ConsumerWidget {
                           remainingLabel: l10n.lotRemaining,
                           remainingValue:
                               AmountFormatter.formatQuantity(remaining),
+                          unit: unit,
                           remainingColor: remaining <= 0
                               ? muted
                               : life <= 0.25
@@ -976,11 +1123,13 @@ class _QtyFocusCard extends ConsumerWidget {
                             _QtyStat(
                               label: l10n.lotTotal,
                               value: AmountFormatter.formatQuantity(total),
+                              unit: unit,
                               valueColor: theme.colorScheme.onSurface,
                             ),
                             _QtyStat(
                               label: l10n.lotConsumed,
                               value: AmountFormatter.formatQuantity(consumed),
+                              unit: unit,
                               valueColor: AppColors.expenseColor,
                             ),
                           ],
@@ -1050,6 +1199,7 @@ class _StatusCluster extends StatelessWidget {
   final Widget? trailing;
   final String remainingLabel;
   final String remainingValue;
+  final String unit;
   final Color remainingColor;
   final double life;
   final Color lifeColor;
@@ -1059,6 +1209,7 @@ class _StatusCluster extends StatelessWidget {
   const _StatusCluster({
     required this.remainingLabel,
     required this.remainingValue,
+    required this.unit,
     required this.remainingColor,
     required this.life,
     required this.lifeColor,
@@ -1076,7 +1227,7 @@ class _StatusCluster extends StatelessWidget {
             : theme.textTheme.headlineMedium)
         ?.copyWith(
       fontWeight: FontWeight.w900,
-      height: 1.05,
+      height: 1,
       letterSpacing: -0.6,
       color: remainingColor,
     );
@@ -1105,9 +1256,11 @@ class _StatusCluster extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Flexible(
-                        child: Text(
-                          remainingValue,
-                          style: qtyStyle,
+                        child: _QtyWithUnit(
+                          quantity: remainingValue,
+                          unit: unit,
+                          quantityStyle: qtyStyle,
+                          unitColor: remainingColor.withValues(alpha: 0.75),
                         ),
                       ),
                       if (showEditIcon) ...[
@@ -1394,12 +1547,14 @@ class _MetricStrip extends StatelessWidget {
 class _QtyStat extends StatelessWidget {
   final String label;
   final String value;
+  final String? unit;
   final Color? valueColor;
   final bool emphasize;
 
   const _QtyStat({
     required this.label,
     required this.value,
+    this.unit,
     this.valueColor,
     this.emphasize = false,
   });
@@ -1419,13 +1574,17 @@ class _QtyStat extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
-        Text(
-          value,
-          style: theme.textTheme.titleSmall?.copyWith(
+        _QtyWithUnit(
+          quantity: value,
+          unit: unit,
+          quantityStyle: theme.textTheme.titleSmall?.copyWith(
             fontWeight: emphasize ? FontWeight.w900 : FontWeight.w700,
             color: valueColor,
             fontSize: 13,
+            height: 1,
           ),
+          unitColor: (valueColor ?? theme.colorScheme.onSurface)
+              .withValues(alpha: 0.7),
         ),
       ],
     );
@@ -1494,6 +1653,7 @@ class _BatchLotPanelState extends State<_BatchLotPanel> {
       earliestExpiry: earliest,
       dateFormat: widget.dateFormat,
       accent: accent,
+      unit: widget.product.unit,
       countBadge: lots.length,
       footerBatch: widget.batchNumber,
       onOpenOrder: () => setState(() => _expanded = !_expanded),
@@ -1527,6 +1687,7 @@ class _BatchLotPanelState extends State<_BatchLotPanel> {
                               final src = widget.sources[lot.uuid];
                               return _QtyFocusCard.lot(
                                 lot: lot,
+                                unit: widget.product.unit,
                                 source: src,
                                 dateFormat: widget.dateFormat,
                                 showBatchInFooter: false,

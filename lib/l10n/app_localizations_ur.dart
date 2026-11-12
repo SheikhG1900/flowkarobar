@@ -546,6 +546,15 @@ class AppLocalizationsUr extends AppLocalizations {
   String get inventoryValue => 'انوینٹری ویلیو';
 
   @override
+  String get avgUnitCost => 'اوسط یونٹ لاگت';
+
+  @override
+  String get consumedStock => 'استعمال شدہ';
+
+  @override
+  String get consumedValue => 'استعمال شدہ قیمت';
+
+  @override
   String get lotsSection => 'لاٹس';
 
   @override
@@ -615,6 +624,17 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get lotDescriptionHint => 'اس لاٹ کے لیے اختیاری نوٹس';
+
+  @override
+  String productionLotDescription(String number) {
+    return 'پیداوار $number سے';
+  }
+
+  @override
+  String productionLotDescriptionWithRecipe(
+      String number, String recipe, String scale) {
+    return 'پیداوار $number سے ($recipe ×$scale)';
+  }
 
   @override
   String get lotExpiry => 'میعاد';

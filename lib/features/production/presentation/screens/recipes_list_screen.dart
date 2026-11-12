@@ -488,23 +488,36 @@ class _LineQtyRow extends StatelessWidget {
               name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.start,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            AmountFormatter.formatQuantity(quantity),
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: accent,
+          // Keep qty + unit in LTR so RTL does not reverse them.
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  AmountFormatter.formatQuantity(quantity),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: accent,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  unit,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: muted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            unit,
-            style: theme.textTheme.bodySmall?.copyWith(color: muted),
           ),
         ],
       ),
@@ -542,9 +555,10 @@ class _ScaledLineRow extends StatelessWidget {
         children: [
           Expanded(
             child: Align(
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: Text(
                 name,
+                textAlign: TextAlign.start,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -552,25 +566,47 @@ class _ScaledLineRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                scaled == null
-                    ? '—'
-                    : '${AmountFormatter.formatQuantity(scaled)} $unit',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: accent,
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      scaled == null
+                          ? '—'
+                          : AmountFormatter.formatQuantity(scaled),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: accent,
+                        height: 1,
+                      ),
+                    ),
+                    if (scaled != null) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        unit,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: muted,
+                          fontWeight: FontWeight.w600,
+                          height: 1,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ),
-              if (showBase)
-                Text(
-                  '${AmountFormatter.formatQuantity(baseQty)} × ${AmountFormatter.formatQuantity(scale)}',
-                  style: theme.textTheme.labelSmall?.copyWith(color: muted),
-                ),
-            ],
+                if (showBase)
+                  Text(
+                    '${AmountFormatter.formatQuantity(baseQty)} × ${AmountFormatter.formatQuantity(scale)}',
+                    style: theme.textTheme.labelSmall?.copyWith(color: muted),
+                  ),
+              ],
+            ),
           ),
         ],
       ),

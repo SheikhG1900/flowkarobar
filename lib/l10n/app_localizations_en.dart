@@ -550,6 +550,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get inventoryValue => 'Inventory value';
 
   @override
+  String get avgUnitCost => 'Avg unit cost';
+
+  @override
+  String get consumedStock => 'Consumed';
+
+  @override
+  String get consumedValue => 'Consumed value';
+
+  @override
   String get lotsSection => 'Lots';
 
   @override
@@ -619,6 +628,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lotDescriptionHint => 'Optional notes for this lot';
+
+  @override
+  String productionLotDescription(String number) {
+    return 'From production $number';
+  }
+
+  @override
+  String productionLotDescriptionWithRecipe(
+      String number, String recipe, String scale) {
+    return 'From production $number ($recipe ×$scale)';
+  }
 
   @override
   String get lotExpiry => 'Expiry';

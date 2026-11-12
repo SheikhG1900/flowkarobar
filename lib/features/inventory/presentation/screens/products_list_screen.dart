@@ -476,9 +476,10 @@ class _ProductCard extends StatelessWidget {
         ? AppColors.warning
         : parseCategoryColor(category?.color, AppColors.incomeColor);
 
-    final stockText = product.isService
-        ? null
-        : '${AmountFormatter.formatQuantity(product.stockQuantity)} ${product.unit}';
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final stockColor = isLowStock
+        ? AppColors.warning
+        : theme.colorScheme.onSurface;
 
     return Material(
       color: Colors.transparent,
@@ -530,13 +531,31 @@ class _ProductCard extends StatelessWidget {
                 ),
                 if (!product.isService) ...[
                   const SizedBox(width: 8),
-                  Text(
-                    stockText!,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: isLowStock
-                          ? AppColors.warning
-                          : theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.w700,
+                  Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          AmountFormatter.formatQuantity(product.stockQuantity),
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: stockColor,
+                            fontWeight: FontWeight.w700,
+                            height: 1,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          product.unit,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: isLowStock ? AppColors.warning : muted,
+                            fontWeight: FontWeight.w600,
+                            height: 1,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

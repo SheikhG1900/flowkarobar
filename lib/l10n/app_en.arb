@@ -193,6 +193,9 @@
   "onHandStock": "On hand",
   "openLots": "Open lots",
   "inventoryValue": "Inventory value",
+  "avgUnitCost": "Avg unit cost",
+  "consumedStock": "Consumed",
+  "consumedValue": "Consumed value",
   "lotsSection": "Lots",
   "noLotsYet": "No lots yet",
   "noOpenLots": "No open lots",
@@ -225,6 +228,20 @@
   "lotBatchNumber": "Batch number",
   "lotDescription": "Description",
   "lotDescriptionHint": "Optional notes for this lot",
+  "productionLotDescription": "From production {number}",
+  "@productionLotDescription": {
+    "placeholders": {
+      "number": { "type": "String" }
+    }
+  },
+  "productionLotDescriptionWithRecipe": "From production {number} ({recipe} ×{scale})",
+  "@productionLotDescriptionWithRecipe": {
+    "placeholders": {
+      "number": { "type": "String" },
+      "recipe": { "type": "String" },
+      "scale": { "type": "String" }
+    }
+  },
   "lotExpiry": "Expiry",
   "lotManufacture": "Manufacture",
   "lotQuantity": "Quantity",

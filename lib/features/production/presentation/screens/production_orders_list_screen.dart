@@ -387,17 +387,32 @@ class _OutputQtyRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            AmountFormatter.formatQuantity(quantity),
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: accent,
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(
+                  AmountFormatter.formatQuantity(quantity),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: accent,
+                    height: 1,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  unit,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: muted,
+                    fontWeight: FontWeight.w600,
+                    height: 1,
+                  ),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            unit,
-            style: theme.textTheme.bodySmall?.copyWith(color: muted),
           ),
         ],
       ),

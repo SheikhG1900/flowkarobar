@@ -193,6 +193,9 @@
   "onHandStock": "دستیاب اسٹاک",
   "openLots": "کھلے لاٹس",
   "inventoryValue": "انوینٹری ویلیو",
+  "avgUnitCost": "اوسط یونٹ لاگت",
+  "consumedStock": "استعمال شدہ",
+  "consumedValue": "استعمال شدہ قیمت",
   "lotsSection": "لاٹس",
   "noLotsYet": "ابھی کوئی لاٹ نہیں",
   "noOpenLots": "کوئی کھلا لاٹ نہیں",
@@ -225,6 +228,20 @@
   "lotBatchNumber": "بیچ نمبر",
   "lotDescription": "تفصیل",
   "lotDescriptionHint": "اس لاٹ کے لیے اختیاری نوٹس",
+  "productionLotDescription": "پیداوار {number} سے",
+  "@productionLotDescription": {
+    "placeholders": {
+      "number": { "type": "String" }
+    }
+  },
+  "productionLotDescriptionWithRecipe": "پیداوار {number} سے ({recipe} ×{scale})",
+  "@productionLotDescriptionWithRecipe": {
+    "placeholders": {
+      "number": { "type": "String" },
+      "recipe": { "type": "String" },
+      "scale": { "type": "String" }
+    }
+  },
   "lotExpiry": "میعاد",
   "lotManufacture": "تیاری",
   "lotQuantity": "مقدار",

@@ -193,6 +193,9 @@
   "onHandStock": "उपलब्ध स्टॉक",
   "openLots": "खुले लॉट",
   "inventoryValue": "इन्वेंटरी मूल्य",
+  "avgUnitCost": "औसत यूनिट लागत",
+  "consumedStock": "उपयोग हुआ",
+  "consumedValue": "उपयोग मूल्य",
   "lotsSection": "लॉट",
   "noLotsYet": "अभी कोई लॉट नहीं",
   "noOpenLots": "कोई खुला लॉट नहीं",
@@ -225,6 +228,20 @@
   "lotBatchNumber": "बैच नंबर",
   "lotDescription": "विवरण",
   "lotDescriptionHint": "इस लॉट के लिए वैकल्पिक नोट्स",
+  "productionLotDescription": "उत्पादन {number} से",
+  "@productionLotDescription": {
+    "placeholders": {
+      "number": { "type": "String" }
+    }
+  },
+  "productionLotDescriptionWithRecipe": "उत्पादन {number} से ({recipe} ×{scale})",
+  "@productionLotDescriptionWithRecipe": {
+    "placeholders": {
+      "number": { "type": "String" },
+      "recipe": { "type": "String" },
+      "scale": { "type": "String" }
+    }
+  },
   "lotExpiry": "समाप्ति",
   "lotManufacture": "निर्माण",
   "lotQuantity": "मात्रा",

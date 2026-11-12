@@ -598,6 +598,8 @@ class ProductionRepository {
     String orderUuid, {
     Map<String, double>? actualInputQty,
     Map<String, double>? actualOutputQty,
+    /// Written onto each output lot so users can trace stock back here.
+    String? outputLotDescription,
   }) async {
     final order = await getOrder(orderUuid);
     if (order == null) throw StateError('Production order not found');
@@ -728,6 +730,7 @@ class ProductionRepository {
           batchNumber: batchNum,
           isManual: true,
           manualType: ManualBatchType.production,
+          description: outputLotDescription,
         );
 
         await (_db.update(_db.productionOrderOutputs)

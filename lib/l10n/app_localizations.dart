@@ -1144,6 +1144,24 @@ abstract class AppLocalizations {
   /// **'Inventory value'**
   String get inventoryValue;
 
+  /// No description provided for @avgUnitCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg unit cost'**
+  String get avgUnitCost;
+
+  /// No description provided for @consumedStock.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumed'**
+  String get consumedStock;
+
+  /// No description provided for @consumedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Consumed value'**
+  String get consumedValue;
+
   /// No description provided for @lotsSection.
   ///
   /// In en, this message translates to:
@@ -1275,6 +1293,19 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Optional notes for this lot'**
   String get lotDescriptionHint;
+
+  /// No description provided for @productionLotDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'From production {number}'**
+  String productionLotDescription(String number);
+
+  /// No description provided for @productionLotDescriptionWithRecipe.
+  ///
+  /// In en, this message translates to:
+  /// **'From production {number} ({recipe} ×{scale})'**
+  String productionLotDescriptionWithRecipe(
+      String number, String recipe, String scale);
 
   /// No description provided for @lotExpiry.
   ///
