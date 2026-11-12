@@ -1,86 +1,79 @@
-# Inventory lot costing — future work
+# Inventory / stock management — future work
 
-Implemented in the current stage (see code):
+Living backlog for stock, lots, orders, production, and related UX.  
+Update this file when items ship or new gaps appear.
 
-- **1 lot ↔ 1 goods-receipt (shipment) line** for purchase stock.
-- **Batch number / mfg / expiry** denormalized on the lot (batch = UI group of lots).
-- **Line planned unit cost** from line discount + allocated order-level discount.
-- **Inbound freight / duty** on a receipt allocated into lot `effectiveCost` (landed).
-- **`effectiveCost` frozen** on purchase lots after create.
-- **Manual lot cost change**: if `consumed > 0`, auto-split remaining into a new lot (`total` capped to `consumed` on the old lot).
-- **`order_items.receivedQuantity`** for partial receives.
-- **`product_batches.shipmentLineUuid`** (null when `isManual`); **`sourceLotUuid`** after cost split.
-- **Product details** screen (`ProductDetailsScreen`): hero + on-hand / open-lots / inventory value; lot list with Open/All/Consumed filters; group by `batchNumber`; manual-lot sheet; purchase lot → PO # / supplier / received date + deep link to order detail; list tap opens details (edit from app bar).
+---
 
-## Deferred (not in this stage)
+## Prioritized TODO (do not miss)
 
-### Product details — remaining Phase C (polish / lineage)
+### High
 
-Done already on the details screen: inventory value (Σ remaining × `effectiveCost`), Open/All/Consumed chips, lots ordered FEFO via `watchBatchesForProduct` (expiry then `createdAt`).
+- [ ] **Returns create UI** — `OrdersRepository.createReturn` restocks/consumes lots; list tab exists; create flow still “coming soon” (`order_action_sheet`). Wire full sale/purchase return UX from order detail.
+- [ ] **Partial goods-receive screen** — Backend supports per-line qty + batch/expiry (`receivedQuantity`, `receivePurchaseShipment`). UI today is mostly “receive all remaining” / mark delivered. Need dedicated receive-shipment flow (multi-receipt per PO).
+- [ ] **Sell pricing source (catalogs)** — Catalog Drift tables + sync exist; **no** feature UI/repo. Product form is identity-only; sales still use `product.retailPrice`. Either finish catalogs (pools, prices, consume strategy) or temporarily own prices on product again until catalogs land.
+- [ ] **Sale multi-lot lineage** — FEFO can consume across lots; `order_items.batchUuid` keeps only the **first** allocation. Persist full allocations for audit and accurate return-to-lot.
+- [ ] **Stock shortfall policy** — Clear block vs allow-overcommit on sale deliver / production complete; consistent UI messaging (preview already exists for production).
 
-Still to do later:
+### Medium
 
-- **Expiry-soon filter**
-  - Chip or segment alongside Open / All / Consumed (e.g. “Expiring” within N days; reuse same threshold as `watchExpiringSoonBatches`, default 60).
-  - Highlight / sort those lots first; keep warning accent on expiry already used on cards.
-- **Cost-split lineage (`sourceLotUuid`)**
-  - When a manual cost change splits a lot, show “Split from …” on the new lot (batch # / short id / unit cost of parent).
-  - Optional: tap parent to scroll/focus that lot, or a small lineage sheet (parent → children).
-  - Do **not** allow editing purchase-lot cost from this UI; lineage is read-only context for manual splits only.
-- **Consumed section UX**
-  - Optional collapsible “Fully consumed” block when filter is All (instead of mixing open + empty in one flat list).
-  - Keep default filter = Open so day-to-day stock stays uncluttered.
-- **Batch-group summary row**
-  - Under each `batchNumber` header: sum remaining qty + inventory value for lots in that group (handy when one label spans many shipment lots).
+- [ ] **Expiry / near-expiry UX** — `watchExpiringSoonBatches` + dashboard count exist. Add product-details “Expiring” filter (reuse ~60-day threshold), optional push/notification alongside low-stock.
+- [ ] **Stock / inventory reports** — Movement, valuation (on-hand by lot), landed-cost vs invoice-cost, COGS by lot / batch-group views. No dedicated reports feature yet.
+- [ ] **Reconcile / WAC UI** — `runFullInventoryReconciliation` has no UI caller; clarify vs lot `effectiveCost` so `purchasePrice` cache does not go stale unnoticed.
+- [ ] **Opening stock on create** — `createProductWithOpeningStock` exists; add-product currently starts at qty 0 (opening only via later manual lot). Optional opening qty on create.
+- [ ] **Cost-split lineage UI** — `sourceLotUuid` is written; show “Split from …” on new manual lot + optional jump to parent.
+- [ ] **Lot hold / exclude from FEFO** — Flag so a lot is not consumed while cost/QC is pending.
+- [ ] **SKU scan in stock flows** — `scan_sku_screen` exists; ensure receive / sale / stock-check entry points use it where useful.
+- [ ] **Consumed / sales-out history on product** — Per lot or product: which sale/return lines consumed qty; deep link to order.
 
-### Product details — Phase D (catalogs & outbound history)
+### Low / later
 
-Depends on catalogs existing as sellable pools (not product master prices).
+- [ ] Multi-warehouse / inter-location stock transfer (not money `account_transfers`).
+- [ ] Serial / IMEI tracking.
+- [ ] Multi-unit conversion (box ↔ piece, etc.).
+- [ ] FIFO / MANUAL batch strategies from catalog items (consume path is FEFO-only today).
+- [ ] Purchase-lot cost correction via reverse-receive / credit note (do not edit frozen purchase `effectiveCost`).
+- [ ] Recoverable tax (VAT/GST) separate from landed `effectiveCost`.
+- [ ] Outbound freight as expense/customer charge (never lot cost).
+- [ ] Discount vouchers as first-class entities.
+- [ ] Strict unique index on `product_batches.shipment_line_uuid` where not null.
+- [ ] RBAC / inventory audit log beyond production consumptions + soft-delete.
 
-- **Catalog memberships**
-  - Section on product details: which catalogs include this product / which of its lots are pooled.
-  - Per membership: catalog name, sell price(s), consume strategy (FEFO / FIFO / short-expiry pool), link to catalog screen.
-  - Empty state: “Not in any catalog yet” + CTA once catalog create/edit exists.
-- **Sales-out / consumption history**
-  - Per lot (or product): which sale orders / return lines consumed qty (from FEFO allocations / order items with `batchUuid`).
-  - Show date, order #, qty, customer; deep link to sale order detail.
-  - Helps 360° view beyond inbound PO/receipt (Phase B already covers inbound).
-- **Do not** put retail/wholesale or “add to sale” CTAs on product details until catalogs own selling; product remains inventory identity + lots.
+---
+
+## Already strong (current stage)
+
+- **1 lot ↔ 1 goods-receipt line** for purchase stock; batch # / mfg / expiry / description on lots.
+- Line planned unit cost + inbound freight/duty into lot `effectiveCost` (frozen on purchase lots).
+- Manual lots (`OPENING` / `PRODUCTION` / `ADJUSTMENT`); cost-split when changing cost with `consumed > 0` (`sourceLotUuid`).
+- Product details: hero, on-hand / avg cost / consumed / open lots, lot filters, batch grouping, deep link to PO.
+- FEFO consume/peek; sales deliver consumes lots + COGS snapshot; services skip stock.
+- Production: recipes, scale, draft/complete/cancel, AUTO/BATCH consume, charges, co-product weights, consumptions audit.
+- Low-stock alerts (list + dashboard); sync registration for products, batches, receipts, orders, returns, catalogs, production in `SyncTables`.
+- Pending-sync badges on lists/details; dashboard grouped “changes to push” with drill-down.
+
+---
+
+## Design notes (still valid)
 
 ### Product master vs catalogs vs lots
-- **Add/Edit Product** stays identity-only (name, SKU, unit, category, service, min-stock alert).
-- **Sell prices** live on **catalogs** (virtual pools): a catalog groups selected lots (or product+strategy) with its own prices and its own consume policy (FEFO / FIFO / short-expiry pool vs normal), separate from other catalogs’ lots.
-- Same physical product can appear in multiple catalogs at different prices; consumption for a sale uses that catalog’s lot subset + strategy — not the global product FEFO pool alone.
 
-### Partial-receive UI
-- Dedicated “Receive shipment” screen: pick qty per open PO line, batch/expiry per line, multiple receipts against one PO.
-- Today: creating a purchase as delivered / “Mark delivered” receives **all remaining** qty in one shipment (freight/duty optional).
+- **Add/Edit Product** stays identity-oriented (name, SKU, unit, category, service, min-stock).
+- **Sell prices** intended on **catalogs** (virtual pools): selected lots (or product+strategy), own prices and consume policy.
+- Same physical product can appear in multiple catalogs at different prices; sale consumption uses that catalog’s subset + strategy.
 
-### Lot hold / exclude from FEFO
-- Flag so a lot is not consumed while cost or QC is pending.
-- Adjustment qty alone does not quarantine a lot.
+### Product details — polish
 
-### Recoverable tax (VAT / GST input credit)
+- Expiry-soon filter; cost-split lineage; optional collapsible fully-consumed block; batch-group summary (Σ remaining + value) — see Medium TODOs above.
+- Catalog memberships + sales-out history once catalogs / multi-lot lineage exist — see Phase D items in High/Medium lists.
+
+### Tax / freight / vouchers
+
 - Do **not** land recoverable tax into `effectiveCost`.
-- Future: tax fields on PO/receipt + tax control / input-credit ledger; settlement separately.
-- `orders.taxAmount` remains invoice/payable facing for now, not inventory cost.
+- Customer delivery (outbound freight) → expense or customer charge, never lot cost.
+- Until voucher entities exist, vouchers roll into `orders.discountAmount`.
 
-### Outbound freight
-- Customer delivery cost → expense (or customer charge), never lot cost.
+### Sync
 
-### Discount vouchers as first-class entities
-- Voucher master, stacking rules, vendor promotions.
-- Until then, vouchers roll into `orders.discountAmount` and allocate like any header discount.
-
-### Purchase-lot cost correction workflow
-- Reverse receive + re-receive (or credit note) instead of editing purchase `effectiveCost`.
-- UI for that correction path.
-
-### Sync / cloud
-- Register `goods_receipts` and `goods_receipt_lines` in sync engine table maps once cloud sync covers inventory.
-
-### Reporting
-- Landed-cost vs invoice-cost reports; batch group views (sum lots by `batchNumber`); COGS by lot.
-
-### Strict unique constraint
-- DB unique index on `product_batches.shipment_line_uuid` where not null (enforce 1:1 in SQLite).
+- Goods receipts / lines **are** registered in `SyncTables` (older note below was outdated).
+- When adding new stock entities: follow `.cursor/rules/sync-features.mdc`.
