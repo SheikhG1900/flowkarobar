@@ -69,6 +69,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get catalogTieredDiscounts => 'Catalog Discounts';
 
   @override
+  String get sellingProducts => 'Selling products';
+
+  @override
+  String get sellingProductComponents => 'Selling product components';
+
+  @override
+  String get noSellingProductsYet => 'No selling products yet';
+
+  @override
+  String get newSellingProduct => 'New selling product';
+
+  @override
+  String get editSellingProduct => 'Edit selling product';
+
+  @override
+  String get sellingProductSaved => 'Selling product saved';
+
+  @override
+  String get sellingProductDeleted => 'Selling product deleted';
+
+  @override
+  String get atLeastOneComponent => 'Add at least one component';
+
+  @override
+  String get sectionComponents => 'Components';
+
+  @override
+  String get addComponent => 'Add component';
+
+  @override
+  String get sellingProductHint =>
+      'Virtual sell offer or bundle — no stock of its own';
+
+  @override
+  String get confirmDeleteSellingProduct => 'Delete this selling product?';
+
+  @override
   String get expiryDate => 'Expiry Date';
 
   @override
@@ -492,6 +529,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get consumeModeAuto => 'Auto (all lots)';
+
+  @override
+  String get consumeModeAutoShort => 'Auto';
 
   @override
   String get consumeModeBatch => 'Batch';

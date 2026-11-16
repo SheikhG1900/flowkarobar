@@ -5,6 +5,8 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/features/inventory/presentation/providers/inventory_provider.dart';
+import 'package:flowpaisa/features/orders/presentation/widgets/order_entity_pickers.dart';
 import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dart';
 import 'package:flowpaisa/features/production/presentation/providers/production_provider.dart';
 import 'package:flowpaisa/features/production/presentation/screens/add_recipe_screen.dart';
@@ -250,6 +252,7 @@ class _RecipeCard extends ConsumerWidget {
               for (var i = 0; i < outputs.length; i++) ...[
                 if (i > 0) const SizedBox(height: 6),
                 _LineQtyRow(
+                  productUuid: outputs[i].productUuid,
                   name: outputs[i].productNameSnapshot,
                   quantity: outputs[i].quantity,
                   unit: outputs[i].unit,
@@ -472,13 +475,15 @@ class _ProduceFromRecipeDialogState
   }
 }
 
-class _LineQtyRow extends StatelessWidget {
+class _LineQtyRow extends ConsumerWidget {
+  final String productUuid;
   final String name;
   final double quantity;
   final String unit;
   final Color accent;
 
   const _LineQtyRow({
+    required this.productUuid,
     required this.name,
     required this.quantity,
     required this.unit,
@@ -486,9 +491,19 @@ class _LineQtyRow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final muted = theme.colorScheme.onSurfaceVariant;
+    final product = ref.watch(productStreamProvider(productUuid)).value;
+    final categories =
+        ref.watch(productCategoriesStreamProvider).value ?? const [];
+    final categoriesById = {for (final c in categories) c.uuid: c};
+    final category = product?.categoryUuid == null
+        ? null
+        : categoriesById[product!.categoryUuid];
+    final iconColor = parseCategoryColor(category?.color, accent);
+    final iconData = categoryIconData(category);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
@@ -498,6 +513,12 @@ class _LineQtyRow extends StatelessWidget {
       ),
       child: Row(
         children: [
+          Icon(
+            iconData,
+            size: 16,
+            color: iconColor.withValues(alpha: 0.9),
+          ),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               name,

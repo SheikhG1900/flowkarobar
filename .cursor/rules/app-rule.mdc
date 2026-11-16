@@ -9,7 +9,9 @@ alwaysApply: true
 
 - for any sucess and error messages, use ToastUtils.
 
-- first recommendation to use theme colors and styling. 
+- first recommendation to use theme colors and styling.
+
+- AppBar actions trailing inset is theme-owned: `AppBarTheme.actionsPadding` = `EdgeInsetsDirectional.only(end: 8)`. Do not add end `SizedBox` in `actions`. Dashboard opts out with `actionsPadding: EdgeInsets.zero`. 
 
 - for Amount and Date formatting, always use AmountFormatter and AppDateFormatter. for the date default date formatting, use AppDateFormatter.formatDate with the dateformat of user profile.
 

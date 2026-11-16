@@ -16295,6 +16295,1040 @@ class OrderReturnItemsCompanion extends UpdateCompanion<OrderReturnItem> {
   }
 }
 
+class $SellingProductsTable extends SellingProducts
+    with TableInfo<$SellingProductsTable, SellingProduct> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SellingProductsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 200),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _skuMeta = const VerificationMeta('sku');
+  @override
+  late final GeneratedColumn<String> sku = GeneratedColumn<String>(
+      'sku', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _categoryUuidMeta =
+      const VerificationMeta('categoryUuid');
+  @override
+  late final GeneratedColumn<String> categoryUuid = GeneratedColumn<String>(
+      'category_uuid', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES product_categories (uuid)'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        name,
+        sku,
+        description,
+        categoryUuid,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'selling_products';
+  @override
+  VerificationContext validateIntegrity(Insertable<SellingProduct> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('sku')) {
+      context.handle(
+          _skuMeta, sku.isAcceptableOrUnknown(data['sku']!, _skuMeta));
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('category_uuid')) {
+      context.handle(
+          _categoryUuidMeta,
+          categoryUuid.isAcceptableOrUnknown(
+              data['category_uuid']!, _categoryUuidMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  SellingProduct map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SellingProduct(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      sku: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sku']),
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description']),
+      categoryUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category_uuid']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $SellingProductsTable createAlias(String alias) {
+    return $SellingProductsTable(attachedDatabase, alias);
+  }
+}
+
+class SellingProduct extends DataClass implements Insertable<SellingProduct> {
+  final String uuid;
+  final String name;
+  final String? sku;
+  final String? description;
+
+  /// Optional category; if unset at save, defaults from first component product.
+  final String? categoryUuid;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const SellingProduct(
+      {required this.uuid,
+      required this.name,
+      this.sku,
+      this.description,
+      this.categoryUuid,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || sku != null) {
+      map['sku'] = Variable<String>(sku);
+    }
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || categoryUuid != null) {
+      map['category_uuid'] = Variable<String>(categoryUuid);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  SellingProductsCompanion toCompanion(bool nullToAbsent) {
+    return SellingProductsCompanion(
+      uuid: Value(uuid),
+      name: Value(name),
+      sku: sku == null && nullToAbsent ? const Value.absent() : Value(sku),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      categoryUuid: categoryUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryUuid),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory SellingProduct.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SellingProduct(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      name: serializer.fromJson<String>(json['name']),
+      sku: serializer.fromJson<String?>(json['sku']),
+      description: serializer.fromJson<String?>(json['description']),
+      categoryUuid: serializer.fromJson<String?>(json['categoryUuid']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'name': serializer.toJson<String>(name),
+      'sku': serializer.toJson<String?>(sku),
+      'description': serializer.toJson<String?>(description),
+      'categoryUuid': serializer.toJson<String?>(categoryUuid),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  SellingProduct copyWith(
+          {String? uuid,
+          String? name,
+          Value<String?> sku = const Value.absent(),
+          Value<String?> description = const Value.absent(),
+          Value<String?> categoryUuid = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      SellingProduct(
+        uuid: uuid ?? this.uuid,
+        name: name ?? this.name,
+        sku: sku.present ? sku.value : this.sku,
+        description: description.present ? description.value : this.description,
+        categoryUuid:
+            categoryUuid.present ? categoryUuid.value : this.categoryUuid,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  SellingProduct copyWithCompanion(SellingProductsCompanion data) {
+    return SellingProduct(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      name: data.name.present ? data.name.value : this.name,
+      sku: data.sku.present ? data.sku.value : this.sku,
+      description:
+          data.description.present ? data.description.value : this.description,
+      categoryUuid: data.categoryUuid.present
+          ? data.categoryUuid.value
+          : this.categoryUuid,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SellingProduct(')
+          ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
+          ..write('sku: $sku, ')
+          ..write('description: $description, ')
+          ..write('categoryUuid: $categoryUuid, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(uuid, name, sku, description, categoryUuid,
+      createdAt, updatedAt, isDeleted, isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SellingProduct &&
+          other.uuid == this.uuid &&
+          other.name == this.name &&
+          other.sku == this.sku &&
+          other.description == this.description &&
+          other.categoryUuid == this.categoryUuid &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class SellingProductsCompanion extends UpdateCompanion<SellingProduct> {
+  final Value<String> uuid;
+  final Value<String> name;
+  final Value<String?> sku;
+  final Value<String?> description;
+  final Value<String?> categoryUuid;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const SellingProductsCompanion({
+    this.uuid = const Value.absent(),
+    this.name = const Value.absent(),
+    this.sku = const Value.absent(),
+    this.description = const Value.absent(),
+    this.categoryUuid = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SellingProductsCompanion.insert({
+    required String uuid,
+    required String name,
+    this.sku = const Value.absent(),
+    this.description = const Value.absent(),
+    this.categoryUuid = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        name = Value(name);
+  static Insertable<SellingProduct> custom({
+    Expression<String>? uuid,
+    Expression<String>? name,
+    Expression<String>? sku,
+    Expression<String>? description,
+    Expression<String>? categoryUuid,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (name != null) 'name': name,
+      if (sku != null) 'sku': sku,
+      if (description != null) 'description': description,
+      if (categoryUuid != null) 'category_uuid': categoryUuid,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SellingProductsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? name,
+      Value<String?>? sku,
+      Value<String?>? description,
+      Value<String?>? categoryUuid,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return SellingProductsCompanion(
+      uuid: uuid ?? this.uuid,
+      name: name ?? this.name,
+      sku: sku ?? this.sku,
+      description: description ?? this.description,
+      categoryUuid: categoryUuid ?? this.categoryUuid,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (sku.present) {
+      map['sku'] = Variable<String>(sku.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (categoryUuid.present) {
+      map['category_uuid'] = Variable<String>(categoryUuid.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SellingProductsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
+          ..write('sku: $sku, ')
+          ..write('description: $description, ')
+          ..write('categoryUuid: $categoryUuid, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SellingProductComponentsTable extends SellingProductComponents
+    with TableInfo<$SellingProductComponentsTable, SellingProductComponent> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SellingProductComponentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sellingProductUuidMeta =
+      const VerificationMeta('sellingProductUuid');
+  @override
+  late final GeneratedColumn<String> sellingProductUuid =
+      GeneratedColumn<String>('selling_product_uuid', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: true,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES selling_products (uuid)'));
+  static const VerificationMeta _productUuidMeta =
+      const VerificationMeta('productUuid');
+  @override
+  late final GeneratedColumn<String> productUuid = GeneratedColumn<String>(
+      'product_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES products (uuid)'));
+  static const VerificationMeta _quantityMeta =
+      const VerificationMeta('quantity');
+  @override
+  late final GeneratedColumn<double> quantity = GeneratedColumn<double>(
+      'quantity', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _consumeModeMeta =
+      const VerificationMeta('consumeMode');
+  @override
+  late final GeneratedColumn<String> consumeMode = GeneratedColumn<String>(
+      'consume_mode', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('AUTO'));
+  static const VerificationMeta _batchNumberMeta =
+      const VerificationMeta('batchNumber');
+  @override
+  late final GeneratedColumn<String> batchNumber = GeneratedColumn<String>(
+      'batch_number', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        sellingProductUuid,
+        productUuid,
+        quantity,
+        consumeMode,
+        batchNumber,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'selling_product_components';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<SellingProductComponent> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('selling_product_uuid')) {
+      context.handle(
+          _sellingProductUuidMeta,
+          sellingProductUuid.isAcceptableOrUnknown(
+              data['selling_product_uuid']!, _sellingProductUuidMeta));
+    } else if (isInserting) {
+      context.missing(_sellingProductUuidMeta);
+    }
+    if (data.containsKey('product_uuid')) {
+      context.handle(
+          _productUuidMeta,
+          productUuid.isAcceptableOrUnknown(
+              data['product_uuid']!, _productUuidMeta));
+    } else if (isInserting) {
+      context.missing(_productUuidMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(_quantityMeta,
+          quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta));
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    if (data.containsKey('consume_mode')) {
+      context.handle(
+          _consumeModeMeta,
+          consumeMode.isAcceptableOrUnknown(
+              data['consume_mode']!, _consumeModeMeta));
+    }
+    if (data.containsKey('batch_number')) {
+      context.handle(
+          _batchNumberMeta,
+          batchNumber.isAcceptableOrUnknown(
+              data['batch_number']!, _batchNumberMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  SellingProductComponent map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SellingProductComponent(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      sellingProductUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}selling_product_uuid'])!,
+      productUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}product_uuid'])!,
+      quantity: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}quantity'])!,
+      consumeMode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}consume_mode'])!,
+      batchNumber: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}batch_number']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $SellingProductComponentsTable createAlias(String alias) {
+    return $SellingProductComponentsTable(attachedDatabase, alias);
+  }
+}
+
+class SellingProductComponent extends DataClass
+    implements Insertable<SellingProductComponent> {
+  final String uuid;
+  final String sellingProductUuid;
+  final String productUuid;
+  final double quantity;
+
+  /// AUTO | BATCH — same idea as recipe / production inputs.
+  final String consumeMode;
+
+  /// Required when [consumeMode] is BATCH.
+  final String? batchNumber;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const SellingProductComponent(
+      {required this.uuid,
+      required this.sellingProductUuid,
+      required this.productUuid,
+      required this.quantity,
+      required this.consumeMode,
+      this.batchNumber,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['selling_product_uuid'] = Variable<String>(sellingProductUuid);
+    map['product_uuid'] = Variable<String>(productUuid);
+    map['quantity'] = Variable<double>(quantity);
+    map['consume_mode'] = Variable<String>(consumeMode);
+    if (!nullToAbsent || batchNumber != null) {
+      map['batch_number'] = Variable<String>(batchNumber);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  SellingProductComponentsCompanion toCompanion(bool nullToAbsent) {
+    return SellingProductComponentsCompanion(
+      uuid: Value(uuid),
+      sellingProductUuid: Value(sellingProductUuid),
+      productUuid: Value(productUuid),
+      quantity: Value(quantity),
+      consumeMode: Value(consumeMode),
+      batchNumber: batchNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(batchNumber),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory SellingProductComponent.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SellingProductComponent(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      sellingProductUuid:
+          serializer.fromJson<String>(json['sellingProductUuid']),
+      productUuid: serializer.fromJson<String>(json['productUuid']),
+      quantity: serializer.fromJson<double>(json['quantity']),
+      consumeMode: serializer.fromJson<String>(json['consumeMode']),
+      batchNumber: serializer.fromJson<String?>(json['batchNumber']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'sellingProductUuid': serializer.toJson<String>(sellingProductUuid),
+      'productUuid': serializer.toJson<String>(productUuid),
+      'quantity': serializer.toJson<double>(quantity),
+      'consumeMode': serializer.toJson<String>(consumeMode),
+      'batchNumber': serializer.toJson<String?>(batchNumber),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  SellingProductComponent copyWith(
+          {String? uuid,
+          String? sellingProductUuid,
+          String? productUuid,
+          double? quantity,
+          String? consumeMode,
+          Value<String?> batchNumber = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      SellingProductComponent(
+        uuid: uuid ?? this.uuid,
+        sellingProductUuid: sellingProductUuid ?? this.sellingProductUuid,
+        productUuid: productUuid ?? this.productUuid,
+        quantity: quantity ?? this.quantity,
+        consumeMode: consumeMode ?? this.consumeMode,
+        batchNumber: batchNumber.present ? batchNumber.value : this.batchNumber,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  SellingProductComponent copyWithCompanion(
+      SellingProductComponentsCompanion data) {
+    return SellingProductComponent(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      sellingProductUuid: data.sellingProductUuid.present
+          ? data.sellingProductUuid.value
+          : this.sellingProductUuid,
+      productUuid:
+          data.productUuid.present ? data.productUuid.value : this.productUuid,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      consumeMode:
+          data.consumeMode.present ? data.consumeMode.value : this.consumeMode,
+      batchNumber:
+          data.batchNumber.present ? data.batchNumber.value : this.batchNumber,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SellingProductComponent(')
+          ..write('uuid: $uuid, ')
+          ..write('sellingProductUuid: $sellingProductUuid, ')
+          ..write('productUuid: $productUuid, ')
+          ..write('quantity: $quantity, ')
+          ..write('consumeMode: $consumeMode, ')
+          ..write('batchNumber: $batchNumber, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid,
+      sellingProductUuid,
+      productUuid,
+      quantity,
+      consumeMode,
+      batchNumber,
+      createdAt,
+      updatedAt,
+      isDeleted,
+      isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SellingProductComponent &&
+          other.uuid == this.uuid &&
+          other.sellingProductUuid == this.sellingProductUuid &&
+          other.productUuid == this.productUuid &&
+          other.quantity == this.quantity &&
+          other.consumeMode == this.consumeMode &&
+          other.batchNumber == this.batchNumber &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class SellingProductComponentsCompanion
+    extends UpdateCompanion<SellingProductComponent> {
+  final Value<String> uuid;
+  final Value<String> sellingProductUuid;
+  final Value<String> productUuid;
+  final Value<double> quantity;
+  final Value<String> consumeMode;
+  final Value<String?> batchNumber;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const SellingProductComponentsCompanion({
+    this.uuid = const Value.absent(),
+    this.sellingProductUuid = const Value.absent(),
+    this.productUuid = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.consumeMode = const Value.absent(),
+    this.batchNumber = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SellingProductComponentsCompanion.insert({
+    required String uuid,
+    required String sellingProductUuid,
+    required String productUuid,
+    required double quantity,
+    this.consumeMode = const Value.absent(),
+    this.batchNumber = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        sellingProductUuid = Value(sellingProductUuid),
+        productUuid = Value(productUuid),
+        quantity = Value(quantity);
+  static Insertable<SellingProductComponent> custom({
+    Expression<String>? uuid,
+    Expression<String>? sellingProductUuid,
+    Expression<String>? productUuid,
+    Expression<double>? quantity,
+    Expression<String>? consumeMode,
+    Expression<String>? batchNumber,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (sellingProductUuid != null)
+        'selling_product_uuid': sellingProductUuid,
+      if (productUuid != null) 'product_uuid': productUuid,
+      if (quantity != null) 'quantity': quantity,
+      if (consumeMode != null) 'consume_mode': consumeMode,
+      if (batchNumber != null) 'batch_number': batchNumber,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SellingProductComponentsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? sellingProductUuid,
+      Value<String>? productUuid,
+      Value<double>? quantity,
+      Value<String>? consumeMode,
+      Value<String?>? batchNumber,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return SellingProductComponentsCompanion(
+      uuid: uuid ?? this.uuid,
+      sellingProductUuid: sellingProductUuid ?? this.sellingProductUuid,
+      productUuid: productUuid ?? this.productUuid,
+      quantity: quantity ?? this.quantity,
+      consumeMode: consumeMode ?? this.consumeMode,
+      batchNumber: batchNumber ?? this.batchNumber,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (sellingProductUuid.present) {
+      map['selling_product_uuid'] = Variable<String>(sellingProductUuid.value);
+    }
+    if (productUuid.present) {
+      map['product_uuid'] = Variable<String>(productUuid.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<double>(quantity.value);
+    }
+    if (consumeMode.present) {
+      map['consume_mode'] = Variable<String>(consumeMode.value);
+    }
+    if (batchNumber.present) {
+      map['batch_number'] = Variable<String>(batchNumber.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SellingProductComponentsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('sellingProductUuid: $sellingProductUuid, ')
+          ..write('productUuid: $productUuid, ')
+          ..write('quantity: $quantity, ')
+          ..write('consumeMode: $consumeMode, ')
+          ..write('batchNumber: $batchNumber, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $CatalogsTable extends Catalogs with TableInfo<$CatalogsTable, Catalog> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -16800,11 +17834,20 @@ class $CatalogItemsTable extends CatalogItems
       const VerificationMeta('productUuid');
   @override
   late final GeneratedColumn<String> productUuid = GeneratedColumn<String>(
-      'product_uuid', aliasedName, false,
+      'product_uuid', aliasedName, true,
       type: DriftSqlType.string,
-      requiredDuringInsert: true,
+      requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('REFERENCES products (uuid)'));
+  static const VerificationMeta _sellingProductUuidMeta =
+      const VerificationMeta('sellingProductUuid');
+  @override
+  late final GeneratedColumn<String> sellingProductUuid =
+      GeneratedColumn<String>('selling_product_uuid', aliasedName, true,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES selling_products (uuid)'));
   static const VerificationMeta _customPriceMeta =
       const VerificationMeta('customPrice');
   @override
@@ -16834,6 +17877,50 @@ class $CatalogItemsTable extends CatalogItems
           type: DriftSqlType.string,
           requiredDuringInsert: false,
           defaultValue: const Constant('FEFO_AUTO'));
+  static const VerificationMeta _pricingApproachMeta =
+      const VerificationMeta('pricingApproach');
+  @override
+  late final GeneratedColumn<String> pricingApproach = GeneratedColumn<String>(
+      'pricing_approach', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('MARKUP'));
+  static const VerificationMeta _markupOrMarginPercentMeta =
+      const VerificationMeta('markupOrMarginPercent');
+  @override
+  late final GeneratedColumn<double> markupOrMarginPercent =
+      GeneratedColumn<double>('markup_or_margin_percent', aliasedName, false,
+          type: DriftSqlType.double,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0.0));
+  static const VerificationMeta _fixedAmountMeta =
+      const VerificationMeta('fixedAmount');
+  @override
+  late final GeneratedColumn<double> fixedAmount = GeneratedColumn<double>(
+      'fixed_amount', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _sellPriceMeta =
+      const VerificationMeta('sellPrice');
+  @override
+  late final GeneratedColumn<double> sellPrice = GeneratedColumn<double>(
+      'sell_price', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _unitCostSnapshotMeta =
+      const VerificationMeta('unitCostSnapshot');
+  @override
+  late final GeneratedColumn<double> unitCostSnapshot = GeneratedColumn<double>(
+      'unit_cost_snapshot', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _priceComputedAtMeta =
+      const VerificationMeta('priceComputedAt');
+  @override
+  late final GeneratedColumn<DateTime> priceComputedAt =
+      GeneratedColumn<DateTime>('price_computed_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -16875,10 +17962,17 @@ class $CatalogItemsTable extends CatalogItems
         uuid,
         catalogUuid,
         productUuid,
+        sellingProductUuid,
         customPrice,
         batchUuid,
         validUntil,
         batchSelectionStrategy,
+        pricingApproach,
+        markupOrMarginPercent,
+        fixedAmount,
+        sellPrice,
+        unitCostSnapshot,
+        priceComputedAt,
         createdAt,
         updatedAt,
         isDeleted,
@@ -16913,8 +18007,12 @@ class $CatalogItemsTable extends CatalogItems
           _productUuidMeta,
           productUuid.isAcceptableOrUnknown(
               data['product_uuid']!, _productUuidMeta));
-    } else if (isInserting) {
-      context.missing(_productUuidMeta);
+    }
+    if (data.containsKey('selling_product_uuid')) {
+      context.handle(
+          _sellingProductUuidMeta,
+          sellingProductUuid.isAcceptableOrUnknown(
+              data['selling_product_uuid']!, _sellingProductUuidMeta));
     }
     if (data.containsKey('custom_price')) {
       context.handle(
@@ -16937,6 +18035,40 @@ class $CatalogItemsTable extends CatalogItems
           _batchSelectionStrategyMeta,
           batchSelectionStrategy.isAcceptableOrUnknown(
               data['batch_selection_strategy']!, _batchSelectionStrategyMeta));
+    }
+    if (data.containsKey('pricing_approach')) {
+      context.handle(
+          _pricingApproachMeta,
+          pricingApproach.isAcceptableOrUnknown(
+              data['pricing_approach']!, _pricingApproachMeta));
+    }
+    if (data.containsKey('markup_or_margin_percent')) {
+      context.handle(
+          _markupOrMarginPercentMeta,
+          markupOrMarginPercent.isAcceptableOrUnknown(
+              data['markup_or_margin_percent']!, _markupOrMarginPercentMeta));
+    }
+    if (data.containsKey('fixed_amount')) {
+      context.handle(
+          _fixedAmountMeta,
+          fixedAmount.isAcceptableOrUnknown(
+              data['fixed_amount']!, _fixedAmountMeta));
+    }
+    if (data.containsKey('sell_price')) {
+      context.handle(_sellPriceMeta,
+          sellPrice.isAcceptableOrUnknown(data['sell_price']!, _sellPriceMeta));
+    }
+    if (data.containsKey('unit_cost_snapshot')) {
+      context.handle(
+          _unitCostSnapshotMeta,
+          unitCostSnapshot.isAcceptableOrUnknown(
+              data['unit_cost_snapshot']!, _unitCostSnapshotMeta));
+    }
+    if (data.containsKey('price_computed_at')) {
+      context.handle(
+          _priceComputedAtMeta,
+          priceComputedAt.isAcceptableOrUnknown(
+              data['price_computed_at']!, _priceComputedAtMeta));
     }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
@@ -16970,7 +18102,9 @@ class $CatalogItemsTable extends CatalogItems
       catalogUuid: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}catalog_uuid'])!,
       productUuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}product_uuid'])!,
+          .read(DriftSqlType.string, data['${effectivePrefix}product_uuid']),
+      sellingProductUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}selling_product_uuid']),
       customPrice: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}custom_price']),
       batchUuid: attachedDatabase.typeMapping
@@ -16980,6 +18114,19 @@ class $CatalogItemsTable extends CatalogItems
       batchSelectionStrategy: attachedDatabase.typeMapping.read(
           DriftSqlType.string,
           data['${effectivePrefix}batch_selection_strategy'])!,
+      pricingApproach: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}pricing_approach'])!,
+      markupOrMarginPercent: attachedDatabase.typeMapping.read(
+          DriftSqlType.double,
+          data['${effectivePrefix}markup_or_margin_percent'])!,
+      fixedAmount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}fixed_amount'])!,
+      sellPrice: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}sell_price'])!,
+      unitCostSnapshot: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}unit_cost_snapshot']),
+      priceComputedAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}price_computed_at']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -17000,11 +18147,32 @@ class $CatalogItemsTable extends CatalogItems
 class CatalogItem extends DataClass implements Insertable<CatalogItem> {
   final String uuid;
   final String catalogUuid;
-  final String productUuid;
+
+  /// Direct stock/service product. XOR with [sellingProductUuid].
+  final String? productUuid;
+
+  /// Virtual offer / bundle. XOR with [productUuid].
+  final String? sellingProductUuid;
+
+  /// Legacy; prefer [sellPrice]. Migrated into sellPrice when present.
   final double? customPrice;
+
+  /// Deprecated — batch strategy lives on selling-product components.
   final String? batchUuid;
   final DateTime? validUntil;
+
+  /// Deprecated — unused for new catalog pricing.
   final String batchSelectionStrategy;
+
+  /// MARKUP | MARGIN
+  final String pricingApproach;
+  final double markupOrMarginPercent;
+  final double fixedAmount;
+
+  /// Final sell price used on orders (snapshot source).
+  final double sellPrice;
+  final double? unitCostSnapshot;
+  final DateTime? priceComputedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
@@ -17012,11 +18180,18 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
   const CatalogItem(
       {required this.uuid,
       required this.catalogUuid,
-      required this.productUuid,
+      this.productUuid,
+      this.sellingProductUuid,
       this.customPrice,
       this.batchUuid,
       this.validUntil,
       required this.batchSelectionStrategy,
+      required this.pricingApproach,
+      required this.markupOrMarginPercent,
+      required this.fixedAmount,
+      required this.sellPrice,
+      this.unitCostSnapshot,
+      this.priceComputedAt,
       required this.createdAt,
       required this.updatedAt,
       required this.isDeleted,
@@ -17026,7 +18201,12 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
     final map = <String, Expression>{};
     map['uuid'] = Variable<String>(uuid);
     map['catalog_uuid'] = Variable<String>(catalogUuid);
-    map['product_uuid'] = Variable<String>(productUuid);
+    if (!nullToAbsent || productUuid != null) {
+      map['product_uuid'] = Variable<String>(productUuid);
+    }
+    if (!nullToAbsent || sellingProductUuid != null) {
+      map['selling_product_uuid'] = Variable<String>(sellingProductUuid);
+    }
     if (!nullToAbsent || customPrice != null) {
       map['custom_price'] = Variable<double>(customPrice);
     }
@@ -17037,6 +18217,16 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       map['valid_until'] = Variable<DateTime>(validUntil);
     }
     map['batch_selection_strategy'] = Variable<String>(batchSelectionStrategy);
+    map['pricing_approach'] = Variable<String>(pricingApproach);
+    map['markup_or_margin_percent'] = Variable<double>(markupOrMarginPercent);
+    map['fixed_amount'] = Variable<double>(fixedAmount);
+    map['sell_price'] = Variable<double>(sellPrice);
+    if (!nullToAbsent || unitCostSnapshot != null) {
+      map['unit_cost_snapshot'] = Variable<double>(unitCostSnapshot);
+    }
+    if (!nullToAbsent || priceComputedAt != null) {
+      map['price_computed_at'] = Variable<DateTime>(priceComputedAt);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['is_deleted'] = Variable<bool>(isDeleted);
@@ -17048,7 +18238,12 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
     return CatalogItemsCompanion(
       uuid: Value(uuid),
       catalogUuid: Value(catalogUuid),
-      productUuid: Value(productUuid),
+      productUuid: productUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productUuid),
+      sellingProductUuid: sellingProductUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sellingProductUuid),
       customPrice: customPrice == null && nullToAbsent
           ? const Value.absent()
           : Value(customPrice),
@@ -17059,6 +18254,16 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
           ? const Value.absent()
           : Value(validUntil),
       batchSelectionStrategy: Value(batchSelectionStrategy),
+      pricingApproach: Value(pricingApproach),
+      markupOrMarginPercent: Value(markupOrMarginPercent),
+      fixedAmount: Value(fixedAmount),
+      sellPrice: Value(sellPrice),
+      unitCostSnapshot: unitCostSnapshot == null && nullToAbsent
+          ? const Value.absent()
+          : Value(unitCostSnapshot),
+      priceComputedAt: priceComputedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(priceComputedAt),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       isDeleted: Value(isDeleted),
@@ -17072,12 +18277,21 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
     return CatalogItem(
       uuid: serializer.fromJson<String>(json['uuid']),
       catalogUuid: serializer.fromJson<String>(json['catalogUuid']),
-      productUuid: serializer.fromJson<String>(json['productUuid']),
+      productUuid: serializer.fromJson<String?>(json['productUuid']),
+      sellingProductUuid:
+          serializer.fromJson<String?>(json['sellingProductUuid']),
       customPrice: serializer.fromJson<double?>(json['customPrice']),
       batchUuid: serializer.fromJson<String?>(json['batchUuid']),
       validUntil: serializer.fromJson<DateTime?>(json['validUntil']),
       batchSelectionStrategy:
           serializer.fromJson<String>(json['batchSelectionStrategy']),
+      pricingApproach: serializer.fromJson<String>(json['pricingApproach']),
+      markupOrMarginPercent:
+          serializer.fromJson<double>(json['markupOrMarginPercent']),
+      fixedAmount: serializer.fromJson<double>(json['fixedAmount']),
+      sellPrice: serializer.fromJson<double>(json['sellPrice']),
+      unitCostSnapshot: serializer.fromJson<double?>(json['unitCostSnapshot']),
+      priceComputedAt: serializer.fromJson<DateTime?>(json['priceComputedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
@@ -17090,12 +18304,19 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
     return <String, dynamic>{
       'uuid': serializer.toJson<String>(uuid),
       'catalogUuid': serializer.toJson<String>(catalogUuid),
-      'productUuid': serializer.toJson<String>(productUuid),
+      'productUuid': serializer.toJson<String?>(productUuid),
+      'sellingProductUuid': serializer.toJson<String?>(sellingProductUuid),
       'customPrice': serializer.toJson<double?>(customPrice),
       'batchUuid': serializer.toJson<String?>(batchUuid),
       'validUntil': serializer.toJson<DateTime?>(validUntil),
       'batchSelectionStrategy':
           serializer.toJson<String>(batchSelectionStrategy),
+      'pricingApproach': serializer.toJson<String>(pricingApproach),
+      'markupOrMarginPercent': serializer.toJson<double>(markupOrMarginPercent),
+      'fixedAmount': serializer.toJson<double>(fixedAmount),
+      'sellPrice': serializer.toJson<double>(sellPrice),
+      'unitCostSnapshot': serializer.toJson<double?>(unitCostSnapshot),
+      'priceComputedAt': serializer.toJson<DateTime?>(priceComputedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'isDeleted': serializer.toJson<bool>(isDeleted),
@@ -17106,11 +18327,18 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
   CatalogItem copyWith(
           {String? uuid,
           String? catalogUuid,
-          String? productUuid,
+          Value<String?> productUuid = const Value.absent(),
+          Value<String?> sellingProductUuid = const Value.absent(),
           Value<double?> customPrice = const Value.absent(),
           Value<String?> batchUuid = const Value.absent(),
           Value<DateTime?> validUntil = const Value.absent(),
           String? batchSelectionStrategy,
+          String? pricingApproach,
+          double? markupOrMarginPercent,
+          double? fixedAmount,
+          double? sellPrice,
+          Value<double?> unitCostSnapshot = const Value.absent(),
+          Value<DateTime?> priceComputedAt = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt,
           bool? isDeleted,
@@ -17118,12 +18346,26 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       CatalogItem(
         uuid: uuid ?? this.uuid,
         catalogUuid: catalogUuid ?? this.catalogUuid,
-        productUuid: productUuid ?? this.productUuid,
+        productUuid: productUuid.present ? productUuid.value : this.productUuid,
+        sellingProductUuid: sellingProductUuid.present
+            ? sellingProductUuid.value
+            : this.sellingProductUuid,
         customPrice: customPrice.present ? customPrice.value : this.customPrice,
         batchUuid: batchUuid.present ? batchUuid.value : this.batchUuid,
         validUntil: validUntil.present ? validUntil.value : this.validUntil,
         batchSelectionStrategy:
             batchSelectionStrategy ?? this.batchSelectionStrategy,
+        pricingApproach: pricingApproach ?? this.pricingApproach,
+        markupOrMarginPercent:
+            markupOrMarginPercent ?? this.markupOrMarginPercent,
+        fixedAmount: fixedAmount ?? this.fixedAmount,
+        sellPrice: sellPrice ?? this.sellPrice,
+        unitCostSnapshot: unitCostSnapshot.present
+            ? unitCostSnapshot.value
+            : this.unitCostSnapshot,
+        priceComputedAt: priceComputedAt.present
+            ? priceComputedAt.value
+            : this.priceComputedAt,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         isDeleted: isDeleted ?? this.isDeleted,
@@ -17136,6 +18378,9 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
           data.catalogUuid.present ? data.catalogUuid.value : this.catalogUuid,
       productUuid:
           data.productUuid.present ? data.productUuid.value : this.productUuid,
+      sellingProductUuid: data.sellingProductUuid.present
+          ? data.sellingProductUuid.value
+          : this.sellingProductUuid,
       customPrice:
           data.customPrice.present ? data.customPrice.value : this.customPrice,
       batchUuid: data.batchUuid.present ? data.batchUuid.value : this.batchUuid,
@@ -17144,6 +18389,21 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       batchSelectionStrategy: data.batchSelectionStrategy.present
           ? data.batchSelectionStrategy.value
           : this.batchSelectionStrategy,
+      pricingApproach: data.pricingApproach.present
+          ? data.pricingApproach.value
+          : this.pricingApproach,
+      markupOrMarginPercent: data.markupOrMarginPercent.present
+          ? data.markupOrMarginPercent.value
+          : this.markupOrMarginPercent,
+      fixedAmount:
+          data.fixedAmount.present ? data.fixedAmount.value : this.fixedAmount,
+      sellPrice: data.sellPrice.present ? data.sellPrice.value : this.sellPrice,
+      unitCostSnapshot: data.unitCostSnapshot.present
+          ? data.unitCostSnapshot.value
+          : this.unitCostSnapshot,
+      priceComputedAt: data.priceComputedAt.present
+          ? data.priceComputedAt.value
+          : this.priceComputedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
@@ -17158,10 +18418,17 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
           ..write('uuid: $uuid, ')
           ..write('catalogUuid: $catalogUuid, ')
           ..write('productUuid: $productUuid, ')
+          ..write('sellingProductUuid: $sellingProductUuid, ')
           ..write('customPrice: $customPrice, ')
           ..write('batchUuid: $batchUuid, ')
           ..write('validUntil: $validUntil, ')
           ..write('batchSelectionStrategy: $batchSelectionStrategy, ')
+          ..write('pricingApproach: $pricingApproach, ')
+          ..write('markupOrMarginPercent: $markupOrMarginPercent, ')
+          ..write('fixedAmount: $fixedAmount, ')
+          ..write('sellPrice: $sellPrice, ')
+          ..write('unitCostSnapshot: $unitCostSnapshot, ')
+          ..write('priceComputedAt: $priceComputedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -17175,10 +18442,17 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       uuid,
       catalogUuid,
       productUuid,
+      sellingProductUuid,
       customPrice,
       batchUuid,
       validUntil,
       batchSelectionStrategy,
+      pricingApproach,
+      markupOrMarginPercent,
+      fixedAmount,
+      sellPrice,
+      unitCostSnapshot,
+      priceComputedAt,
       createdAt,
       updatedAt,
       isDeleted,
@@ -17190,10 +18464,17 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
           other.uuid == this.uuid &&
           other.catalogUuid == this.catalogUuid &&
           other.productUuid == this.productUuid &&
+          other.sellingProductUuid == this.sellingProductUuid &&
           other.customPrice == this.customPrice &&
           other.batchUuid == this.batchUuid &&
           other.validUntil == this.validUntil &&
           other.batchSelectionStrategy == this.batchSelectionStrategy &&
+          other.pricingApproach == this.pricingApproach &&
+          other.markupOrMarginPercent == this.markupOrMarginPercent &&
+          other.fixedAmount == this.fixedAmount &&
+          other.sellPrice == this.sellPrice &&
+          other.unitCostSnapshot == this.unitCostSnapshot &&
+          other.priceComputedAt == this.priceComputedAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.isDeleted == this.isDeleted &&
@@ -17203,11 +18484,18 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
 class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
   final Value<String> uuid;
   final Value<String> catalogUuid;
-  final Value<String> productUuid;
+  final Value<String?> productUuid;
+  final Value<String?> sellingProductUuid;
   final Value<double?> customPrice;
   final Value<String?> batchUuid;
   final Value<DateTime?> validUntil;
   final Value<String> batchSelectionStrategy;
+  final Value<String> pricingApproach;
+  final Value<double> markupOrMarginPercent;
+  final Value<double> fixedAmount;
+  final Value<double> sellPrice;
+  final Value<double?> unitCostSnapshot;
+  final Value<DateTime?> priceComputedAt;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<bool> isDeleted;
@@ -17217,10 +18505,17 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
     this.uuid = const Value.absent(),
     this.catalogUuid = const Value.absent(),
     this.productUuid = const Value.absent(),
+    this.sellingProductUuid = const Value.absent(),
     this.customPrice = const Value.absent(),
     this.batchUuid = const Value.absent(),
     this.validUntil = const Value.absent(),
     this.batchSelectionStrategy = const Value.absent(),
+    this.pricingApproach = const Value.absent(),
+    this.markupOrMarginPercent = const Value.absent(),
+    this.fixedAmount = const Value.absent(),
+    this.sellPrice = const Value.absent(),
+    this.unitCostSnapshot = const Value.absent(),
+    this.priceComputedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -17230,27 +18525,40 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
   CatalogItemsCompanion.insert({
     required String uuid,
     required String catalogUuid,
-    required String productUuid,
+    this.productUuid = const Value.absent(),
+    this.sellingProductUuid = const Value.absent(),
     this.customPrice = const Value.absent(),
     this.batchUuid = const Value.absent(),
     this.validUntil = const Value.absent(),
     this.batchSelectionStrategy = const Value.absent(),
+    this.pricingApproach = const Value.absent(),
+    this.markupOrMarginPercent = const Value.absent(),
+    this.fixedAmount = const Value.absent(),
+    this.sellPrice = const Value.absent(),
+    this.unitCostSnapshot = const Value.absent(),
+    this.priceComputedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
     this.isNotSynced = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : uuid = Value(uuid),
-        catalogUuid = Value(catalogUuid),
-        productUuid = Value(productUuid);
+        catalogUuid = Value(catalogUuid);
   static Insertable<CatalogItem> custom({
     Expression<String>? uuid,
     Expression<String>? catalogUuid,
     Expression<String>? productUuid,
+    Expression<String>? sellingProductUuid,
     Expression<double>? customPrice,
     Expression<String>? batchUuid,
     Expression<DateTime>? validUntil,
     Expression<String>? batchSelectionStrategy,
+    Expression<String>? pricingApproach,
+    Expression<double>? markupOrMarginPercent,
+    Expression<double>? fixedAmount,
+    Expression<double>? sellPrice,
+    Expression<double>? unitCostSnapshot,
+    Expression<DateTime>? priceComputedAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<bool>? isDeleted,
@@ -17261,11 +18569,20 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
       if (uuid != null) 'uuid': uuid,
       if (catalogUuid != null) 'catalog_uuid': catalogUuid,
       if (productUuid != null) 'product_uuid': productUuid,
+      if (sellingProductUuid != null)
+        'selling_product_uuid': sellingProductUuid,
       if (customPrice != null) 'custom_price': customPrice,
       if (batchUuid != null) 'batch_uuid': batchUuid,
       if (validUntil != null) 'valid_until': validUntil,
       if (batchSelectionStrategy != null)
         'batch_selection_strategy': batchSelectionStrategy,
+      if (pricingApproach != null) 'pricing_approach': pricingApproach,
+      if (markupOrMarginPercent != null)
+        'markup_or_margin_percent': markupOrMarginPercent,
+      if (fixedAmount != null) 'fixed_amount': fixedAmount,
+      if (sellPrice != null) 'sell_price': sellPrice,
+      if (unitCostSnapshot != null) 'unit_cost_snapshot': unitCostSnapshot,
+      if (priceComputedAt != null) 'price_computed_at': priceComputedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isDeleted != null) 'is_deleted': isDeleted,
@@ -17277,11 +18594,18 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
   CatalogItemsCompanion copyWith(
       {Value<String>? uuid,
       Value<String>? catalogUuid,
-      Value<String>? productUuid,
+      Value<String?>? productUuid,
+      Value<String?>? sellingProductUuid,
       Value<double?>? customPrice,
       Value<String?>? batchUuid,
       Value<DateTime?>? validUntil,
       Value<String>? batchSelectionStrategy,
+      Value<String>? pricingApproach,
+      Value<double>? markupOrMarginPercent,
+      Value<double>? fixedAmount,
+      Value<double>? sellPrice,
+      Value<double?>? unitCostSnapshot,
+      Value<DateTime?>? priceComputedAt,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<bool>? isDeleted,
@@ -17291,11 +18615,19 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
       uuid: uuid ?? this.uuid,
       catalogUuid: catalogUuid ?? this.catalogUuid,
       productUuid: productUuid ?? this.productUuid,
+      sellingProductUuid: sellingProductUuid ?? this.sellingProductUuid,
       customPrice: customPrice ?? this.customPrice,
       batchUuid: batchUuid ?? this.batchUuid,
       validUntil: validUntil ?? this.validUntil,
       batchSelectionStrategy:
           batchSelectionStrategy ?? this.batchSelectionStrategy,
+      pricingApproach: pricingApproach ?? this.pricingApproach,
+      markupOrMarginPercent:
+          markupOrMarginPercent ?? this.markupOrMarginPercent,
+      fixedAmount: fixedAmount ?? this.fixedAmount,
+      sellPrice: sellPrice ?? this.sellPrice,
+      unitCostSnapshot: unitCostSnapshot ?? this.unitCostSnapshot,
+      priceComputedAt: priceComputedAt ?? this.priceComputedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
@@ -17316,6 +18648,9 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
     if (productUuid.present) {
       map['product_uuid'] = Variable<String>(productUuid.value);
     }
+    if (sellingProductUuid.present) {
+      map['selling_product_uuid'] = Variable<String>(sellingProductUuid.value);
+    }
     if (customPrice.present) {
       map['custom_price'] = Variable<double>(customPrice.value);
     }
@@ -17328,6 +18663,25 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
     if (batchSelectionStrategy.present) {
       map['batch_selection_strategy'] =
           Variable<String>(batchSelectionStrategy.value);
+    }
+    if (pricingApproach.present) {
+      map['pricing_approach'] = Variable<String>(pricingApproach.value);
+    }
+    if (markupOrMarginPercent.present) {
+      map['markup_or_margin_percent'] =
+          Variable<double>(markupOrMarginPercent.value);
+    }
+    if (fixedAmount.present) {
+      map['fixed_amount'] = Variable<double>(fixedAmount.value);
+    }
+    if (sellPrice.present) {
+      map['sell_price'] = Variable<double>(sellPrice.value);
+    }
+    if (unitCostSnapshot.present) {
+      map['unit_cost_snapshot'] = Variable<double>(unitCostSnapshot.value);
+    }
+    if (priceComputedAt.present) {
+      map['price_computed_at'] = Variable<DateTime>(priceComputedAt.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -17353,10 +18707,17 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
           ..write('uuid: $uuid, ')
           ..write('catalogUuid: $catalogUuid, ')
           ..write('productUuid: $productUuid, ')
+          ..write('sellingProductUuid: $sellingProductUuid, ')
           ..write('customPrice: $customPrice, ')
           ..write('batchUuid: $batchUuid, ')
           ..write('validUntil: $validUntil, ')
           ..write('batchSelectionStrategy: $batchSelectionStrategy, ')
+          ..write('pricingApproach: $pricingApproach, ')
+          ..write('markupOrMarginPercent: $markupOrMarginPercent, ')
+          ..write('fixedAmount: $fixedAmount, ')
+          ..write('sellPrice: $sellPrice, ')
+          ..write('unitCostSnapshot: $unitCostSnapshot, ')
+          ..write('priceComputedAt: $priceComputedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -18223,6 +19584,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $OrderReturnsTable orderReturns = $OrderReturnsTable(this);
   late final $OrderReturnItemsTable orderReturnItems =
       $OrderReturnItemsTable(this);
+  late final $SellingProductsTable sellingProducts =
+      $SellingProductsTable(this);
+  late final $SellingProductComponentsTable sellingProductComponents =
+      $SellingProductComponentsTable(this);
   late final $CatalogsTable catalogs = $CatalogsTable(this);
   late final $CatalogItemsTable catalogItems = $CatalogItemsTable(this);
   late final $CatalogAssignmentsTable catalogAssignments =
@@ -18260,6 +19625,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         productionConsumptions,
         orderReturns,
         orderReturnItems,
+        sellingProducts,
+        sellingProductComponents,
         catalogs,
         catalogItems,
         catalogAssignments,
@@ -18300,14 +19667,31 @@ final class $$ProductCategoriesTableReferences extends BaseReferences<
   static MultiTypedResultKey<$ProductsTable, List<Product>> _productsRefsTable(
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.products,
-          aliasName: $_aliasNameGenerator(
-              db.productCategories.uuid, db.products.categoryUuid));
+          aliasName: 'product_categories__uuid__products__category_uuid');
 
   $$ProductsTableProcessedTableManager get productsRefs {
     final manager = $$ProductsTableTableManager($_db, $_db.products).filter(
         (f) => f.categoryUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
 
     final cache = $_typedResult.readTableOrNull(_productsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$SellingProductsTable, List<SellingProduct>>
+      _sellingProductsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.sellingProducts,
+              aliasName:
+                  'product_categories__uuid__selling_products__category_uuid');
+
+  $$SellingProductsTableProcessedTableManager get sellingProductsRefs {
+    final manager =
+        $$SellingProductsTableTableManager($_db, $_db.sellingProducts).filter(
+            (f) =>
+                f.categoryUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_sellingProductsRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -18359,6 +19743,27 @@ class $$ProductCategoriesTableFilterComposer
             $$ProductsTableFilterComposer(
               $db: $db,
               $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> sellingProductsRefs(
+      Expression<bool> Function($$SellingProductsTableFilterComposer f) f) {
+    final $$SellingProductsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.categoryUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableFilterComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -18455,6 +19860,27 @@ class $$ProductCategoriesTableAnnotationComposer
             ));
     return f(composer);
   }
+
+  Expression<T> sellingProductsRefs<T extends Object>(
+      Expression<T> Function($$SellingProductsTableAnnotationComposer a) f) {
+    final $$SellingProductsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.categoryUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$ProductCategoriesTableTableManager extends RootTableManager<
@@ -18468,7 +19894,7 @@ class $$ProductCategoriesTableTableManager extends RootTableManager<
     $$ProductCategoriesTableUpdateCompanionBuilder,
     (ProductCategory, $$ProductCategoriesTableReferences),
     ProductCategory,
-    PrefetchHooks Function({bool productsRefs})> {
+    PrefetchHooks Function({bool productsRefs, bool sellingProductsRefs})> {
   $$ProductCategoriesTableTableManager(
       _$AppDatabase db, $ProductCategoriesTable table)
       : super(TableManagerState(
@@ -18527,29 +19953,48 @@ class $$ProductCategoriesTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$ProductCategoriesTable, ProductCategory>(
+                        table),
                     $$ProductCategoriesTableReferences(db, table, e)
                   ))
               .toList(),
-          prefetchHooksCallback: ({productsRefs = false}) {
+          prefetchHooksCallback: (
+              {productsRefs = false, sellingProductsRefs = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [if (productsRefs) db.products],
+              explicitlyWatchedTables: [
+                if (productsRefs) db.products,
+                if (sellingProductsRefs) db.sellingProducts
+              ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (productsRefs)
-                    await $_getPrefetchedData<ProductCategory, $ProductCategoriesTable,
-                            Product>(
+                    await $_getPrefetchedDataByColumns<ProductCategory,
+                            $ProductCategoriesTable, Product, $ProductsTable>(
                         currentTable: table,
                         referencedTable: $$ProductCategoriesTableReferences
                             ._productsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductCategoriesTableReferences(db, table, p0)
                                 .productsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.categoryUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'category_uuid',
+                        typedResults: items),
+                  if (sellingProductsRefs)
+                    await $_getPrefetchedDataByColumns<
+                            ProductCategory,
+                            $ProductCategoriesTable,
+                            SellingProduct,
+                            $SellingProductsTable>(
+                        currentTable: table,
+                        referencedTable: $$ProductCategoriesTableReferences
+                            ._sellingProductsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductCategoriesTableReferences(db, table, p0)
+                                .sellingProductsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'category_uuid',
                         typedResults: items)
                 ];
               },
@@ -18569,7 +20014,7 @@ typedef $$ProductCategoriesTableProcessedTableManager = ProcessedTableManager<
     $$ProductCategoriesTableUpdateCompanionBuilder,
     (ProductCategory, $$ProductCategoriesTableReferences),
     ProductCategory,
-    PrefetchHooks Function({bool productsRefs})>;
+    PrefetchHooks Function({bool productsRefs, bool sellingProductsRefs})>;
 typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
   required String uuid,
   required String name,
@@ -18620,8 +20065,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$OrdersTable, List<Order>> _ordersRefsTable(
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.orders,
-          aliasName:
-              $_aliasNameGenerator(db.contacts.uuid, db.orders.contactUuid));
+          aliasName: 'contacts__uuid__orders__contact_uuid');
 
   $$OrdersTableProcessedTableManager get ordersRefs {
     final manager = $$OrdersTableTableManager($_db, $_db.orders).filter(
@@ -18635,8 +20079,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$TransactionsTable, List<Transaction>>
       _transactionsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.transactions,
-              aliasName: $_aliasNameGenerator(
-                  db.contacts.uuid, db.transactions.contactUuid));
+              aliasName: 'contacts__uuid__transactions__contact_uuid');
 
   $$TransactionsTableProcessedTableManager get transactionsRefs {
     final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
@@ -18651,8 +20094,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$OrderReturnsTable, List<OrderReturn>>
       _orderReturnsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.orderReturns,
-              aliasName: $_aliasNameGenerator(
-                  db.contacts.uuid, db.orderReturns.contactUuid));
+              aliasName: 'contacts__uuid__order_returns__contact_uuid');
 
   $$OrderReturnsTableProcessedTableManager get orderReturnsRefs {
     final manager = $$OrderReturnsTableTableManager($_db, $_db.orderReturns)
@@ -18667,8 +20109,7 @@ final class $$ContactsTableReferences
   static MultiTypedResultKey<$CatalogAssignmentsTable, List<CatalogAssignment>>
       _catalogAssignmentsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.catalogAssignments,
-              aliasName: $_aliasNameGenerator(
-                  db.contacts.uuid, db.catalogAssignments.contactUuid));
+              aliasName: 'contacts__uuid__catalog_assignments__contact_uuid');
 
   $$CatalogAssignmentsTableProcessedTableManager get catalogAssignmentsRefs {
     final manager = $$CatalogAssignmentsTableTableManager(
@@ -19155,8 +20596,10 @@ class $$ContactsTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$ContactsTableReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$ContactsTable, Contact>(table),
+                    $$ContactsTableReferences(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: (
               {ordersRefs = false,
@@ -19175,54 +20618,51 @@ class $$ContactsTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (ordersRefs)
-                    await $_getPrefetchedData<Contact, $ContactsTable, Order>(
+                    await $_getPrefetchedDataByColumns<Contact, $ContactsTable,
+                            Order, $OrdersTable>(
                         currentTable: table,
                         referencedTable:
                             $$ContactsTableReferences._ordersRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ContactsTableReferences(db, table, p0).ordersRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.contactUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'contact_uuid',
                         typedResults: items),
                   if (transactionsRefs)
-                    await $_getPrefetchedData<Contact, $ContactsTable,
-                            Transaction>(
+                    await $_getPrefetchedDataByColumns<Contact, $ContactsTable,
+                            Transaction, $TransactionsTable>(
                         currentTable: table,
                         referencedTable: $$ContactsTableReferences
                             ._transactionsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ContactsTableReferences(db, table, p0)
                                 .transactionsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.contactUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'contact_uuid',
                         typedResults: items),
                   if (orderReturnsRefs)
-                    await $_getPrefetchedData<Contact, $ContactsTable,
-                            OrderReturn>(
+                    await $_getPrefetchedDataByColumns<Contact, $ContactsTable,
+                            OrderReturn, $OrderReturnsTable>(
                         currentTable: table,
                         referencedTable: $$ContactsTableReferences
                             ._orderReturnsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ContactsTableReferences(db, table, p0)
                                 .orderReturnsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.contactUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'contact_uuid',
                         typedResults: items),
                   if (catalogAssignmentsRefs)
-                    await $_getPrefetchedData<Contact, $ContactsTable,
-                            CatalogAssignment>(
+                    await $_getPrefetchedDataByColumns<Contact, $ContactsTable,
+                            CatalogAssignment, $CatalogAssignmentsTable>(
                         currentTable: table,
                         referencedTable: $$ContactsTableReferences
                             ._catalogAssignmentsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ContactsTableReferences(db, table, p0)
                                 .catalogAssignmentsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.contactUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'contact_uuid',
                         typedResults: items)
                 ];
               },
@@ -19295,8 +20735,7 @@ final class $$AccountsTableReferences
   static MultiTypedResultKey<$TransactionsTable, List<Transaction>>
       _transactionsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.transactions,
-              aliasName: $_aliasNameGenerator(
-                  db.accounts.uuid, db.transactions.accountUuid));
+              aliasName: 'accounts__uuid__transactions__account_uuid');
 
   $$TransactionsTableProcessedTableManager get transactionsRefs {
     final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
@@ -19311,8 +20750,8 @@ final class $$AccountsTableReferences
   static MultiTypedResultKey<$AccountTransfersTable, List<AccountTransfer>>
       _outgoingTransfersRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.accountTransfers,
-              aliasName: $_aliasNameGenerator(
-                  db.accounts.uuid, db.accountTransfers.fromAccountUuid));
+              aliasName:
+                  'accounts__uuid__account_transfers__from_account_uuid');
 
   $$AccountTransfersTableProcessedTableManager get outgoingTransfersRefs {
     final manager = $$AccountTransfersTableTableManager(
@@ -19329,8 +20768,7 @@ final class $$AccountsTableReferences
   static MultiTypedResultKey<$AccountTransfersTable, List<AccountTransfer>>
       _incomingTransfersRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.accountTransfers,
-              aliasName: $_aliasNameGenerator(
-                  db.accounts.uuid, db.accountTransfers.toAccountUuid));
+              aliasName: 'accounts__uuid__account_transfers__to_account_uuid');
 
   $$AccountTransfersTableProcessedTableManager get incomingTransfersRefs {
     final manager =
@@ -19768,8 +21206,10 @@ class $$AccountsTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$AccountsTableReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$AccountsTable, Account>(table),
+                    $$AccountsTableReferences(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: (
               {transactionsRefs = false,
@@ -19786,43 +21226,40 @@ class $$AccountsTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (transactionsRefs)
-                    await $_getPrefetchedData<Account, $AccountsTable,
-                            Transaction>(
+                    await $_getPrefetchedDataByColumns<Account, $AccountsTable,
+                            Transaction, $TransactionsTable>(
                         currentTable: table,
                         referencedTable: $$AccountsTableReferences
                             ._transactionsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$AccountsTableReferences(db, table, p0)
                                 .transactionsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.accountUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'account_uuid',
                         typedResults: items),
                   if (outgoingTransfersRefs)
-                    await $_getPrefetchedData<Account, $AccountsTable,
-                            AccountTransfer>(
+                    await $_getPrefetchedDataByColumns<Account, $AccountsTable,
+                            AccountTransfer, $AccountTransfersTable>(
                         currentTable: table,
                         referencedTable: $$AccountsTableReferences
                             ._outgoingTransfersRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$AccountsTableReferences(db, table, p0)
                                 .outgoingTransfersRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.fromAccountUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'from_account_uuid',
                         typedResults: items),
                   if (incomingTransfersRefs)
-                    await $_getPrefetchedData<Account, $AccountsTable,
-                            AccountTransfer>(
+                    await $_getPrefetchedDataByColumns<Account, $AccountsTable,
+                            AccountTransfer, $AccountTransfersTable>(
                         currentTable: table,
                         referencedTable: $$AccountsTableReferences
                             ._incomingTransfersRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$AccountsTableReferences(db, table, p0)
                                 .incomingTransfersRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.toAccountUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'to_account_uuid',
                         typedResults: items)
                 ];
               },
@@ -19898,8 +21335,7 @@ final class $$OrdersTableReferences
   $$OrdersTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ContactsTable _contactUuidTable(_$AppDatabase db) =>
-      db.contacts.createAlias(
-          $_aliasNameGenerator(db.orders.contactUuid, db.contacts.uuid));
+      db.contacts.createAlias('orders__contact_uuid__contacts__uuid');
 
   $$ContactsTableProcessedTableManager? get contactUuid {
     final $_column = $_itemColumn<String>('contact_uuid');
@@ -19913,10 +21349,9 @@ final class $$OrdersTableReferences
   }
 
   static MultiTypedResultKey<$TransactionsTable, List<Transaction>>
-      _transactionsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-          db.transactions,
-          aliasName:
-              $_aliasNameGenerator(db.orders.uuid, db.transactions.orderUuid));
+      _transactionsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.transactions,
+              aliasName: 'orders__uuid__transactions__order_uuid');
 
   $$TransactionsTableProcessedTableManager get transactionsRefs {
     final manager = $$TransactionsTableTableManager($_db, $_db.transactions)
@@ -19929,10 +21364,9 @@ final class $$OrdersTableReferences
   }
 
   static MultiTypedResultKey<$OrderItemsTable, List<OrderItem>>
-      _orderItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-          db.orderItems,
-          aliasName:
-              $_aliasNameGenerator(db.orders.uuid, db.orderItems.orderUuid));
+      _orderItemsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.orderItems,
+              aliasName: 'orders__uuid__order_items__order_uuid');
 
   $$OrderItemsTableProcessedTableManager get orderItemsRefs {
     final manager = $$OrderItemsTableTableManager($_db, $_db.orderItems).filter(
@@ -19946,8 +21380,7 @@ final class $$OrdersTableReferences
   static MultiTypedResultKey<$GoodsReceiptsTable, List<GoodsReceipt>>
       _goodsReceiptsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.goodsReceipts,
-              aliasName: $_aliasNameGenerator(
-                  db.orders.uuid, db.goodsReceipts.orderUuid));
+              aliasName: 'orders__uuid__goods_receipts__order_uuid');
 
   $$GoodsReceiptsTableProcessedTableManager get goodsReceiptsRefs {
     final manager = $$GoodsReceiptsTableTableManager($_db, $_db.goodsReceipts)
@@ -19960,10 +21393,9 @@ final class $$OrdersTableReferences
   }
 
   static MultiTypedResultKey<$OrderReturnsTable, List<OrderReturn>>
-      _orderReturnsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-          db.orderReturns,
-          aliasName:
-              $_aliasNameGenerator(db.orders.uuid, db.orderReturns.orderUuid));
+      _orderReturnsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.orderReturns,
+              aliasName: 'orders__uuid__order_returns__order_uuid');
 
   $$OrderReturnsTableProcessedTableManager get orderReturnsRefs {
     final manager = $$OrderReturnsTableTableManager($_db, $_db.orderReturns)
@@ -20535,8 +21967,10 @@ class $$OrdersTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$OrdersTableReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$OrdersTable, Order>(table),
+                    $$OrdersTableReferences(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: (
               {contactUuid = false,
@@ -20581,53 +22015,52 @@ class $$OrdersTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (transactionsRefs)
-                    await $_getPrefetchedData<Order, $OrdersTable, Transaction>(
+                    await $_getPrefetchedDataByColumns<Order, $OrdersTable,
+                            Transaction, $TransactionsTable>(
                         currentTable: table,
                         referencedTable:
                             $$OrdersTableReferences._transactionsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$OrdersTableReferences(db, table, p0)
                                 .transactionsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.orderUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'order_uuid',
                         typedResults: items),
                   if (orderItemsRefs)
-                    await $_getPrefetchedData<Order, $OrdersTable, OrderItem>(
+                    await $_getPrefetchedDataByColumns<Order, $OrdersTable,
+                            OrderItem, $OrderItemsTable>(
                         currentTable: table,
                         referencedTable:
                             $$OrdersTableReferences._orderItemsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$OrdersTableReferences(db, table, p0)
                                 .orderItemsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.orderUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'order_uuid',
                         typedResults: items),
                   if (goodsReceiptsRefs)
-                    await $_getPrefetchedData<Order, $OrdersTable,
-                            GoodsReceipt>(
+                    await $_getPrefetchedDataByColumns<Order, $OrdersTable,
+                            GoodsReceipt, $GoodsReceiptsTable>(
                         currentTable: table,
                         referencedTable:
                             $$OrdersTableReferences._goodsReceiptsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$OrdersTableReferences(db, table, p0)
                                 .goodsReceiptsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.orderUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'order_uuid',
                         typedResults: items),
                   if (orderReturnsRefs)
-                    await $_getPrefetchedData<Order, $OrdersTable, OrderReturn>(
+                    await $_getPrefetchedDataByColumns<Order, $OrdersTable,
+                            OrderReturn, $OrderReturnsTable>(
                         currentTable: table,
                         referencedTable:
                             $$OrdersTableReferences._orderReturnsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$OrdersTableReferences(db, table, p0)
                                 .orderReturnsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.orderUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'order_uuid',
                         typedResults: items)
                 ];
               },
@@ -20707,8 +22140,7 @@ final class $$TransactionsTableReferences
   $$TransactionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ContactsTable _contactUuidTable(_$AppDatabase db) =>
-      db.contacts.createAlias(
-          $_aliasNameGenerator(db.transactions.contactUuid, db.contacts.uuid));
+      db.contacts.createAlias('transactions__contact_uuid__contacts__uuid');
 
   $$ContactsTableProcessedTableManager? get contactUuid {
     final $_column = $_itemColumn<String>('contact_uuid');
@@ -20722,8 +22154,7 @@ final class $$TransactionsTableReferences
   }
 
   static $OrdersTable _orderUuidTable(_$AppDatabase db) =>
-      db.orders.createAlias(
-          $_aliasNameGenerator(db.transactions.orderUuid, db.orders.uuid));
+      db.orders.createAlias('transactions__order_uuid__orders__uuid');
 
   $$OrdersTableProcessedTableManager? get orderUuid {
     final $_column = $_itemColumn<String>('order_uuid');
@@ -20737,8 +22168,7 @@ final class $$TransactionsTableReferences
   }
 
   static $AccountsTable _accountUuidTable(_$AppDatabase db) =>
-      db.accounts.createAlias(
-          $_aliasNameGenerator(db.transactions.accountUuid, db.accounts.uuid));
+      db.accounts.createAlias('transactions__account_uuid__accounts__uuid');
 
   $$AccountsTableProcessedTableManager? get accountUuid {
     final $_column = $_itemColumn<String>('account_uuid');
@@ -21243,7 +22673,7 @@ class $$TransactionsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$TransactionsTable, Transaction>(table),
                     $$TransactionsTableReferences(db, table, e)
                   ))
               .toList(),
@@ -21355,9 +22785,8 @@ final class $$AccountTransfersTableReferences extends BaseReferences<
   $$AccountTransfersTableReferences(
       super.$_db, super.$_table, super.$_typedResult);
 
-  static $AccountsTable _fromAccountUuidTable(_$AppDatabase db) =>
-      db.accounts.createAlias($_aliasNameGenerator(
-          db.accountTransfers.fromAccountUuid, db.accounts.uuid));
+  static $AccountsTable _fromAccountUuidTable(_$AppDatabase db) => db.accounts
+      .createAlias('account_transfers__from_account_uuid__accounts__uuid');
 
   $$AccountsTableProcessedTableManager get fromAccountUuid {
     final $_column = $_itemColumn<String>('from_account_uuid')!;
@@ -21370,9 +22799,8 @@ final class $$AccountTransfersTableReferences extends BaseReferences<
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $AccountsTable _toAccountUuidTable(_$AppDatabase db) =>
-      db.accounts.createAlias($_aliasNameGenerator(
-          db.accountTransfers.toAccountUuid, db.accounts.uuid));
+  static $AccountsTable _toAccountUuidTable(_$AppDatabase db) => db.accounts
+      .createAlias('account_transfers__to_account_uuid__accounts__uuid');
 
   $$AccountsTableProcessedTableManager get toAccountUuid {
     final $_column = $_itemColumn<String>('to_account_uuid')!;
@@ -21685,7 +23113,7 @@ class $$AccountTransfersTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$AccountTransfersTable, AccountTransfer>(table),
                     $$AccountTransfersTableReferences(db, table, e)
                   ))
               .toList(),
@@ -21914,7 +23342,11 @@ class $$UserPreferencesTableTableManager extends RootTableManager<
             isNotSynced: isNotSynced,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$UserPreferencesTable, UserPreference>(table),
+                    BaseReferences<_$AppDatabase, $UserPreferencesTable,
+                        UserPreference>(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: null,
         ));
@@ -22091,7 +23523,11 @@ class $$SyncLogTableTableManager extends RootTableManager<
             createdAt: createdAt,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$SyncLogTable, SyncLogData>(table),
+                    BaseReferences<_$AppDatabase, $SyncLogTable, SyncLogData>(
+                        db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: null,
         ));
@@ -22367,7 +23803,11 @@ class $$AppCurrenciesTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$AppCurrenciesTable, AppCurrency>(table),
+                    BaseReferences<_$AppDatabase, $AppCurrenciesTable,
+                        AppCurrency>(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: null,
         ));
@@ -22557,7 +23997,11 @@ class $$SyncMetadataTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$SyncMetadataTable, SyncMetadataData>(table),
+                    BaseReferences<_$AppDatabase, $SyncMetadataTable,
+                        SyncMetadataData>(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: null,
         ));
@@ -22622,8 +24066,8 @@ final class $$ProductsTableReferences
   $$ProductsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $ProductCategoriesTable _categoryUuidTable(_$AppDatabase db) =>
-      db.productCategories.createAlias($_aliasNameGenerator(
-          db.products.categoryUuid, db.productCategories.uuid));
+      db.productCategories
+          .createAlias('products__category_uuid__product_categories__uuid');
 
   $$ProductCategoriesTableProcessedTableManager? get categoryUuid {
     final $_column = $_itemColumn<String>('category_uuid');
@@ -22640,8 +24084,7 @@ final class $$ProductsTableReferences
   static MultiTypedResultKey<$ProductBatchesTable, List<ProductBatche>>
       _productBatchesRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.productBatches,
-              aliasName: $_aliasNameGenerator(
-                  db.products.uuid, db.productBatches.productUuid));
+              aliasName: 'products__uuid__product_batches__product_uuid');
 
   $$ProductBatchesTableProcessedTableManager get productBatchesRefs {
     final manager = $$ProductBatchesTableTableManager($_db, $_db.productBatches)
@@ -22656,8 +24099,7 @@ final class $$ProductsTableReferences
   static MultiTypedResultKey<$OrderItemsTable, List<OrderItem>>
       _orderItemsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.orderItems,
-              aliasName: $_aliasNameGenerator(
-                  db.products.uuid, db.orderItems.productUuid));
+              aliasName: 'products__uuid__order_items__product_uuid');
 
   $$OrderItemsTableProcessedTableManager get orderItemsRefs {
     final manager = $$OrderItemsTableTableManager($_db, $_db.orderItems).filter(
@@ -22671,8 +24113,7 @@ final class $$ProductsTableReferences
   static MultiTypedResultKey<$GoodsReceiptLinesTable, List<GoodsReceiptLine>>
       _goodsReceiptLinesRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.goodsReceiptLines,
-              aliasName: $_aliasNameGenerator(
-                  db.products.uuid, db.goodsReceiptLines.productUuid));
+              aliasName: 'products__uuid__goods_receipt_lines__product_uuid');
 
   $$GoodsReceiptLinesTableProcessedTableManager get goodsReceiptLinesRefs {
     final manager = $$GoodsReceiptLinesTableTableManager(
@@ -22689,8 +24130,7 @@ final class $$ProductsTableReferences
   static MultiTypedResultKey<$RecipeInputsTable, List<RecipeInput>>
       _recipeInputsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.recipeInputs,
-              aliasName: $_aliasNameGenerator(
-                  db.products.uuid, db.recipeInputs.productUuid));
+              aliasName: 'products__uuid__recipe_inputs__product_uuid');
 
   $$RecipeInputsTableProcessedTableManager get recipeInputsRefs {
     final manager = $$RecipeInputsTableTableManager($_db, $_db.recipeInputs)
@@ -22705,8 +24145,7 @@ final class $$ProductsTableReferences
   static MultiTypedResultKey<$RecipeOutputsTable, List<RecipeOutput>>
       _recipeOutputsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.recipeOutputs,
-              aliasName: $_aliasNameGenerator(
-                  db.products.uuid, db.recipeOutputs.productUuid));
+              aliasName: 'products__uuid__recipe_outputs__product_uuid');
 
   $$RecipeOutputsTableProcessedTableManager get recipeOutputsRefs {
     final manager = $$RecipeOutputsTableTableManager($_db, $_db.recipeOutputs)
@@ -22722,8 +24161,7 @@ final class $$ProductsTableReferences
       List<ProductionOrderInput>> _productionOrderInputsRefsTable(
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.productionOrderInputs,
-          aliasName: $_aliasNameGenerator(
-              db.products.uuid, db.productionOrderInputs.productUuid));
+          aliasName: 'products__uuid__production_order_inputs__product_uuid');
 
   $$ProductionOrderInputsTableProcessedTableManager
       get productionOrderInputsRefs {
@@ -22742,8 +24180,7 @@ final class $$ProductsTableReferences
       List<ProductionOrderOutput>> _productionOrderOutputsRefsTable(
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.productionOrderOutputs,
-          aliasName: $_aliasNameGenerator(
-              db.products.uuid, db.productionOrderOutputs.productUuid));
+          aliasName: 'products__uuid__production_order_outputs__product_uuid');
 
   $$ProductionOrderOutputsTableProcessedTableManager
       get productionOrderOutputsRefs {
@@ -22761,8 +24198,7 @@ final class $$ProductsTableReferences
   static MultiTypedResultKey<$OrderReturnItemsTable, List<OrderReturnItem>>
       _orderReturnItemsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.orderReturnItems,
-              aliasName: $_aliasNameGenerator(
-                  db.products.uuid, db.orderReturnItems.productUuid));
+              aliasName: 'products__uuid__order_return_items__product_uuid');
 
   $$OrderReturnItemsTableProcessedTableManager get orderReturnItemsRefs {
     final manager =
@@ -22775,11 +24211,30 @@ final class $$ProductsTableReferences
         manager.$state.copyWith(prefetchedData: cache));
   }
 
+  static MultiTypedResultKey<$SellingProductComponentsTable,
+      List<SellingProductComponent>> _sellingProductComponentsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.sellingProductComponents,
+          aliasName:
+              'products__uuid__selling_product_components__product_uuid');
+
+  $$SellingProductComponentsTableProcessedTableManager
+      get sellingProductComponentsRefs {
+    final manager = $$SellingProductComponentsTableTableManager(
+            $_db, $_db.sellingProductComponents)
+        .filter(
+            (f) => f.productUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_sellingProductComponentsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
   static MultiTypedResultKey<$CatalogItemsTable, List<CatalogItem>>
       _catalogItemsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.catalogItems,
-              aliasName: $_aliasNameGenerator(
-                  db.products.uuid, db.catalogItems.productUuid));
+              aliasName: 'products__uuid__catalog_items__product_uuid');
 
   $$CatalogItemsTableProcessedTableManager get catalogItemsRefs {
     final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
@@ -23036,6 +24491,29 @@ class $$ProductsTableFilterComposer
               $removeJoinBuilderFromRootComposer:
                   $removeJoinBuilderFromRootComposer,
             ));
+    return f(composer);
+  }
+
+  Expression<bool> sellingProductComponentsRefs(
+      Expression<bool> Function($$SellingProductComponentsTableFilterComposer f)
+          f) {
+    final $$SellingProductComponentsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.sellingProductComponents,
+            getReferencedColumn: (t) => t.productUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$SellingProductComponentsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.sellingProductComponents,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
     return f(composer);
   }
 
@@ -23388,6 +24866,30 @@ class $$ProductsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> sellingProductComponentsRefs<T extends Object>(
+      Expression<T> Function(
+              $$SellingProductComponentsTableAnnotationComposer a)
+          f) {
+    final $$SellingProductComponentsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.sellingProductComponents,
+            getReferencedColumn: (t) => t.productUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$SellingProductComponentsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.sellingProductComponents,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
   Expression<T> catalogItemsRefs<T extends Object>(
       Expression<T> Function($$CatalogItemsTableAnnotationComposer a) f) {
     final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
@@ -23431,6 +24933,7 @@ class $$ProductsTableTableManager extends RootTableManager<
         bool productionOrderInputsRefs,
         bool productionOrderOutputsRefs,
         bool orderReturnItemsRefs,
+        bool sellingProductComponentsRefs,
         bool catalogItemsRefs})> {
   $$ProductsTableTableManager(_$AppDatabase db, $ProductsTable table)
       : super(TableManagerState(
@@ -23519,8 +25022,10 @@ class $$ProductsTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$ProductsTableReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$ProductsTable, Product>(table),
+                    $$ProductsTableReferences(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: (
               {categoryUuid = false,
@@ -23532,6 +25037,7 @@ class $$ProductsTableTableManager extends RootTableManager<
               productionOrderInputsRefs = false,
               productionOrderOutputsRefs = false,
               orderReturnItemsRefs = false,
+              sellingProductComponentsRefs = false,
               catalogItemsRefs = false}) {
             return PrefetchHooks(
               db: db,
@@ -23544,6 +25050,7 @@ class $$ProductsTableTableManager extends RootTableManager<
                 if (productionOrderInputsRefs) db.productionOrderInputs,
                 if (productionOrderOutputsRefs) db.productionOrderOutputs,
                 if (orderReturnItemsRefs) db.orderReturnItems,
+                if (sellingProductComponentsRefs) db.sellingProductComponents,
                 if (catalogItemsRefs) db.catalogItems
               ],
               addJoins: <
@@ -23575,121 +25082,130 @@ class $$ProductsTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (productBatchesRefs)
-                    await $_getPrefetchedData<Product, $ProductsTable,
-                            ProductBatche>(
+                    await $_getPrefetchedDataByColumns<Product, $ProductsTable,
+                            ProductBatche, $ProductBatchesTable>(
                         currentTable: table,
                         referencedTable: $$ProductsTableReferences
                             ._productBatchesRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductsTableReferences(db, table, p0)
                                 .productBatchesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.productUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'product_uuid',
                         typedResults: items),
                   if (orderItemsRefs)
-                    await $_getPrefetchedData<Product, $ProductsTable,
-                            OrderItem>(
+                    await $_getPrefetchedDataByColumns<Product, $ProductsTable,
+                            OrderItem, $OrderItemsTable>(
                         currentTable: table,
                         referencedTable:
                             $$ProductsTableReferences._orderItemsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductsTableReferences(db, table, p0)
                                 .orderItemsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.productUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'product_uuid',
                         typedResults: items),
                   if (goodsReceiptLinesRefs)
-                    await $_getPrefetchedData<Product, $ProductsTable,
-                            GoodsReceiptLine>(
+                    await $_getPrefetchedDataByColumns<Product, $ProductsTable,
+                            GoodsReceiptLine, $GoodsReceiptLinesTable>(
                         currentTable: table,
                         referencedTable: $$ProductsTableReferences
                             ._goodsReceiptLinesRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductsTableReferences(db, table, p0)
                                 .goodsReceiptLinesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.productUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'product_uuid',
                         typedResults: items),
                   if (recipeInputsRefs)
-                    await $_getPrefetchedData<Product, $ProductsTable,
-                            RecipeInput>(
+                    await $_getPrefetchedDataByColumns<Product, $ProductsTable,
+                            RecipeInput, $RecipeInputsTable>(
                         currentTable: table,
                         referencedTable: $$ProductsTableReferences
                             ._recipeInputsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductsTableReferences(db, table, p0)
                                 .recipeInputsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.productUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'product_uuid',
                         typedResults: items),
                   if (recipeOutputsRefs)
-                    await $_getPrefetchedData<Product, $ProductsTable,
-                            RecipeOutput>(
+                    await $_getPrefetchedDataByColumns<Product, $ProductsTable,
+                            RecipeOutput, $RecipeOutputsTable>(
                         currentTable: table,
                         referencedTable: $$ProductsTableReferences
                             ._recipeOutputsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductsTableReferences(db, table, p0)
                                 .recipeOutputsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.productUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'product_uuid',
                         typedResults: items),
                   if (productionOrderInputsRefs)
-                    await $_getPrefetchedData<Product, $ProductsTable,
-                            ProductionOrderInput>(
+                    await $_getPrefetchedDataByColumns<Product, $ProductsTable,
+                            ProductionOrderInput, $ProductionOrderInputsTable>(
                         currentTable: table,
                         referencedTable: $$ProductsTableReferences
                             ._productionOrderInputsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductsTableReferences(db, table, p0)
                                 .productionOrderInputsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.productUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'product_uuid',
                         typedResults: items),
                   if (productionOrderOutputsRefs)
-                    await $_getPrefetchedData<Product, $ProductsTable,
-                            ProductionOrderOutput>(
+                    await $_getPrefetchedDataByColumns<
+                            Product,
+                            $ProductsTable,
+                            ProductionOrderOutput,
+                            $ProductionOrderOutputsTable>(
                         currentTable: table,
                         referencedTable: $$ProductsTableReferences
                             ._productionOrderOutputsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductsTableReferences(db, table, p0)
                                 .productionOrderOutputsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.productUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'product_uuid',
                         typedResults: items),
                   if (orderReturnItemsRefs)
-                    await $_getPrefetchedData<Product, $ProductsTable,
-                            OrderReturnItem>(
+                    await $_getPrefetchedDataByColumns<Product, $ProductsTable,
+                            OrderReturnItem, $OrderReturnItemsTable>(
                         currentTable: table,
                         referencedTable: $$ProductsTableReferences
                             ._orderReturnItemsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductsTableReferences(db, table, p0)
                                 .orderReturnItemsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.productUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'product_uuid',
+                        typedResults: items),
+                  if (sellingProductComponentsRefs)
+                    await $_getPrefetchedDataByColumns<
+                            Product,
+                            $ProductsTable,
+                            SellingProductComponent,
+                            $SellingProductComponentsTable>(
+                        currentTable: table,
+                        referencedTable: $$ProductsTableReferences
+                            ._sellingProductComponentsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductsTableReferences(db, table, p0)
+                                .sellingProductComponentsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'product_uuid',
                         typedResults: items),
                   if (catalogItemsRefs)
-                    await $_getPrefetchedData<Product, $ProductsTable,
-                            CatalogItem>(
+                    await $_getPrefetchedDataByColumns<Product, $ProductsTable,
+                            CatalogItem, $CatalogItemsTable>(
                         currentTable: table,
                         referencedTable: $$ProductsTableReferences
                             ._catalogItemsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductsTableReferences(db, table, p0)
                                 .catalogItemsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.productUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'product_uuid',
                         typedResults: items)
                 ];
               },
@@ -23719,6 +25235,7 @@ typedef $$ProductsTableProcessedTableManager = ProcessedTableManager<
         bool productionOrderInputsRefs,
         bool productionOrderOutputsRefs,
         bool orderReturnItemsRefs,
+        bool sellingProductComponentsRefs,
         bool catalogItemsRefs})>;
 typedef $$ProductBatchesTableCreateCompanionBuilder = ProductBatchesCompanion
     Function({
@@ -23775,8 +25292,7 @@ final class $$ProductBatchesTableReferences
       super.$_db, super.$_table, super.$_typedResult);
 
   static $ProductsTable _productUuidTable(_$AppDatabase db) =>
-      db.products.createAlias($_aliasNameGenerator(
-          db.productBatches.productUuid, db.products.uuid));
+      db.products.createAlias('product_batches__product_uuid__products__uuid');
 
   $$ProductsTableProcessedTableManager get productUuid {
     final $_column = $_itemColumn<String>('product_uuid')!;
@@ -23792,8 +25308,7 @@ final class $$ProductBatchesTableReferences
   static MultiTypedResultKey<$OrderItemsTable, List<OrderItem>>
       _orderItemsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.orderItems,
-              aliasName: $_aliasNameGenerator(
-                  db.productBatches.uuid, db.orderItems.batchUuid));
+              aliasName: 'product_batches__uuid__order_items__batch_uuid');
 
   $$OrderItemsTableProcessedTableManager get orderItemsRefs {
     final manager = $$OrderItemsTableTableManager($_db, $_db.orderItems).filter(
@@ -23808,8 +25323,8 @@ final class $$ProductBatchesTableReferences
       List<ProductionConsumption>> _productionConsumptionsRefsTable(
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.productionConsumptions,
-          aliasName: $_aliasNameGenerator(
-              db.productBatches.uuid, db.productionConsumptions.lotUuid));
+          aliasName:
+              'product_batches__uuid__production_consumptions__lot_uuid');
 
   $$ProductionConsumptionsTableProcessedTableManager
       get productionConsumptionsRefs {
@@ -23826,8 +25341,8 @@ final class $$ProductBatchesTableReferences
   static MultiTypedResultKey<$OrderReturnItemsTable, List<OrderReturnItem>>
       _orderReturnItemsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.orderReturnItems,
-              aliasName: $_aliasNameGenerator(
-                  db.productBatches.uuid, db.orderReturnItems.batchUuid));
+              aliasName:
+                  'product_batches__uuid__order_return_items__batch_uuid');
 
   $$OrderReturnItemsTableProcessedTableManager get orderReturnItemsRefs {
     final manager =
@@ -23843,8 +25358,7 @@ final class $$ProductBatchesTableReferences
   static MultiTypedResultKey<$CatalogItemsTable, List<CatalogItem>>
       _catalogItemsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.catalogItems,
-              aliasName: $_aliasNameGenerator(
-                  db.productBatches.uuid, db.catalogItems.batchUuid));
+              aliasName: 'product_batches__uuid__catalog_items__batch_uuid');
 
   $$CatalogItemsTableProcessedTableManager get catalogItemsRefs {
     final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
@@ -24426,7 +25940,7 @@ class $$ProductBatchesTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$ProductBatchesTable, ProductBatche>(table),
                     $$ProductBatchesTableReferences(db, table, e)
                   ))
               .toList(),
@@ -24474,56 +25988,61 @@ class $$ProductBatchesTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (orderItemsRefs)
-                    await $_getPrefetchedData<ProductBatche,
-                            $ProductBatchesTable, OrderItem>(
+                    await $_getPrefetchedDataByColumns<ProductBatche,
+                            $ProductBatchesTable, OrderItem, $OrderItemsTable>(
                         currentTable: table,
                         referencedTable: $$ProductBatchesTableReferences
                             ._orderItemsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductBatchesTableReferences(db, table, p0)
                                 .orderItemsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.batchUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'batch_uuid',
                         typedResults: items),
                   if (productionConsumptionsRefs)
-                    await $_getPrefetchedData<ProductBatche,
-                            $ProductBatchesTable, ProductionConsumption>(
+                    await $_getPrefetchedDataByColumns<
+                            ProductBatche,
+                            $ProductBatchesTable,
+                            ProductionConsumption,
+                            $ProductionConsumptionsTable>(
                         currentTable: table,
                         referencedTable: $$ProductBatchesTableReferences
                             ._productionConsumptionsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductBatchesTableReferences(db, table, p0)
                                 .productionConsumptionsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.lotUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'lot_uuid',
                         typedResults: items),
                   if (orderReturnItemsRefs)
-                    await $_getPrefetchedData<ProductBatche,
-                            $ProductBatchesTable, OrderReturnItem>(
+                    await $_getPrefetchedDataByColumns<
+                            ProductBatche,
+                            $ProductBatchesTable,
+                            OrderReturnItem,
+                            $OrderReturnItemsTable>(
                         currentTable: table,
                         referencedTable: $$ProductBatchesTableReferences
                             ._orderReturnItemsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductBatchesTableReferences(db, table, p0)
                                 .orderReturnItemsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.batchUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'batch_uuid',
                         typedResults: items),
                   if (catalogItemsRefs)
-                    await $_getPrefetchedData<ProductBatche,
-                            $ProductBatchesTable, CatalogItem>(
+                    await $_getPrefetchedDataByColumns<
+                            ProductBatche,
+                            $ProductBatchesTable,
+                            CatalogItem,
+                            $CatalogItemsTable>(
                         currentTable: table,
                         referencedTable: $$ProductBatchesTableReferences
                             ._catalogItemsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductBatchesTableReferences(db, table, p0)
                                 .catalogItemsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.batchUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'batch_uuid',
                         typedResults: items)
                 ];
               },
@@ -24593,8 +26112,7 @@ final class $$OrderItemsTableReferences
   $$OrderItemsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $OrdersTable _orderUuidTable(_$AppDatabase db) =>
-      db.orders.createAlias(
-          $_aliasNameGenerator(db.orderItems.orderUuid, db.orders.uuid));
+      db.orders.createAlias('order_items__order_uuid__orders__uuid');
 
   $$OrdersTableProcessedTableManager get orderUuid {
     final $_column = $_itemColumn<String>('order_uuid')!;
@@ -24608,8 +26126,7 @@ final class $$OrderItemsTableReferences
   }
 
   static $ProductsTable _productUuidTable(_$AppDatabase db) =>
-      db.products.createAlias(
-          $_aliasNameGenerator(db.orderItems.productUuid, db.products.uuid));
+      db.products.createAlias('order_items__product_uuid__products__uuid');
 
   $$ProductsTableProcessedTableManager get productUuid {
     final $_column = $_itemColumn<String>('product_uuid')!;
@@ -24623,8 +26140,8 @@ final class $$OrderItemsTableReferences
   }
 
   static $ProductBatchesTable _batchUuidTable(_$AppDatabase db) =>
-      db.productBatches.createAlias($_aliasNameGenerator(
-          db.orderItems.batchUuid, db.productBatches.uuid));
+      db.productBatches
+          .createAlias('order_items__batch_uuid__product_batches__uuid');
 
   $$ProductBatchesTableProcessedTableManager? get batchUuid {
     final $_column = $_itemColumn<String>('batch_uuid');
@@ -24640,8 +26157,8 @@ final class $$OrderItemsTableReferences
   static MultiTypedResultKey<$GoodsReceiptLinesTable, List<GoodsReceiptLine>>
       _goodsReceiptLinesRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.goodsReceiptLines,
-              aliasName: $_aliasNameGenerator(
-                  db.orderItems.uuid, db.goodsReceiptLines.orderItemUuid));
+              aliasName:
+                  'order_items__uuid__goods_receipt_lines__order_item_uuid');
 
   $$GoodsReceiptLinesTableProcessedTableManager get goodsReceiptLinesRefs {
     final manager =
@@ -25138,7 +26655,7 @@ class $$OrderItemsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$OrderItemsTable, OrderItem>(table),
                     $$OrderItemsTableReferences(db, table, e)
                   ))
               .toList(),
@@ -25201,17 +26718,19 @@ class $$OrderItemsTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (goodsReceiptLinesRefs)
-                    await $_getPrefetchedData<OrderItem, $OrderItemsTable,
-                            GoodsReceiptLine>(
+                    await $_getPrefetchedDataByColumns<
+                            OrderItem,
+                            $OrderItemsTable,
+                            GoodsReceiptLine,
+                            $GoodsReceiptLinesTable>(
                         currentTable: table,
                         referencedTable: $$OrderItemsTableReferences
                             ._goodsReceiptLinesRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$OrderItemsTableReferences(db, table, p0)
                                 .goodsReceiptLinesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.orderItemUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'order_item_uuid',
                         typedResults: items)
                 ];
               },
@@ -25271,8 +26790,7 @@ final class $$GoodsReceiptsTableReferences
       super.$_db, super.$_table, super.$_typedResult);
 
   static $OrdersTable _orderUuidTable(_$AppDatabase db) =>
-      db.orders.createAlias(
-          $_aliasNameGenerator(db.goodsReceipts.orderUuid, db.orders.uuid));
+      db.orders.createAlias('goods_receipts__order_uuid__orders__uuid');
 
   $$OrdersTableProcessedTableManager get orderUuid {
     final $_column = $_itemColumn<String>('order_uuid')!;
@@ -25288,8 +26806,8 @@ final class $$GoodsReceiptsTableReferences
   static MultiTypedResultKey<$GoodsReceiptLinesTable, List<GoodsReceiptLine>>
       _goodsReceiptLinesRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.goodsReceiptLines,
-              aliasName: $_aliasNameGenerator(
-                  db.goodsReceipts.uuid, db.goodsReceiptLines.receiptUuid));
+              aliasName:
+                  'goods_receipts__uuid__goods_receipt_lines__receipt_uuid');
 
   $$GoodsReceiptLinesTableProcessedTableManager get goodsReceiptLinesRefs {
     final manager = $$GoodsReceiptLinesTableTableManager(
@@ -25595,7 +27113,7 @@ class $$GoodsReceiptsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$GoodsReceiptsTable, GoodsReceipt>(table),
                     $$GoodsReceiptsTableReferences(db, table, e)
                   ))
               .toList(),
@@ -25635,17 +27153,19 @@ class $$GoodsReceiptsTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (goodsReceiptLinesRefs)
-                    await $_getPrefetchedData<GoodsReceipt, $GoodsReceiptsTable,
-                            GoodsReceiptLine>(
+                    await $_getPrefetchedDataByColumns<
+                            GoodsReceipt,
+                            $GoodsReceiptsTable,
+                            GoodsReceiptLine,
+                            $GoodsReceiptLinesTable>(
                         currentTable: table,
                         referencedTable: $$GoodsReceiptsTableReferences
                             ._goodsReceiptLinesRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$GoodsReceiptsTableReferences(db, table, p0)
                                 .goodsReceiptLinesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.receiptUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'receipt_uuid',
                         typedResults: items)
                 ];
               },
@@ -25708,9 +27228,9 @@ final class $$GoodsReceiptLinesTableReferences extends BaseReferences<
   $$GoodsReceiptLinesTableReferences(
       super.$_db, super.$_table, super.$_typedResult);
 
-  static $GoodsReceiptsTable _receiptUuidTable(_$AppDatabase db) =>
-      db.goodsReceipts.createAlias($_aliasNameGenerator(
-          db.goodsReceiptLines.receiptUuid, db.goodsReceipts.uuid));
+  static $GoodsReceiptsTable _receiptUuidTable(_$AppDatabase db) => db
+      .goodsReceipts
+      .createAlias('goods_receipt_lines__receipt_uuid__goods_receipts__uuid');
 
   $$GoodsReceiptsTableProcessedTableManager get receiptUuid {
     final $_column = $_itemColumn<String>('receipt_uuid')!;
@@ -25723,9 +27243,8 @@ final class $$GoodsReceiptLinesTableReferences extends BaseReferences<
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $OrderItemsTable _orderItemUuidTable(_$AppDatabase db) =>
-      db.orderItems.createAlias($_aliasNameGenerator(
-          db.goodsReceiptLines.orderItemUuid, db.orderItems.uuid));
+  static $OrderItemsTable _orderItemUuidTable(_$AppDatabase db) => db.orderItems
+      .createAlias('goods_receipt_lines__order_item_uuid__order_items__uuid');
 
   $$OrderItemsTableProcessedTableManager get orderItemUuid {
     final $_column = $_itemColumn<String>('order_item_uuid')!;
@@ -25738,9 +27257,8 @@ final class $$GoodsReceiptLinesTableReferences extends BaseReferences<
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $ProductsTable _productUuidTable(_$AppDatabase db) =>
-      db.products.createAlias($_aliasNameGenerator(
-          db.goodsReceiptLines.productUuid, db.products.uuid));
+  static $ProductsTable _productUuidTable(_$AppDatabase db) => db.products
+      .createAlias('goods_receipt_lines__product_uuid__products__uuid');
 
   $$ProductsTableProcessedTableManager get productUuid {
     final $_column = $_itemColumn<String>('product_uuid')!;
@@ -26162,7 +27680,8 @@ class $$GoodsReceiptLinesTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$GoodsReceiptLinesTable, GoodsReceiptLine>(
+                        table),
                     $$GoodsReceiptLinesTableReferences(db, table, e)
                   ))
               .toList(),
@@ -26271,8 +27790,7 @@ final class $$RecipesTableReferences
   static MultiTypedResultKey<$RecipeInputsTable, List<RecipeInput>>
       _recipeInputsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.recipeInputs,
-              aliasName: $_aliasNameGenerator(
-                  db.recipes.uuid, db.recipeInputs.recipeUuid));
+              aliasName: 'recipes__uuid__recipe_inputs__recipe_uuid');
 
   $$RecipeInputsTableProcessedTableManager get recipeInputsRefs {
     final manager = $$RecipeInputsTableTableManager($_db, $_db.recipeInputs)
@@ -26287,8 +27805,7 @@ final class $$RecipesTableReferences
   static MultiTypedResultKey<$RecipeOutputsTable, List<RecipeOutput>>
       _recipeOutputsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.recipeOutputs,
-              aliasName: $_aliasNameGenerator(
-                  db.recipes.uuid, db.recipeOutputs.recipeUuid));
+              aliasName: 'recipes__uuid__recipe_outputs__recipe_uuid');
 
   $$RecipeOutputsTableProcessedTableManager get recipeOutputsRefs {
     final manager = $$RecipeOutputsTableTableManager($_db, $_db.recipeOutputs)
@@ -26303,8 +27820,7 @@ final class $$RecipesTableReferences
   static MultiTypedResultKey<$RecipeChargesTable, List<RecipeCharge>>
       _recipeChargesRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.recipeCharges,
-              aliasName: $_aliasNameGenerator(
-                  db.recipes.uuid, db.recipeCharges.recipeUuid));
+              aliasName: 'recipes__uuid__recipe_charges__recipe_uuid');
 
   $$RecipeChargesTableProcessedTableManager get recipeChargesRefs {
     final manager = $$RecipeChargesTableTableManager($_db, $_db.recipeCharges)
@@ -26319,8 +27835,7 @@ final class $$RecipesTableReferences
   static MultiTypedResultKey<$ProductionOrdersTable, List<ProductionOrder>>
       _productionOrdersRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.productionOrders,
-              aliasName: $_aliasNameGenerator(
-                  db.recipes.uuid, db.productionOrders.recipeUuid));
+              aliasName: 'recipes__uuid__production_orders__recipe_uuid');
 
   $$ProductionOrdersTableProcessedTableManager get productionOrdersRefs {
     final manager =
@@ -26662,8 +28177,10 @@ class $$RecipesTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$RecipesTableReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$RecipesTable, Recipe>(table),
+                    $$RecipesTableReferences(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: (
               {recipeInputsRefs = false,
@@ -26682,56 +28199,52 @@ class $$RecipesTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (recipeInputsRefs)
-                    await $_getPrefetchedData<Recipe, $RecipesTable,
-                            RecipeInput>(
+                    await $_getPrefetchedDataByColumns<Recipe, $RecipesTable,
+                            RecipeInput, $RecipeInputsTable>(
                         currentTable: table,
                         referencedTable:
                             $$RecipesTableReferences._recipeInputsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$RecipesTableReferences(db, table, p0)
                                 .recipeInputsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.recipeUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'recipe_uuid',
                         typedResults: items),
                   if (recipeOutputsRefs)
-                    await $_getPrefetchedData<Recipe, $RecipesTable,
-                            RecipeOutput>(
+                    await $_getPrefetchedDataByColumns<Recipe, $RecipesTable,
+                            RecipeOutput, $RecipeOutputsTable>(
                         currentTable: table,
                         referencedTable: $$RecipesTableReferences
                             ._recipeOutputsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$RecipesTableReferences(db, table, p0)
                                 .recipeOutputsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.recipeUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'recipe_uuid',
                         typedResults: items),
                   if (recipeChargesRefs)
-                    await $_getPrefetchedData<Recipe, $RecipesTable,
-                            RecipeCharge>(
+                    await $_getPrefetchedDataByColumns<Recipe, $RecipesTable,
+                            RecipeCharge, $RecipeChargesTable>(
                         currentTable: table,
                         referencedTable: $$RecipesTableReferences
                             ._recipeChargesRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$RecipesTableReferences(db, table, p0)
                                 .recipeChargesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.recipeUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'recipe_uuid',
                         typedResults: items),
                   if (productionOrdersRefs)
-                    await $_getPrefetchedData<Recipe, $RecipesTable,
-                            ProductionOrder>(
+                    await $_getPrefetchedDataByColumns<Recipe, $RecipesTable,
+                            ProductionOrder, $ProductionOrdersTable>(
                         currentTable: table,
                         referencedTable: $$RecipesTableReferences
                             ._productionOrdersRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$RecipesTableReferences(db, table, p0)
                                 .productionOrdersRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.recipeUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'recipe_uuid',
                         typedResults: items)
                 ];
               },
@@ -26794,8 +28307,7 @@ final class $$RecipeInputsTableReferences
   $$RecipeInputsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $RecipesTable _recipeUuidTable(_$AppDatabase db) =>
-      db.recipes.createAlias(
-          $_aliasNameGenerator(db.recipeInputs.recipeUuid, db.recipes.uuid));
+      db.recipes.createAlias('recipe_inputs__recipe_uuid__recipes__uuid');
 
   $$RecipesTableProcessedTableManager get recipeUuid {
     final $_column = $_itemColumn<String>('recipe_uuid')!;
@@ -26809,8 +28321,7 @@ final class $$RecipeInputsTableReferences
   }
 
   static $ProductsTable _productUuidTable(_$AppDatabase db) =>
-      db.products.createAlias(
-          $_aliasNameGenerator(db.recipeInputs.productUuid, db.products.uuid));
+      db.products.createAlias('recipe_inputs__product_uuid__products__uuid');
 
   $$ProductsTableProcessedTableManager get productUuid {
     final $_column = $_itemColumn<String>('product_uuid')!;
@@ -27150,7 +28661,7 @@ class $$RecipeInputsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$RecipeInputsTable, RecipeInput>(table),
                     $$RecipeInputsTableReferences(db, table, e)
                   ))
               .toList(),
@@ -27252,8 +28763,7 @@ final class $$RecipeOutputsTableReferences
       super.$_db, super.$_table, super.$_typedResult);
 
   static $RecipesTable _recipeUuidTable(_$AppDatabase db) =>
-      db.recipes.createAlias(
-          $_aliasNameGenerator(db.recipeOutputs.recipeUuid, db.recipes.uuid));
+      db.recipes.createAlias('recipe_outputs__recipe_uuid__recipes__uuid');
 
   $$RecipesTableProcessedTableManager get recipeUuid {
     final $_column = $_itemColumn<String>('recipe_uuid')!;
@@ -27267,8 +28777,7 @@ final class $$RecipeOutputsTableReferences
   }
 
   static $ProductsTable _productUuidTable(_$AppDatabase db) =>
-      db.products.createAlias(
-          $_aliasNameGenerator(db.recipeOutputs.productUuid, db.products.uuid));
+      db.products.createAlias('recipe_outputs__product_uuid__products__uuid');
 
   $$ProductsTableProcessedTableManager get productUuid {
     final $_column = $_itemColumn<String>('product_uuid')!;
@@ -27595,7 +29104,7 @@ class $$RecipeOutputsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$RecipeOutputsTable, RecipeOutput>(table),
                     $$RecipeOutputsTableReferences(db, table, e)
                   ))
               .toList(),
@@ -27692,8 +29201,7 @@ final class $$RecipeChargesTableReferences
       super.$_db, super.$_table, super.$_typedResult);
 
   static $RecipesTable _recipeUuidTable(_$AppDatabase db) =>
-      db.recipes.createAlias(
-          $_aliasNameGenerator(db.recipeCharges.recipeUuid, db.recipes.uuid));
+      db.recipes.createAlias('recipe_charges__recipe_uuid__recipes__uuid');
 
   $$RecipesTableProcessedTableManager get recipeUuid {
     final $_column = $_itemColumn<String>('recipe_uuid')!;
@@ -27928,7 +29436,7 @@ class $$RecipeChargesTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$RecipeChargesTable, RecipeCharge>(table),
                     $$RecipeChargesTableReferences(db, table, e)
                   ))
               .toList(),
@@ -28024,8 +29532,7 @@ final class $$ProductionOrdersTableReferences extends BaseReferences<
       super.$_db, super.$_table, super.$_typedResult);
 
   static $RecipesTable _recipeUuidTable(_$AppDatabase db) =>
-      db.recipes.createAlias($_aliasNameGenerator(
-          db.productionOrders.recipeUuid, db.recipes.uuid));
+      db.recipes.createAlias('production_orders__recipe_uuid__recipes__uuid');
 
   $$RecipesTableProcessedTableManager? get recipeUuid {
     final $_column = $_itemColumn<String>('recipe_uuid');
@@ -28042,8 +29549,8 @@ final class $$ProductionOrdersTableReferences extends BaseReferences<
       List<ProductionOrderInput>> _productionOrderInputsRefsTable(
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.productionOrderInputs,
-          aliasName: $_aliasNameGenerator(db.productionOrders.uuid,
-              db.productionOrderInputs.productionOrderUuid));
+          aliasName:
+              'production_orders__uuid__production_order_inputs__production_order_uuid');
 
   $$ProductionOrderInputsTableProcessedTableManager
       get productionOrderInputsRefs {
@@ -28062,8 +29569,8 @@ final class $$ProductionOrdersTableReferences extends BaseReferences<
       List<ProductionOrderOutput>> _productionOrderOutputsRefsTable(
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.productionOrderOutputs,
-          aliasName: $_aliasNameGenerator(db.productionOrders.uuid,
-              db.productionOrderOutputs.productionOrderUuid));
+          aliasName:
+              'production_orders__uuid__production_order_outputs__production_order_uuid');
 
   $$ProductionOrderOutputsTableProcessedTableManager
       get productionOrderOutputsRefs {
@@ -28082,8 +29589,8 @@ final class $$ProductionOrdersTableReferences extends BaseReferences<
       List<ProductionOrderCharge>> _productionOrderChargesRefsTable(
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.productionOrderCharges,
-          aliasName: $_aliasNameGenerator(db.productionOrders.uuid,
-              db.productionOrderCharges.productionOrderUuid));
+          aliasName:
+              'production_orders__uuid__production_order_charges__production_order_uuid');
 
   $$ProductionOrderChargesTableProcessedTableManager
       get productionOrderChargesRefs {
@@ -28102,8 +29609,8 @@ final class $$ProductionOrdersTableReferences extends BaseReferences<
       List<ProductionConsumption>> _productionConsumptionsRefsTable(
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.productionConsumptions,
-          aliasName: $_aliasNameGenerator(db.productionOrders.uuid,
-              db.productionConsumptions.productionOrderUuid));
+          aliasName:
+              'production_orders__uuid__production_consumptions__production_order_uuid');
 
   $$ProductionConsumptionsTableProcessedTableManager
       get productionConsumptionsRefs {
@@ -28601,7 +30108,7 @@ class $$ProductionOrdersTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$ProductionOrdersTable, ProductionOrder>(table),
                     $$ProductionOrdersTableReferences(db, table, e)
                   ))
               .toList(),
@@ -28649,56 +30156,64 @@ class $$ProductionOrdersTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (productionOrderInputsRefs)
-                    await $_getPrefetchedData<ProductionOrder,
-                            $ProductionOrdersTable, ProductionOrderInput>(
+                    await $_getPrefetchedDataByColumns<
+                            ProductionOrder,
+                            $ProductionOrdersTable,
+                            ProductionOrderInput,
+                            $ProductionOrderInputsTable>(
                         currentTable: table,
                         referencedTable: $$ProductionOrdersTableReferences
                             ._productionOrderInputsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductionOrdersTableReferences(db, table, p0)
                                 .productionOrderInputsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems.where(
-                                (e) => e.productionOrderUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'production_order_uuid',
                         typedResults: items),
                   if (productionOrderOutputsRefs)
-                    await $_getPrefetchedData<ProductionOrder,
-                            $ProductionOrdersTable, ProductionOrderOutput>(
+                    await $_getPrefetchedDataByColumns<
+                            ProductionOrder,
+                            $ProductionOrdersTable,
+                            ProductionOrderOutput,
+                            $ProductionOrderOutputsTable>(
                         currentTable: table,
                         referencedTable: $$ProductionOrdersTableReferences
                             ._productionOrderOutputsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductionOrdersTableReferences(db, table, p0)
                                 .productionOrderOutputsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems.where(
-                                (e) => e.productionOrderUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'production_order_uuid',
                         typedResults: items),
                   if (productionOrderChargesRefs)
-                    await $_getPrefetchedData<ProductionOrder,
-                            $ProductionOrdersTable, ProductionOrderCharge>(
+                    await $_getPrefetchedDataByColumns<
+                            ProductionOrder,
+                            $ProductionOrdersTable,
+                            ProductionOrderCharge,
+                            $ProductionOrderChargesTable>(
                         currentTable: table,
                         referencedTable: $$ProductionOrdersTableReferences
                             ._productionOrderChargesRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductionOrdersTableReferences(db, table, p0)
                                 .productionOrderChargesRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems.where(
-                                (e) => e.productionOrderUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'production_order_uuid',
                         typedResults: items),
                   if (productionConsumptionsRefs)
-                    await $_getPrefetchedData<ProductionOrder,
-                            $ProductionOrdersTable, ProductionConsumption>(
+                    await $_getPrefetchedDataByColumns<
+                            ProductionOrder,
+                            $ProductionOrdersTable,
+                            ProductionConsumption,
+                            $ProductionConsumptionsTable>(
                         currentTable: table,
                         referencedTable: $$ProductionOrdersTableReferences
                             ._productionConsumptionsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$ProductionOrdersTableReferences(db, table, p0)
                                 .productionConsumptionsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems.where(
-                                (e) => e.productionOrderUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'production_order_uuid',
                         typedResults: items)
                 ];
               },
@@ -28765,9 +30280,8 @@ final class $$ProductionOrderInputsTableReferences extends BaseReferences<
       super.$_db, super.$_table, super.$_typedResult);
 
   static $ProductionOrdersTable _productionOrderUuidTable(_$AppDatabase db) =>
-      db.productionOrders.createAlias($_aliasNameGenerator(
-          db.productionOrderInputs.productionOrderUuid,
-          db.productionOrders.uuid));
+      db.productionOrders.createAlias(
+          'production_order_inputs__production_order_uuid__production_orders__uuid');
 
   $$ProductionOrdersTableProcessedTableManager get productionOrderUuid {
     final $_column = $_itemColumn<String>('production_order_uuid')!;
@@ -28781,9 +30295,8 @@ final class $$ProductionOrderInputsTableReferences extends BaseReferences<
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $ProductsTable _productUuidTable(_$AppDatabase db) =>
-      db.products.createAlias($_aliasNameGenerator(
-          db.productionOrderInputs.productUuid, db.products.uuid));
+  static $ProductsTable _productUuidTable(_$AppDatabase db) => db.products
+      .createAlias('production_order_inputs__product_uuid__products__uuid');
 
   $$ProductsTableProcessedTableManager get productUuid {
     final $_column = $_itemColumn<String>('product_uuid')!;
@@ -28800,8 +30313,8 @@ final class $$ProductionOrderInputsTableReferences extends BaseReferences<
       List<ProductionConsumption>> _productionConsumptionsRefsTable(
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.productionConsumptions,
-          aliasName: $_aliasNameGenerator(db.productionOrderInputs.uuid,
-              db.productionConsumptions.inputLineUuid));
+          aliasName:
+              'production_order_inputs__uuid__production_consumptions__input_line_uuid');
 
   $$ProductionConsumptionsTableProcessedTableManager
       get productionConsumptionsRefs {
@@ -29213,7 +30726,8 @@ class $$ProductionOrderInputsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$ProductionOrderInputsTable,
+                        ProductionOrderInput>(table),
                     $$ProductionOrderInputsTableReferences(db, table, e)
                   ))
               .toList(),
@@ -29267,8 +30781,11 @@ class $$ProductionOrderInputsTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (productionConsumptionsRefs)
-                    await $_getPrefetchedData<ProductionOrderInput,
-                            $ProductionOrderInputsTable, ProductionConsumption>(
+                    await $_getPrefetchedDataByColumns<
+                            ProductionOrderInput,
+                            $ProductionOrderInputsTable,
+                            ProductionConsumption,
+                            $ProductionConsumptionsTable>(
                         currentTable: table,
                         referencedTable: $$ProductionOrderInputsTableReferences
                             ._productionConsumptionsRefsTable(db),
@@ -29276,9 +30793,8 @@ class $$ProductionOrderInputsTableTableManager extends RootTableManager<
                             $$ProductionOrderInputsTableReferences(
                                     db, table, p0)
                                 .productionConsumptionsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.inputLineUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'input_line_uuid',
                         typedResults: items)
                 ];
               },
@@ -29348,9 +30864,8 @@ final class $$ProductionOrderOutputsTableReferences extends BaseReferences<
       super.$_db, super.$_table, super.$_typedResult);
 
   static $ProductionOrdersTable _productionOrderUuidTable(_$AppDatabase db) =>
-      db.productionOrders.createAlias($_aliasNameGenerator(
-          db.productionOrderOutputs.productionOrderUuid,
-          db.productionOrders.uuid));
+      db.productionOrders.createAlias(
+          'production_order_outputs__production_order_uuid__production_orders__uuid');
 
   $$ProductionOrdersTableProcessedTableManager get productionOrderUuid {
     final $_column = $_itemColumn<String>('production_order_uuid')!;
@@ -29364,9 +30879,8 @@ final class $$ProductionOrderOutputsTableReferences extends BaseReferences<
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $ProductsTable _productUuidTable(_$AppDatabase db) =>
-      db.products.createAlias($_aliasNameGenerator(
-          db.productionOrderOutputs.productUuid, db.products.uuid));
+  static $ProductsTable _productUuidTable(_$AppDatabase db) => db.products
+      .createAlias('production_order_outputs__product_uuid__products__uuid');
 
   $$ProductsTableProcessedTableManager get productUuid {
     final $_column = $_itemColumn<String>('product_uuid')!;
@@ -29756,7 +31270,8 @@ class $$ProductionOrderOutputsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$ProductionOrderOutputsTable,
+                        ProductionOrderOutput>(table),
                     $$ProductionOrderOutputsTableReferences(db, table, e)
                   ))
               .toList(),
@@ -29855,9 +31370,8 @@ final class $$ProductionOrderChargesTableReferences extends BaseReferences<
       super.$_db, super.$_table, super.$_typedResult);
 
   static $ProductionOrdersTable _productionOrderUuidTable(_$AppDatabase db) =>
-      db.productionOrders.createAlias($_aliasNameGenerator(
-          db.productionOrderCharges.productionOrderUuid,
-          db.productionOrders.uuid));
+      db.productionOrders.createAlias(
+          'production_order_charges__production_order_uuid__production_orders__uuid');
 
   $$ProductionOrdersTableProcessedTableManager get productionOrderUuid {
     final $_column = $_itemColumn<String>('production_order_uuid')!;
@@ -30097,7 +31611,8 @@ class $$ProductionOrderChargesTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$ProductionOrderChargesTable,
+                        ProductionOrderCharge>(table),
                     $$ProductionOrderChargesTableReferences(db, table, e)
                   ))
               .toList(),
@@ -30188,9 +31703,8 @@ final class $$ProductionConsumptionsTableReferences extends BaseReferences<
       super.$_db, super.$_table, super.$_typedResult);
 
   static $ProductionOrdersTable _productionOrderUuidTable(_$AppDatabase db) =>
-      db.productionOrders.createAlias($_aliasNameGenerator(
-          db.productionConsumptions.productionOrderUuid,
-          db.productionOrders.uuid));
+      db.productionOrders.createAlias(
+          'production_consumptions__production_order_uuid__production_orders__uuid');
 
   $$ProductionOrdersTableProcessedTableManager get productionOrderUuid {
     final $_column = $_itemColumn<String>('production_order_uuid')!;
@@ -30205,9 +31719,8 @@ final class $$ProductionConsumptionsTableReferences extends BaseReferences<
   }
 
   static $ProductionOrderInputsTable _inputLineUuidTable(_$AppDatabase db) =>
-      db.productionOrderInputs.createAlias($_aliasNameGenerator(
-          db.productionConsumptions.inputLineUuid,
-          db.productionOrderInputs.uuid));
+      db.productionOrderInputs.createAlias(
+          'production_consumptions__input_line_uuid__production_order_inputs__uuid');
 
   $$ProductionOrderInputsTableProcessedTableManager get inputLineUuid {
     final $_column = $_itemColumn<String>('input_line_uuid')!;
@@ -30221,9 +31734,9 @@ final class $$ProductionConsumptionsTableReferences extends BaseReferences<
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $ProductBatchesTable _lotUuidTable(_$AppDatabase db) =>
-      db.productBatches.createAlias($_aliasNameGenerator(
-          db.productionConsumptions.lotUuid, db.productBatches.uuid));
+  static $ProductBatchesTable _lotUuidTable(_$AppDatabase db) => db
+      .productBatches
+      .createAlias('production_consumptions__lot_uuid__product_batches__uuid');
 
   $$ProductBatchesTableProcessedTableManager get lotUuid {
     final $_column = $_itemColumn<String>('lot_uuid')!;
@@ -30595,7 +32108,8 @@ class $$ProductionConsumptionsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$ProductionConsumptionsTable,
+                        ProductionConsumption>(table),
                     $$ProductionConsumptionsTableReferences(db, table, e)
                   ))
               .toList(),
@@ -30715,8 +32229,7 @@ final class $$OrderReturnsTableReferences
   $$OrderReturnsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $OrdersTable _orderUuidTable(_$AppDatabase db) =>
-      db.orders.createAlias(
-          $_aliasNameGenerator(db.orderReturns.orderUuid, db.orders.uuid));
+      db.orders.createAlias('order_returns__order_uuid__orders__uuid');
 
   $$OrdersTableProcessedTableManager get orderUuid {
     final $_column = $_itemColumn<String>('order_uuid')!;
@@ -30730,8 +32243,7 @@ final class $$OrderReturnsTableReferences
   }
 
   static $ContactsTable _contactUuidTable(_$AppDatabase db) =>
-      db.contacts.createAlias(
-          $_aliasNameGenerator(db.orderReturns.contactUuid, db.contacts.uuid));
+      db.contacts.createAlias('order_returns__contact_uuid__contacts__uuid');
 
   $$ContactsTableProcessedTableManager? get contactUuid {
     final $_column = $_itemColumn<String>('contact_uuid');
@@ -30747,8 +32259,8 @@ final class $$OrderReturnsTableReferences
   static MultiTypedResultKey<$OrderReturnItemsTable, List<OrderReturnItem>>
       _orderReturnItemsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.orderReturnItems,
-              aliasName: $_aliasNameGenerator(
-                  db.orderReturns.uuid, db.orderReturnItems.returnUuid));
+              aliasName:
+                  'order_returns__uuid__order_return_items__return_uuid');
 
   $$OrderReturnItemsTableProcessedTableManager get orderReturnItemsRefs {
     final manager =
@@ -31132,7 +32644,7 @@ class $$OrderReturnsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$OrderReturnsTable, OrderReturn>(table),
                     $$OrderReturnsTableReferences(db, table, e)
                   ))
               .toList(),
@@ -31185,17 +32697,19 @@ class $$OrderReturnsTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (orderReturnItemsRefs)
-                    await $_getPrefetchedData<OrderReturn, $OrderReturnsTable,
-                            OrderReturnItem>(
+                    await $_getPrefetchedDataByColumns<
+                            OrderReturn,
+                            $OrderReturnsTable,
+                            OrderReturnItem,
+                            $OrderReturnItemsTable>(
                         currentTable: table,
                         referencedTable: $$OrderReturnsTableReferences
                             ._orderReturnItemsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$OrderReturnsTableReferences(db, table, p0)
                                 .orderReturnItemsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.returnUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'return_uuid',
                         typedResults: items)
                 ];
               },
@@ -31252,8 +32766,8 @@ final class $$OrderReturnItemsTableReferences extends BaseReferences<
       super.$_db, super.$_table, super.$_typedResult);
 
   static $OrderReturnsTable _returnUuidTable(_$AppDatabase db) =>
-      db.orderReturns.createAlias($_aliasNameGenerator(
-          db.orderReturnItems.returnUuid, db.orderReturns.uuid));
+      db.orderReturns
+          .createAlias('order_return_items__return_uuid__order_returns__uuid');
 
   $$OrderReturnsTableProcessedTableManager get returnUuid {
     final $_column = $_itemColumn<String>('return_uuid')!;
@@ -31266,9 +32780,8 @@ final class $$OrderReturnItemsTableReferences extends BaseReferences<
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $ProductsTable _productUuidTable(_$AppDatabase db) =>
-      db.products.createAlias($_aliasNameGenerator(
-          db.orderReturnItems.productUuid, db.products.uuid));
+  static $ProductsTable _productUuidTable(_$AppDatabase db) => db.products
+      .createAlias('order_return_items__product_uuid__products__uuid');
 
   $$ProductsTableProcessedTableManager get productUuid {
     final $_column = $_itemColumn<String>('product_uuid')!;
@@ -31282,8 +32795,8 @@ final class $$OrderReturnItemsTableReferences extends BaseReferences<
   }
 
   static $ProductBatchesTable _batchUuidTable(_$AppDatabase db) =>
-      db.productBatches.createAlias($_aliasNameGenerator(
-          db.orderReturnItems.batchUuid, db.productBatches.uuid));
+      db.productBatches
+          .createAlias('order_return_items__batch_uuid__product_batches__uuid');
 
   $$ProductBatchesTableProcessedTableManager? get batchUuid {
     final $_column = $_itemColumn<String>('batch_uuid');
@@ -31650,7 +33163,7 @@ class $$OrderReturnItemsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$OrderReturnItemsTable, OrderReturnItem>(table),
                     $$OrderReturnItemsTableReferences(db, table, e)
                   ))
               .toList(),
@@ -31729,6 +33242,950 @@ typedef $$OrderReturnItemsTableProcessedTableManager = ProcessedTableManager<
     OrderReturnItem,
     PrefetchHooks Function(
         {bool returnUuid, bool productUuid, bool batchUuid})>;
+typedef $$SellingProductsTableCreateCompanionBuilder = SellingProductsCompanion
+    Function({
+  required String uuid,
+  required String name,
+  Value<String?> sku,
+  Value<String?> description,
+  Value<String?> categoryUuid,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$SellingProductsTableUpdateCompanionBuilder = SellingProductsCompanion
+    Function({
+  Value<String> uuid,
+  Value<String> name,
+  Value<String?> sku,
+  Value<String?> description,
+  Value<String?> categoryUuid,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$SellingProductsTableReferences extends BaseReferences<
+    _$AppDatabase, $SellingProductsTable, SellingProduct> {
+  $$SellingProductsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProductCategoriesTable _categoryUuidTable(_$AppDatabase db) => db
+      .productCategories
+      .createAlias('selling_products__category_uuid__product_categories__uuid');
+
+  $$ProductCategoriesTableProcessedTableManager? get categoryUuid {
+    final $_column = $_itemColumn<String>('category_uuid');
+    if ($_column == null) return null;
+    final manager =
+        $$ProductCategoriesTableTableManager($_db, $_db.productCategories)
+            .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$SellingProductComponentsTable,
+      List<SellingProductComponent>> _sellingProductComponentsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.sellingProductComponents,
+          aliasName:
+              'selling_products__uuid__selling_product_components__selling_product_uuid');
+
+  $$SellingProductComponentsTableProcessedTableManager
+      get sellingProductComponentsRefs {
+    final manager = $$SellingProductComponentsTableTableManager(
+            $_db, $_db.sellingProductComponents)
+        .filter((f) =>
+            f.sellingProductUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_sellingProductComponentsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CatalogItemsTable, List<CatalogItem>>
+      _catalogItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+          db.catalogItems,
+          aliasName:
+              'selling_products__uuid__catalog_items__selling_product_uuid');
+
+  $$CatalogItemsTableProcessedTableManager get catalogItemsRefs {
+    final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
+        .filter((f) =>
+            f.sellingProductUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache = $_typedResult.readTableOrNull(_catalogItemsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$SellingProductsTableFilterComposer
+    extends Composer<_$AppDatabase, $SellingProductsTable> {
+  $$SellingProductsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sku => $composableBuilder(
+      column: $table.sku, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$ProductCategoriesTableFilterComposer get categoryUuid {
+    final $$ProductCategoriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryUuid,
+        referencedTable: $db.productCategories,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductCategoriesTableFilterComposer(
+              $db: $db,
+              $table: $db.productCategories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> sellingProductComponentsRefs(
+      Expression<bool> Function($$SellingProductComponentsTableFilterComposer f)
+          f) {
+    final $$SellingProductComponentsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.sellingProductComponents,
+            getReferencedColumn: (t) => t.sellingProductUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$SellingProductComponentsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.sellingProductComponents,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> catalogItemsRefs(
+      Expression<bool> Function($$CatalogItemsTableFilterComposer f) f) {
+    final $$CatalogItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.sellingProductUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$SellingProductsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SellingProductsTable> {
+  $$SellingProductsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sku => $composableBuilder(
+      column: $table.sku, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$ProductCategoriesTableOrderingComposer get categoryUuid {
+    final $$ProductCategoriesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryUuid,
+        referencedTable: $db.productCategories,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductCategoriesTableOrderingComposer(
+              $db: $db,
+              $table: $db.productCategories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SellingProductsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SellingProductsTable> {
+  $$SellingProductsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get sku =>
+      $composableBuilder(column: $table.sku, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$ProductCategoriesTableAnnotationComposer get categoryUuid {
+    final $$ProductCategoriesTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.categoryUuid,
+            referencedTable: $db.productCategories,
+            getReferencedColumn: (t) => t.uuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductCategoriesTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.productCategories,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+
+  Expression<T> sellingProductComponentsRefs<T extends Object>(
+      Expression<T> Function(
+              $$SellingProductComponentsTableAnnotationComposer a)
+          f) {
+    final $$SellingProductComponentsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.sellingProductComponents,
+            getReferencedColumn: (t) => t.sellingProductUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$SellingProductComponentsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.sellingProductComponents,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> catalogItemsRefs<T extends Object>(
+      Expression<T> Function($$CatalogItemsTableAnnotationComposer a) f) {
+    final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.sellingProductUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$SellingProductsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SellingProductsTable,
+    SellingProduct,
+    $$SellingProductsTableFilterComposer,
+    $$SellingProductsTableOrderingComposer,
+    $$SellingProductsTableAnnotationComposer,
+    $$SellingProductsTableCreateCompanionBuilder,
+    $$SellingProductsTableUpdateCompanionBuilder,
+    (SellingProduct, $$SellingProductsTableReferences),
+    SellingProduct,
+    PrefetchHooks Function(
+        {bool categoryUuid,
+        bool sellingProductComponentsRefs,
+        bool catalogItemsRefs})> {
+  $$SellingProductsTableTableManager(
+      _$AppDatabase db, $SellingProductsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SellingProductsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SellingProductsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SellingProductsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> sku = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<String?> categoryUuid = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SellingProductsCompanion(
+            uuid: uuid,
+            name: name,
+            sku: sku,
+            description: description,
+            categoryUuid: categoryUuid,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String name,
+            Value<String?> sku = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<String?> categoryUuid = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SellingProductsCompanion.insert(
+            uuid: uuid,
+            name: name,
+            sku: sku,
+            description: description,
+            categoryUuid: categoryUuid,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$SellingProductsTable, SellingProduct>(table),
+                    $$SellingProductsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {categoryUuid = false,
+              sellingProductComponentsRefs = false,
+              catalogItemsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (sellingProductComponentsRefs) db.sellingProductComponents,
+                if (catalogItemsRefs) db.catalogItems
+              ],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (categoryUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.categoryUuid,
+                    referencedTable:
+                        $$SellingProductsTableReferences._categoryUuidTable(db),
+                    referencedColumn: $$SellingProductsTableReferences
+                        ._categoryUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (sellingProductComponentsRefs)
+                    await $_getPrefetchedDataByColumns<
+                            SellingProduct,
+                            $SellingProductsTable,
+                            SellingProductComponent,
+                            $SellingProductComponentsTable>(
+                        currentTable: table,
+                        referencedTable: $$SellingProductsTableReferences
+                            ._sellingProductComponentsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SellingProductsTableReferences(db, table, p0)
+                                .sellingProductComponentsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'selling_product_uuid',
+                        typedResults: items),
+                  if (catalogItemsRefs)
+                    await $_getPrefetchedDataByColumns<
+                            SellingProduct,
+                            $SellingProductsTable,
+                            CatalogItem,
+                            $CatalogItemsTable>(
+                        currentTable: table,
+                        referencedTable: $$SellingProductsTableReferences
+                            ._catalogItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SellingProductsTableReferences(db, table, p0)
+                                .catalogItemsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'selling_product_uuid',
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$SellingProductsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $SellingProductsTable,
+    SellingProduct,
+    $$SellingProductsTableFilterComposer,
+    $$SellingProductsTableOrderingComposer,
+    $$SellingProductsTableAnnotationComposer,
+    $$SellingProductsTableCreateCompanionBuilder,
+    $$SellingProductsTableUpdateCompanionBuilder,
+    (SellingProduct, $$SellingProductsTableReferences),
+    SellingProduct,
+    PrefetchHooks Function(
+        {bool categoryUuid,
+        bool sellingProductComponentsRefs,
+        bool catalogItemsRefs})>;
+typedef $$SellingProductComponentsTableCreateCompanionBuilder
+    = SellingProductComponentsCompanion Function({
+  required String uuid,
+  required String sellingProductUuid,
+  required String productUuid,
+  required double quantity,
+  Value<String> consumeMode,
+  Value<String?> batchNumber,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$SellingProductComponentsTableUpdateCompanionBuilder
+    = SellingProductComponentsCompanion Function({
+  Value<String> uuid,
+  Value<String> sellingProductUuid,
+  Value<String> productUuid,
+  Value<double> quantity,
+  Value<String> consumeMode,
+  Value<String?> batchNumber,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$SellingProductComponentsTableReferences extends BaseReferences<
+    _$AppDatabase, $SellingProductComponentsTable, SellingProductComponent> {
+  $$SellingProductComponentsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $SellingProductsTable _sellingProductUuidTable(_$AppDatabase db) =>
+      db.sellingProducts.createAlias(
+          'selling_product_components__selling_product_uuid__selling_products__uuid');
+
+  $$SellingProductsTableProcessedTableManager get sellingProductUuid {
+    final $_column = $_itemColumn<String>('selling_product_uuid')!;
+
+    final manager =
+        $$SellingProductsTableTableManager($_db, $_db.sellingProducts)
+            .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sellingProductUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ProductsTable _productUuidTable(_$AppDatabase db) => db.products
+      .createAlias('selling_product_components__product_uuid__products__uuid');
+
+  $$ProductsTableProcessedTableManager get productUuid {
+    final $_column = $_itemColumn<String>('product_uuid')!;
+
+    final manager = $$ProductsTableTableManager($_db, $_db.products)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$SellingProductComponentsTableFilterComposer
+    extends Composer<_$AppDatabase, $SellingProductComponentsTable> {
+  $$SellingProductComponentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get consumeMode => $composableBuilder(
+      column: $table.consumeMode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$SellingProductsTableFilterComposer get sellingProductUuid {
+    final $$SellingProductsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableFilterComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableFilterComposer get productUuid {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableFilterComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SellingProductComponentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SellingProductComponentsTable> {
+  $$SellingProductComponentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get consumeMode => $composableBuilder(
+      column: $table.consumeMode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$SellingProductsTableOrderingComposer get sellingProductUuid {
+    final $$SellingProductsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableOrderingComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableOrderingComposer get productUuid {
+    final $$ProductsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableOrderingComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SellingProductComponentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SellingProductComponentsTable> {
+  $$SellingProductComponentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<double> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<String> get consumeMode => $composableBuilder(
+      column: $table.consumeMode, builder: (column) => column);
+
+  GeneratedColumn<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$SellingProductsTableAnnotationComposer get sellingProductUuid {
+    final $$SellingProductsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableAnnotationComposer get productUuid {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SellingProductComponentsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SellingProductComponentsTable,
+    SellingProductComponent,
+    $$SellingProductComponentsTableFilterComposer,
+    $$SellingProductComponentsTableOrderingComposer,
+    $$SellingProductComponentsTableAnnotationComposer,
+    $$SellingProductComponentsTableCreateCompanionBuilder,
+    $$SellingProductComponentsTableUpdateCompanionBuilder,
+    (SellingProductComponent, $$SellingProductComponentsTableReferences),
+    SellingProductComponent,
+    PrefetchHooks Function({bool sellingProductUuid, bool productUuid})> {
+  $$SellingProductComponentsTableTableManager(
+      _$AppDatabase db, $SellingProductComponentsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SellingProductComponentsTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SellingProductComponentsTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SellingProductComponentsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> sellingProductUuid = const Value.absent(),
+            Value<String> productUuid = const Value.absent(),
+            Value<double> quantity = const Value.absent(),
+            Value<String> consumeMode = const Value.absent(),
+            Value<String?> batchNumber = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SellingProductComponentsCompanion(
+            uuid: uuid,
+            sellingProductUuid: sellingProductUuid,
+            productUuid: productUuid,
+            quantity: quantity,
+            consumeMode: consumeMode,
+            batchNumber: batchNumber,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String sellingProductUuid,
+            required String productUuid,
+            required double quantity,
+            Value<String> consumeMode = const Value.absent(),
+            Value<String?> batchNumber = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SellingProductComponentsCompanion.insert(
+            uuid: uuid,
+            sellingProductUuid: sellingProductUuid,
+            productUuid: productUuid,
+            quantity: quantity,
+            consumeMode: consumeMode,
+            batchNumber: batchNumber,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$SellingProductComponentsTable,
+                        SellingProductComponent>(table),
+                    $$SellingProductComponentsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {sellingProductUuid = false, productUuid = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (sellingProductUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.sellingProductUuid,
+                    referencedTable: $$SellingProductComponentsTableReferences
+                        ._sellingProductUuidTable(db),
+                    referencedColumn: $$SellingProductComponentsTableReferences
+                        ._sellingProductUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (productUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.productUuid,
+                    referencedTable: $$SellingProductComponentsTableReferences
+                        ._productUuidTable(db),
+                    referencedColumn: $$SellingProductComponentsTableReferences
+                        ._productUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$SellingProductComponentsTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $SellingProductComponentsTable,
+        SellingProductComponent,
+        $$SellingProductComponentsTableFilterComposer,
+        $$SellingProductComponentsTableOrderingComposer,
+        $$SellingProductComponentsTableAnnotationComposer,
+        $$SellingProductComponentsTableCreateCompanionBuilder,
+        $$SellingProductComponentsTableUpdateCompanionBuilder,
+        (SellingProductComponent, $$SellingProductComponentsTableReferences),
+        SellingProductComponent,
+        PrefetchHooks Function({bool sellingProductUuid, bool productUuid})>;
 typedef $$CatalogsTableCreateCompanionBuilder = CatalogsCompanion Function({
   required String uuid,
   required String name,
@@ -31761,8 +34218,7 @@ final class $$CatalogsTableReferences
   static MultiTypedResultKey<$CatalogItemsTable, List<CatalogItem>>
       _catalogItemsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.catalogItems,
-              aliasName: $_aliasNameGenerator(
-                  db.catalogs.uuid, db.catalogItems.catalogUuid));
+              aliasName: 'catalogs__uuid__catalog_items__catalog_uuid');
 
   $$CatalogItemsTableProcessedTableManager get catalogItemsRefs {
     final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
@@ -31777,8 +34233,7 @@ final class $$CatalogsTableReferences
   static MultiTypedResultKey<$CatalogAssignmentsTable, List<CatalogAssignment>>
       _catalogAssignmentsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.catalogAssignments,
-              aliasName: $_aliasNameGenerator(
-                  db.catalogs.uuid, db.catalogAssignments.catalogUuid));
+              aliasName: 'catalogs__uuid__catalog_assignments__catalog_uuid');
 
   $$CatalogAssignmentsTableProcessedTableManager get catalogAssignmentsRefs {
     final manager = $$CatalogAssignmentsTableTableManager(
@@ -32061,8 +34516,10 @@ class $$CatalogsTableTableManager extends RootTableManager<
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
-              .map((e) =>
-                  (e.readTable(table), $$CatalogsTableReferences(db, table, e)))
+              .map((e) => (
+                    e.readTable<$CatalogsTable, Catalog>(table),
+                    $$CatalogsTableReferences(db, table, e)
+                  ))
               .toList(),
           prefetchHooksCallback: (
               {catalogItemsRefs = false, catalogAssignmentsRefs = false}) {
@@ -32076,30 +34533,28 @@ class $$CatalogsTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (catalogItemsRefs)
-                    await $_getPrefetchedData<Catalog, $CatalogsTable,
-                            CatalogItem>(
+                    await $_getPrefetchedDataByColumns<Catalog, $CatalogsTable,
+                            CatalogItem, $CatalogItemsTable>(
                         currentTable: table,
                         referencedTable: $$CatalogsTableReferences
                             ._catalogItemsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$CatalogsTableReferences(db, table, p0)
                                 .catalogItemsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.catalogUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'catalog_uuid',
                         typedResults: items),
                   if (catalogAssignmentsRefs)
-                    await $_getPrefetchedData<Catalog, $CatalogsTable,
-                            CatalogAssignment>(
+                    await $_getPrefetchedDataByColumns<Catalog, $CatalogsTable,
+                            CatalogAssignment, $CatalogAssignmentsTable>(
                         currentTable: table,
                         referencedTable: $$CatalogsTableReferences
                             ._catalogAssignmentsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$CatalogsTableReferences(db, table, p0)
                                 .catalogAssignmentsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.catalogUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'catalog_uuid',
                         typedResults: items)
                 ];
               },
@@ -32125,11 +34580,18 @@ typedef $$CatalogItemsTableCreateCompanionBuilder = CatalogItemsCompanion
     Function({
   required String uuid,
   required String catalogUuid,
-  required String productUuid,
+  Value<String?> productUuid,
+  Value<String?> sellingProductUuid,
   Value<double?> customPrice,
   Value<String?> batchUuid,
   Value<DateTime?> validUntil,
   Value<String> batchSelectionStrategy,
+  Value<String> pricingApproach,
+  Value<double> markupOrMarginPercent,
+  Value<double> fixedAmount,
+  Value<double> sellPrice,
+  Value<double?> unitCostSnapshot,
+  Value<DateTime?> priceComputedAt,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -32140,11 +34602,18 @@ typedef $$CatalogItemsTableUpdateCompanionBuilder = CatalogItemsCompanion
     Function({
   Value<String> uuid,
   Value<String> catalogUuid,
-  Value<String> productUuid,
+  Value<String?> productUuid,
+  Value<String?> sellingProductUuid,
   Value<double?> customPrice,
   Value<String?> batchUuid,
   Value<DateTime?> validUntil,
   Value<String> batchSelectionStrategy,
+  Value<String> pricingApproach,
+  Value<double> markupOrMarginPercent,
+  Value<double> fixedAmount,
+  Value<double> sellPrice,
+  Value<double?> unitCostSnapshot,
+  Value<DateTime?> priceComputedAt,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -32157,8 +34626,7 @@ final class $$CatalogItemsTableReferences
   $$CatalogItemsTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $CatalogsTable _catalogUuidTable(_$AppDatabase db) =>
-      db.catalogs.createAlias(
-          $_aliasNameGenerator(db.catalogItems.catalogUuid, db.catalogs.uuid));
+      db.catalogs.createAlias('catalog_items__catalog_uuid__catalogs__uuid');
 
   $$CatalogsTableProcessedTableManager get catalogUuid {
     final $_column = $_itemColumn<String>('catalog_uuid')!;
@@ -32172,12 +34640,11 @@ final class $$CatalogItemsTableReferences
   }
 
   static $ProductsTable _productUuidTable(_$AppDatabase db) =>
-      db.products.createAlias(
-          $_aliasNameGenerator(db.catalogItems.productUuid, db.products.uuid));
+      db.products.createAlias('catalog_items__product_uuid__products__uuid');
 
-  $$ProductsTableProcessedTableManager get productUuid {
-    final $_column = $_itemColumn<String>('product_uuid')!;
-
+  $$ProductsTableProcessedTableManager? get productUuid {
+    final $_column = $_itemColumn<String>('product_uuid');
+    if ($_column == null) return null;
     final manager = $$ProductsTableTableManager($_db, $_db.products)
         .filter((f) => f.uuid.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_productUuidTable($_db));
@@ -32186,9 +34653,25 @@ final class $$CatalogItemsTableReferences
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
+  static $SellingProductsTable _sellingProductUuidTable(_$AppDatabase db) =>
+      db.sellingProducts.createAlias(
+          'catalog_items__selling_product_uuid__selling_products__uuid');
+
+  $$SellingProductsTableProcessedTableManager? get sellingProductUuid {
+    final $_column = $_itemColumn<String>('selling_product_uuid');
+    if ($_column == null) return null;
+    final manager =
+        $$SellingProductsTableTableManager($_db, $_db.sellingProducts)
+            .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sellingProductUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
   static $ProductBatchesTable _batchUuidTable(_$AppDatabase db) =>
-      db.productBatches.createAlias($_aliasNameGenerator(
-          db.catalogItems.batchUuid, db.productBatches.uuid));
+      db.productBatches
+          .createAlias('catalog_items__batch_uuid__product_batches__uuid');
 
   $$ProductBatchesTableProcessedTableManager? get batchUuid {
     final $_column = $_itemColumn<String>('batch_uuid');
@@ -32205,8 +34688,8 @@ final class $$CatalogItemsTableReferences
       List<CatalogTieredDiscount>> _catalogTieredDiscountsRefsTable(
           _$AppDatabase db) =>
       MultiTypedResultKey.fromTable(db.catalogTieredDiscounts,
-          aliasName: $_aliasNameGenerator(
-              db.catalogItems.uuid, db.catalogTieredDiscounts.catalogItemUuid));
+          aliasName:
+              'catalog_items__uuid__catalog_tiered_discounts__catalog_item_uuid');
 
   $$CatalogTieredDiscountsTableProcessedTableManager
       get catalogTieredDiscountsRefs {
@@ -32242,6 +34725,28 @@ class $$CatalogItemsTableFilterComposer
 
   ColumnFilters<String> get batchSelectionStrategy => $composableBuilder(
       column: $table.batchSelectionStrategy,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get pricingApproach => $composableBuilder(
+      column: $table.pricingApproach,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get markupOrMarginPercent => $composableBuilder(
+      column: $table.markupOrMarginPercent,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get fixedAmount => $composableBuilder(
+      column: $table.fixedAmount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get sellPrice => $composableBuilder(
+      column: $table.sellPrice, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get unitCostSnapshot => $composableBuilder(
+      column: $table.unitCostSnapshot,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get priceComputedAt => $composableBuilder(
+      column: $table.priceComputedAt,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
@@ -32288,6 +34793,26 @@ class $$CatalogItemsTableFilterComposer
             $$ProductsTableFilterComposer(
               $db: $db,
               $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SellingProductsTableFilterComposer get sellingProductUuid {
+    final $$SellingProductsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableFilterComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -32362,6 +34887,28 @@ class $$CatalogItemsTableOrderingComposer
       column: $table.batchSelectionStrategy,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get pricingApproach => $composableBuilder(
+      column: $table.pricingApproach,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get markupOrMarginPercent => $composableBuilder(
+      column: $table.markupOrMarginPercent,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get fixedAmount => $composableBuilder(
+      column: $table.fixedAmount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get sellPrice => $composableBuilder(
+      column: $table.sellPrice, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get unitCostSnapshot => $composableBuilder(
+      column: $table.unitCostSnapshot,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get priceComputedAt => $composableBuilder(
+      column: $table.priceComputedAt,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -32414,6 +34961,26 @@ class $$CatalogItemsTableOrderingComposer
     return composer;
   }
 
+  $$SellingProductsTableOrderingComposer get sellingProductUuid {
+    final $$SellingProductsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableOrderingComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
   $$ProductBatchesTableOrderingComposer get batchUuid {
     final $$ProductBatchesTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -32455,6 +35022,24 @@ class $$CatalogItemsTableAnnotationComposer
 
   GeneratedColumn<String> get batchSelectionStrategy => $composableBuilder(
       column: $table.batchSelectionStrategy, builder: (column) => column);
+
+  GeneratedColumn<String> get pricingApproach => $composableBuilder(
+      column: $table.pricingApproach, builder: (column) => column);
+
+  GeneratedColumn<double> get markupOrMarginPercent => $composableBuilder(
+      column: $table.markupOrMarginPercent, builder: (column) => column);
+
+  GeneratedColumn<double> get fixedAmount => $composableBuilder(
+      column: $table.fixedAmount, builder: (column) => column);
+
+  GeneratedColumn<double> get sellPrice =>
+      $composableBuilder(column: $table.sellPrice, builder: (column) => column);
+
+  GeneratedColumn<double> get unitCostSnapshot => $composableBuilder(
+      column: $table.unitCostSnapshot, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get priceComputedAt => $composableBuilder(
+      column: $table.priceComputedAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -32500,6 +35085,26 @@ class $$CatalogItemsTableAnnotationComposer
             $$ProductsTableAnnotationComposer(
               $db: $db,
               $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SellingProductsTableAnnotationComposer get sellingProductUuid {
+    final $$SellingProductsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -32566,6 +35171,7 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
     PrefetchHooks Function(
         {bool catalogUuid,
         bool productUuid,
+        bool sellingProductUuid,
         bool batchUuid,
         bool catalogTieredDiscountsRefs})> {
   $$CatalogItemsTableTableManager(_$AppDatabase db, $CatalogItemsTable table)
@@ -32581,11 +35187,18 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<String> uuid = const Value.absent(),
             Value<String> catalogUuid = const Value.absent(),
-            Value<String> productUuid = const Value.absent(),
+            Value<String?> productUuid = const Value.absent(),
+            Value<String?> sellingProductUuid = const Value.absent(),
             Value<double?> customPrice = const Value.absent(),
             Value<String?> batchUuid = const Value.absent(),
             Value<DateTime?> validUntil = const Value.absent(),
             Value<String> batchSelectionStrategy = const Value.absent(),
+            Value<String> pricingApproach = const Value.absent(),
+            Value<double> markupOrMarginPercent = const Value.absent(),
+            Value<double> fixedAmount = const Value.absent(),
+            Value<double> sellPrice = const Value.absent(),
+            Value<double?> unitCostSnapshot = const Value.absent(),
+            Value<DateTime?> priceComputedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -32596,10 +35209,17 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
             uuid: uuid,
             catalogUuid: catalogUuid,
             productUuid: productUuid,
+            sellingProductUuid: sellingProductUuid,
             customPrice: customPrice,
             batchUuid: batchUuid,
             validUntil: validUntil,
             batchSelectionStrategy: batchSelectionStrategy,
+            pricingApproach: pricingApproach,
+            markupOrMarginPercent: markupOrMarginPercent,
+            fixedAmount: fixedAmount,
+            sellPrice: sellPrice,
+            unitCostSnapshot: unitCostSnapshot,
+            priceComputedAt: priceComputedAt,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,
@@ -32609,11 +35229,18 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
           createCompanionCallback: ({
             required String uuid,
             required String catalogUuid,
-            required String productUuid,
+            Value<String?> productUuid = const Value.absent(),
+            Value<String?> sellingProductUuid = const Value.absent(),
             Value<double?> customPrice = const Value.absent(),
             Value<String?> batchUuid = const Value.absent(),
             Value<DateTime?> validUntil = const Value.absent(),
             Value<String> batchSelectionStrategy = const Value.absent(),
+            Value<String> pricingApproach = const Value.absent(),
+            Value<double> markupOrMarginPercent = const Value.absent(),
+            Value<double> fixedAmount = const Value.absent(),
+            Value<double> sellPrice = const Value.absent(),
+            Value<double?> unitCostSnapshot = const Value.absent(),
+            Value<DateTime?> priceComputedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -32624,10 +35251,17 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
             uuid: uuid,
             catalogUuid: catalogUuid,
             productUuid: productUuid,
+            sellingProductUuid: sellingProductUuid,
             customPrice: customPrice,
             batchUuid: batchUuid,
             validUntil: validUntil,
             batchSelectionStrategy: batchSelectionStrategy,
+            pricingApproach: pricingApproach,
+            markupOrMarginPercent: markupOrMarginPercent,
+            fixedAmount: fixedAmount,
+            sellPrice: sellPrice,
+            unitCostSnapshot: unitCostSnapshot,
+            priceComputedAt: priceComputedAt,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,
@@ -32636,13 +35270,14 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$CatalogItemsTable, CatalogItem>(table),
                     $$CatalogItemsTableReferences(db, table, e)
                   ))
               .toList(),
           prefetchHooksCallback: (
               {catalogUuid = false,
               productUuid = false,
+              sellingProductUuid = false,
               batchUuid = false,
               catalogTieredDiscountsRefs = false}) {
             return PrefetchHooks(
@@ -32685,6 +35320,17 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
                         .uuid,
                   ) as T;
                 }
+                if (sellingProductUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.sellingProductUuid,
+                    referencedTable: $$CatalogItemsTableReferences
+                        ._sellingProductUuidTable(db),
+                    referencedColumn: $$CatalogItemsTableReferences
+                        ._sellingProductUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
                 if (batchUuid) {
                   state = state.withJoin(
                     currentTable: table,
@@ -32701,17 +35347,19 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (catalogTieredDiscountsRefs)
-                    await $_getPrefetchedData<CatalogItem, $CatalogItemsTable,
-                            CatalogTieredDiscount>(
+                    await $_getPrefetchedDataByColumns<
+                            CatalogItem,
+                            $CatalogItemsTable,
+                            CatalogTieredDiscount,
+                            $CatalogTieredDiscountsTable>(
                         currentTable: table,
                         referencedTable: $$CatalogItemsTableReferences
                             ._catalogTieredDiscountsRefsTable(db),
                         managerFromTypedResult: (p0) =>
                             $$CatalogItemsTableReferences(db, table, p0)
                                 .catalogTieredDiscountsRefs,
-                        referencedItemsForCurrentItem:
-                            (item, referencedItems) => referencedItems
-                                .where((e) => e.catalogItemUuid == item.uuid),
+                        currentColumn: 'uuid',
+                        referencedColumn: 'catalog_item_uuid',
                         typedResults: items)
                 ];
               },
@@ -32734,6 +35382,7 @@ typedef $$CatalogItemsTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function(
         {bool catalogUuid,
         bool productUuid,
+        bool sellingProductUuid,
         bool batchUuid,
         bool catalogTieredDiscountsRefs})>;
 typedef $$CatalogAssignmentsTableCreateCompanionBuilder
@@ -32762,9 +35411,8 @@ final class $$CatalogAssignmentsTableReferences extends BaseReferences<
   $$CatalogAssignmentsTableReferences(
       super.$_db, super.$_table, super.$_typedResult);
 
-  static $CatalogsTable _catalogUuidTable(_$AppDatabase db) =>
-      db.catalogs.createAlias($_aliasNameGenerator(
-          db.catalogAssignments.catalogUuid, db.catalogs.uuid));
+  static $CatalogsTable _catalogUuidTable(_$AppDatabase db) => db.catalogs
+      .createAlias('catalog_assignments__catalog_uuid__catalogs__uuid');
 
   $$CatalogsTableProcessedTableManager get catalogUuid {
     final $_column = $_itemColumn<String>('catalog_uuid')!;
@@ -32777,9 +35425,8 @@ final class $$CatalogAssignmentsTableReferences extends BaseReferences<
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
-  static $ContactsTable _contactUuidTable(_$AppDatabase db) =>
-      db.contacts.createAlias($_aliasNameGenerator(
-          db.catalogAssignments.contactUuid, db.contacts.uuid));
+  static $ContactsTable _contactUuidTable(_$AppDatabase db) => db.contacts
+      .createAlias('catalog_assignments__contact_uuid__contacts__uuid');
 
   $$ContactsTableProcessedTableManager get contactUuid {
     final $_column = $_itemColumn<String>('contact_uuid')!;
@@ -33041,7 +35688,8 @@ class $$CatalogAssignmentsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$CatalogAssignmentsTable, CatalogAssignment>(
+                        table),
                     $$CatalogAssignmentsTableReferences(db, table, e)
                   ))
               .toList(),
@@ -33138,8 +35786,8 @@ final class $$CatalogTieredDiscountsTableReferences extends BaseReferences<
       super.$_db, super.$_table, super.$_typedResult);
 
   static $CatalogItemsTable _catalogItemUuidTable(_$AppDatabase db) =>
-      db.catalogItems.createAlias($_aliasNameGenerator(
-          db.catalogTieredDiscounts.catalogItemUuid, db.catalogItems.uuid));
+      db.catalogItems.createAlias(
+          'catalog_tiered_discounts__catalog_item_uuid__catalog_items__uuid');
 
   $$CatalogItemsTableProcessedTableManager get catalogItemUuid {
     final $_column = $_itemColumn<String>('catalog_item_uuid')!;
@@ -33380,7 +36028,8 @@ class $$CatalogTieredDiscountsTableTableManager extends RootTableManager<
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
-                    e.readTable(table),
+                    e.readTable<$CatalogTieredDiscountsTable,
+                        CatalogTieredDiscount>(table),
                     $$CatalogTieredDiscountsTableReferences(db, table, e)
                   ))
               .toList(),
@@ -33495,6 +36144,11 @@ class $AppDatabaseManager {
       $$OrderReturnsTableTableManager(_db, _db.orderReturns);
   $$OrderReturnItemsTableTableManager get orderReturnItems =>
       $$OrderReturnItemsTableTableManager(_db, _db.orderReturnItems);
+  $$SellingProductsTableTableManager get sellingProducts =>
+      $$SellingProductsTableTableManager(_db, _db.sellingProducts);
+  $$SellingProductComponentsTableTableManager get sellingProductComponents =>
+      $$SellingProductComponentsTableTableManager(
+          _db, _db.sellingProductComponents);
   $$CatalogsTableTableManager get catalogs =>
       $$CatalogsTableTableManager(_db, _db.catalogs);
   $$CatalogItemsTableTableManager get catalogItems =>

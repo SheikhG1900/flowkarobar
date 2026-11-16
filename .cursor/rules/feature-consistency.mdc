@@ -26,6 +26,7 @@ Use when adding or changing a **screen, entity, or CRUD flow**. Complements `app
 - Destructive swipe/delete: `SwipeableListItem` where lists already use it.
 - FAB: `AppFloatingActionButton` with a unique `heroTag` per screen.
 - Standalone routes need an **AppBar** (or parent tab with back); embedded tab bodies use `showAppBar: false` / equivalent.
+- **AppBar trailing inset:** rely on theme `AppBarTheme.actionsPadding` (`EdgeInsetsDirectional.only(end: 8)` in `app_theme.dart`). Do **not** add end `SizedBox` / manual `actionsPadding` on normal screens. **Exception:** dashboard `SliverAppBar` keeps `actionsPadding: EdgeInsets.zero`.
 
 ## Detail / form UI
 

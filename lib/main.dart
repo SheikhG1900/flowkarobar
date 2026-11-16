@@ -2707,6 +2707,8 @@ class _DashboardHeader extends ConsumerWidget {
       pinned: true,
       stretch: true,
       elevation: 0,
+      // Dashboard keeps its own denser trailing layout (theme uses end: 8).
+      actionsPadding: EdgeInsets.zero,
       backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.9),
       flexibleSpace: FlexibleSpaceBar(
         stretchModes: const [StretchMode.zoomBackground],

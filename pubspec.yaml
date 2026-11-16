@@ -14,11 +14,10 @@ dependencies:
   flutter_riverpod: ^3.1.0
   riverpod_annotation: ^4.0.0
   
-  # Database
-  drift: ^2.14.0
-  sqlite3: ^2.1.0
-  sqlite3_flutter_libs: ^0.5.0
-  drift_flutter: ^0.2.0
+  # Database (sqlite3 3.x required for Flutter 3.50 + drift_dev/riverpod_lint)
+  drift: ^2.32.0
+  sqlite3: ^3.0.0
+  drift_flutter: ^0.3.0
   path_provider: ^2.1.0
   path: ^1.8.3
   
@@ -115,7 +114,7 @@ dev_dependencies:
     sdk: flutter
   build_runner: ^2.4.0
   riverpod_generator: ^4.0.0+1
-  drift_dev: ^2.13.0
+  drift_dev: ^2.32.0
   riverpod_lint: ^3.1.0
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.13.1

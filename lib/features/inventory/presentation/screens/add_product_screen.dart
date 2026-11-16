@@ -15,6 +15,7 @@ import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/entity_picker_sheet.dart';
 import 'package:flowpaisa/shared/widgets/form_section_card.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/shared/widgets/pending_sync_badge.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 /// Introduces / updates a product master record only.
@@ -243,6 +244,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
               accent: categoryColor,
               isEditing: _isEditing,
               isService: _isService,
+              showPendingSync: widget.existing?.isNotSynced == true,
               nameHint: _name.text.trim().isEmpty
                   ? l10n.product
                   : _name.text.trim(),
@@ -410,6 +412,7 @@ class _ProductHeroHeader extends StatelessWidget {
   final Color accent;
   final bool isEditing;
   final bool isService;
+  final bool showPendingSync;
   final String nameHint;
   final String? categoryName;
   final IconData categoryIcon;
@@ -418,6 +421,7 @@ class _ProductHeroHeader extends StatelessWidget {
     required this.accent,
     required this.isEditing,
     required this.isService,
+    required this.showPendingSync,
     required this.nameHint,
     required this.categoryName,
     required this.categoryIcon,
@@ -431,119 +435,131 @@ class _ProductHeroHeader extends StatelessWidget {
     const onGradient = Colors.white;
     final onGradientMuted = Colors.white.withValues(alpha: 0.88);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        gradient: gradient,
-        boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: 0.48),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.16),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Stack(
-          children: [
-            PositionedDirectional(
-              end: -28,
-              top: -32,
-              child: Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.14),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.28),
-                    width: 1.5,
-                  ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: gradient,
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.48),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
                 ),
-              ),
-            ),
-            PositionedDirectional(
-              end: 28,
-              bottom: -40,
-              child: Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withValues(alpha: 0.10),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.22),
-                  ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.16),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
                 ),
-              ),
+              ],
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Stack(
                 children: [
-                  _HeroCategoryIcon(
-                    categoryIcon: categoryIcon,
-                    accent: accent,
-                    onGradient: onGradient,
-                    isService: isService,
-                    serviceTooltip: l10n.serviceProduct,
+                  PositionedDirectional(
+                    end: -28,
+                    top: -32,
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.14),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.28),
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  PositionedDirectional(
+                    end: 28,
+                    bottom: -40,
+                    child: Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withValues(alpha: 0.10),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.22),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        _HeaderChip(
-                          label:
-                              isEditing ? l10n.editProduct : l10n.addProduct,
-                          foreground: onGradient,
-                          background: Colors.white.withValues(alpha: 0.20),
-                          borderColor: Colors.white.withValues(alpha: 0.40),
+                        _HeroCategoryIcon(
+                          categoryIcon: categoryIcon,
+                          accent: accent,
+                          onGradient: onGradient,
+                          isService: isService,
+                          serviceTooltip: l10n.serviceProduct,
                         ),
-                        const SizedBox(height: 10),
-                        Text(
-                          nameHint,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: onGradient,
-                            height: 1.15,
-                            letterSpacing: -0.3,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Icon(
-                              categoryName == null
-                                  ? Icons.info_outline_rounded
-                                  : Symbols.category,
-                              size: 15,
-                              color: onGradientMuted,
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                categoryName ?? l10n.productMasterHint,
-                                maxLines: 2,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _HeaderChip(
+                                label: isEditing
+                                    ? l10n.editProduct
+                                    : l10n.addProduct,
+                                foreground: onGradient,
+                                background:
+                                    Colors.white.withValues(alpha: 0.20),
+                                borderColor:
+                                    Colors.white.withValues(alpha: 0.40),
+                              ),
+                              const SizedBox(height: 10),
+                              Text(
+                                nameHint,
+                                maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: onGradientMuted,
-                                  height: 1.35,
-                                  fontWeight: FontWeight.w500,
+                                style: theme.textTheme.headlineSmall?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: onGradient,
+                                  height: 1.15,
+                                  letterSpacing: -0.3,
                                 ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Icon(
+                                    categoryName == null
+                                        ? Icons.info_outline_rounded
+                                        : Symbols.category,
+                                    size: 15,
+                                    color: onGradientMuted,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      categoryName ?? l10n.productMasterHint,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style:
+                                          theme.textTheme.bodySmall?.copyWith(
+                                        color: onGradientMuted,
+                                        height: 1.35,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -551,8 +567,14 @@ class _ProductHeroHeader extends StatelessWidget {
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+          if (showPendingSync)
+            const PositionedDirectional(
+              top: -6,
+              end: -6,
+              child: PendingSyncDetailBadge(),
+            ),
+        ],
       ),
     );
   }

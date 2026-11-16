@@ -4,6 +4,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/features/catalog/presentation/screens/selling_products_list_screen.dart';
 import 'package:flowpaisa/features/inventory/presentation/providers/inventory_provider.dart';
 import 'package:flowpaisa/features/inventory/presentation/screens/add_product_screen.dart';
 import 'package:flowpaisa/features/inventory/presentation/screens/product_details_screen.dart';
@@ -137,6 +138,18 @@ class _ProductsListScreenState extends ConsumerState<ProductsListScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (_) => const ProductionOrdersListScreen(),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            tooltip: l10n.sellingProducts,
+            icon: const Icon(Icons.sell_outlined),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const SellingProductsListScreen(),
                 ),
               );
             },

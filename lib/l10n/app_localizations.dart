@@ -220,6 +220,78 @@ abstract class AppLocalizations {
   /// **'Catalog Discounts'**
   String get catalogTieredDiscounts;
 
+  /// No description provided for @sellingProducts.
+  ///
+  /// In en, this message translates to:
+  /// **'Selling products'**
+  String get sellingProducts;
+
+  /// No description provided for @sellingProductComponents.
+  ///
+  /// In en, this message translates to:
+  /// **'Selling product components'**
+  String get sellingProductComponents;
+
+  /// No description provided for @noSellingProductsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No selling products yet'**
+  String get noSellingProductsYet;
+
+  /// No description provided for @newSellingProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'New selling product'**
+  String get newSellingProduct;
+
+  /// No description provided for @editSellingProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit selling product'**
+  String get editSellingProduct;
+
+  /// No description provided for @sellingProductSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Selling product saved'**
+  String get sellingProductSaved;
+
+  /// No description provided for @sellingProductDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Selling product deleted'**
+  String get sellingProductDeleted;
+
+  /// No description provided for @atLeastOneComponent.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least one component'**
+  String get atLeastOneComponent;
+
+  /// No description provided for @sectionComponents.
+  ///
+  /// In en, this message translates to:
+  /// **'Components'**
+  String get sectionComponents;
+
+  /// No description provided for @addComponent.
+  ///
+  /// In en, this message translates to:
+  /// **'Add component'**
+  String get addComponent;
+
+  /// No description provided for @sellingProductHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Virtual sell offer or bundle — no stock of its own'**
+  String get sellingProductHint;
+
+  /// No description provided for @confirmDeleteSellingProduct.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this selling product?'**
+  String get confirmDeleteSellingProduct;
+
   /// No description provided for @expiryDate.
   ///
   /// In en, this message translates to:
@@ -1035,6 +1107,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auto (all lots)'**
   String get consumeModeAuto;
+
+  /// No description provided for @consumeModeAutoShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get consumeModeAutoShort;
 
   /// No description provided for @consumeModeBatch.
   ///

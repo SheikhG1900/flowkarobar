@@ -644,6 +644,8 @@ class BackupNotifier extends Notifier<BackupState> {
         db.select(db.userPreferences).watch(),
         db.select(db.products).watch(),
         db.select(db.productBatches).watch(),
+        db.select(db.sellingProducts).watch(),
+        db.select(db.sellingProductComponents).watch(),
         db.select(db.catalogs).watch(),
         db.select(db.catalogItems).watch(),
         db.select(db.catalogAssignments).watch(),

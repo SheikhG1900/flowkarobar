@@ -168,6 +168,8 @@ class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         backgroundColor: Colors.transparent,
+        // Trailing inset for action icons (dashboard opts out).
+        actionsPadding: const EdgeInsetsDirectional.only(end: 8),
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           systemNavigationBarColor: Colors.transparent,
@@ -366,6 +368,8 @@ class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: false,
         backgroundColor: Colors.transparent,
+        // Trailing inset for action icons (dashboard opts out).
+        actionsPadding: const EdgeInsetsDirectional.only(end: 8),
         systemOverlayStyle: const SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           systemNavigationBarColor: Colors.transparent,

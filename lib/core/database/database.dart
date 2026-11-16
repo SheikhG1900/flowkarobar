@@ -468,6 +468,48 @@ class OrderReturnItems extends Table {
   Set<Column> get primaryKey => {uuid};
 }
 
+/// Virtual sell offer (simple pin or bundle). No stock of its own.
+class SellingProducts extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get name => text().withLength(min: 1, max: 200)();
+  TextColumn get sku => text().nullable()();
+  TextColumn get description => text().nullable()();
+
+  /// Optional category; if unset at save, defaults from first component product.
+  TextColumn get categoryUuid =>
+      text().nullable().references(ProductCategories, #uuid)();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+/// BOM lines for a selling product. Consume mode: AUTO | BATCH.
+class SellingProductComponents extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get sellingProductUuid => text().references(SellingProducts, #uuid)();
+  TextColumn get productUuid => text().references(Products, #uuid)();
+  RealColumn get quantity => real()();
+
+  /// AUTO | BATCH — same idea as recipe / production inputs.
+  TextColumn get consumeMode => text().withDefault(const Constant('AUTO'))();
+
+  /// Required when [consumeMode] is BATCH.
+  TextColumn get batchNumber => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
 class Catalogs extends Table {
   TextColumn get uuid => text()();
   TextColumn get name => text().withLength(min: 1, max: 100)();
@@ -484,14 +526,41 @@ class Catalogs extends Table {
   Set<Column> get primaryKey => {uuid};
 }
 
+/// Catalog line: exactly one of [productUuid] or [sellingProductUuid].
+/// Price = stored [sellPrice]; formula fields support refresh (not order-time calc).
 class CatalogItems extends Table {
   TextColumn get uuid => text()();
   TextColumn get catalogUuid => text().references(Catalogs, #uuid)();
-  TextColumn get productUuid => text().references(Products, #uuid)();
+
+  /// Direct stock/service product. XOR with [sellingProductUuid].
+  TextColumn get productUuid => text().nullable().references(Products, #uuid)();
+
+  /// Virtual offer / bundle. XOR with [productUuid].
+  TextColumn get sellingProductUuid =>
+      text().nullable().references(SellingProducts, #uuid)();
+
+  /// Legacy; prefer [sellPrice]. Migrated into sellPrice when present.
   RealColumn get customPrice => real().nullable()();
+
+  /// Deprecated — batch strategy lives on selling-product components.
   TextColumn get batchUuid => text().nullable().references(ProductBatches, #uuid)();
   DateTimeColumn get validUntil => dateTime().nullable()();
-  TextColumn get batchSelectionStrategy => text().withDefault(const Constant('FEFO_AUTO'))(); // 'FEFO_AUTO' | 'FIFO_AUTO' | 'MANUAL_BATCH'
+
+  /// Deprecated — unused for new catalog pricing.
+  TextColumn get batchSelectionStrategy =>
+      text().withDefault(const Constant('FEFO_AUTO'))();
+
+  /// MARKUP | MARGIN
+  TextColumn get pricingApproach =>
+      text().withDefault(const Constant('MARKUP'))();
+  RealColumn get markupOrMarginPercent =>
+      real().withDefault(const Constant(0.0))();
+  RealColumn get fixedAmount => real().withDefault(const Constant(0.0))();
+
+  /// Final sell price used on orders (snapshot source).
+  RealColumn get sellPrice => real().withDefault(const Constant(0.0))();
+  RealColumn get unitCostSnapshot => real().nullable()();
+  DateTimeColumn get priceComputedAt => dateTime().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -682,6 +751,8 @@ typedef CategoriesCompanion = ProductCategoriesCompanion;
   ProductionConsumptions,
   OrderReturns,
   OrderReturnItems,
+  SellingProducts,
+  SellingProductComponents,
   Catalogs,
   CatalogItems,
   CatalogAssignments,
@@ -692,7 +763,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 9;
 
   // Compatibility getters and helpers for deprecated tables
   $ProductCategoriesTable get categories => productCategories;
@@ -758,8 +829,131 @@ class AppDatabase extends _$AppDatabase {
           if (from < 7) {
             await _migrateRecipeInputBatchToV7();
           }
+          if (from < 8) {
+            await _migrateCatalogsSellingProductsToV8(m);
+          }
+          if (from < 9) {
+            await _migrateSellingProductCategoryToV9();
+          }
         },
       );
+
+  Future<void> _migrateSellingProductCategoryToV9() async {
+    try {
+      await customStatement(
+        'ALTER TABLE selling_products ADD COLUMN category_uuid TEXT '
+        'REFERENCES product_categories (uuid)',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v9 alter skipped: $e');
+      }
+    }
+  }
+
+  /// Selling products + catalog item pricing / XOR product|sellingProduct link.
+  Future<void> _migrateCatalogsSellingProductsToV8(Migrator m) async {
+    await m.createTable(sellingProducts);
+    await m.createTable(sellingProductComponents);
+
+    try {
+      await customStatement('PRAGMA foreign_keys=OFF');
+      await customStatement('''
+        CREATE TABLE catalog_items_new (
+          uuid TEXT NOT NULL PRIMARY KEY,
+          catalog_uuid TEXT NOT NULL REFERENCES catalogs (uuid),
+          product_uuid TEXT NULL REFERENCES products (uuid),
+          selling_product_uuid TEXT NULL REFERENCES selling_products (uuid),
+          custom_price REAL NULL,
+          batch_uuid TEXT NULL REFERENCES product_batches (uuid),
+          valid_until INTEGER NULL,
+          batch_selection_strategy TEXT NOT NULL DEFAULT 'FEFO_AUTO',
+          pricing_approach TEXT NOT NULL DEFAULT 'MARKUP',
+          markup_or_margin_percent REAL NOT NULL DEFAULT 0.0,
+          fixed_amount REAL NOT NULL DEFAULT 0.0,
+          sell_price REAL NOT NULL DEFAULT 0.0,
+          unit_cost_snapshot REAL NULL,
+          price_computed_at INTEGER NULL,
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          is_deleted INTEGER NOT NULL DEFAULT 0 CHECK ("is_deleted" IN (0, 1)),
+          is_not_synced INTEGER NOT NULL DEFAULT 1 CHECK ("is_not_synced" IN (0, 1))
+        )
+      ''');
+      await customStatement('''
+        INSERT INTO catalog_items_new (
+          uuid, catalog_uuid, product_uuid, selling_product_uuid,
+          custom_price, batch_uuid, valid_until, batch_selection_strategy,
+          pricing_approach, markup_or_margin_percent, fixed_amount, sell_price,
+          unit_cost_snapshot, price_computed_at,
+          created_at, updated_at, is_deleted, is_not_synced
+        )
+        SELECT
+          uuid, catalog_uuid, product_uuid, NULL,
+          custom_price, batch_uuid, valid_until, batch_selection_strategy,
+          'MARKUP', 0.0, 0.0, COALESCE(custom_price, 0.0),
+          NULL, NULL,
+          created_at, updated_at, is_deleted, is_not_synced
+        FROM catalog_items
+      ''');
+      await customStatement('DROP TABLE catalog_items');
+      await customStatement(
+        'ALTER TABLE catalog_items_new RENAME TO catalog_items',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v8 catalog_items rebuild: $e');
+      }
+      // Fresh DBs that already match new schema, or partial migrate: add cols.
+      Future<void> tryAlter(String sql) async {
+        try {
+          await customStatement(sql);
+        } catch (err) {
+          if (kDebugMode) {
+            print('Database migrate v8 alter skipped: $err');
+          }
+        }
+      }
+
+      await tryAlter(
+        'ALTER TABLE catalog_items ADD COLUMN selling_product_uuid TEXT '
+        'REFERENCES selling_products (uuid)',
+      );
+      await tryAlter(
+        "ALTER TABLE catalog_items ADD COLUMN pricing_approach TEXT "
+        "NOT NULL DEFAULT 'MARKUP'",
+      );
+      await tryAlter(
+        'ALTER TABLE catalog_items ADD COLUMN markup_or_margin_percent '
+        'REAL NOT NULL DEFAULT 0.0',
+      );
+      await tryAlter(
+        'ALTER TABLE catalog_items ADD COLUMN fixed_amount '
+        'REAL NOT NULL DEFAULT 0.0',
+      );
+      await tryAlter(
+        'ALTER TABLE catalog_items ADD COLUMN sell_price '
+        'REAL NOT NULL DEFAULT 0.0',
+      );
+      await tryAlter(
+        'ALTER TABLE catalog_items ADD COLUMN unit_cost_snapshot REAL',
+      );
+      await tryAlter(
+        'ALTER TABLE catalog_items ADD COLUMN price_computed_at INTEGER',
+      );
+      try {
+        await customStatement('''
+          UPDATE catalog_items
+          SET sell_price = COALESCE(custom_price, sell_price, 0.0)
+          WHERE sell_price = 0 OR sell_price IS NULL
+        ''');
+      } catch (_) {}
+    } finally {
+      try {
+        await customStatement('PRAGMA foreign_keys=ON');
+      } catch (_) {}
+    }
+  }
 
   Future<void> _migrateLotDescriptionToV6() async {
     try {
@@ -956,6 +1150,8 @@ class AppDatabase extends _$AppDatabase {
       await delete(catalogAssignments).go();
       await delete(catalogItems).go();
       await delete(catalogs).go();
+      await delete(sellingProductComponents).go();
+      await delete(sellingProducts).go();
       await delete(orderReturnItems).go();
       await delete(orderReturns).go();
       await delete(orderItems).go();

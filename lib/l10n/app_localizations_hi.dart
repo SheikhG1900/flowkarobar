@@ -69,6 +69,43 @@ class AppLocalizationsHi extends AppLocalizations {
   String get catalogTieredDiscounts => 'कैटलॉग छूट';
 
   @override
+  String get sellingProducts => 'बिक्री उत्पाद';
+
+  @override
+  String get sellingProductComponents => 'बिक्री उत्पाद घटक';
+
+  @override
+  String get noSellingProductsYet => 'अभी कोई बिक्री उत्पाद नहीं';
+
+  @override
+  String get newSellingProduct => 'नया बिक्री उत्पाद';
+
+  @override
+  String get editSellingProduct => 'बिक्री उत्पाद संपादित करें';
+
+  @override
+  String get sellingProductSaved => 'बिक्री उत्पाद सहेजा गया';
+
+  @override
+  String get sellingProductDeleted => 'बिक्री उत्पाद हटाया गया';
+
+  @override
+  String get atLeastOneComponent => 'कम से कम एक घटक जोड़ें';
+
+  @override
+  String get sectionComponents => 'घटक';
+
+  @override
+  String get addComponent => 'घटक जोड़ें';
+
+  @override
+  String get sellingProductHint =>
+      'वर्चुअल बिक्री ऑफ़र या बंडल — स्वयं का स्टॉक नहीं';
+
+  @override
+  String get confirmDeleteSellingProduct => 'यह बिक्री उत्पाद हटाएँ?';
+
+  @override
   String get expiryDate => 'समाप्ति तिथि';
 
   @override
@@ -489,6 +526,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get consumeModeAuto => 'ऑटो (सभी लॉट)';
+
+  @override
+  String get consumeModeAutoShort => 'ऑटो';
 
   @override
   String get consumeModeBatch => 'बैच';

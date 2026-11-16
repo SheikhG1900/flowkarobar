@@ -19,6 +19,7 @@ import 'package:flowpaisa/features/payables/presentation/screens/payables_list_s
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/categories_list_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contacts_list_screen.dart';
+import 'package:flowpaisa/features/catalog/presentation/screens/selling_products_list_screen.dart';
 import 'package:flowpaisa/features/inventory/presentation/screens/products_list_screen.dart';
 import 'package:flowpaisa/features/orders/presentation/screens/orders_list_screen.dart';
 import 'package:flowpaisa/features/production/presentation/screens/production_orders_list_screen.dart';
@@ -94,6 +95,10 @@ String _syncTableLabel(String table, AppLocalizations l10n) {
       return l10n.products;
     case 'product_batches':
       return l10n.batches;
+    case 'selling_products':
+      return l10n.sellingProducts;
+    case 'selling_product_components':
+      return l10n.sellingProductComponents;
     case 'catalogs':
       return l10n.catalogs;
     case 'catalog_items':
@@ -449,6 +454,14 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                         MaterialPageRoute(
                             builder: (_) =>
                                 const ProductionOrdersListScreen()),
+                      );
+                case 'selling_products':
+                case 'selling_product_components':
+                  return () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SellingProductsListScreen(),
+                        ),
                       );
                 default:
                   return null;

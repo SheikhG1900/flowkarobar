@@ -78,7 +78,6 @@ class _BackupScreenState extends ConsumerState<BackupScreen> {
               icon: const Icon(Icons.delete_forever, color: Colors.red),
               tooltip: l10n.clearAllCloudData,
             ),
-          const SizedBox(width: 12),
         ],
       ),
       body: LayoutBuilder(

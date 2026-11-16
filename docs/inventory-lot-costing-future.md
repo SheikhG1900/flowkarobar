@@ -11,7 +11,7 @@ Update this file when items ship or new gaps appear.
 
 - [ ] **Returns create UI** — `OrdersRepository.createReturn` restocks/consumes lots; list tab exists; create flow still “coming soon” (`order_action_sheet`). Wire full sale/purchase return UX from order detail.
 - [ ] **Partial goods-receive screen** — Backend supports per-line qty + batch/expiry (`receivedQuantity`, `receivePurchaseShipment`). UI today is mostly “receive all remaining” / mark delivered. Need dedicated receive-shipment flow (multi-receipt per PO).
-- [ ] **Sell pricing source (catalogs)** — Catalog Drift tables + sync exist; **no** feature UI/repo. Product form is identity-only; sales still use `product.retailPrice`. Either finish catalogs (pools, prices, consume strategy) or temporarily own prices on product again until catalogs land.
+- [ ] **Sell pricing source (catalogs)** — Catalog Drift tables + sync exist; **no** feature UI/repo. Product form is identity-only; sales still use `product.retailPrice`. Implement per **`docs/catalogs-selling-products.md`** (selling products, XOR catalog links, cost-based %/fixed → stored sell price; no batch strategy on catalog items).
 - [ ] **Sale multi-lot lineage** — FEFO can consume across lots; `order_items.batchUuid` keeps only the **first** allocation. Persist full allocations for audit and accurate return-to-lot.
 - [ ] **Stock shortfall policy** — Clear block vs allow-overcommit on sale deliver / production complete; consistent UI messaging (preview already exists for production).
 
@@ -59,8 +59,8 @@ Update this file when items ship or new gaps appear.
 ### Product master vs catalogs vs lots
 
 - **Add/Edit Product** stays identity-oriented (name, SKU, unit, category, service, min-stock).
-- **Sell prices** intended on **catalogs** (virtual pools): selected lots (or product+strategy), own prices and consume policy.
-- Same physical product can appear in multiple catalogs at different prices; sale consumption uses that catalog’s subset + strategy.
+- **Sell prices** on **catalogs** — see **`docs/catalogs-selling-products.md`**. Catalog item links to a product **or** a virtual selling product (bundle / batch-scoped offer); price = stored sell price from cost + % + fixed (not live at order time). Batch/consume rules live on selling-product components, not on catalog rows.
+- Same product or selling product can appear in multiple catalogs at different prices.
 
 ### Product details — polish
 

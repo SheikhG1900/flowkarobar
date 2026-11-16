@@ -69,6 +69,43 @@ class AppLocalizationsUr extends AppLocalizations {
   String get catalogTieredDiscounts => 'کیٹلاگ ڈسکاؤنٹس';
 
   @override
+  String get sellingProducts => 'فروختی مصنوعات';
+
+  @override
+  String get sellingProductComponents => 'فروختی مصنوعات کے اجزاء';
+
+  @override
+  String get noSellingProductsYet => 'ابھی کوئی فروختی مصنوعات نہیں';
+
+  @override
+  String get newSellingProduct => 'نئی فروختی مصنوعات';
+
+  @override
+  String get editSellingProduct => 'فروختی مصنوعات میں ترمیم';
+
+  @override
+  String get sellingProductSaved => 'فروختی مصنوعات محفوظ ہو گئی';
+
+  @override
+  String get sellingProductDeleted => 'فروختی مصنوعات حذف ہو گئی';
+
+  @override
+  String get atLeastOneComponent => 'کم از کم ایک جزو شامل کریں';
+
+  @override
+  String get sectionComponents => 'اجزا';
+
+  @override
+  String get addComponent => 'جزو شامل کریں';
+
+  @override
+  String get sellingProductHint =>
+      'ورچوئل فروختی آفر یا بنڈل — اپنا اسٹاک نہیں';
+
+  @override
+  String get confirmDeleteSellingProduct => 'یہ فروختی مصنوعات حذف کریں؟';
+
+  @override
   String get expiryDate => 'تاریخِ معیاد';
 
   @override
@@ -489,6 +526,9 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get consumeModeAuto => 'آٹو (تمام لاٹس)';
+
+  @override
+  String get consumeModeAutoShort => 'آٹو';
 
   @override
   String get consumeModeBatch => 'بیچ';

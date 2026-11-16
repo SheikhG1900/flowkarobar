@@ -19,6 +19,9 @@ class SyncTables {
     // Inventory
     'products',
     'product_batches',
+    // Selling products (before catalog_items FK)
+    'selling_products',
+    'selling_product_components',
     // Pricing catalogs
     'catalogs',
     'catalog_items',
@@ -77,6 +80,8 @@ class SyncTables {
     'expiry_date',
     'production_date',
     'completed_at',
+    'price_computed_at',
+    'valid_until',
   ];
 
   /// Maps payload/legacy names to the real SQLite table name.
@@ -101,6 +106,10 @@ class SyncTables {
         return db.products;
       case 'product_batches':
         return db.productBatches;
+      case 'selling_products':
+        return db.sellingProducts;
+      case 'selling_product_components':
+        return db.sellingProductComponents;
       case 'catalogs':
         return db.catalogs;
       case 'catalog_items':
@@ -158,6 +167,8 @@ class SyncTables {
       db.accountTransfers,
       db.products,
       db.productBatches,
+      db.sellingProducts,
+      db.sellingProductComponents,
       db.catalogs,
       db.catalogItems,
       db.catalogAssignments,
