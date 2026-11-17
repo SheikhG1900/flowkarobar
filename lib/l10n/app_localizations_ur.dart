@@ -210,6 +210,43 @@ class AppLocalizationsUr extends AppLocalizations {
   String get manualCatalogPrice => 'دستی سیٹ قیمت';
 
   @override
+  String get defaultDiscount => 'ڈیفالٹ رعایت';
+
+  @override
+  String get defaultDiscountHint => 'جب کوئی مقدار ٹائر نہ ملے تو لاگو';
+
+  @override
+  String get catalogDiscountHint =>
+      'رعایت آرڈر/کوٹیشن پر فروخت قیمت پر لاگو ہوتی ہے۔ مقدار ٹائر ڈیفالٹ کی جگہ لیتا ہے۔';
+
+  @override
+  String get discountType => 'قسم';
+
+  @override
+  String get discountTypePercent => 'فیصد';
+
+  @override
+  String get discountTypeFixed => 'فی یونٹ مقررہ';
+
+  @override
+  String get discountPercent => 'فیصد';
+
+  @override
+  String get discountAmount => 'رقم';
+
+  @override
+  String get tieredDiscounts => 'مقدار ٹائرز';
+
+  @override
+  String get addDiscountTier => 'ٹائر شامل کریں';
+
+  @override
+  String get noDiscountTiers => 'کوئی مقدار ٹائر نہیں';
+
+  @override
+  String get minQuantity => 'کم از کم مقدار';
+
+  @override
   String recalculateCatalogDone(int updated, int skipped) {
     return '$updated آئٹمز اپڈیٹ ($skipped چھوڑے گئے)';
   }

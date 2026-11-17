@@ -210,6 +210,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manualCatalogPrice => 'Manually set price';
 
   @override
+  String get defaultDiscount => 'Default discount';
+
+  @override
+  String get defaultDiscountHint => 'Applied when no qty tier matches';
+
+  @override
+  String get catalogDiscountHint =>
+      'Discounts apply at order/quotation time on the sell price. A matching qty tier replaces the default.';
+
+  @override
+  String get discountType => 'Type';
+
+  @override
+  String get discountTypePercent => 'Percent';
+
+  @override
+  String get discountTypeFixed => 'Fixed per unit';
+
+  @override
+  String get discountPercent => 'Percent';
+
+  @override
+  String get discountAmount => 'Amount';
+
+  @override
+  String get tieredDiscounts => 'Qty tiers';
+
+  @override
+  String get addDiscountTier => 'Add tier';
+
+  @override
+  String get noDiscountTiers => 'No qty tiers';
+
+  @override
+  String get minQuantity => 'Min qty';
+
+  @override
   String recalculateCatalogDone(int updated, int skipped) {
     return 'Updated $updated items ($skipped skipped)';
   }

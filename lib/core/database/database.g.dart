@@ -17969,6 +17969,20 @@ class $CatalogItemsTable extends CatalogItems
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("price_override" IN (0, 1))'),
       defaultValue: const Constant(false));
+  static const VerificationMeta _defaultDiscountTypeMeta =
+      const VerificationMeta('defaultDiscountType');
+  @override
+  late final GeneratedColumn<String> defaultDiscountType =
+      GeneratedColumn<String>('default_discount_type', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _defaultDiscountValueMeta =
+      const VerificationMeta('defaultDiscountValue');
+  @override
+  late final GeneratedColumn<double> defaultDiscountValue =
+      GeneratedColumn<double>('default_discount_value', aliasedName, false,
+          type: DriftSqlType.double,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0.0));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -18022,6 +18036,8 @@ class $CatalogItemsTable extends CatalogItems
         unitCostSnapshot,
         priceComputedAt,
         priceOverride,
+        defaultDiscountType,
+        defaultDiscountValue,
         createdAt,
         updatedAt,
         isDeleted,
@@ -18125,6 +18141,18 @@ class $CatalogItemsTable extends CatalogItems
           priceOverride.isAcceptableOrUnknown(
               data['price_override']!, _priceOverrideMeta));
     }
+    if (data.containsKey('default_discount_type')) {
+      context.handle(
+          _defaultDiscountTypeMeta,
+          defaultDiscountType.isAcceptableOrUnknown(
+              data['default_discount_type']!, _defaultDiscountTypeMeta));
+    }
+    if (data.containsKey('default_discount_value')) {
+      context.handle(
+          _defaultDiscountValueMeta,
+          defaultDiscountValue.isAcceptableOrUnknown(
+              data['default_discount_value']!, _defaultDiscountValueMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -18184,6 +18212,11 @@ class $CatalogItemsTable extends CatalogItems
           DriftSqlType.dateTime, data['${effectivePrefix}price_computed_at']),
       priceOverride: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}price_override'])!,
+      defaultDiscountType: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}default_discount_type']),
+      defaultDiscountValue: attachedDatabase.typeMapping.read(
+          DriftSqlType.double,
+          data['${effectivePrefix}default_discount_value'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -18233,6 +18266,10 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
 
   /// True when sell price was set manually; skipped by catalog recalculate.
   final bool priceOverride;
+
+  /// Optional always-on discount: PERCENT | FIXED. Null/empty = none.
+  final String? defaultDiscountType;
+  final double defaultDiscountValue;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
@@ -18253,6 +18290,8 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       this.unitCostSnapshot,
       this.priceComputedAt,
       required this.priceOverride,
+      this.defaultDiscountType,
+      required this.defaultDiscountValue,
       required this.createdAt,
       required this.updatedAt,
       required this.isDeleted,
@@ -18289,6 +18328,10 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       map['price_computed_at'] = Variable<DateTime>(priceComputedAt);
     }
     map['price_override'] = Variable<bool>(priceOverride);
+    if (!nullToAbsent || defaultDiscountType != null) {
+      map['default_discount_type'] = Variable<String>(defaultDiscountType);
+    }
+    map['default_discount_value'] = Variable<double>(defaultDiscountValue);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['is_deleted'] = Variable<bool>(isDeleted);
@@ -18327,6 +18370,10 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
           ? const Value.absent()
           : Value(priceComputedAt),
       priceOverride: Value(priceOverride),
+      defaultDiscountType: defaultDiscountType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(defaultDiscountType),
+      defaultDiscountValue: Value(defaultDiscountValue),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       isDeleted: Value(isDeleted),
@@ -18356,6 +18403,10 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       unitCostSnapshot: serializer.fromJson<double?>(json['unitCostSnapshot']),
       priceComputedAt: serializer.fromJson<DateTime?>(json['priceComputedAt']),
       priceOverride: serializer.fromJson<bool>(json['priceOverride']),
+      defaultDiscountType:
+          serializer.fromJson<String?>(json['defaultDiscountType']),
+      defaultDiscountValue:
+          serializer.fromJson<double>(json['defaultDiscountValue']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
@@ -18382,6 +18433,8 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       'unitCostSnapshot': serializer.toJson<double?>(unitCostSnapshot),
       'priceComputedAt': serializer.toJson<DateTime?>(priceComputedAt),
       'priceOverride': serializer.toJson<bool>(priceOverride),
+      'defaultDiscountType': serializer.toJson<String?>(defaultDiscountType),
+      'defaultDiscountValue': serializer.toJson<double>(defaultDiscountValue),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'isDeleted': serializer.toJson<bool>(isDeleted),
@@ -18405,6 +18458,8 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
           Value<double?> unitCostSnapshot = const Value.absent(),
           Value<DateTime?> priceComputedAt = const Value.absent(),
           bool? priceOverride,
+          Value<String?> defaultDiscountType = const Value.absent(),
+          double? defaultDiscountValue,
           DateTime? createdAt,
           DateTime? updatedAt,
           bool? isDeleted,
@@ -18433,6 +18488,10 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
             ? priceComputedAt.value
             : this.priceComputedAt,
         priceOverride: priceOverride ?? this.priceOverride,
+        defaultDiscountType: defaultDiscountType.present
+            ? defaultDiscountType.value
+            : this.defaultDiscountType,
+        defaultDiscountValue: defaultDiscountValue ?? this.defaultDiscountValue,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         isDeleted: isDeleted ?? this.isDeleted,
@@ -18474,6 +18533,12 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       priceOverride: data.priceOverride.present
           ? data.priceOverride.value
           : this.priceOverride,
+      defaultDiscountType: data.defaultDiscountType.present
+          ? data.defaultDiscountType.value
+          : this.defaultDiscountType,
+      defaultDiscountValue: data.defaultDiscountValue.present
+          ? data.defaultDiscountValue.value
+          : this.defaultDiscountValue,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
@@ -18500,6 +18565,8 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
           ..write('unitCostSnapshot: $unitCostSnapshot, ')
           ..write('priceComputedAt: $priceComputedAt, ')
           ..write('priceOverride: $priceOverride, ')
+          ..write('defaultDiscountType: $defaultDiscountType, ')
+          ..write('defaultDiscountValue: $defaultDiscountValue, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -18509,26 +18576,29 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
   }
 
   @override
-  int get hashCode => Object.hash(
-      uuid,
-      catalogUuid,
-      productUuid,
-      sellingProductUuid,
-      customPrice,
-      batchUuid,
-      validUntil,
-      batchSelectionStrategy,
-      pricingApproach,
-      markupOrMarginPercent,
-      fixedAmount,
-      sellPrice,
-      unitCostSnapshot,
-      priceComputedAt,
-      priceOverride,
-      createdAt,
-      updatedAt,
-      isDeleted,
-      isNotSynced);
+  int get hashCode => Object.hashAll([
+        uuid,
+        catalogUuid,
+        productUuid,
+        sellingProductUuid,
+        customPrice,
+        batchUuid,
+        validUntil,
+        batchSelectionStrategy,
+        pricingApproach,
+        markupOrMarginPercent,
+        fixedAmount,
+        sellPrice,
+        unitCostSnapshot,
+        priceComputedAt,
+        priceOverride,
+        defaultDiscountType,
+        defaultDiscountValue,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -18548,6 +18618,8 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
           other.unitCostSnapshot == this.unitCostSnapshot &&
           other.priceComputedAt == this.priceComputedAt &&
           other.priceOverride == this.priceOverride &&
+          other.defaultDiscountType == this.defaultDiscountType &&
+          other.defaultDiscountValue == this.defaultDiscountValue &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.isDeleted == this.isDeleted &&
@@ -18570,6 +18642,8 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
   final Value<double?> unitCostSnapshot;
   final Value<DateTime?> priceComputedAt;
   final Value<bool> priceOverride;
+  final Value<String?> defaultDiscountType;
+  final Value<double> defaultDiscountValue;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<bool> isDeleted;
@@ -18591,6 +18665,8 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
     this.unitCostSnapshot = const Value.absent(),
     this.priceComputedAt = const Value.absent(),
     this.priceOverride = const Value.absent(),
+    this.defaultDiscountType = const Value.absent(),
+    this.defaultDiscountValue = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -18613,6 +18689,8 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
     this.unitCostSnapshot = const Value.absent(),
     this.priceComputedAt = const Value.absent(),
     this.priceOverride = const Value.absent(),
+    this.defaultDiscountType = const Value.absent(),
+    this.defaultDiscountValue = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -18636,6 +18714,8 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
     Expression<double>? unitCostSnapshot,
     Expression<DateTime>? priceComputedAt,
     Expression<bool>? priceOverride,
+    Expression<String>? defaultDiscountType,
+    Expression<double>? defaultDiscountValue,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<bool>? isDeleted,
@@ -18661,6 +18741,10 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
       if (unitCostSnapshot != null) 'unit_cost_snapshot': unitCostSnapshot,
       if (priceComputedAt != null) 'price_computed_at': priceComputedAt,
       if (priceOverride != null) 'price_override': priceOverride,
+      if (defaultDiscountType != null)
+        'default_discount_type': defaultDiscountType,
+      if (defaultDiscountValue != null)
+        'default_discount_value': defaultDiscountValue,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isDeleted != null) 'is_deleted': isDeleted,
@@ -18685,6 +18769,8 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
       Value<double?>? unitCostSnapshot,
       Value<DateTime?>? priceComputedAt,
       Value<bool>? priceOverride,
+      Value<String?>? defaultDiscountType,
+      Value<double>? defaultDiscountValue,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<bool>? isDeleted,
@@ -18708,6 +18794,8 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
       unitCostSnapshot: unitCostSnapshot ?? this.unitCostSnapshot,
       priceComputedAt: priceComputedAt ?? this.priceComputedAt,
       priceOverride: priceOverride ?? this.priceOverride,
+      defaultDiscountType: defaultDiscountType ?? this.defaultDiscountType,
+      defaultDiscountValue: defaultDiscountValue ?? this.defaultDiscountValue,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
@@ -18766,6 +18854,14 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
     if (priceOverride.present) {
       map['price_override'] = Variable<bool>(priceOverride.value);
     }
+    if (defaultDiscountType.present) {
+      map['default_discount_type'] =
+          Variable<String>(defaultDiscountType.value);
+    }
+    if (defaultDiscountValue.present) {
+      map['default_discount_value'] =
+          Variable<double>(defaultDiscountValue.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -18802,6 +18898,8 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
           ..write('unitCostSnapshot: $unitCostSnapshot, ')
           ..write('priceComputedAt: $priceComputedAt, ')
           ..write('priceOverride: $priceOverride, ')
+          ..write('defaultDiscountType: $defaultDiscountType, ')
+          ..write('defaultDiscountValue: $defaultDiscountValue, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -19209,6 +19307,22 @@ class $CatalogTieredDiscountsTable extends CatalogTieredDiscounts
   late final GeneratedColumn<double> discountPercentage =
       GeneratedColumn<double>('discount_percentage', aliasedName, false,
           type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _discountTypeMeta =
+      const VerificationMeta('discountType');
+  @override
+  late final GeneratedColumn<String> discountType = GeneratedColumn<String>(
+      'discount_type', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('PERCENT'));
+  static const VerificationMeta _discountAmountMeta =
+      const VerificationMeta('discountAmount');
+  @override
+  late final GeneratedColumn<double> discountAmount = GeneratedColumn<double>(
+      'discount_amount', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -19251,6 +19365,8 @@ class $CatalogTieredDiscountsTable extends CatalogTieredDiscounts
         catalogItemUuid,
         minQuantity,
         discountPercentage,
+        discountType,
+        discountAmount,
         createdAt,
         updatedAt,
         isDeleted,
@@ -19297,6 +19413,18 @@ class $CatalogTieredDiscountsTable extends CatalogTieredDiscounts
     } else if (isInserting) {
       context.missing(_discountPercentageMeta);
     }
+    if (data.containsKey('discount_type')) {
+      context.handle(
+          _discountTypeMeta,
+          discountType.isAcceptableOrUnknown(
+              data['discount_type']!, _discountTypeMeta));
+    }
+    if (data.containsKey('discount_amount')) {
+      context.handle(
+          _discountAmountMeta,
+          discountAmount.isAcceptableOrUnknown(
+              data['discount_amount']!, _discountAmountMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -19332,6 +19460,10 @@ class $CatalogTieredDiscountsTable extends CatalogTieredDiscounts
           .read(DriftSqlType.double, data['${effectivePrefix}min_quantity'])!,
       discountPercentage: attachedDatabase.typeMapping.read(
           DriftSqlType.double, data['${effectivePrefix}discount_percentage'])!,
+      discountType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}discount_type'])!,
+      discountAmount: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}discount_amount'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -19354,7 +19486,13 @@ class CatalogTieredDiscount extends DataClass
   final String uuid;
   final String catalogItemUuid;
   final double minQuantity;
+
+  /// Legacy / PERCENT value. Prefer [discountType] + [discountAmount] for FIXED.
   final double discountPercentage;
+
+  /// PERCENT | FIXED — qty tier replaces item default when matched.
+  final String discountType;
+  final double discountAmount;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
@@ -19364,6 +19502,8 @@ class CatalogTieredDiscount extends DataClass
       required this.catalogItemUuid,
       required this.minQuantity,
       required this.discountPercentage,
+      required this.discountType,
+      required this.discountAmount,
       required this.createdAt,
       required this.updatedAt,
       required this.isDeleted,
@@ -19375,6 +19515,8 @@ class CatalogTieredDiscount extends DataClass
     map['catalog_item_uuid'] = Variable<String>(catalogItemUuid);
     map['min_quantity'] = Variable<double>(minQuantity);
     map['discount_percentage'] = Variable<double>(discountPercentage);
+    map['discount_type'] = Variable<String>(discountType);
+    map['discount_amount'] = Variable<double>(discountAmount);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['is_deleted'] = Variable<bool>(isDeleted);
@@ -19388,6 +19530,8 @@ class CatalogTieredDiscount extends DataClass
       catalogItemUuid: Value(catalogItemUuid),
       minQuantity: Value(minQuantity),
       discountPercentage: Value(discountPercentage),
+      discountType: Value(discountType),
+      discountAmount: Value(discountAmount),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       isDeleted: Value(isDeleted),
@@ -19404,6 +19548,8 @@ class CatalogTieredDiscount extends DataClass
       minQuantity: serializer.fromJson<double>(json['minQuantity']),
       discountPercentage:
           serializer.fromJson<double>(json['discountPercentage']),
+      discountType: serializer.fromJson<String>(json['discountType']),
+      discountAmount: serializer.fromJson<double>(json['discountAmount']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
@@ -19418,6 +19564,8 @@ class CatalogTieredDiscount extends DataClass
       'catalogItemUuid': serializer.toJson<String>(catalogItemUuid),
       'minQuantity': serializer.toJson<double>(minQuantity),
       'discountPercentage': serializer.toJson<double>(discountPercentage),
+      'discountType': serializer.toJson<String>(discountType),
+      'discountAmount': serializer.toJson<double>(discountAmount),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'isDeleted': serializer.toJson<bool>(isDeleted),
@@ -19430,6 +19578,8 @@ class CatalogTieredDiscount extends DataClass
           String? catalogItemUuid,
           double? minQuantity,
           double? discountPercentage,
+          String? discountType,
+          double? discountAmount,
           DateTime? createdAt,
           DateTime? updatedAt,
           bool? isDeleted,
@@ -19439,6 +19589,8 @@ class CatalogTieredDiscount extends DataClass
         catalogItemUuid: catalogItemUuid ?? this.catalogItemUuid,
         minQuantity: minQuantity ?? this.minQuantity,
         discountPercentage: discountPercentage ?? this.discountPercentage,
+        discountType: discountType ?? this.discountType,
+        discountAmount: discountAmount ?? this.discountAmount,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         isDeleted: isDeleted ?? this.isDeleted,
@@ -19456,6 +19608,12 @@ class CatalogTieredDiscount extends DataClass
       discountPercentage: data.discountPercentage.present
           ? data.discountPercentage.value
           : this.discountPercentage,
+      discountType: data.discountType.present
+          ? data.discountType.value
+          : this.discountType,
+      discountAmount: data.discountAmount.present
+          ? data.discountAmount.value
+          : this.discountAmount,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
@@ -19471,6 +19629,8 @@ class CatalogTieredDiscount extends DataClass
           ..write('catalogItemUuid: $catalogItemUuid, ')
           ..write('minQuantity: $minQuantity, ')
           ..write('discountPercentage: $discountPercentage, ')
+          ..write('discountType: $discountType, ')
+          ..write('discountAmount: $discountAmount, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -19480,8 +19640,17 @@ class CatalogTieredDiscount extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(uuid, catalogItemUuid, minQuantity,
-      discountPercentage, createdAt, updatedAt, isDeleted, isNotSynced);
+  int get hashCode => Object.hash(
+      uuid,
+      catalogItemUuid,
+      minQuantity,
+      discountPercentage,
+      discountType,
+      discountAmount,
+      createdAt,
+      updatedAt,
+      isDeleted,
+      isNotSynced);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -19490,6 +19659,8 @@ class CatalogTieredDiscount extends DataClass
           other.catalogItemUuid == this.catalogItemUuid &&
           other.minQuantity == this.minQuantity &&
           other.discountPercentage == this.discountPercentage &&
+          other.discountType == this.discountType &&
+          other.discountAmount == this.discountAmount &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.isDeleted == this.isDeleted &&
@@ -19502,6 +19673,8 @@ class CatalogTieredDiscountsCompanion
   final Value<String> catalogItemUuid;
   final Value<double> minQuantity;
   final Value<double> discountPercentage;
+  final Value<String> discountType;
+  final Value<double> discountAmount;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<bool> isDeleted;
@@ -19512,6 +19685,8 @@ class CatalogTieredDiscountsCompanion
     this.catalogItemUuid = const Value.absent(),
     this.minQuantity = const Value.absent(),
     this.discountPercentage = const Value.absent(),
+    this.discountType = const Value.absent(),
+    this.discountAmount = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -19523,6 +19698,8 @@ class CatalogTieredDiscountsCompanion
     required String catalogItemUuid,
     required double minQuantity,
     required double discountPercentage,
+    this.discountType = const Value.absent(),
+    this.discountAmount = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -19537,6 +19714,8 @@ class CatalogTieredDiscountsCompanion
     Expression<String>? catalogItemUuid,
     Expression<double>? minQuantity,
     Expression<double>? discountPercentage,
+    Expression<String>? discountType,
+    Expression<double>? discountAmount,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<bool>? isDeleted,
@@ -19548,6 +19727,8 @@ class CatalogTieredDiscountsCompanion
       if (catalogItemUuid != null) 'catalog_item_uuid': catalogItemUuid,
       if (minQuantity != null) 'min_quantity': minQuantity,
       if (discountPercentage != null) 'discount_percentage': discountPercentage,
+      if (discountType != null) 'discount_type': discountType,
+      if (discountAmount != null) 'discount_amount': discountAmount,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isDeleted != null) 'is_deleted': isDeleted,
@@ -19561,6 +19742,8 @@ class CatalogTieredDiscountsCompanion
       Value<String>? catalogItemUuid,
       Value<double>? minQuantity,
       Value<double>? discountPercentage,
+      Value<String>? discountType,
+      Value<double>? discountAmount,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<bool>? isDeleted,
@@ -19571,6 +19754,8 @@ class CatalogTieredDiscountsCompanion
       catalogItemUuid: catalogItemUuid ?? this.catalogItemUuid,
       minQuantity: minQuantity ?? this.minQuantity,
       discountPercentage: discountPercentage ?? this.discountPercentage,
+      discountType: discountType ?? this.discountType,
+      discountAmount: discountAmount ?? this.discountAmount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
@@ -19593,6 +19778,12 @@ class CatalogTieredDiscountsCompanion
     }
     if (discountPercentage.present) {
       map['discount_percentage'] = Variable<double>(discountPercentage.value);
+    }
+    if (discountType.present) {
+      map['discount_type'] = Variable<String>(discountType.value);
+    }
+    if (discountAmount.present) {
+      map['discount_amount'] = Variable<double>(discountAmount.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -19619,6 +19810,8 @@ class CatalogTieredDiscountsCompanion
           ..write('catalogItemUuid: $catalogItemUuid, ')
           ..write('minQuantity: $minQuantity, ')
           ..write('discountPercentage: $discountPercentage, ')
+          ..write('discountType: $discountType, ')
+          ..write('discountAmount: $discountAmount, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -34692,6 +34885,8 @@ typedef $$CatalogItemsTableCreateCompanionBuilder = CatalogItemsCompanion
   Value<double?> unitCostSnapshot,
   Value<DateTime?> priceComputedAt,
   Value<bool> priceOverride,
+  Value<String?> defaultDiscountType,
+  Value<double> defaultDiscountValue,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -34715,6 +34910,8 @@ typedef $$CatalogItemsTableUpdateCompanionBuilder = CatalogItemsCompanion
   Value<double?> unitCostSnapshot,
   Value<DateTime?> priceComputedAt,
   Value<bool> priceOverride,
+  Value<String?> defaultDiscountType,
+  Value<double> defaultDiscountValue,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -34852,6 +35049,14 @@ class $$CatalogItemsTableFilterComposer
 
   ColumnFilters<bool> get priceOverride => $composableBuilder(
       column: $table.priceOverride, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get defaultDiscountType => $composableBuilder(
+      column: $table.defaultDiscountType,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get defaultDiscountValue => $composableBuilder(
+      column: $table.defaultDiscountValue,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -35017,6 +35222,14 @@ class $$CatalogItemsTableOrderingComposer
       column: $table.priceOverride,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get defaultDiscountType => $composableBuilder(
+      column: $table.defaultDiscountType,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get defaultDiscountValue => $composableBuilder(
+      column: $table.defaultDiscountValue,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -35151,6 +35364,12 @@ class $$CatalogItemsTableAnnotationComposer
 
   GeneratedColumn<bool> get priceOverride => $composableBuilder(
       column: $table.priceOverride, builder: (column) => column);
+
+  GeneratedColumn<String> get defaultDiscountType => $composableBuilder(
+      column: $table.defaultDiscountType, builder: (column) => column);
+
+  GeneratedColumn<double> get defaultDiscountValue => $composableBuilder(
+      column: $table.defaultDiscountValue, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -35311,6 +35530,8 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
             Value<double?> unitCostSnapshot = const Value.absent(),
             Value<DateTime?> priceComputedAt = const Value.absent(),
             Value<bool> priceOverride = const Value.absent(),
+            Value<String?> defaultDiscountType = const Value.absent(),
+            Value<double> defaultDiscountValue = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -35333,6 +35554,8 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
             unitCostSnapshot: unitCostSnapshot,
             priceComputedAt: priceComputedAt,
             priceOverride: priceOverride,
+            defaultDiscountType: defaultDiscountType,
+            defaultDiscountValue: defaultDiscountValue,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,
@@ -35355,6 +35578,8 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
             Value<double?> unitCostSnapshot = const Value.absent(),
             Value<DateTime?> priceComputedAt = const Value.absent(),
             Value<bool> priceOverride = const Value.absent(),
+            Value<String?> defaultDiscountType = const Value.absent(),
+            Value<double> defaultDiscountValue = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -35377,6 +35602,8 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
             unitCostSnapshot: unitCostSnapshot,
             priceComputedAt: priceComputedAt,
             priceOverride: priceOverride,
+            defaultDiscountType: defaultDiscountType,
+            defaultDiscountValue: defaultDiscountValue,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,
@@ -35876,6 +36103,8 @@ typedef $$CatalogTieredDiscountsTableCreateCompanionBuilder
   required String catalogItemUuid,
   required double minQuantity,
   required double discountPercentage,
+  Value<String> discountType,
+  Value<double> discountAmount,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -35888,6 +36117,8 @@ typedef $$CatalogTieredDiscountsTableUpdateCompanionBuilder
   Value<String> catalogItemUuid,
   Value<double> minQuantity,
   Value<double> discountPercentage,
+  Value<String> discountType,
+  Value<double> discountAmount,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -35933,6 +36164,13 @@ class $$CatalogTieredDiscountsTableFilterComposer
 
   ColumnFilters<double> get discountPercentage => $composableBuilder(
       column: $table.discountPercentage,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get discountType => $composableBuilder(
+      column: $table.discountType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get discountAmount => $composableBuilder(
+      column: $table.discountAmount,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
@@ -35987,6 +36225,14 @@ class $$CatalogTieredDiscountsTableOrderingComposer
       column: $table.discountPercentage,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get discountType => $composableBuilder(
+      column: $table.discountType,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get discountAmount => $composableBuilder(
+      column: $table.discountAmount,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -36037,6 +36283,12 @@ class $$CatalogTieredDiscountsTableAnnotationComposer
 
   GeneratedColumn<double> get discountPercentage => $composableBuilder(
       column: $table.discountPercentage, builder: (column) => column);
+
+  GeneratedColumn<String> get discountType => $composableBuilder(
+      column: $table.discountType, builder: (column) => column);
+
+  GeneratedColumn<double> get discountAmount => $composableBuilder(
+      column: $table.discountAmount, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -36102,6 +36354,8 @@ class $$CatalogTieredDiscountsTableTableManager extends RootTableManager<
             Value<String> catalogItemUuid = const Value.absent(),
             Value<double> minQuantity = const Value.absent(),
             Value<double> discountPercentage = const Value.absent(),
+            Value<String> discountType = const Value.absent(),
+            Value<double> discountAmount = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -36113,6 +36367,8 @@ class $$CatalogTieredDiscountsTableTableManager extends RootTableManager<
             catalogItemUuid: catalogItemUuid,
             minQuantity: minQuantity,
             discountPercentage: discountPercentage,
+            discountType: discountType,
+            discountAmount: discountAmount,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,
@@ -36124,6 +36380,8 @@ class $$CatalogTieredDiscountsTableTableManager extends RootTableManager<
             required String catalogItemUuid,
             required double minQuantity,
             required double discountPercentage,
+            Value<String> discountType = const Value.absent(),
+            Value<double> discountAmount = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -36135,6 +36393,8 @@ class $$CatalogTieredDiscountsTableTableManager extends RootTableManager<
             catalogItemUuid: catalogItemUuid,
             minQuantity: minQuantity,
             discountPercentage: discountPercentage,
+            discountType: discountType,
+            discountAmount: discountAmount,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,

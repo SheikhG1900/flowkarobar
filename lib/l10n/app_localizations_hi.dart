@@ -210,6 +210,43 @@ class AppLocalizationsHi extends AppLocalizations {
   String get manualCatalogPrice => 'मैन्युअल सेट कीमत';
 
   @override
+  String get defaultDiscount => 'डिफ़ॉल्ट छूट';
+
+  @override
+  String get defaultDiscountHint => 'जब कोई मात्रा टियर मेल न खाए तब लागू';
+
+  @override
+  String get catalogDiscountHint =>
+      'छूट ऑर्डर/कोटेशन पर विक्रय मूल्य पर लागू होती है। मात्रा टियर डिफ़ॉल्ट की जगह लेता है।';
+
+  @override
+  String get discountType => 'प्रकार';
+
+  @override
+  String get discountTypePercent => 'प्रतिशत';
+
+  @override
+  String get discountTypeFixed => 'प्रति इकाई निश्चित';
+
+  @override
+  String get discountPercent => 'प्रतिशत';
+
+  @override
+  String get discountAmount => 'राशि';
+
+  @override
+  String get tieredDiscounts => 'मात्रा टियर';
+
+  @override
+  String get addDiscountTier => 'टियर जोड़ें';
+
+  @override
+  String get noDiscountTiers => 'कोई मात्रा टियर नहीं';
+
+  @override
+  String get minQuantity => 'न्यूनतम मात्रा';
+
+  @override
   String recalculateCatalogDone(int updated, int skipped) {
     return '$updated आइटम अपडेट ($skipped छोड़े गए)';
   }

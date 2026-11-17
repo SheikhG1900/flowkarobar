@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/features/catalog/data/catalog_repository.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_discounts.dart';
 import 'package:flowpaisa/features/catalog/domain/catalog_pricing.dart';
 import 'package:flowpaisa/features/catalog/presentation/providers/catalog_provider.dart';
 import 'package:flowpaisa/features/catalog/presentation/screens/add_catalog_items_screen.dart';
 import 'package:flowpaisa/features/catalog/presentation/screens/add_edit_catalog_screen.dart';
+import 'package:flowpaisa/features/catalog/presentation/widgets/catalog_discount_editor.dart';
 import 'package:flowpaisa/features/catalog/presentation/widgets/catalog_pricing_approach_picker.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/inventory/presentation/providers/inventory_provider.dart';
@@ -17,6 +21,7 @@ import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
 import 'package:flowpaisa/shared/widgets/entity_picker_sheet.dart';
 import 'package:flowpaisa/shared/widgets/form_section_card.dart';
+import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/shared/widgets/hover_border_card.dart';
 import 'package:flowpaisa/shared/widgets/pending_sync_badge.dart';
 import 'package:flowpaisa/shared/widgets/swipeable_list_item.dart';
@@ -288,6 +293,7 @@ class _CatalogDetailScreenState extends ConsumerState<CatalogDetailScreen> {
             markupOrMarginPercent: result.percent,
             fixedAmount: result.fixedAmount,
             sellPriceOverride: result.sellPriceOverride,
+            discounts: result.discounts,
           );
       if (!mounted) return;
       ToastUtils.showSuccessToast(context, ref, l10n.catalogItemSaved);
@@ -827,6 +833,86 @@ class _CatalogItemCard extends ConsumerWidget {
     final categoryName = category?.name.trim();
     final formula =
         '${item.markupOrMarginPercent.toStringAsFixed(1)}% + ${formatOrderAmount(ref, item.fixedAmount)}';
+    final tiers =
+        ref.watch(catalogItemTiersStreamProvider(item.uuid)).value ??
+            const <CatalogTieredDiscount>[];
+    final hasTiers = tiers.isNotEmpty;
+    final defaultType = item.defaultDiscountType?.trim();
+    final hasDefaultDiscount = defaultType != null &&
+        defaultType.isNotEmpty &&
+        CatalogDiscountType.isValid(defaultType) &&
+        item.defaultDiscountValue > 0;
+    final discountedPrice = hasDefaultDiscount
+        ? CatalogDiscounts.applyDiscount(
+            sellPrice: item.sellPrice,
+            type: defaultType,
+            value: item.defaultDiscountValue,
+          )
+        : null;
+
+    Widget priceRow({
+      required double amount,
+      required Color color,
+      required FontWeight weight,
+      TextDecoration? decoration,
+      double? fontSize,
+    }) {
+      return Directionality(
+        textDirection: TextDirection.ltr,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (item.priceOverride && decoration == null)
+              Tooltip(
+                message: l10n.manualCatalogPrice,
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.only(end: 3, top: 1),
+                  child: Text(
+                    '*',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                      height: 1,
+                    ),
+                  ),
+                ),
+              ),
+            Text(
+              formatOrderAmount(ref, amount),
+              style: (fontSize != null
+                      ? theme.textTheme.bodySmall
+                      : theme.textTheme.titleMedium)
+                  ?.copyWith(
+                color: color,
+                fontWeight: weight,
+                height: 1,
+                fontSize: fontSize,
+                decoration: decoration,
+                decorationColor: color,
+              ),
+            ),
+            if (unit.isNotEmpty) ...[
+              const SizedBox(width: 2),
+              Padding(
+                padding: EdgeInsets.only(top: fontSize != null ? 2 : 4),
+                child: Text(
+                  '/$unit',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: muted,
+                    fontWeight: FontWeight.w600,
+                    height: 1,
+                    decoration: decoration,
+                    decorationColor: muted,
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
 
     return HoverBorderCard(
       accent: accent,
@@ -868,11 +954,28 @@ class _CatalogItemCard extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    if (hasTiers) ...[
+                      const SizedBox(width: 6),
+                      Tooltip(
+                        message: l10n.tieredDiscounts,
+                        child: Icon(
+                          Icons.discount_outlined,
+                          size: 16,
+                          color: accent,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 if (sku != null && sku.isNotEmpty) ...[
                   const SizedBox(height: 2),
@@ -898,56 +1001,26 @@ class _CatalogItemCard extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Directionality(
-                textDirection: TextDirection.ltr,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (item.priceOverride)
-                      Tooltip(
-                        message: l10n.manualCatalogPrice,
-                        child: Padding(
-                          padding: const EdgeInsetsDirectional.only(
-                            end: 3,
-                            top: 1,
-                          ),
-                          child: Text(
-                            '*',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: accent,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 11,
-                              height: 1,
-                            ),
-                          ),
-                        ),
-                      ),
-                    Text(
-                      formatOrderAmount(ref, item.sellPrice),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: accent,
-                        fontWeight: FontWeight.w800,
-                        height: 1,
-                      ),
-                    ),
-                    if (unit.isNotEmpty) ...[
-                      const SizedBox(width: 2),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          '/$unit',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: muted,
-                            fontWeight: FontWeight.w600,
-                            height: 1,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
+              if (hasDefaultDiscount && discountedPrice != null) ...[
+                priceRow(
+                  amount: item.sellPrice,
+                  color: muted,
+                  weight: FontWeight.w600,
+                  decoration: TextDecoration.lineThrough,
+                  fontSize: 12,
                 ),
-              ),
+                const SizedBox(height: 2),
+                priceRow(
+                  amount: discountedPrice,
+                  color: accent,
+                  weight: FontWeight.w800,
+                ),
+              ] else
+                priceRow(
+                  amount: item.sellPrice,
+                  color: accent,
+                  weight: FontWeight.w800,
+                ),
               const SizedBox(height: 4),
               Text(
                 formula,
@@ -969,6 +1042,7 @@ class _PricingEditResult {
   final double percent;
   final double fixedAmount;
   final double? sellPriceOverride;
+  final CatalogItemDiscountInput? discounts;
   final bool refreshOnly;
 
   const _PricingEditResult({
@@ -976,6 +1050,7 @@ class _PricingEditResult {
     required this.percent,
     required this.fixedAmount,
     this.sellPriceOverride,
+    this.discounts,
   }) : refreshOnly = false;
 
   const _PricingEditResult.refresh()
@@ -983,36 +1058,80 @@ class _PricingEditResult {
         percent = 0,
         fixedAmount = 0,
         sellPriceOverride = null,
+        discounts = null,
         refreshOnly = true;
 }
 
-class _EditItemPricingSheet extends StatefulWidget {
+class _EditItemPricingSheet extends ConsumerStatefulWidget {
   final CatalogItem item;
 
   const _EditItemPricingSheet({required this.item});
 
   @override
-  State<_EditItemPricingSheet> createState() => _EditItemPricingSheetState();
+  ConsumerState<_EditItemPricingSheet> createState() =>
+      _EditItemPricingSheetState();
 }
 
-class _EditItemPricingSheetState extends State<_EditItemPricingSheet> {
+class _EditItemPricingSheetState
+    extends ConsumerState<_EditItemPricingSheet> {
   late String _approach;
   late final TextEditingController _percent;
   late final TextEditingController _fixed;
   late final TextEditingController _sellOverride;
+  late final TextEditingController _defaultDiscountValue;
+  final _tiers = <CatalogDiscountTierDraft>[];
   bool _override = false;
+  bool _enableDefaultDiscount = false;
+  String _defaultDiscountType = CatalogDiscountType.percent;
+  bool _loadingTiers = true;
 
   @override
   void initState() {
     super.initState();
-    _approach = widget.item.pricingApproach;
+    final item = widget.item;
+    _approach = item.pricingApproach;
     _percent = TextEditingController(
-      text: widget.item.markupOrMarginPercent.toString(),
+      text: item.markupOrMarginPercent.toString(),
     );
-    _fixed = TextEditingController(text: widget.item.fixedAmount.toString());
-    _sellOverride =
-        TextEditingController(text: widget.item.sellPrice.toString());
-    _override = widget.item.priceOverride;
+    _fixed = TextEditingController(text: item.fixedAmount.toString());
+    _sellOverride = TextEditingController(text: item.sellPrice.toString());
+    _override = item.priceOverride;
+    final defaultType = item.defaultDiscountType?.trim();
+    _enableDefaultDiscount =
+        defaultType != null &&
+        defaultType.isNotEmpty &&
+        item.defaultDiscountValue > 0;
+    _defaultDiscountType = CatalogDiscountType.isValid(defaultType)
+        ? defaultType!
+        : CatalogDiscountType.percent;
+    _defaultDiscountValue = TextEditingController(
+      text: item.defaultDiscountValue > 0
+          ? item.defaultDiscountValue.toString()
+          : '',
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadTiers());
+  }
+
+  Future<void> _loadTiers() async {
+    final tiers = await ref
+        .read(catalogRepositoryProvider)
+        .getItemTiers(widget.item.uuid);
+    if (!mounted) return;
+    setState(() {
+      for (final t in tiers) {
+        _tiers.add(
+          CatalogDiscountTierDraft(
+            uuid: t.uuid,
+            minQuantity: t.minQuantity,
+            discountType: t.discountType,
+            discountValue: t.discountType == CatalogDiscountType.fixed
+                ? t.discountAmount
+                : t.discountPercentage,
+          ),
+        );
+      }
+      _loadingTiers = false;
+    });
   }
 
   @override
@@ -1020,90 +1139,229 @@ class _EditItemPricingSheetState extends State<_EditItemPricingSheet> {
     _percent.dispose();
     _fixed.dispose();
     _sellOverride.dispose();
+    _defaultDiscountValue.dispose();
+    for (final t in _tiers) {
+      t.dispose();
+    }
     super.dispose();
+  }
+
+  CatalogItemDiscountInput _discountInput() {
+    final tiers = <CatalogDiscountTierInput>[
+      for (final t in _tiers)
+        if (t.toInputOrNull() != null) t.toInputOrNull()!,
+    ];
+    if (!_enableDefaultDiscount) {
+      return CatalogItemDiscountInput(tiers: tiers);
+    }
+    return CatalogItemDiscountInput(
+      defaultDiscountType: _defaultDiscountType,
+      defaultDiscountValue:
+          double.tryParse(_defaultDiscountValue.text.trim()) ?? 0,
+      tiers: tiers,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
+    final accent = AppColors.receivableColor;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            l10n.editItemPricing,
-            style: Theme.of(context).textTheme.titleLarge,
+    // Sticky drawer header; body + actions scroll together (no docked footer).
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(16, 12, 16, 16 + bottom),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * 0.88,
           ),
-          const SizedBox(height: 12),
-          CatalogPricingApproachPicker(
-            value: _approach,
-            accentColor: AppColors.receivableColor,
-            onChanged: (v) => setState(() => _approach = v),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _percent,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: l10n.markupOrMarginPercent,
-              filled: true,
-            ),
-          ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _fixed,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(
-              labelText: l10n.fixedAmount,
-              filled: true,
-            ),
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(l10n.sellPrice),
-            value: _override,
-            onChanged: (v) => setState(() => _override = v),
-          ),
-          if (_override)
-            TextField(
-              controller: _sellOverride,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: InputDecoration(
-                labelText: l10n.sellPrice,
-                filled: true,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .outlineVariant
+                      .withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(999),
+                ),
               ),
             ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: () {
-              Navigator.pop(context, const _PricingEditResult.refresh());
-            },
-            icon: const Icon(Icons.refresh_rounded),
-            label: Text(l10n.refreshItemPrice),
-          ),
-          const SizedBox(height: 8),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(
-                context,
-                _PricingEditResult(
-                  approach: _approach,
-                  percent: double.tryParse(_percent.text.trim()) ?? 0,
-                  fixedAmount: double.tryParse(_fixed.text.trim()) ?? 0,
-                  sellPriceOverride: _override
-                      ? double.tryParse(_sellOverride.text.trim())
-                      : null,
+            Text(
+              l10n.editItemPricing,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+            FormSectionCard(
+              title: l10n.sectionPricing,
+              icon: Icons.calculate_outlined,
+              accentColor: accent,
+              children: [
+                CatalogPricingApproachPicker(
+                  value: _approach,
+                  accentColor: accent,
+                  onChanged: (v) => setState(() => _approach = v),
                 ),
-              );
-            },
-            child: Text(l10n.save),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _percent,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d*'),
+                          ),
+                        ],
+                        decoration: InputDecoration(
+                          labelText: l10n.markupOrMarginPercent,
+                          filled: true,
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: _fixed,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d*'),
+                          ),
+                        ],
+                        decoration: InputDecoration(
+                          labelText: l10n.fixedAmount,
+                          filled: true,
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(l10n.sellPrice),
+                  subtitle: Text(l10n.manualCatalogPrice),
+                  value: _override,
+                  activeThumbColor: accent,
+                  onChanged: (v) => setState(() => _override = v),
+                ),
+                if (_override)
+                  TextField(
+                    controller: _sellOverride,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^\d*\.?\d*'),
+                      ),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: l10n.sellPrice,
+                      filled: true,
+                      isDense: true,
+                    ),
+                  ),
+              ],
+            ),
+            FormSectionCard(
+              title: l10n.discount,
+              icon: Icons.percent_outlined,
+              accentColor: accent,
+              children: [
+                if (_loadingTiers)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else
+                  CatalogDiscountEditor(
+                    accent: accent,
+                    enabledDefault: _enableDefaultDiscount,
+                    defaultType: _defaultDiscountType,
+                    defaultValue: _defaultDiscountValue,
+                    onEnabledDefaultChanged: (v) =>
+                        setState(() => _enableDefaultDiscount = v),
+                    onDefaultTypeChanged: (v) =>
+                        setState(() => _defaultDiscountType = v),
+                    tiers: _tiers,
+                    onAddTier: () => setState(
+                      () => _tiers.add(CatalogDiscountTierDraft()),
+                    ),
+                    onRemoveTier: (i) => setState(() {
+                      _tiers[i].dispose();
+                      _tiers.removeAt(i);
+                    }),
+                    onTierTypeChanged: (_) => setState(() {}),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: _loadingTiers
+                  ? null
+                  : () {
+                      Navigator.pop(
+                        context,
+                        const _PricingEditResult.refresh(),
+                      );
+                    },
+              icon: const Icon(Icons.refresh_rounded),
+              label: Text(l10n.refreshItemPrice),
+            ),
+            const SizedBox(height: 8),
+            GradientButton(
+              label: l10n.save,
+              icon: Icons.check_rounded,
+              width: double.infinity,
+              gradient: AppColors.getPrimaryGradient(accent),
+              onPressed: _loadingTiers
+                  ? null
+                  : () {
+                      Navigator.pop(
+                        context,
+                        _PricingEditResult(
+                          approach: _approach,
+                          percent:
+                              double.tryParse(_percent.text.trim()) ?? 0,
+                          fixedAmount:
+                              double.tryParse(_fixed.text.trim()) ?? 0,
+                          sellPriceOverride: _override
+                              ? double.tryParse(_sellOverride.text.trim())
+                              : null,
+                          discounts: _discountInput(),
+                        ),
+                      );
+                    },
+            ),
+                  ],
+                ),
+              ),
+            ),
+          ],
           ),
-        ],
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_discounts.dart';
 import 'package:flowpaisa/features/catalog/domain/catalog_pricing.dart';
 import 'package:flowpaisa/features/inventory/data/inventory_repository.dart';
 import 'package:uuid/uuid.dart';
@@ -23,6 +24,36 @@ class CatalogItemPricingInput {
     this.fixedAmount = 0,
     this.sellPriceOverride,
   });
+}
+
+/// Qty tier discount copied onto a catalog item.
+class CatalogDiscountTierInput {
+  final String? uuid;
+  final double minQuantity;
+  final String discountType;
+  final double discountValue;
+
+  const CatalogDiscountTierInput({
+    this.uuid,
+    required this.minQuantity,
+    required this.discountType,
+    required this.discountValue,
+  });
+}
+
+/// Default + tiers applied/copied with pricing on add/edit.
+class CatalogItemDiscountInput {
+  final String? defaultDiscountType;
+  final double defaultDiscountValue;
+  final List<CatalogDiscountTierInput> tiers;
+
+  const CatalogItemDiscountInput({
+    this.defaultDiscountType,
+    this.defaultDiscountValue = 0,
+    this.tiers = const [],
+  });
+
+  static const none = CatalogItemDiscountInput();
 }
 
 class CatalogRepository {
@@ -250,9 +281,145 @@ class CatalogRepository {
     return (unitCost: unitCost, sellPrice: sellPrice);
   }
 
+  Stream<List<CatalogTieredDiscount>> watchItemTiers(String catalogItemUuid) {
+    return (_db.select(_db.catalogTieredDiscounts)
+          ..where((t) =>
+              t.catalogItemUuid.equals(catalogItemUuid) &
+              t.isDeleted.equals(false))
+          ..orderBy([(t) => OrderingTerm.asc(t.minQuantity)]))
+        .watch();
+  }
+
+  Future<List<CatalogTieredDiscount>> getItemTiers(String catalogItemUuid) {
+    return (_db.select(_db.catalogTieredDiscounts)
+          ..where((t) =>
+              t.catalogItemUuid.equals(catalogItemUuid) &
+              t.isDeleted.equals(false))
+          ..orderBy([(t) => OrderingTerm.asc(t.minQuantity)]))
+        .get();
+  }
+
+  void _validateDiscounts(CatalogItemDiscountInput discounts) {
+    final defaultType = _nullIfEmpty(discounts.defaultDiscountType);
+    if (defaultType != null && !CatalogDiscountType.isValid(defaultType)) {
+      throw ArgumentError('Invalid default discount type');
+    }
+    if (defaultType != null &&
+        CatalogDiscountType.isValid(defaultType) &&
+        discounts.defaultDiscountValue < 0) {
+      throw ArgumentError('Default discount must be ≥ 0');
+    }
+    if (defaultType == CatalogDiscountType.percent &&
+        discounts.defaultDiscountValue >= 100) {
+      throw ArgumentError('Default percent discount must be < 100');
+    }
+    for (final t in discounts.tiers) {
+      if (t.minQuantity <= 0) {
+        throw ArgumentError('Tier min quantity must be positive');
+      }
+      if (!CatalogDiscountType.isValid(t.discountType)) {
+        throw ArgumentError('Invalid tier discount type');
+      }
+      if (t.discountValue < 0) {
+        throw ArgumentError('Tier discount must be ≥ 0');
+      }
+      if (t.discountType == CatalogDiscountType.percent &&
+          t.discountValue >= 100) {
+        throw ArgumentError('Tier percent discount must be < 100');
+      }
+    }
+  }
+
+  Future<void> _replaceItemTiers({
+    required String catalogItemUuid,
+    required List<CatalogDiscountTierInput> tiers,
+  }) async {
+    final now = DateTime.now();
+    final existing = await getItemTiers(catalogItemUuid);
+    final keepIds = <String>{
+      for (final t in tiers)
+        if (t.uuid != null && t.uuid!.trim().isNotEmpty) t.uuid!,
+    };
+
+    for (final row in existing) {
+      if (keepIds.contains(row.uuid)) continue;
+      await (_db.update(_db.catalogTieredDiscounts)
+            ..where((t) => t.uuid.equals(row.uuid)))
+          .write(
+        CatalogTieredDiscountsCompanion(
+          isDeleted: const Value(true),
+          isNotSynced: const Value(true),
+          updatedAt: Value(now),
+        ),
+      );
+    }
+
+    for (final t in tiers) {
+      final percent = t.discountType == CatalogDiscountType.percent
+          ? t.discountValue
+          : 0.0;
+      final amount =
+          t.discountType == CatalogDiscountType.fixed ? t.discountValue : 0.0;
+      final existingUuid = _nullIfEmpty(t.uuid);
+      if (existingUuid != null &&
+          existing.any((e) => e.uuid == existingUuid)) {
+        await (_db.update(_db.catalogTieredDiscounts)
+              ..where((r) => r.uuid.equals(existingUuid)))
+            .write(
+          CatalogTieredDiscountsCompanion(
+            minQuantity: Value(t.minQuantity),
+            discountType: Value(t.discountType),
+            discountPercentage: Value(percent),
+            discountAmount: Value(amount),
+            isDeleted: const Value(false),
+            isNotSynced: const Value(true),
+            updatedAt: Value(now),
+          ),
+        );
+      } else {
+        await _db.into(_db.catalogTieredDiscounts).insert(
+              CatalogTieredDiscountsCompanion.insert(
+                uuid: const Uuid().v4(),
+                catalogItemUuid: catalogItemUuid,
+                minQuantity: t.minQuantity,
+                discountPercentage: percent,
+                discountType: Value(t.discountType),
+                discountAmount: Value(amount),
+                createdAt: Value(now),
+                updatedAt: Value(now),
+              ),
+            );
+      }
+    }
+  }
+
+  Future<void> _copyItemTiers({
+    required String sourceItemUuid,
+    required String targetItemUuid,
+  }) async {
+    final tiers = await getItemTiers(sourceItemUuid);
+    if (tiers.isEmpty) return;
+    final now = DateTime.now();
+    for (final t in tiers) {
+      await _db.into(_db.catalogTieredDiscounts).insert(
+            CatalogTieredDiscountsCompanion.insert(
+              uuid: const Uuid().v4(),
+              catalogItemUuid: targetItemUuid,
+              minQuantity: t.minQuantity,
+              discountPercentage: t.discountPercentage,
+              discountType: Value(t.discountType),
+              discountAmount: Value(t.discountAmount),
+              createdAt: Value(now),
+              updatedAt: Value(now),
+            ),
+          );
+    }
+  }
+
   Future<String> addItem({
     required String catalogUuid,
     required CatalogItemPricingInput pricing,
+    CatalogItemDiscountInput discounts = CatalogItemDiscountInput.none,
     DateTime? validUntil,
   }) async {
     final catalog = await getCatalog(catalogUuid);
@@ -268,38 +435,54 @@ class CatalogRepository {
         'Catalog item requires exactly one of productUuid or sellingProductUuid',
       );
     }
+    _validateDiscounts(discounts);
 
     final computed = await computePricing(pricing);
     final uuid = const Uuid().v4();
     final now = DateTime.now();
-    await _db.into(_db.catalogItems).insert(
-          CatalogItemsCompanion.insert(
-            uuid: uuid,
-            catalogUuid: catalogUuid,
-            productUuid: Value(_nullIfEmpty(pricing.productUuid)),
-            sellingProductUuid: Value(_nullIfEmpty(pricing.sellingProductUuid)),
-            pricingApproach: Value(pricing.pricingApproach),
-            markupOrMarginPercent: Value(pricing.markupOrMarginPercent),
-            fixedAmount: Value(pricing.fixedAmount),
-            sellPrice: Value(computed.sellPrice),
-            unitCostSnapshot: Value(computed.unitCost),
-            priceComputedAt: Value(now),
-            customPrice: Value(computed.sellPrice),
-            validUntil: Value(validUntil),
-            createdAt: Value(now),
-            updatedAt: Value(now),
-          ),
+    final defaultType = _nullIfEmpty(discounts.defaultDiscountType);
+    await _db.transaction(() async {
+      await _db.into(_db.catalogItems).insert(
+            CatalogItemsCompanion.insert(
+              uuid: uuid,
+              catalogUuid: catalogUuid,
+              productUuid: Value(_nullIfEmpty(pricing.productUuid)),
+              sellingProductUuid:
+                  Value(_nullIfEmpty(pricing.sellingProductUuid)),
+              pricingApproach: Value(pricing.pricingApproach),
+              markupOrMarginPercent: Value(pricing.markupOrMarginPercent),
+              fixedAmount: Value(pricing.fixedAmount),
+              sellPrice: Value(computed.sellPrice),
+              unitCostSnapshot: Value(computed.unitCost),
+              priceComputedAt: Value(now),
+              customPrice: Value(computed.sellPrice),
+              defaultDiscountType: Value(defaultType),
+              defaultDiscountValue: Value(
+                defaultType == null ? 0 : discounts.defaultDiscountValue,
+              ),
+              validUntil: Value(validUntil),
+              createdAt: Value(now),
+              updatedAt: Value(now),
+            ),
+          );
+      if (discounts.tiers.isNotEmpty) {
+        await _replaceItemTiers(
+          catalogItemUuid: uuid,
+          tiers: discounts.tiers,
         );
+      }
+    });
     return uuid;
   }
 
-  /// Bulk-add lines that share the same formula inputs (copied per line).
+  /// Bulk-add lines that share the same formula + discount inputs (copied per line).
   Future<int> addItemsBulk({
     required String catalogUuid,
     required List<CatalogItemPricingInput> targets,
     required String pricingApproach,
     required double markupOrMarginPercent,
     required double fixedAmount,
+    CatalogItemDiscountInput discounts = CatalogItemDiscountInput.none,
   }) async {
     var added = 0;
     for (final target in targets) {
@@ -317,6 +500,18 @@ class CatalogRepository {
           pricingApproach: pricingApproach,
           markupOrMarginPercent: markupOrMarginPercent,
           fixedAmount: fixedAmount,
+        ),
+        discounts: CatalogItemDiscountInput(
+          defaultDiscountType: discounts.defaultDiscountType,
+          defaultDiscountValue: discounts.defaultDiscountValue,
+          tiers: [
+            for (final t in discounts.tiers)
+              CatalogDiscountTierInput(
+                minQuantity: t.minQuantity,
+                discountType: t.discountType,
+                discountValue: t.discountValue,
+              ),
+          ],
         ),
       );
       added++;
@@ -376,12 +571,19 @@ class CatalogRepository {
                 priceComputedAt: Value(source.priceComputedAt ?? now),
                 customPrice: Value(source.sellPrice),
                 priceOverride: Value(source.priceOverride),
+                defaultDiscountType: Value(source.defaultDiscountType),
+                defaultDiscountValue: Value(source.defaultDiscountValue),
                 validUntil: Value(source.validUntil),
                 createdAt: Value(now),
                 updatedAt: Value(now),
               ),
             );
+        await _copyItemTiers(
+          sourceItemUuid: source.uuid,
+          targetItemUuid: uuid,
+        );
       } else {
+        final sourceTiers = await getItemTiers(source.uuid);
         await addItem(
           catalogUuid: targetCatalogUuid,
           pricing: CatalogItemPricingInput(
@@ -390,6 +592,20 @@ class CatalogRepository {
             pricingApproach: source.pricingApproach,
             markupOrMarginPercent: source.markupOrMarginPercent,
             fixedAmount: source.fixedAmount,
+          ),
+          discounts: CatalogItemDiscountInput(
+            defaultDiscountType: source.defaultDiscountType,
+            defaultDiscountValue: source.defaultDiscountValue,
+            tiers: [
+              for (final t in sourceTiers)
+                CatalogDiscountTierInput(
+                  minQuantity: t.minQuantity,
+                  discountType: t.discountType,
+                  discountValue: t.discountType == CatalogDiscountType.fixed
+                      ? t.discountAmount
+                      : t.discountPercentage,
+                ),
+            ],
           ),
           validUntil: source.validUntil,
         );
@@ -405,12 +621,14 @@ class CatalogRepository {
     required double markupOrMarginPercent,
     required double fixedAmount,
     double? sellPriceOverride,
+    CatalogItemDiscountInput? discounts,
   }) async {
     final item = await getItem(itemUuid);
     if (item == null) throw StateError('Catalog item not found');
     if (!CatalogPricingApproach.all.contains(pricingApproach)) {
       throw ArgumentError('Invalid pricing approach');
     }
+    if (discounts != null) _validateDiscounts(discounts);
 
     final computed = await computePricing(
       CatalogItemPricingInput(
@@ -424,9 +642,8 @@ class CatalogRepository {
     );
     final now = DateTime.now();
     final isOverride = sellPriceOverride != null;
-    await (_db.update(_db.catalogItems)..where((i) => i.uuid.equals(itemUuid)))
-        .write(
-      CatalogItemsCompanion(
+    await _db.transaction(() async {
+      final companion = CatalogItemsCompanion(
         pricingApproach: Value(pricingApproach),
         markupOrMarginPercent: Value(markupOrMarginPercent),
         fixedAmount: Value(fixedAmount),
@@ -437,8 +654,26 @@ class CatalogRepository {
         priceOverride: Value(isOverride),
         isNotSynced: const Value(true),
         updatedAt: Value(now),
-      ),
-    );
+        defaultDiscountType: discounts == null
+            ? const Value.absent()
+            : Value(_nullIfEmpty(discounts.defaultDiscountType)),
+        defaultDiscountValue: discounts == null
+            ? const Value.absent()
+            : Value(
+                _nullIfEmpty(discounts.defaultDiscountType) == null
+                    ? 0
+                    : discounts.defaultDiscountValue,
+              ),
+      );
+      await (_db.update(_db.catalogItems)..where((i) => i.uuid.equals(itemUuid)))
+          .write(companion);
+      if (discounts != null) {
+        await _replaceItemTiers(
+          catalogItemUuid: itemUuid,
+          tiers: discounts.tiers,
+        );
+      }
+    });
   }
 
   /// Recompute sellPrice from current unit cost using stored formula fields.
@@ -484,14 +719,29 @@ class CatalogRepository {
   Future<void> softDeleteItem(String itemUuid) async {
     final item = await getItem(itemUuid);
     if (item == null) return;
-    await (_db.update(_db.catalogItems)..where((i) => i.uuid.equals(itemUuid)))
-        .write(
-      CatalogItemsCompanion(
-        isDeleted: const Value(true),
-        isNotSynced: const Value(true),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
+    final now = DateTime.now();
+    await _db.transaction(() async {
+      await (_db.update(_db.catalogItems)..where((i) => i.uuid.equals(itemUuid)))
+          .write(
+        CatalogItemsCompanion(
+          isDeleted: const Value(true),
+          isNotSynced: const Value(true),
+          updatedAt: Value(now),
+        ),
+      );
+      final tiers = await getItemTiers(itemUuid);
+      for (final t in tiers) {
+        await (_db.update(_db.catalogTieredDiscounts)
+              ..where((r) => r.uuid.equals(t.uuid)))
+            .write(
+          CatalogTieredDiscountsCompanion(
+            isDeleted: const Value(true),
+            isNotSynced: const Value(true),
+            updatedAt: Value(now),
+          ),
+        );
+      }
+    });
   }
 
   /// Find active item in catalog with same product or selling-product link.

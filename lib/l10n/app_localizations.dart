@@ -496,6 +496,78 @@ abstract class AppLocalizations {
   /// **'Manually set price'**
   String get manualCatalogPrice;
 
+  /// No description provided for @defaultDiscount.
+  ///
+  /// In en, this message translates to:
+  /// **'Default discount'**
+  String get defaultDiscount;
+
+  /// No description provided for @defaultDiscountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Applied when no qty tier matches'**
+  String get defaultDiscountHint;
+
+  /// No description provided for @catalogDiscountHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Discounts apply at order/quotation time on the sell price. A matching qty tier replaces the default.'**
+  String get catalogDiscountHint;
+
+  /// No description provided for @discountType.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get discountType;
+
+  /// No description provided for @discountTypePercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Percent'**
+  String get discountTypePercent;
+
+  /// No description provided for @discountTypeFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed per unit'**
+  String get discountTypeFixed;
+
+  /// No description provided for @discountPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Percent'**
+  String get discountPercent;
+
+  /// No description provided for @discountAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount'**
+  String get discountAmount;
+
+  /// No description provided for @tieredDiscounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty tiers'**
+  String get tieredDiscounts;
+
+  /// No description provided for @addDiscountTier.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tier'**
+  String get addDiscountTier;
+
+  /// No description provided for @noDiscountTiers.
+  ///
+  /// In en, this message translates to:
+  /// **'No qty tiers'**
+  String get noDiscountTiers;
+
+  /// No description provided for @minQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Min qty'**
+  String get minQuantity;
+
   /// No description provided for @recalculateCatalogDone.
   ///
   /// In en, this message translates to:

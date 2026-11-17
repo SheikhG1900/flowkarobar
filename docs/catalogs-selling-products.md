@@ -189,6 +189,20 @@ Require `percent < 100` for both margin options. Existing rows with `MARKUP` / `
 | `unitCostSnapshot` | optional but useful — cost used when price was last computed |
 | `priceComputedAt` | optional — when last refreshed |
 | `priceOverride` | bool — true when sell price was set manually; skipped by catalog recalculate; UI shows `*` |
+| `defaultDiscountType` | `PERCENT` \| `FIXED` \| null — always-on discount when no qty tier matches |
+| `defaultDiscountValue` | real — % or fixed amount per unit |
+
+### Qty tiers (`catalog_tiered_discounts`)
+
+| Field | Notes |
+|-------|--------|
+| `catalogItemUuid` | FK → catalog item |
+| `minQuantity` | Apply when order qty ≥ this |
+| `discountType` | `PERCENT` \| `FIXED` |
+| `discountPercentage` | used when type is PERCENT |
+| `discountAmount` | used when type is FIXED (per unit) |
+
+**Apply rule (order/quotation):** start from `sellPrice`; if a tier matches qty, use that tier **instead of** the item default (no stacking). Snapshot the result on the order line.
 
 ### Add-to-catalog UX (agreed flow)
 
@@ -301,7 +315,7 @@ Until catalogs ship end-to-end, sales may keep using `product.retailPrice` as to
 
 Follow **in order**. Mark each step `[x]` when done. Do not start a later phase until the previous phase’s required steps are complete (Phase 5 is optional / later).
 
-**Progress:** Phase 1 ☑ · Phase 2 ☑ · Phase 3 ☑ · Phase 4 ☐ · Phase 5 (later) ☐
+**Progress:** Phase 1 ☑ · Phase 2 ☑ · Phase 3 ☑ · Phase 4 ☐ · Phase 5 (partial: 5.1/5.3 ☑)
 
 ---
 
@@ -375,7 +389,7 @@ Follow **in order**. Mark each step `[x]` when done. Do not start a later phase 
 
 ### Phase 5 — Later (optional)
 
-- [ ] **5.1** Tiered discounts on catalog items.
+- [x] **5.1** Default + tiered discounts on catalog items (`PERCENT` / `FIXED`; copy on bulk add; edit on item; apply at order later).
 - [ ] **5.2** Catalog-level default approach / % / fixed for new lines.
 - [x] **5.3** Manual sell-price override flag (skip on catalog recalculate; confirm on single refresh; `*` marker).
 - [ ] **5.4** Reports: margin vs cost at catalog / sale.

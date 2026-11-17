@@ -5,8 +5,10 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/catalog/data/catalog_repository.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_discounts.dart';
 import 'package:flowpaisa/features/catalog/domain/catalog_pricing.dart';
 import 'package:flowpaisa/features/catalog/presentation/providers/catalog_provider.dart';
+import 'package:flowpaisa/features/catalog/presentation/widgets/catalog_discount_editor.dart';
 import 'package:flowpaisa/features/catalog/presentation/widgets/catalog_pricing_approach_picker.dart';
 import 'package:flowpaisa/features/inventory/presentation/providers/inventory_provider.dart';
 import 'package:flowpaisa/features/orders/presentation/widgets/order_entity_pickers.dart';
@@ -59,7 +61,11 @@ class _AddCatalogItemsScreenState extends ConsumerState<AddCatalogItemsScreen>
   final _selected = <String>{};
   final _percent = TextEditingController(text: '0');
   final _fixed = TextEditingController(text: '0');
+  final _defaultDiscountValue = TextEditingController();
+  final _tiers = <CatalogDiscountTierDraft>[];
   String _approach = CatalogPricingApproach.markup;
+  bool _enableDefaultDiscount = false;
+  String _defaultDiscountType = CatalogDiscountType.percent;
   bool _saving = false;
   String _query = '';
 
@@ -74,7 +80,27 @@ class _AddCatalogItemsScreenState extends ConsumerState<AddCatalogItemsScreen>
     _tabs.dispose();
     _percent.dispose();
     _fixed.dispose();
+    _defaultDiscountValue.dispose();
+    for (final t in _tiers) {
+      t.dispose();
+    }
     super.dispose();
+  }
+
+  CatalogItemDiscountInput _discountInput() {
+    final tiers = <CatalogDiscountTierInput>[
+      for (final t in _tiers)
+        if (t.toInputOrNull() != null) t.toInputOrNull()!,
+    ];
+    if (!_enableDefaultDiscount) {
+      return CatalogItemDiscountInput(tiers: tiers);
+    }
+    return CatalogItemDiscountInput(
+      defaultDiscountType: _defaultDiscountType,
+      defaultDiscountValue:
+          double.tryParse(_defaultDiscountValue.text.trim()) ?? 0,
+      tiers: tiers,
+    );
   }
 
   Future<void> _submit(List<_SelectableTarget> allTargets) async {
@@ -108,6 +134,7 @@ class _AddCatalogItemsScreenState extends ConsumerState<AddCatalogItemsScreen>
             pricingApproach: _approach,
             markupOrMarginPercent: percent,
             fixedAmount: fixed,
+            discounts: _discountInput(),
           );
       if (!mounted) return;
       ToastUtils.showSuccessToast(
@@ -174,75 +201,108 @@ class _AddCatalogItemsScreenState extends ConsumerState<AddCatalogItemsScreen>
         ),
       ),
       bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              FormSectionCard(
-                title: l10n.sectionPricing,
-                icon: Icons.calculate_outlined,
-                accentColor: accent,
-                children: [
-                  CatalogPricingApproachPicker(
-                    value: _approach,
-                    accentColor: accent,
-                    onChanged: (v) => setState(() => _approach = v),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _percent,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d*'),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * 0.48,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FormSectionCard(
+                  title: l10n.sectionPricing,
+                  icon: Icons.calculate_outlined,
+                  accentColor: accent,
+                  children: [
+                    CatalogPricingApproachPicker(
+                      value: _approach,
+                      accentColor: accent,
+                      onChanged: (v) => setState(() => _approach = v),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _percent,
+                            keyboardType:
+                                const TextInputType.numberWithOptions(
+                              decimal: true,
                             ),
-                          ],
-                          decoration: InputDecoration(
-                            labelText: l10n.markupOrMarginPercent,
-                            filled: true,
-                            isDense: true,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d*'),
+                              ),
+                            ],
+                            decoration: InputDecoration(
+                              labelText: l10n.markupOrMarginPercent,
+                              filled: true,
+                              isDense: true,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          controller: _fixed,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d*'),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _fixed,
+                            keyboardType:
+                                const TextInputType.numberWithOptions(
+                              decimal: true,
                             ),
-                          ],
-                          decoration: InputDecoration(
-                            labelText: l10n.fixedAmount,
-                            filled: true,
-                            isDense: true,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d*'),
+                              ),
+                            ],
+                            decoration: InputDecoration(
+                              labelText: l10n.fixedAmount,
+                              filled: true,
+                              isDense: true,
+                            ),
                           ),
                         ),
+                      ],
+                    ),
+                  ],
+                ),
+                FormSectionCard(
+                  title: l10n.discount,
+                  icon: Icons.percent_outlined,
+                  accentColor: accent,
+                  children: [
+                    CatalogDiscountEditor(
+                      accent: accent,
+                      enabledDefault: _enableDefaultDiscount,
+                      defaultType: _defaultDiscountType,
+                      defaultValue: _defaultDiscountValue,
+                      onEnabledDefaultChanged: (v) =>
+                          setState(() => _enableDefaultDiscount = v),
+                      onDefaultTypeChanged: (v) =>
+                          setState(() => _defaultDiscountType = v),
+                      tiers: _tiers,
+                      onAddTier: () => setState(
+                        () => _tiers.add(CatalogDiscountTierDraft()),
                       ),
-                    ],
-                  ),
-                ],
-              ),
-              GradientButton(
-                label:
-                    '${l10n.applyPricingAndAdd} (${l10n.selectedCount(_selected.length)})',
-                icon: Icons.check_rounded,
-                isLoading: _saving,
-                width: double.infinity,
-                gradient: AppColors.getPrimaryGradient(accent),
-                onPressed: _saving ? null : () => _submit(allTargets),
-              ),
-            ],
+                      onRemoveTier: (i) => setState(() {
+                        _tiers[i].dispose();
+                        _tiers.removeAt(i);
+                      }),
+                      onTierTypeChanged: (_) => setState(() {}),
+                    ),
+                  ],
+                ),
+                GradientButton(
+                  label:
+                      '${l10n.applyPricingAndAdd} (${l10n.selectedCount(_selected.length)})',
+                  icon: Icons.check_rounded,
+                  isLoading: _saving,
+                  width: double.infinity,
+                  gradient: AppColors.getPrimaryGradient(accent),
+                  onPressed: _saving ? null : () => _submit(allTargets),
+                ),
+              ],
+            ),
           ),
         ),
       ),

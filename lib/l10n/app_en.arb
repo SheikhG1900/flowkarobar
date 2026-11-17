@@ -65,6 +65,18 @@
   "recalculateCatalogConfirm": "Refresh formula-based sell prices from current cost? Manually set prices (*) are skipped. Existing orders are not changed.",
   "refreshManualPriceConfirm": "This price was set manually. Refreshing will replace it with the formula result. Continue?",
   "manualCatalogPrice": "Manually set price",
+  "defaultDiscount": "Default discount",
+  "defaultDiscountHint": "Applied when no qty tier matches",
+  "catalogDiscountHint": "Discounts apply at order/quotation time on the sell price. A matching qty tier replaces the default.",
+  "discountType": "Type",
+  "discountTypePercent": "Percent",
+  "discountTypeFixed": "Fixed per unit",
+  "discountPercent": "Percent",
+  "discountAmount": "Amount",
+  "tieredDiscounts": "Qty tiers",
+  "addDiscountTier": "Add tier",
+  "noDiscountTiers": "No qty tiers",
+  "minQuantity": "Min qty",
   "recalculateCatalogDone": "Updated {updated} items ({skipped} skipped)",
   "@recalculateCatalogDone": {
     "placeholders": {

@@ -52,3 +52,8 @@ final catalogAssignmentsStreamProvider =
     StreamProvider.family<List<CatalogAssignment>, String>((ref, catalogUuid) {
   return ref.watch(catalogRepositoryProvider).watchAssignments(catalogUuid);
 });
+
+final catalogItemTiersStreamProvider = StreamProvider.family<
+    List<CatalogTieredDiscount>, String>((ref, catalogItemUuid) {
+  return ref.watch(catalogRepositoryProvider).watchItemTiers(catalogItemUuid);
+});

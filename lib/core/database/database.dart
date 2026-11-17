@@ -569,6 +569,11 @@ class CatalogItems extends Table {
   BoolColumn get priceOverride =>
       boolean().withDefault(const Constant(false))();
 
+  /// Optional always-on discount: PERCENT | FIXED. Null/empty = none.
+  TextColumn get defaultDiscountType => text().nullable()();
+  RealColumn get defaultDiscountValue =>
+      real().withDefault(const Constant(0.0))();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
@@ -595,7 +600,14 @@ class CatalogTieredDiscounts extends Table {
   TextColumn get uuid => text()();
   TextColumn get catalogItemUuid => text().references(CatalogItems, #uuid)();
   RealColumn get minQuantity => real()();
+
+  /// Legacy / PERCENT value. Prefer [discountType] + [discountAmount] for FIXED.
   RealColumn get discountPercentage => real()();
+
+  /// PERCENT | FIXED — qty tier replaces item default when matched.
+  TextColumn get discountType =>
+      text().withDefault(const Constant('PERCENT'))();
+  RealColumn get discountAmount => real().withDefault(const Constant(0.0))();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -770,7 +782,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   // Compatibility getters and helpers for deprecated tables
   $ProductCategoriesTable get categories => productCategories;
@@ -848,8 +860,53 @@ class AppDatabase extends _$AppDatabase {
           if (from < 11) {
             await _migrateCatalogItemPriceOverrideToV11();
           }
+          if (from < 12) {
+            await _migrateCatalogDiscountsToV12();
+          }
         },
       );
+
+  Future<void> _migrateCatalogDiscountsToV12() async {
+    try {
+      await customStatement(
+        'ALTER TABLE catalog_items ADD COLUMN default_discount_type TEXT',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v12 default_discount_type skipped: $e');
+      }
+    }
+    try {
+      await customStatement(
+        'ALTER TABLE catalog_items ADD COLUMN default_discount_value REAL '
+        'NOT NULL DEFAULT 0.0',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v12 default_discount_value skipped: $e');
+      }
+    }
+    try {
+      await customStatement(
+        "ALTER TABLE catalog_tiered_discounts ADD COLUMN discount_type TEXT "
+        "NOT NULL DEFAULT 'PERCENT'",
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v12 discount_type skipped: $e');
+      }
+    }
+    try {
+      await customStatement(
+        'ALTER TABLE catalog_tiered_discounts ADD COLUMN discount_amount REAL '
+        'NOT NULL DEFAULT 0.0',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v12 discount_amount skipped: $e');
+      }
+    }
+  }
 
   Future<void> _migrateCatalogItemPriceOverrideToV11() async {
     try {
