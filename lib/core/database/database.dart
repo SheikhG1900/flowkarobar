@@ -479,6 +479,9 @@ class SellingProducts extends Table {
   TextColumn get categoryUuid =>
       text().nullable().references(ProductCategories, #uuid)();
 
+  /// Optional sell unit; if unset at save, defaults from first component product.
+  TextColumn get unit => text().nullable()();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
@@ -561,6 +564,10 @@ class CatalogItems extends Table {
   RealColumn get sellPrice => real().withDefault(const Constant(0.0))();
   RealColumn get unitCostSnapshot => real().nullable()();
   DateTimeColumn get priceComputedAt => dateTime().nullable()();
+
+  /// True when sell price was set manually; skipped by catalog recalculate.
+  BoolColumn get priceOverride =>
+      boolean().withDefault(const Constant(false))();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -763,7 +770,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 11;
 
   // Compatibility getters and helpers for deprecated tables
   $ProductCategoriesTable get categories => productCategories;
@@ -835,8 +842,27 @@ class AppDatabase extends _$AppDatabase {
           if (from < 9) {
             await _migrateSellingProductCategoryToV9();
           }
+          if (from < 10) {
+            await _migrateSellingProductUnitToV10();
+          }
+          if (from < 11) {
+            await _migrateCatalogItemPriceOverrideToV11();
+          }
         },
       );
+
+  Future<void> _migrateCatalogItemPriceOverrideToV11() async {
+    try {
+      await customStatement(
+        'ALTER TABLE catalog_items ADD COLUMN price_override INTEGER NOT NULL '
+        "DEFAULT 0 CHECK (price_override IN (0, 1))",
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v11 alter skipped: $e');
+      }
+    }
+  }
 
   Future<void> _migrateSellingProductCategoryToV9() async {
     try {
@@ -847,6 +873,39 @@ class AppDatabase extends _$AppDatabase {
     } catch (e) {
       if (kDebugMode) {
         print('Database migrate v9 alter skipped: $e');
+      }
+    }
+  }
+
+  Future<void> _migrateSellingProductUnitToV10() async {
+    try {
+      await customStatement(
+        'ALTER TABLE selling_products ADD COLUMN unit TEXT',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v10 alter skipped: $e');
+      }
+    }
+    // Backfill from first non-deleted component product when unit is empty.
+    try {
+      await customStatement('''
+        UPDATE selling_products
+        SET unit = (
+          SELECT p.unit
+          FROM selling_product_components c
+          INNER JOIN products p ON p.uuid = c.product_uuid
+          WHERE c.selling_product_uuid = selling_products.uuid
+            AND c.is_deleted = 0
+            AND p.is_deleted = 0
+          ORDER BY c.created_at ASC
+          LIMIT 1
+        )
+        WHERE unit IS NULL OR TRIM(unit) = ''
+      ''');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v10 unit backfill skipped: $e');
       }
     }
   }

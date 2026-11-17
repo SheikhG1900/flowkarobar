@@ -7,6 +7,7 @@ class HoverBorderCard extends StatefulWidget {
   final Color accent;
   final Widget child;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
   final EdgeInsetsGeometry? padding;
   final double borderRadius;
   /// When set, uses a flat fill instead of the standard card decoration.
@@ -18,6 +19,7 @@ class HoverBorderCard extends StatefulWidget {
     required this.accent,
     required this.child,
     this.onTap,
+    this.onLongPress,
     this.padding,
     this.borderRadius = 20,
     this.fillColor,
@@ -76,7 +78,7 @@ class _HoverBorderCardState extends State<HoverBorderCard> {
     );
 
     // Hover-only cards (e.g. recipe with inner buttons) must not swallow taps.
-    if (widget.onTap == null) {
+    if (widget.onTap == null && widget.onLongPress == null) {
       return MouseRegion(
         onEnter: (_) => _setHovered(true),
         onExit: (_) => _setHovered(false),
@@ -98,6 +100,7 @@ class _HoverBorderCardState extends State<HoverBorderCard> {
           splashColor: widget.accent.withValues(alpha: 0.06),
           onHover: _setHovered,
           onTap: widget.onTap,
+          onLongPress: widget.onLongPress,
           child: content,
         ),
       ),

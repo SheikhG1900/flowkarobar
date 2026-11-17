@@ -62,7 +62,7 @@ class FormSectionCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                 ],
-                Flexible(
+                Expanded(
                   child: Text(
                     title,
                     style: theme.textTheme.titleSmall?.copyWith(
@@ -74,7 +74,6 @@ class FormSectionCard extends StatelessWidget {
                 if (hasSubtitle) ...[
                   const SizedBox(width: 8),
                   Flexible(
-                    flex: 2,
                     child: Text(
                       subtitle!,
                       maxLines: 1,
@@ -89,7 +88,7 @@ class FormSectionCard extends StatelessWidget {
                   ),
                 ],
                 if (trailing != null) ...[
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 8),
                   trailing!,
                 ],
               ],

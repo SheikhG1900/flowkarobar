@@ -286,9 +286,117 @@ class CatalogRepository {
             priceComputedAt: Value(now),
             customPrice: Value(computed.sellPrice),
             validUntil: Value(validUntil),
+            createdAt: Value(now),
+            updatedAt: Value(now),
           ),
         );
     return uuid;
+  }
+
+  /// Bulk-add lines that share the same formula inputs (copied per line).
+  Future<int> addItemsBulk({
+    required String catalogUuid,
+    required List<CatalogItemPricingInput> targets,
+    required String pricingApproach,
+    required double markupOrMarginPercent,
+    required double fixedAmount,
+  }) async {
+    var added = 0;
+    for (final target in targets) {
+      final dup = await findDuplicate(
+        catalogUuid: catalogUuid,
+        productUuid: target.productUuid,
+        sellingProductUuid: target.sellingProductUuid,
+      );
+      if (dup != null) continue;
+      await addItem(
+        catalogUuid: catalogUuid,
+        pricing: CatalogItemPricingInput(
+          productUuid: target.productUuid,
+          sellingProductUuid: target.sellingProductUuid,
+          pricingApproach: pricingApproach,
+          markupOrMarginPercent: markupOrMarginPercent,
+          fixedAmount: fixedAmount,
+        ),
+      );
+      added++;
+    }
+    return added;
+  }
+
+  /// Copy / recalculate items from [sourceCatalogUuid] into [targetCatalogUuid].
+  /// [conflictAction] should be [CatalogImportConflictAction.skipAll] or
+  /// [CatalogImportConflictAction.replaceAll] for bulk import.
+  Future<({int added, int replaced, int skipped})> addFromCatalog({
+    required String targetCatalogUuid,
+    required String sourceCatalogUuid,
+    required CatalogImportPriceMode priceMode,
+    required CatalogImportConflictAction conflictAction,
+  }) async {
+    if (targetCatalogUuid == sourceCatalogUuid) {
+      throw ArgumentError('Source and target catalog must differ');
+    }
+    final replace = conflictAction == CatalogImportConflictAction.replace ||
+        conflictAction == CatalogImportConflictAction.replaceAll;
+    final sourceItems = await getItems(sourceCatalogUuid);
+    var added = 0;
+    var replaced = 0;
+    var skipped = 0;
+
+    for (final source in sourceItems) {
+      final dup = await findDuplicate(
+        catalogUuid: targetCatalogUuid,
+        productUuid: source.productUuid,
+        sellingProductUuid: source.sellingProductUuid,
+      );
+
+      if (dup != null) {
+        if (!replace) {
+          skipped++;
+          continue;
+        }
+        await softDeleteItem(dup.uuid);
+        replaced++;
+      }
+
+      if (priceMode == CatalogImportPriceMode.copy) {
+        final uuid = const Uuid().v4();
+        final now = DateTime.now();
+        await _db.into(_db.catalogItems).insert(
+              CatalogItemsCompanion.insert(
+                uuid: uuid,
+                catalogUuid: targetCatalogUuid,
+                productUuid: Value(source.productUuid),
+                sellingProductUuid: Value(source.sellingProductUuid),
+                pricingApproach: Value(source.pricingApproach),
+                markupOrMarginPercent: Value(source.markupOrMarginPercent),
+                fixedAmount: Value(source.fixedAmount),
+                sellPrice: Value(source.sellPrice),
+                unitCostSnapshot: Value(source.unitCostSnapshot),
+                priceComputedAt: Value(source.priceComputedAt ?? now),
+                customPrice: Value(source.sellPrice),
+                priceOverride: Value(source.priceOverride),
+                validUntil: Value(source.validUntil),
+                createdAt: Value(now),
+                updatedAt: Value(now),
+              ),
+            );
+      } else {
+        await addItem(
+          catalogUuid: targetCatalogUuid,
+          pricing: CatalogItemPricingInput(
+            productUuid: source.productUuid,
+            sellingProductUuid: source.sellingProductUuid,
+            pricingApproach: source.pricingApproach,
+            markupOrMarginPercent: source.markupOrMarginPercent,
+            fixedAmount: source.fixedAmount,
+          ),
+          validUntil: source.validUntil,
+        );
+      }
+      added++;
+    }
+    return (added: added, replaced: replaced, skipped: skipped);
   }
 
   Future<void> updateItemPricing({
@@ -315,6 +423,7 @@ class CatalogRepository {
       ),
     );
     final now = DateTime.now();
+    final isOverride = sellPriceOverride != null;
     await (_db.update(_db.catalogItems)..where((i) => i.uuid.equals(itemUuid)))
         .write(
       CatalogItemsCompanion(
@@ -325,6 +434,7 @@ class CatalogRepository {
         unitCostSnapshot: Value(computed.unitCost),
         priceComputedAt: Value(now),
         customPrice: Value(computed.sellPrice),
+        priceOverride: Value(isOverride),
         isNotSynced: const Value(true),
         updatedAt: Value(now),
       ),
@@ -332,6 +442,7 @@ class CatalogRepository {
   }
 
   /// Recompute sellPrice from current unit cost using stored formula fields.
+  /// Clears [CatalogItem.priceOverride] when applied.
   Future<bool> refreshItemPrice(String itemUuid) async {
     final item = await getItem(itemUuid);
     if (item == null) return false;
@@ -344,7 +455,7 @@ class CatalogRepository {
     return true;
   }
 
-  /// Refresh all active items in a catalog. Returns counts.
+  /// Refresh formula-driven items only; skips manual price overrides.
   Future<({int updated, int skipped})> recalculateCatalog(
     String catalogUuid,
   ) async {
@@ -352,6 +463,10 @@ class CatalogRepository {
     var updated = 0;
     var skipped = 0;
     for (final item in items) {
+      if (item.priceOverride) {
+        skipped++;
+        continue;
+      }
       try {
         final ok = await refreshItemPrice(item.uuid);
         if (ok) {

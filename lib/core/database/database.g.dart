@@ -16334,6 +16334,11 @@ class $SellingProductsTable extends SellingProducts
       requiredDuringInsert: false,
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'REFERENCES product_categories (uuid)'));
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+      'unit', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -16377,6 +16382,7 @@ class $SellingProductsTable extends SellingProducts
         sku,
         description,
         categoryUuid,
+        unit,
         createdAt,
         updatedAt,
         isDeleted,
@@ -16420,6 +16426,10 @@ class $SellingProductsTable extends SellingProducts
           categoryUuid.isAcceptableOrUnknown(
               data['category_uuid']!, _categoryUuidMeta));
     }
+    if (data.containsKey('unit')) {
+      context.handle(
+          _unitMeta, unit.isAcceptableOrUnknown(data['unit']!, _unitMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -16457,6 +16467,8 @@ class $SellingProductsTable extends SellingProducts
           .read(DriftSqlType.string, data['${effectivePrefix}description']),
       categoryUuid: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}category_uuid']),
+      unit: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}unit']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -16482,6 +16494,9 @@ class SellingProduct extends DataClass implements Insertable<SellingProduct> {
 
   /// Optional category; if unset at save, defaults from first component product.
   final String? categoryUuid;
+
+  /// Optional sell unit; if unset at save, defaults from first component product.
+  final String? unit;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
@@ -16492,6 +16507,7 @@ class SellingProduct extends DataClass implements Insertable<SellingProduct> {
       this.sku,
       this.description,
       this.categoryUuid,
+      this.unit,
       required this.createdAt,
       required this.updatedAt,
       required this.isDeleted,
@@ -16509,6 +16525,9 @@ class SellingProduct extends DataClass implements Insertable<SellingProduct> {
     }
     if (!nullToAbsent || categoryUuid != null) {
       map['category_uuid'] = Variable<String>(categoryUuid);
+    }
+    if (!nullToAbsent || unit != null) {
+      map['unit'] = Variable<String>(unit);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
@@ -16528,6 +16547,7 @@ class SellingProduct extends DataClass implements Insertable<SellingProduct> {
       categoryUuid: categoryUuid == null && nullToAbsent
           ? const Value.absent()
           : Value(categoryUuid),
+      unit: unit == null && nullToAbsent ? const Value.absent() : Value(unit),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       isDeleted: Value(isDeleted),
@@ -16544,6 +16564,7 @@ class SellingProduct extends DataClass implements Insertable<SellingProduct> {
       sku: serializer.fromJson<String?>(json['sku']),
       description: serializer.fromJson<String?>(json['description']),
       categoryUuid: serializer.fromJson<String?>(json['categoryUuid']),
+      unit: serializer.fromJson<String?>(json['unit']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
@@ -16559,6 +16580,7 @@ class SellingProduct extends DataClass implements Insertable<SellingProduct> {
       'sku': serializer.toJson<String?>(sku),
       'description': serializer.toJson<String?>(description),
       'categoryUuid': serializer.toJson<String?>(categoryUuid),
+      'unit': serializer.toJson<String?>(unit),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'isDeleted': serializer.toJson<bool>(isDeleted),
@@ -16572,6 +16594,7 @@ class SellingProduct extends DataClass implements Insertable<SellingProduct> {
           Value<String?> sku = const Value.absent(),
           Value<String?> description = const Value.absent(),
           Value<String?> categoryUuid = const Value.absent(),
+          Value<String?> unit = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt,
           bool? isDeleted,
@@ -16583,6 +16606,7 @@ class SellingProduct extends DataClass implements Insertable<SellingProduct> {
         description: description.present ? description.value : this.description,
         categoryUuid:
             categoryUuid.present ? categoryUuid.value : this.categoryUuid,
+        unit: unit.present ? unit.value : this.unit,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         isDeleted: isDeleted ?? this.isDeleted,
@@ -16598,6 +16622,7 @@ class SellingProduct extends DataClass implements Insertable<SellingProduct> {
       categoryUuid: data.categoryUuid.present
           ? data.categoryUuid.value
           : this.categoryUuid,
+      unit: data.unit.present ? data.unit.value : this.unit,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
@@ -16614,6 +16639,7 @@ class SellingProduct extends DataClass implements Insertable<SellingProduct> {
           ..write('sku: $sku, ')
           ..write('description: $description, ')
           ..write('categoryUuid: $categoryUuid, ')
+          ..write('unit: $unit, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -16624,7 +16650,7 @@ class SellingProduct extends DataClass implements Insertable<SellingProduct> {
 
   @override
   int get hashCode => Object.hash(uuid, name, sku, description, categoryUuid,
-      createdAt, updatedAt, isDeleted, isNotSynced);
+      unit, createdAt, updatedAt, isDeleted, isNotSynced);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -16634,6 +16660,7 @@ class SellingProduct extends DataClass implements Insertable<SellingProduct> {
           other.sku == this.sku &&
           other.description == this.description &&
           other.categoryUuid == this.categoryUuid &&
+          other.unit == this.unit &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.isDeleted == this.isDeleted &&
@@ -16646,6 +16673,7 @@ class SellingProductsCompanion extends UpdateCompanion<SellingProduct> {
   final Value<String?> sku;
   final Value<String?> description;
   final Value<String?> categoryUuid;
+  final Value<String?> unit;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<bool> isDeleted;
@@ -16657,6 +16685,7 @@ class SellingProductsCompanion extends UpdateCompanion<SellingProduct> {
     this.sku = const Value.absent(),
     this.description = const Value.absent(),
     this.categoryUuid = const Value.absent(),
+    this.unit = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -16669,6 +16698,7 @@ class SellingProductsCompanion extends UpdateCompanion<SellingProduct> {
     this.sku = const Value.absent(),
     this.description = const Value.absent(),
     this.categoryUuid = const Value.absent(),
+    this.unit = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -16682,6 +16712,7 @@ class SellingProductsCompanion extends UpdateCompanion<SellingProduct> {
     Expression<String>? sku,
     Expression<String>? description,
     Expression<String>? categoryUuid,
+    Expression<String>? unit,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<bool>? isDeleted,
@@ -16694,6 +16725,7 @@ class SellingProductsCompanion extends UpdateCompanion<SellingProduct> {
       if (sku != null) 'sku': sku,
       if (description != null) 'description': description,
       if (categoryUuid != null) 'category_uuid': categoryUuid,
+      if (unit != null) 'unit': unit,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isDeleted != null) 'is_deleted': isDeleted,
@@ -16708,6 +16740,7 @@ class SellingProductsCompanion extends UpdateCompanion<SellingProduct> {
       Value<String?>? sku,
       Value<String?>? description,
       Value<String?>? categoryUuid,
+      Value<String?>? unit,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<bool>? isDeleted,
@@ -16719,6 +16752,7 @@ class SellingProductsCompanion extends UpdateCompanion<SellingProduct> {
       sku: sku ?? this.sku,
       description: description ?? this.description,
       categoryUuid: categoryUuid ?? this.categoryUuid,
+      unit: unit ?? this.unit,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
@@ -16744,6 +16778,9 @@ class SellingProductsCompanion extends UpdateCompanion<SellingProduct> {
     }
     if (categoryUuid.present) {
       map['category_uuid'] = Variable<String>(categoryUuid.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -16771,6 +16808,7 @@ class SellingProductsCompanion extends UpdateCompanion<SellingProduct> {
           ..write('sku: $sku, ')
           ..write('description: $description, ')
           ..write('categoryUuid: $categoryUuid, ')
+          ..write('unit: $unit, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -17921,6 +17959,16 @@ class $CatalogItemsTable extends CatalogItems
   late final GeneratedColumn<DateTime> priceComputedAt =
       GeneratedColumn<DateTime>('price_computed_at', aliasedName, true,
           type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _priceOverrideMeta =
+      const VerificationMeta('priceOverride');
+  @override
+  late final GeneratedColumn<bool> priceOverride = GeneratedColumn<bool>(
+      'price_override', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("price_override" IN (0, 1))'),
+      defaultValue: const Constant(false));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -17973,6 +18021,7 @@ class $CatalogItemsTable extends CatalogItems
         sellPrice,
         unitCostSnapshot,
         priceComputedAt,
+        priceOverride,
         createdAt,
         updatedAt,
         isDeleted,
@@ -18070,6 +18119,12 @@ class $CatalogItemsTable extends CatalogItems
           priceComputedAt.isAcceptableOrUnknown(
               data['price_computed_at']!, _priceComputedAtMeta));
     }
+    if (data.containsKey('price_override')) {
+      context.handle(
+          _priceOverrideMeta,
+          priceOverride.isAcceptableOrUnknown(
+              data['price_override']!, _priceOverrideMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -18127,6 +18182,8 @@ class $CatalogItemsTable extends CatalogItems
           DriftSqlType.double, data['${effectivePrefix}unit_cost_snapshot']),
       priceComputedAt: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}price_computed_at']),
+      priceOverride: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}price_override'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -18173,6 +18230,9 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
   final double sellPrice;
   final double? unitCostSnapshot;
   final DateTime? priceComputedAt;
+
+  /// True when sell price was set manually; skipped by catalog recalculate.
+  final bool priceOverride;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
@@ -18192,6 +18252,7 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       required this.sellPrice,
       this.unitCostSnapshot,
       this.priceComputedAt,
+      required this.priceOverride,
       required this.createdAt,
       required this.updatedAt,
       required this.isDeleted,
@@ -18227,6 +18288,7 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
     if (!nullToAbsent || priceComputedAt != null) {
       map['price_computed_at'] = Variable<DateTime>(priceComputedAt);
     }
+    map['price_override'] = Variable<bool>(priceOverride);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['is_deleted'] = Variable<bool>(isDeleted);
@@ -18264,6 +18326,7 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       priceComputedAt: priceComputedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(priceComputedAt),
+      priceOverride: Value(priceOverride),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       isDeleted: Value(isDeleted),
@@ -18292,6 +18355,7 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       sellPrice: serializer.fromJson<double>(json['sellPrice']),
       unitCostSnapshot: serializer.fromJson<double?>(json['unitCostSnapshot']),
       priceComputedAt: serializer.fromJson<DateTime?>(json['priceComputedAt']),
+      priceOverride: serializer.fromJson<bool>(json['priceOverride']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
@@ -18317,6 +18381,7 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       'sellPrice': serializer.toJson<double>(sellPrice),
       'unitCostSnapshot': serializer.toJson<double?>(unitCostSnapshot),
       'priceComputedAt': serializer.toJson<DateTime?>(priceComputedAt),
+      'priceOverride': serializer.toJson<bool>(priceOverride),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'isDeleted': serializer.toJson<bool>(isDeleted),
@@ -18339,6 +18404,7 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
           double? sellPrice,
           Value<double?> unitCostSnapshot = const Value.absent(),
           Value<DateTime?> priceComputedAt = const Value.absent(),
+          bool? priceOverride,
           DateTime? createdAt,
           DateTime? updatedAt,
           bool? isDeleted,
@@ -18366,6 +18432,7 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
         priceComputedAt: priceComputedAt.present
             ? priceComputedAt.value
             : this.priceComputedAt,
+        priceOverride: priceOverride ?? this.priceOverride,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         isDeleted: isDeleted ?? this.isDeleted,
@@ -18404,6 +18471,9 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       priceComputedAt: data.priceComputedAt.present
           ? data.priceComputedAt.value
           : this.priceComputedAt,
+      priceOverride: data.priceOverride.present
+          ? data.priceOverride.value
+          : this.priceOverride,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
@@ -18429,6 +18499,7 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
           ..write('sellPrice: $sellPrice, ')
           ..write('unitCostSnapshot: $unitCostSnapshot, ')
           ..write('priceComputedAt: $priceComputedAt, ')
+          ..write('priceOverride: $priceOverride, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -18453,6 +18524,7 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
       sellPrice,
       unitCostSnapshot,
       priceComputedAt,
+      priceOverride,
       createdAt,
       updatedAt,
       isDeleted,
@@ -18475,6 +18547,7 @@ class CatalogItem extends DataClass implements Insertable<CatalogItem> {
           other.sellPrice == this.sellPrice &&
           other.unitCostSnapshot == this.unitCostSnapshot &&
           other.priceComputedAt == this.priceComputedAt &&
+          other.priceOverride == this.priceOverride &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.isDeleted == this.isDeleted &&
@@ -18496,6 +18569,7 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
   final Value<double> sellPrice;
   final Value<double?> unitCostSnapshot;
   final Value<DateTime?> priceComputedAt;
+  final Value<bool> priceOverride;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<bool> isDeleted;
@@ -18516,6 +18590,7 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
     this.sellPrice = const Value.absent(),
     this.unitCostSnapshot = const Value.absent(),
     this.priceComputedAt = const Value.absent(),
+    this.priceOverride = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -18537,6 +18612,7 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
     this.sellPrice = const Value.absent(),
     this.unitCostSnapshot = const Value.absent(),
     this.priceComputedAt = const Value.absent(),
+    this.priceOverride = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -18559,6 +18635,7 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
     Expression<double>? sellPrice,
     Expression<double>? unitCostSnapshot,
     Expression<DateTime>? priceComputedAt,
+    Expression<bool>? priceOverride,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<bool>? isDeleted,
@@ -18583,6 +18660,7 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
       if (sellPrice != null) 'sell_price': sellPrice,
       if (unitCostSnapshot != null) 'unit_cost_snapshot': unitCostSnapshot,
       if (priceComputedAt != null) 'price_computed_at': priceComputedAt,
+      if (priceOverride != null) 'price_override': priceOverride,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isDeleted != null) 'is_deleted': isDeleted,
@@ -18606,6 +18684,7 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
       Value<double>? sellPrice,
       Value<double?>? unitCostSnapshot,
       Value<DateTime?>? priceComputedAt,
+      Value<bool>? priceOverride,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<bool>? isDeleted,
@@ -18628,6 +18707,7 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
       sellPrice: sellPrice ?? this.sellPrice,
       unitCostSnapshot: unitCostSnapshot ?? this.unitCostSnapshot,
       priceComputedAt: priceComputedAt ?? this.priceComputedAt,
+      priceOverride: priceOverride ?? this.priceOverride,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
@@ -18683,6 +18763,9 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
     if (priceComputedAt.present) {
       map['price_computed_at'] = Variable<DateTime>(priceComputedAt.value);
     }
+    if (priceOverride.present) {
+      map['price_override'] = Variable<bool>(priceOverride.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -18718,6 +18801,7 @@ class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
           ..write('sellPrice: $sellPrice, ')
           ..write('unitCostSnapshot: $unitCostSnapshot, ')
           ..write('priceComputedAt: $priceComputedAt, ')
+          ..write('priceOverride: $priceOverride, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -33249,6 +33333,7 @@ typedef $$SellingProductsTableCreateCompanionBuilder = SellingProductsCompanion
   Value<String?> sku,
   Value<String?> description,
   Value<String?> categoryUuid,
+  Value<String?> unit,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -33262,6 +33347,7 @@ typedef $$SellingProductsTableUpdateCompanionBuilder = SellingProductsCompanion
   Value<String?> sku,
   Value<String?> description,
   Value<String?> categoryUuid,
+  Value<String?> unit,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -33347,6 +33433,9 @@ class $$SellingProductsTableFilterComposer
 
   ColumnFilters<String> get description => $composableBuilder(
       column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -33446,6 +33535,9 @@ class $$SellingProductsTableOrderingComposer
   ColumnOrderings<String> get description => $composableBuilder(
       column: $table.description, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -33499,6 +33591,9 @@ class $$SellingProductsTableAnnotationComposer
 
   GeneratedColumn<String> get description => $composableBuilder(
       column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -33611,6 +33706,7 @@ class $$SellingProductsTableTableManager extends RootTableManager<
             Value<String?> sku = const Value.absent(),
             Value<String?> description = const Value.absent(),
             Value<String?> categoryUuid = const Value.absent(),
+            Value<String?> unit = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -33623,6 +33719,7 @@ class $$SellingProductsTableTableManager extends RootTableManager<
             sku: sku,
             description: description,
             categoryUuid: categoryUuid,
+            unit: unit,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,
@@ -33635,6 +33732,7 @@ class $$SellingProductsTableTableManager extends RootTableManager<
             Value<String?> sku = const Value.absent(),
             Value<String?> description = const Value.absent(),
             Value<String?> categoryUuid = const Value.absent(),
+            Value<String?> unit = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -33647,6 +33745,7 @@ class $$SellingProductsTableTableManager extends RootTableManager<
             sku: sku,
             description: description,
             categoryUuid: categoryUuid,
+            unit: unit,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,
@@ -34592,6 +34691,7 @@ typedef $$CatalogItemsTableCreateCompanionBuilder = CatalogItemsCompanion
   Value<double> sellPrice,
   Value<double?> unitCostSnapshot,
   Value<DateTime?> priceComputedAt,
+  Value<bool> priceOverride,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -34614,6 +34714,7 @@ typedef $$CatalogItemsTableUpdateCompanionBuilder = CatalogItemsCompanion
   Value<double> sellPrice,
   Value<double?> unitCostSnapshot,
   Value<DateTime?> priceComputedAt,
+  Value<bool> priceOverride,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -34748,6 +34849,9 @@ class $$CatalogItemsTableFilterComposer
   ColumnFilters<DateTime> get priceComputedAt => $composableBuilder(
       column: $table.priceComputedAt,
       builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get priceOverride => $composableBuilder(
+      column: $table.priceOverride, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -34909,6 +35013,10 @@ class $$CatalogItemsTableOrderingComposer
       column: $table.priceComputedAt,
       builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<bool> get priceOverride => $composableBuilder(
+      column: $table.priceOverride,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -35040,6 +35148,9 @@ class $$CatalogItemsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get priceComputedAt => $composableBuilder(
       column: $table.priceComputedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get priceOverride => $composableBuilder(
+      column: $table.priceOverride, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -35199,6 +35310,7 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
             Value<double> sellPrice = const Value.absent(),
             Value<double?> unitCostSnapshot = const Value.absent(),
             Value<DateTime?> priceComputedAt = const Value.absent(),
+            Value<bool> priceOverride = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -35220,6 +35332,7 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
             sellPrice: sellPrice,
             unitCostSnapshot: unitCostSnapshot,
             priceComputedAt: priceComputedAt,
+            priceOverride: priceOverride,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,
@@ -35241,6 +35354,7 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
             Value<double> sellPrice = const Value.absent(),
             Value<double?> unitCostSnapshot = const Value.absent(),
             Value<DateTime?> priceComputedAt = const Value.absent(),
+            Value<bool> priceOverride = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -35262,6 +35376,7 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
             sellPrice: sellPrice,
             unitCostSnapshot: unitCostSnapshot,
             priceComputedAt: priceComputedAt,
+            priceOverride: priceOverride,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,

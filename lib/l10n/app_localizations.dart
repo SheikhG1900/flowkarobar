@@ -286,6 +286,12 @@ abstract class AppLocalizations {
   /// **'Virtual sell offer or bundle — no stock of its own'**
   String get sellingProductHint;
 
+  /// No description provided for @sellingProductUnitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Defaults from first component'**
+  String get sellingProductUnitHint;
+
   /// No description provided for @confirmDeleteSellingProduct.
   ///
   /// In en, this message translates to:
@@ -381,6 +387,372 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Catalog'**
   String get catalog;
+
+  /// No description provided for @noCatalogsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No catalogs yet'**
+  String get noCatalogsYet;
+
+  /// No description provided for @newCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'New catalog'**
+  String get newCatalog;
+
+  /// No description provided for @editCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit catalog'**
+  String get editCatalog;
+
+  /// No description provided for @catalogSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog saved'**
+  String get catalogSaved;
+
+  /// No description provided for @catalogDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog deleted'**
+  String get catalogDeleted;
+
+  /// No description provided for @confirmDeleteCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this catalog and its items?'**
+  String get confirmDeleteCatalog;
+
+  /// No description provided for @catalogHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Price list for products and selling offers'**
+  String get catalogHint;
+
+  /// No description provided for @defaultCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Default catalog'**
+  String get defaultCatalog;
+
+  /// No description provided for @setAsDefaultCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Set as default catalog'**
+  String get setAsDefaultCatalog;
+
+  /// No description provided for @catalogValidUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid until'**
+  String get catalogValidUntil;
+
+  /// No description provided for @expired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get expired;
+
+  /// No description provided for @catalogItemsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No items in this catalog yet'**
+  String get catalogItemsEmpty;
+
+  /// No description provided for @addCatalogItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Add items'**
+  String get addCatalogItems;
+
+  /// No description provided for @addFromCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Add from catalog'**
+  String get addFromCatalog;
+
+  /// No description provided for @recalculateCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Recalculate prices'**
+  String get recalculateCatalog;
+
+  /// No description provided for @recalculateCatalogConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh formula-based sell prices from current cost? Manually set prices (*) are skipped. Existing orders are not changed.'**
+  String get recalculateCatalogConfirm;
+
+  /// No description provided for @refreshManualPriceConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This price was set manually. Refreshing will replace it with the formula result. Continue?'**
+  String get refreshManualPriceConfirm;
+
+  /// No description provided for @manualCatalogPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Manually set price'**
+  String get manualCatalogPrice;
+
+  /// No description provided for @recalculateCatalogDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {updated} items ({skipped} skipped)'**
+  String recalculateCatalogDone(int updated, int skipped);
+
+  /// No description provided for @pricingApproach.
+  ///
+  /// In en, this message translates to:
+  /// **'Pricing approach'**
+  String get pricingApproach;
+
+  /// No description provided for @pricingMarkup.
+  ///
+  /// In en, this message translates to:
+  /// **'Markup on cost'**
+  String get pricingMarkup;
+
+  /// No description provided for @pricingMargin.
+  ///
+  /// In en, this message translates to:
+  /// **'Margin on sell price'**
+  String get pricingMargin;
+
+  /// No description provided for @pricingMarkupThenFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Markup, then fixed'**
+  String get pricingMarkupThenFixed;
+
+  /// No description provided for @pricingMarkupThenFixedScenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Mark up cost, then add packing or delivery'**
+  String get pricingMarkupThenFixedScenario;
+
+  /// No description provided for @pricingMarkupThenFixedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell = cost × (1 + %) + fixed'**
+  String get pricingMarkupThenFixedHint;
+
+  /// No description provided for @pricingFixedThenMarkup.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed into cost, then markup'**
+  String get pricingFixedThenMarkup;
+
+  /// No description provided for @pricingFixedThenMarkupScenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Add extras into cost, then mark up everything'**
+  String get pricingFixedThenMarkupScenario;
+
+  /// No description provided for @pricingFixedThenMarkupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell = (cost + fixed) × (1 + %)'**
+  String get pricingFixedThenMarkupHint;
+
+  /// No description provided for @pricingFixedThenMargin.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed into cost, then margin'**
+  String get pricingFixedThenMargin;
+
+  /// No description provided for @pricingFixedThenMarginScenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Cover a flat fee and hit a margin on sell price'**
+  String get pricingFixedThenMarginScenario;
+
+  /// No description provided for @pricingFixedThenMarginHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell = (cost + fixed) ÷ (1 − %); % under 100'**
+  String get pricingFixedThenMarginHint;
+
+  /// No description provided for @pricingMarginThenFixed.
+  ///
+  /// In en, this message translates to:
+  /// **'Margin, then fixed'**
+  String get pricingMarginThenFixed;
+
+  /// No description provided for @pricingMarginThenFixedScenario.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit margin on cost, then add flat extra profit'**
+  String get pricingMarginThenFixedScenario;
+
+  /// No description provided for @pricingMarginThenFixedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell = cost ÷ (1 − %) + fixed; % under 100'**
+  String get pricingMarginThenFixedHint;
+
+  /// No description provided for @markupOrMarginPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Percent'**
+  String get markupOrMarginPercent;
+
+  /// No description provided for @fixedAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed amount'**
+  String get fixedAmount;
+
+  /// No description provided for @sellPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell price'**
+  String get sellPrice;
+
+  /// No description provided for @unitCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit cost'**
+  String get unitCost;
+
+  /// No description provided for @catalogItemSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog item saved'**
+  String get catalogItemSaved;
+
+  /// No description provided for @catalogItemDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog item removed'**
+  String get catalogItemDeleted;
+
+  /// No description provided for @confirmDeleteCatalogItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this item from the catalog?'**
+  String get confirmDeleteCatalogItem;
+
+  /// No description provided for @refreshItemPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh price'**
+  String get refreshItemPrice;
+
+  /// No description provided for @editItemPricing.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit pricing'**
+  String get editItemPricing;
+
+  /// No description provided for @selectCatalogItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Select products or selling products'**
+  String get selectCatalogItems;
+
+  /// No description provided for @selectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectedCount(int count);
+
+  /// No description provided for @applyPricingAndAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply pricing & add'**
+  String get applyPricingAndAdd;
+
+  /// No description provided for @catalogImportPriceMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Price mode'**
+  String get catalogImportPriceMode;
+
+  /// No description provided for @catalogImportCopyPrices.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy prices'**
+  String get catalogImportCopyPrices;
+
+  /// No description provided for @catalogImportRecalculate.
+  ///
+  /// In en, this message translates to:
+  /// **'Recalculate from cost'**
+  String get catalogImportRecalculate;
+
+  /// No description provided for @catalogImportConflicts.
+  ///
+  /// In en, this message translates to:
+  /// **'If item already exists'**
+  String get catalogImportConflicts;
+
+  /// No description provided for @catalogImportSkipAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip duplicates'**
+  String get catalogImportSkipAll;
+
+  /// No description provided for @catalogImportReplaceAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Replace duplicates'**
+  String get catalogImportReplaceAll;
+
+  /// No description provided for @catalogImportDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Added {added}, replaced {replaced}, skipped {skipped}'**
+  String catalogImportDone(int added, int replaced, int skipped);
+
+  /// No description provided for @selectSourceCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Select source catalog'**
+  String get selectSourceCatalog;
+
+  /// No description provided for @catalogAssignmentsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Assigned contacts'**
+  String get catalogAssignmentsSection;
+
+  /// No description provided for @assignContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign contact'**
+  String get assignContact;
+
+  /// No description provided for @noCatalogAssignments.
+  ///
+  /// In en, this message translates to:
+  /// **'No contacts assigned'**
+  String get noCatalogAssignments;
+
+  /// No description provided for @catalogAssignmentAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact assigned'**
+  String get catalogAssignmentAdded;
+
+  /// No description provided for @catalogAssignmentRemoved.
+  ///
+  /// In en, this message translates to:
+  /// **'Assignment removed'**
+  String get catalogAssignmentRemoved;
+
+  /// No description provided for @pricingMarkupHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell = cost × (1 + %) + fixed'**
+  String get pricingMarkupHint;
+
+  /// No description provided for @pricingMarginHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell = (cost + fixed) ÷ (1 − %); % must be under 100'**
+  String get pricingMarginHint;
 
   /// No description provided for @sales.
   ///

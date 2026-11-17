@@ -103,6 +103,9 @@ class AppLocalizationsUr extends AppLocalizations {
       'ورچوئل فروختی آفر یا بنڈل — اپنا اسٹاک نہیں';
 
   @override
+  String get sellingProductUnitHint => 'پہلے جزو سے ڈیفالٹ';
+
+  @override
   String get confirmDeleteSellingProduct => 'یہ فروختی مصنوعات حذف کریں؟';
 
   @override
@@ -149,6 +152,204 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get catalog => 'کیٹلاگ';
+
+  @override
+  String get noCatalogsYet => 'ابھی کوئی کیٹلاگ نہیں';
+
+  @override
+  String get newCatalog => 'نیا کیٹلاگ';
+
+  @override
+  String get editCatalog => 'کیٹلاگ میں ترمیم';
+
+  @override
+  String get catalogSaved => 'کیٹلاگ محفوظ ہو گیا';
+
+  @override
+  String get catalogDeleted => 'کیٹلاگ حذف ہو گیا';
+
+  @override
+  String get confirmDeleteCatalog => 'یہ کیٹلاگ اور اس کی اشیاء حذف کریں؟';
+
+  @override
+  String get catalogHint => 'مصنوعات اور فروختی پیشکشوں کی قیمت فہرست';
+
+  @override
+  String get defaultCatalog => 'طے شدہ کیٹلاگ';
+
+  @override
+  String get setAsDefaultCatalog => 'طے شدہ کیٹلاگ بنائیں';
+
+  @override
+  String get catalogValidUntil => 'میعاد تک';
+
+  @override
+  String get expired => 'میعاد ختم';
+
+  @override
+  String get catalogItemsEmpty => 'اس کیٹلاگ میں ابھی کوئی آئٹم نہیں';
+
+  @override
+  String get addCatalogItems => 'آئٹمز شامل کریں';
+
+  @override
+  String get addFromCatalog => 'کیٹلاگ سے شامل کریں';
+
+  @override
+  String get recalculateCatalog => 'قیمتیں دوبارہ حساب کریں';
+
+  @override
+  String get recalculateCatalogConfirm =>
+      'موجودہ لاگت سے فارمولا پر مبنی فروخت قیمت تازہ کریں؟ دستی قیمتیں (*) چھوڑ دی جائیں گی۔ موجودہ آرڈرز تبدیل نہیں ہوں گے۔';
+
+  @override
+  String get refreshManualPriceConfirm =>
+      'یہ قیمت دستی طور پر سیٹ کی گئی ہے۔ تازہ کرنے سے فارمولا کا نتیجہ لگے گا۔ جاری رکھیں؟';
+
+  @override
+  String get manualCatalogPrice => 'دستی سیٹ قیمت';
+
+  @override
+  String recalculateCatalogDone(int updated, int skipped) {
+    return '$updated آئٹمز اپڈیٹ ($skipped چھوڑے گئے)';
+  }
+
+  @override
+  String get pricingApproach => 'قیمت کا طریقہ';
+
+  @override
+  String get pricingMarkup => 'لاگت پر مارک اپ';
+
+  @override
+  String get pricingMargin => 'فروخت قیمت پر مارجن';
+
+  @override
+  String get pricingMarkupThenFixed => 'مارک اپ، پھر مقررہ';
+
+  @override
+  String get pricingMarkupThenFixedScenario =>
+      'لاگت پر مارک اپ، پھر پیکنگ/ڈیلیوری شامل کریں';
+
+  @override
+  String get pricingMarkupThenFixedHint => 'فروخت = لاگت × (1 + %) + مقررہ';
+
+  @override
+  String get pricingFixedThenMarkup => 'مقررہ لاگت میں، پھر مارک اپ';
+
+  @override
+  String get pricingFixedThenMarkupScenario =>
+      'اضافی لاگت میں ڈال کر سب پر مارک اپ';
+
+  @override
+  String get pricingFixedThenMarkupHint => 'فروخت = (لاگت + مقررہ) × (1 + %)';
+
+  @override
+  String get pricingFixedThenMargin => 'مقررہ لاگت میں، پھر مارجن';
+
+  @override
+  String get pricingFixedThenMarginScenario =>
+      'فلیٹ فیس کور کریں اور فروخت پر مارجن رکھیں';
+
+  @override
+  String get pricingFixedThenMarginHint =>
+      'فروخت = (لاگت + مقررہ) ÷ (1 − %)؛ % < 100';
+
+  @override
+  String get pricingMarginThenFixed => 'مارجن، پھر مقررہ';
+
+  @override
+  String get pricingMarginThenFixedScenario =>
+      'لاگت پر مارجن، پھر اضافی منافع شامل کریں';
+
+  @override
+  String get pricingMarginThenFixedHint =>
+      'فروخت = لاگت ÷ (1 − %) + مقررہ؛ % < 100';
+
+  @override
+  String get markupOrMarginPercent => 'فیصد';
+
+  @override
+  String get fixedAmount => 'مقررہ رقم';
+
+  @override
+  String get sellPrice => 'فروخت قیمت';
+
+  @override
+  String get unitCost => 'یونٹ لاگت';
+
+  @override
+  String get catalogItemSaved => 'کیٹلاگ آئٹم محفوظ ہو گئی';
+
+  @override
+  String get catalogItemDeleted => 'کیٹلاگ آئٹم ہٹا دی گئی';
+
+  @override
+  String get confirmDeleteCatalogItem => 'اس آئٹم کو کیٹلاگ سے ہٹائیں؟';
+
+  @override
+  String get refreshItemPrice => 'قیمت تازہ کریں';
+
+  @override
+  String get editItemPricing => 'قیمت میں ترمیم';
+
+  @override
+  String get selectCatalogItems => 'مصنوعات یا فروختی مصنوعات منتخب کریں';
+
+  @override
+  String selectedCount(int count) {
+    return '$count منتخب';
+  }
+
+  @override
+  String get applyPricingAndAdd => 'قیمت لگائیں اور شامل کریں';
+
+  @override
+  String get catalogImportPriceMode => 'قیمت موڈ';
+
+  @override
+  String get catalogImportCopyPrices => 'قیمتیں کاپی کریں';
+
+  @override
+  String get catalogImportRecalculate => 'لاگت سے دوبارہ حساب';
+
+  @override
+  String get catalogImportConflicts => 'اگر آئٹم پہلے سے موجود ہو';
+
+  @override
+  String get catalogImportSkipAll => 'ڈپلیکیٹ چھوڑیں';
+
+  @override
+  String get catalogImportReplaceAll => 'ڈپلیکیٹ تبدیل کریں';
+
+  @override
+  String catalogImportDone(int added, int replaced, int skipped) {
+    return 'شامل $added، تبدیل $replaced، چھوڑے $skipped';
+  }
+
+  @override
+  String get selectSourceCatalog => 'ماخذ کیٹلاگ منتخب کریں';
+
+  @override
+  String get catalogAssignmentsSection => 'تفویض شدہ رابطے';
+
+  @override
+  String get assignContact => 'رابطہ تفویض کریں';
+
+  @override
+  String get noCatalogAssignments => 'کوئی رابطہ تفویض نہیں';
+
+  @override
+  String get catalogAssignmentAdded => 'رابطہ تفویض ہو گیا';
+
+  @override
+  String get catalogAssignmentRemoved => 'تفویض ہٹا دی گئی';
+
+  @override
+  String get pricingMarkupHint => 'فروخت = لاگت × (1 + %) + مقررہ';
+
+  @override
+  String get pricingMarginHint =>
+      'فروخت = (لاگت + مقررہ) ÷ (1 − %)؛ % 100 سے کم ہونا چاہیے';
 
   @override
   String get sales => 'فروخت';

@@ -64,6 +64,7 @@ Contact ──< CatalogAssignment >── Catalog
 | `sku` | text? | Optional code |
 | `description` | text? | |
 | `categoryUuid` | FK? → product_categories | Optional; if unset at save, defaults from first component product’s category |
+| `unit` | text? | Optional sell unit; if unset at save, defaults from first component product’s unit |
 | `createdAt` / `updatedAt` | | |
 | `isDeleted` / `isNotSynced` | | Soft-delete + sync (follow `sync-features.mdc`) |
 
@@ -164,41 +165,30 @@ Formula fields exist so the user can **refresh / recalculate an item’s price i
 | **Stock product (batch scope)** | Same average, limited to lots with that `batchNumber` (when selling-product component uses `BATCH`). |
 | **Selling product** | `Σ (componentUnitCost × componentQty)` using the rules above per component |
 
-### Formula approaches (pick labels; store on each catalog item)
+### Formula approaches (4 options; store on each catalog item)
 
-**A — Markup on cost** (percent of cost, then fixed):
+UI shows a **scenario hint** for each option so users pick the business meaning, not only the algebra.
 
-```text
-sellPrice = unitCost × (1 + percent / 100) + fixedAmount
-```
+| Code | Scenario | Formula |
+|------|----------|---------|
+| `MARKUP` | Mark up cost, then add packing/delivery | `sell = cost × (1 + %/100) + fixed` |
+| `MARKUP_ON_BASE` | Fold extras into cost, then mark up everything | `sell = (cost + fixed) × (1 + %/100)` |
+| `MARGIN` | Cover a flat fee and hit margin on sell | `sell = (cost + fixed) / (1 − %/100)` |
+| `MARGIN_THEN_FIXED` | Hit margin on cost, then add flat extra profit | `sell = cost / (1 − %/100) + fixed` |
 
-**B — Margin on sell price** (percent of selling price; fixed treated as amount to recover with cost):
-
-```text
-sellPrice = (unitCost + fixedAmount) / (1 − percent / 100)
-```
-
-Require `percent < 100` for B.
-
-**Fixed amount order (v1 lock-in)**
-
-- Markup (A): **% on cost, then add fixed** (packing/fee style).
-- Margin (B): **fixed added to cost, then divide by (1 − margin%)**.
-
-Do not offer alternate orderings in v1; document in UI helper text. Businesses differ; one clear rule beats ambiguous math.
+Require `percent < 100` for both margin options. Existing rows with `MARKUP` / `MARGIN` keep the same meaning.
 
 ### Fields on each catalog item (pricing)
 
 | Field | Notes |
 |-------|--------|
-| `pricingApproach` | `MARKUP` \| `MARGIN` |
+| `pricingApproach` | `MARKUP` \| `MARKUP_ON_BASE` \| `MARGIN` \| `MARGIN_THEN_FIXED` |
 | `markupOrMarginPercent` | real, default 0 |
 | `fixedAmount` | real, default 0 |
 | `sellPrice` | final computed (or manually overridden) price |
 | `unitCostSnapshot` | optional but useful — cost used when price was last computed |
 | `priceComputedAt` | optional — when last refreshed |
-
-Optional later: `priceOverride` flag if user types sell price manually and clears formula-driven updates.
+| `priceOverride` | bool — true when sell price was set manually; skipped by catalog recalculate; UI shows `*` |
 
 ### Add-to-catalog UX (agreed flow)
 
@@ -311,7 +301,7 @@ Until catalogs ship end-to-end, sales may keep using `product.retailPrice` as to
 
 Follow **in order**. Mark each step `[x]` when done. Do not start a later phase until the previous phase’s required steps are complete (Phase 5 is optional / later).
 
-**Progress:** Phase 1 ☑ · Phase 2 ☑ · Phase 3 ☐ · Phase 4 ☐ · Phase 5 (later) ☐
+**Progress:** Phase 1 ☑ · Phase 2 ☑ · Phase 3 ☑ · Phase 4 ☐ · Phase 5 (later) ☐
 
 ---
 
@@ -340,7 +330,7 @@ Follow **in order**. Mark each step `[x]` when done. Do not start a later phase 
 **Goal:** Users can define virtual offers / bundles (no catalog pricing yet).
 
 - [x] **2.1** Navigation entry + list screen (search, soft-deleted hidden, pending-sync badge).
-- [x] **2.2** Create / edit selling product (name, sku, description, category; default category from first component if unset).
+- [x] **2.2** Create / edit selling product (name, sku, description, category, unit; default category/unit from first component if unset).
 - [x] **2.3** Component editor: product picker, qty, `AUTO` | `BATCH`, batch picker when BATCH.
 - [x] **2.4** Validation: at least one component; BATCH requires batch label; no nested selling products.
 - [x] **2.5** Soft-delete selling product (+ components policy); detail screen with pending-sync.
@@ -353,18 +343,18 @@ Follow **in order**. Mark each step `[x]` when done. Do not start a later phase 
 
 **Goal:** Full price-list management; sales still may use `retailPrice` until Phase 4.
 
-- [ ] **3.1** Catalog list / create / edit header (`name`, `description`, `validUntil`, `isDefault`).
-- [ ] **3.2** Catalog detail: list items with sell price + link target name; pending-sync.
-- [ ] **3.3** Add items from products + selling products:
-  - [ ] Multi-select.
-  - [ ] Common calculation sheet (approach + % + fixed) for this selection only.
-  - [ ] Insert lines with **individual** copied pricing fields + computed `sellPrice`.
-- [ ] **3.4** Edit single catalog item pricing; optional per-item refresh price.
-- [ ] **3.5** **Add from catalog:** pick source catalog; price mode Copy vs Recalculate; conflicts Skip / Replace / Skip all / Replace all.
-- [ ] **3.6** **Recalculate whole catalog** in place (confirm + summary); orders unaffected.
-- [ ] **3.7** Contact ↔ catalog assignment UI.
-- [ ] **3.8** l10n EN / HI / UR.
-- [ ] **3.9** Mark Phase 3 progress ☐ → ☑ when 3.1–3.8 done.
+- [x] **3.1** Catalog list / create / edit header (`name`, `description`, `validUntil`, `isDefault`).
+- [x] **3.2** Catalog detail: list items with sell price + link target name; pending-sync.
+- [x] **3.3** Add items from products + selling products:
+  - [x] Multi-select.
+  - [x] Common calculation sheet (approach + % + fixed) for this selection only.
+  - [x] Insert lines with **individual** copied pricing fields + computed `sellPrice`.
+- [x] **3.4** Edit single catalog item pricing; optional per-item refresh price.
+- [x] **3.5** **Add from catalog:** pick source catalog; price mode Copy vs Recalculate; conflicts Skip all / Replace all.
+- [x] **3.6** **Recalculate whole catalog** in place (confirm + summary); orders unaffected.
+- [x] **3.7** Contact ↔ catalog assignment UI.
+- [x] **3.8** l10n EN / HI / UR.
+- [x] **3.9** Mark Phase 3 progress ☐ → ☑ when 3.1–3.8 done.
 
 ---
 
@@ -387,7 +377,7 @@ Follow **in order**. Mark each step `[x]` when done. Do not start a later phase 
 
 - [ ] **5.1** Tiered discounts on catalog items.
 - [ ] **5.2** Catalog-level default approach / % / fixed for new lines.
-- [ ] **5.3** Manual sell-price override flag (skip formula on refresh).
+- [x] **5.3** Manual sell-price override flag (skip on catalog recalculate; confirm on single refresh; `*` marker).
 - [ ] **5.4** Reports: margin vs cost at catalog / sale.
 - [ ] **5.5** Mark Phase 5 progress when adopted items are done.
 
@@ -407,9 +397,9 @@ Follow **in order**. Mark each step `[x]` when done. Do not start a later phase 
 | % + fixed meaning | Stored per catalog item for individual/bulk refresh |
 | Bulk add | Common formula for selection → copied onto each new line |
 | Import catalog → catalog | New item rows; Copy prices or Recalculate; conflicts: Skip / Replace / Skip all / Replace all |
-| Recalculate whole catalog | In-place refresh of all item sell prices from current cost + stored formula; orders unaffected |
-| Markup vs margin | Both supported via `pricingApproach` |
-| Fixed vs % order | Locked as in “Pricing model” section |
+| Recalculate whole catalog | In-place refresh of formula items from current cost; skip `priceOverride`; orders unaffected |
+| Markup vs margin | Four approaches (markup/margin × fixed before/after) via `pricingApproach` |
+| Fixed vs % order | Chosen per item via the four scenario options |
 | Lot multi-batch | No — one operational batch per lot; move to reclassify |
 
 ---

@@ -15,15 +15,39 @@ void main() {
       );
     });
 
+    test('markupOnBase: fixed then percent', () {
+      expect(
+        CatalogPricing.computeSellPrice(
+          approach: CatalogPricingApproach.markupOnBase,
+          unitCost: 100,
+          percent: 20,
+          fixedAmount: 50,
+        ),
+        180,
+      );
+    });
+
     test('margin: (cost + fixed) / (1 - p/100)', () {
       expect(
         CatalogPricing.computeSellPrice(
           approach: CatalogPricingApproach.margin,
           unitCost: 100,
           percent: 20,
-          fixedAmount: 0,
+          fixedAmount: 50,
         ),
-        125,
+        187.5,
+      );
+    });
+
+    test('marginThenFixed: cost/(1-p/100) + fixed', () {
+      expect(
+        CatalogPricing.computeSellPrice(
+          approach: CatalogPricingApproach.marginThenFixed,
+          unitCost: 100,
+          percent: 20,
+          fixedAmount: 50,
+        ),
+        175,
       );
     });
 

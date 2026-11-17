@@ -54,6 +54,7 @@ class _AddSellingProductScreenState
   final _formKey = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _sku = TextEditingController();
+  final _unit = TextEditingController();
   final _description = TextEditingController();
   final _components = <_ComponentLine>[];
   String? _categoryUuid;
@@ -87,6 +88,7 @@ class _AddSellingProductScreenState
 
     _name.text = sp.name;
     _sku.text = sp.sku ?? '';
+    _unit.text = sp.unit ?? '';
     _description.text = sp.description ?? '';
     _categoryUuid = sp.categoryUuid;
     _pendingSync = sp.isNotSynced == true;
@@ -115,6 +117,7 @@ class _AddSellingProductScreenState
   void dispose() {
     _name.dispose();
     _sku.dispose();
+    _unit.dispose();
     _description.dispose();
     for (final c in _components) {
       c.dispose();
@@ -206,6 +209,7 @@ class _AddSellingProductScreenState
           sku: _sku.text.trim(),
           description: _description.text.trim(),
           categoryUuid: _categoryUuid,
+          unit: _unit.text.trim(),
           components: inputs,
         );
       } else {
@@ -214,6 +218,7 @@ class _AddSellingProductScreenState
           sku: _sku.text.trim(),
           description: _description.text.trim(),
           categoryUuid: _categoryUuid,
+          unit: _unit.text.trim(),
           components: inputs,
         );
       }
@@ -397,15 +402,40 @@ class _AddSellingProductScreenState
                     return null;
                   },
                 ),
-                TextFormField(
-                  controller: _sku,
-                  textCapitalization: TextCapitalization.characters,
-                  textInputAction: TextInputAction.next,
-                  decoration: _fieldDecoration(
-                    theme,
-                    l10n.sku,
-                    icon: Icons.qr_code_2_outlined,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: TextFormField(
+                        controller: _sku,
+                        textCapitalization: TextCapitalization.characters,
+                        textInputAction: TextInputAction.next,
+                        decoration: _fieldDecoration(
+                          theme,
+                          l10n.sku,
+                          icon: Icons.qr_code_2_outlined,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: TextFormField(
+                        controller: _unit,
+                        textInputAction: TextInputAction.next,
+                        decoration: _fieldDecoration(
+                          theme,
+                          l10n.unit,
+                          icon: Icons.straighten_outlined,
+                        ).copyWith(
+                          hintText: _components.isNotEmpty
+                              ? _components.first.product.unit
+                              : l10n.sellingProductUnitHint,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 EntityPickerField(
                   label: l10n.category,

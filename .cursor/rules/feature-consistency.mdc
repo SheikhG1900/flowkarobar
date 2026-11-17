@@ -21,7 +21,7 @@ Use when adding or changing a **screen, entity, or CRUD flow**. Complements `app
 ## List UI
 
 - Tappable cards: `HoverBorderCard` (border hover only; no background flash).
-- Pending sync: `PendingSyncCornerBadge` when `isNotSynced`.
+- Pending sync: `PendingSyncCornerBadge` when `isNotSynced` — **on the leading icon/avatar** when the row has one; otherwise trailing (see `sync-features.mdc`).
 - Empty states: reuse existing empty-state pattern (e.g. `OrderEmptyState`), not a one-off column of text.
 - Destructive swipe/delete: `SwipeableListItem` where lists already use it.
 - FAB: `AppFloatingActionButton` with a unique `heroTag` per screen.

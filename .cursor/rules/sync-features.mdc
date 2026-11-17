@@ -32,7 +32,8 @@ Canonical list: `lib/features/backup/data/sync/sync_tables.dart` (`SyncTables`).
 
 ## UI pending-sync indicators
 
-- **List items**: `PendingSyncCornerBadge` when `isNotSynced == true` (same as transaction list).
+- **List items with a leading icon/avatar**: overlay `PendingSyncCornerBadge` **on that icon** (Stack, typically top-end / `Positioned(right/top)`), not as a separate trailing chip. Pattern reference: product list `_ProductLeading`.
+- **List items without a leading icon**: `PendingSyncCornerBadge` in the trailing/actions area (same as transaction list).
 - **Detail heroes/headers**: `PendingSyncDetailBadge` as a **corner overlay** on a full-width card (`width: double.infinity` if content would otherwise shrink-wrap). Do not use a text chip in the header.
 - Use `l10n.pendingSync` for tooltips.
 
@@ -47,3 +48,4 @@ Canonical list: `lib/features/backup/data/sync/sync_tables.dart` (`SyncTables`).
 - ❌ Hard-delete rows “because they were never synced”
 - ❌ New table in DB but missing from `SyncTables.ordered`
 - ❌ Detail pending-sync chip instead of corner badge; shrink-wrapped hero with badge at screen edge
+- ❌ Free-floating list sync badge when the row already has a leading icon/avatar (put the badge on the icon)

@@ -349,6 +349,7 @@ class _SellingProductCard extends ConsumerWidget {
         ref.watch(sellingProductComponentsStreamProvider(sellingProduct.uuid));
     final comps = compsAsync.value ?? const <SellingProductComponent>[];
     final sku = sellingProduct.sku?.trim();
+    final unit = sellingProduct.unit?.trim();
     final desc = sellingProduct.description?.trim();
     final categoryName = category?.name.trim();
 
@@ -362,12 +363,34 @@ class _SellingProductCard extends ConsumerWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              categoryLeadingAvatar(
-                color: accent,
-                icon: category == null
-                    ? Icons.sell_outlined
-                    : categoryIconData(category),
-                radius: 22,
+              SizedBox(
+                width: 44,
+                height: 44,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned.fill(
+                      child: Center(
+                        child: categoryLeadingAvatar(
+                          color: accent,
+                          icon: category == null
+                              ? Icons.sell_outlined
+                              : categoryIconData(category),
+                          radius: 22,
+                        ),
+                      ),
+                    ),
+                    if (sellingProduct.isNotSynced == true)
+                      Positioned(
+                        right: -3,
+                        top: -3,
+                        child: Tooltip(
+                          message: l10n.pendingSync,
+                          child: const PendingSyncCornerBadge(iconSize: 11),
+                        ),
+                      ),
+                  ],
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -385,6 +408,16 @@ class _SellingProductCard extends ConsumerWidget {
                       Text(
                         sku,
                         style: theme.textTheme.labelMedium?.copyWith(
+                          color: muted,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                    if (unit != null && unit.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        unit,
+                        style: theme.textTheme.labelSmall?.copyWith(
                           color: muted,
                           fontWeight: FontWeight.w600,
                         ),
@@ -416,13 +449,6 @@ class _SellingProductCard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              if (sellingProduct.isNotSynced == true) ...[
-                Tooltip(
-                  message: l10n.pendingSync,
-                  child: const PendingSyncCornerBadge(iconSize: 12),
-                ),
-                const SizedBox(width: 8),
-              ],
               _CountBadge(
                 count: comps.length,
                 accent: accent,

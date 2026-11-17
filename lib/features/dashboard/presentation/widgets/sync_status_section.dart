@@ -19,6 +19,7 @@ import 'package:flowpaisa/features/payables/presentation/screens/payables_list_s
 import 'package:flowpaisa/features/receivables/presentation/screens/receivables_list_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/categories_list_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contacts_list_screen.dart';
+import 'package:flowpaisa/features/catalog/presentation/screens/catalogs_list_screen.dart';
 import 'package:flowpaisa/features/catalog/presentation/screens/selling_products_list_screen.dart';
 import 'package:flowpaisa/features/inventory/presentation/screens/products_list_screen.dart';
 import 'package:flowpaisa/features/orders/presentation/screens/orders_list_screen.dart';
@@ -428,11 +429,19 @@ class _SyncStatusSectionState extends ConsumerState<SyncStatusSection>
                             builder: (_) => const DocumentsScreen()),
                       );
                 case 'products':
-                case 'catalogs':
                   return () => Navigator.push(
                         context,
                         MaterialPageRoute(
                             builder: (_) => const ProductsListScreen()),
+                      );
+                case 'catalogs':
+                case 'catalog_items':
+                case 'catalog_assignments':
+                case 'catalog_tiered_discounts':
+                  return () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const CatalogsListScreen()),
                       );
                 case 'orders':
                   return () => Navigator.push(

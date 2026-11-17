@@ -103,6 +103,9 @@ class AppLocalizationsHi extends AppLocalizations {
       'वर्चुअल बिक्री ऑफ़र या बंडल — स्वयं का स्टॉक नहीं';
 
   @override
+  String get sellingProductUnitHint => 'पहले घटक से डिफ़ॉल्ट';
+
+  @override
   String get confirmDeleteSellingProduct => 'यह बिक्री उत्पाद हटाएँ?';
 
   @override
@@ -149,6 +152,205 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get catalog => 'कैटलॉग';
+
+  @override
+  String get noCatalogsYet => 'अभी कोई कैटलॉग नहीं';
+
+  @override
+  String get newCatalog => 'नया कैटलॉग';
+
+  @override
+  String get editCatalog => 'कैटलॉग संपादित करें';
+
+  @override
+  String get catalogSaved => 'कैटलॉग सहेजा गया';
+
+  @override
+  String get catalogDeleted => 'कैटलॉग हटाया गया';
+
+  @override
+  String get confirmDeleteCatalog => 'यह कैटलॉग और उसकी आइटम हटाएँ?';
+
+  @override
+  String get catalogHint => 'उत्पादों और बिक्री ऑफ़र की मूल्य सूची';
+
+  @override
+  String get defaultCatalog => 'डिफ़ॉल्ट कैटलॉग';
+
+  @override
+  String get setAsDefaultCatalog => 'डिफ़ॉल्ट कैटलॉग बनाएँ';
+
+  @override
+  String get catalogValidUntil => 'मान्य तक';
+
+  @override
+  String get expired => 'समाप्त';
+
+  @override
+  String get catalogItemsEmpty => 'इस कैटलॉग में अभी कोई आइटम नहीं';
+
+  @override
+  String get addCatalogItems => 'आइटम जोड़ें';
+
+  @override
+  String get addFromCatalog => 'कैटलॉग से जोड़ें';
+
+  @override
+  String get recalculateCatalog => 'मूल्य पुनर्गणना करें';
+
+  @override
+  String get recalculateCatalogConfirm =>
+      'वर्तमान लागत से सूत्र-आधारित विक्रय मूल्य ताज़ा करें? मैन्युअल कीमतें (*) छोड़ दी जाएँगी। मौजूदा ऑर्डर नहीं बदलेंगे।';
+
+  @override
+  String get refreshManualPriceConfirm =>
+      'यह कीमत मैन्युअल सेट की गई है। ताज़ा करने पर सूत्र वाला परिणाम लग जाएगा। जारी रखें?';
+
+  @override
+  String get manualCatalogPrice => 'मैन्युअल सेट कीमत';
+
+  @override
+  String recalculateCatalogDone(int updated, int skipped) {
+    return '$updated आइटम अपडेट ($skipped छोड़े गए)';
+  }
+
+  @override
+  String get pricingApproach => 'मूल्य निर्धारण तरीका';
+
+  @override
+  String get pricingMarkup => 'लागत पर मार्कअप';
+
+  @override
+  String get pricingMargin => 'विक्रय मूल्य पर मार्जिन';
+
+  @override
+  String get pricingMarkupThenFixed => 'मार्कअप, फिर निश्चित';
+
+  @override
+  String get pricingMarkupThenFixedScenario =>
+      'लागत पर मार्कअप, फिर पैकिंग/डिलीवरी जोड़ें';
+
+  @override
+  String get pricingMarkupThenFixedHint => 'विक्रय = लागत × (1 + %) + निश्चित';
+
+  @override
+  String get pricingFixedThenMarkup => 'निश्चित लागत में, फिर मार्कअप';
+
+  @override
+  String get pricingFixedThenMarkupScenario =>
+      'अतिरिक्त लागत में जोड़कर पूरे पर मार्कअप';
+
+  @override
+  String get pricingFixedThenMarkupHint =>
+      'विक्रय = (लागत + निश्चित) × (1 + %)';
+
+  @override
+  String get pricingFixedThenMargin => 'निश्चित लागत में, फिर मार्जिन';
+
+  @override
+  String get pricingFixedThenMarginScenario =>
+      'फ्लैट शुल्क कवर कर विक्रय पर मार्जिन रखें';
+
+  @override
+  String get pricingFixedThenMarginHint =>
+      'विक्रय = (लागत + निश्चित) ÷ (1 − %); % < 100';
+
+  @override
+  String get pricingMarginThenFixed => 'मार्जिन, फिर निश्चित';
+
+  @override
+  String get pricingMarginThenFixedScenario =>
+      'लागत पर मार्जिन, फिर अतिरिक्त लाभ जोड़ें';
+
+  @override
+  String get pricingMarginThenFixedHint =>
+      'विक्रय = लागत ÷ (1 − %) + निश्चित; % < 100';
+
+  @override
+  String get markupOrMarginPercent => 'प्रतिशत';
+
+  @override
+  String get fixedAmount => 'निश्चित राशि';
+
+  @override
+  String get sellPrice => 'विक्रय मूल्य';
+
+  @override
+  String get unitCost => 'इकाई लागत';
+
+  @override
+  String get catalogItemSaved => 'कैटलॉग आइटम सहेजी गई';
+
+  @override
+  String get catalogItemDeleted => 'कैटलॉग आइटम हटाई गई';
+
+  @override
+  String get confirmDeleteCatalogItem => 'इस आइटम को कैटलॉग से हटाएँ?';
+
+  @override
+  String get refreshItemPrice => 'मूल्य ताज़ा करें';
+
+  @override
+  String get editItemPricing => 'मूल्य संपादित करें';
+
+  @override
+  String get selectCatalogItems => 'उत्पाद या बिक्री उत्पाद चुनें';
+
+  @override
+  String selectedCount(int count) {
+    return '$count चयनित';
+  }
+
+  @override
+  String get applyPricingAndAdd => 'मूल्य लागू कर जोड़ें';
+
+  @override
+  String get catalogImportPriceMode => 'मूल्य मोड';
+
+  @override
+  String get catalogImportCopyPrices => 'मूल्य कॉपी करें';
+
+  @override
+  String get catalogImportRecalculate => 'लागत से पुनर्गणना';
+
+  @override
+  String get catalogImportConflicts => 'यदि आइटम पहले से मौजूद हो';
+
+  @override
+  String get catalogImportSkipAll => 'डुप्लिकेट छोड़ें';
+
+  @override
+  String get catalogImportReplaceAll => 'डुप्लिकेट बदलें';
+
+  @override
+  String catalogImportDone(int added, int replaced, int skipped) {
+    return 'जोड़े $added, बदले $replaced, छोड़े $skipped';
+  }
+
+  @override
+  String get selectSourceCatalog => 'स्रोत कैटलॉग चुनें';
+
+  @override
+  String get catalogAssignmentsSection => 'निर्दिष्ट संपर्क';
+
+  @override
+  String get assignContact => 'संपर्क निर्दिष्ट करें';
+
+  @override
+  String get noCatalogAssignments => 'कोई संपर्क निर्दिष्ट नहीं';
+
+  @override
+  String get catalogAssignmentAdded => 'संपर्क निर्दिष्ट किया गया';
+
+  @override
+  String get catalogAssignmentRemoved => 'निर्धारण हटाया गया';
+
+  @override
+  String get pricingMarkupHint => 'विक्रय = लागत × (1 + %) + निश्चित';
+
+  @override
+  String get pricingMarginHint =>
+      'विक्रय = (लागत + निश्चित) ÷ (1 − %); % 100 से कम होना चाहिए';
 
   @override
   String get sales => 'बिक्री';

@@ -84,6 +84,17 @@ class SellingProductRepository {
     }
   }
 
+  Future<Product?> _firstComponentProduct(
+    List<SellingProductComponentInput> components,
+  ) async {
+    if (components.isEmpty) return null;
+    return (_db.select(_db.products)
+          ..where((p) =>
+              p.uuid.equals(components.first.productUuid) &
+              p.isDeleted.equals(false)))
+        .getSingleOrNull();
+  }
+
   /// Resolves category: explicit [categoryUuid], else first component product's category.
   Future<String?> _resolveCategoryUuid({
     String? categoryUuid,
@@ -91,13 +102,19 @@ class SellingProductRepository {
   }) async {
     final explicit = _nullIfEmpty(categoryUuid);
     if (explicit != null) return explicit;
-    if (components.isEmpty) return null;
-    final product = await (_db.select(_db.products)
-          ..where((p) =>
-              p.uuid.equals(components.first.productUuid) &
-              p.isDeleted.equals(false)))
-        .getSingleOrNull();
+    final product = await _firstComponentProduct(components);
     return _nullIfEmpty(product?.categoryUuid);
+  }
+
+  /// Resolves unit: explicit [unit], else first component product's unit.
+  Future<String?> _resolveUnit({
+    String? unit,
+    required List<SellingProductComponentInput> components,
+  }) async {
+    final explicit = _nullIfEmpty(unit);
+    if (explicit != null) return explicit;
+    final product = await _firstComponentProduct(components);
+    return _nullIfEmpty(product?.unit);
   }
 
   Future<String> create({
@@ -105,6 +122,7 @@ class SellingProductRepository {
     String? sku,
     String? description,
     String? categoryUuid,
+    String? unit,
     required List<SellingProductComponentInput> components,
   }) async {
     final trimmed = name.trim();
@@ -112,6 +130,10 @@ class SellingProductRepository {
     _validateComponents(components);
     final resolvedCategory = await _resolveCategoryUuid(
       categoryUuid: categoryUuid,
+      components: components,
+    );
+    final resolvedUnit = await _resolveUnit(
+      unit: unit,
       components: components,
     );
 
@@ -124,6 +146,7 @@ class SellingProductRepository {
               sku: Value(_nullIfEmpty(sku)),
               description: Value(_nullIfEmpty(description)),
               categoryUuid: Value(resolvedCategory),
+              unit: Value(resolvedUnit),
             ),
           );
       await _insertComponents(uuid, components);
@@ -137,6 +160,7 @@ class SellingProductRepository {
     String? sku,
     String? description,
     String? categoryUuid,
+    String? unit,
     required List<SellingProductComponentInput> components,
   }) async {
     final existing = await get(uuid);
@@ -148,6 +172,10 @@ class SellingProductRepository {
       categoryUuid: categoryUuid,
       components: components,
     );
+    final resolvedUnit = await _resolveUnit(
+      unit: unit,
+      components: components,
+    );
 
     await _db.transaction(() async {
       await (_db.update(_db.sellingProducts)..where((r) => r.uuid.equals(uuid)))
@@ -157,6 +185,7 @@ class SellingProductRepository {
           sku: Value(_nullIfEmpty(sku)),
           description: Value(_nullIfEmpty(description)),
           categoryUuid: Value(resolvedCategory),
+          unit: Value(resolvedUnit),
           isNotSynced: const Value(true),
           updatedAt: Value(DateTime.now()),
         ),

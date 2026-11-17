@@ -103,6 +103,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Virtual sell offer or bundle — no stock of its own';
 
   @override
+  String get sellingProductUnitHint => 'Defaults from first component';
+
+  @override
   String get confirmDeleteSellingProduct => 'Delete this selling product?';
 
   @override
@@ -149,6 +152,204 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get catalog => 'Catalog';
+
+  @override
+  String get noCatalogsYet => 'No catalogs yet';
+
+  @override
+  String get newCatalog => 'New catalog';
+
+  @override
+  String get editCatalog => 'Edit catalog';
+
+  @override
+  String get catalogSaved => 'Catalog saved';
+
+  @override
+  String get catalogDeleted => 'Catalog deleted';
+
+  @override
+  String get confirmDeleteCatalog => 'Delete this catalog and its items?';
+
+  @override
+  String get catalogHint => 'Price list for products and selling offers';
+
+  @override
+  String get defaultCatalog => 'Default catalog';
+
+  @override
+  String get setAsDefaultCatalog => 'Set as default catalog';
+
+  @override
+  String get catalogValidUntil => 'Valid until';
+
+  @override
+  String get expired => 'Expired';
+
+  @override
+  String get catalogItemsEmpty => 'No items in this catalog yet';
+
+  @override
+  String get addCatalogItems => 'Add items';
+
+  @override
+  String get addFromCatalog => 'Add from catalog';
+
+  @override
+  String get recalculateCatalog => 'Recalculate prices';
+
+  @override
+  String get recalculateCatalogConfirm =>
+      'Refresh formula-based sell prices from current cost? Manually set prices (*) are skipped. Existing orders are not changed.';
+
+  @override
+  String get refreshManualPriceConfirm =>
+      'This price was set manually. Refreshing will replace it with the formula result. Continue?';
+
+  @override
+  String get manualCatalogPrice => 'Manually set price';
+
+  @override
+  String recalculateCatalogDone(int updated, int skipped) {
+    return 'Updated $updated items ($skipped skipped)';
+  }
+
+  @override
+  String get pricingApproach => 'Pricing approach';
+
+  @override
+  String get pricingMarkup => 'Markup on cost';
+
+  @override
+  String get pricingMargin => 'Margin on sell price';
+
+  @override
+  String get pricingMarkupThenFixed => 'Markup, then fixed';
+
+  @override
+  String get pricingMarkupThenFixedScenario =>
+      'Mark up cost, then add packing or delivery';
+
+  @override
+  String get pricingMarkupThenFixedHint => 'Sell = cost × (1 + %) + fixed';
+
+  @override
+  String get pricingFixedThenMarkup => 'Fixed into cost, then markup';
+
+  @override
+  String get pricingFixedThenMarkupScenario =>
+      'Add extras into cost, then mark up everything';
+
+  @override
+  String get pricingFixedThenMarkupHint => 'Sell = (cost + fixed) × (1 + %)';
+
+  @override
+  String get pricingFixedThenMargin => 'Fixed into cost, then margin';
+
+  @override
+  String get pricingFixedThenMarginScenario =>
+      'Cover a flat fee and hit a margin on sell price';
+
+  @override
+  String get pricingFixedThenMarginHint =>
+      'Sell = (cost + fixed) ÷ (1 − %); % under 100';
+
+  @override
+  String get pricingMarginThenFixed => 'Margin, then fixed';
+
+  @override
+  String get pricingMarginThenFixedScenario =>
+      'Hit margin on cost, then add flat extra profit';
+
+  @override
+  String get pricingMarginThenFixedHint =>
+      'Sell = cost ÷ (1 − %) + fixed; % under 100';
+
+  @override
+  String get markupOrMarginPercent => 'Percent';
+
+  @override
+  String get fixedAmount => 'Fixed amount';
+
+  @override
+  String get sellPrice => 'Sell price';
+
+  @override
+  String get unitCost => 'Unit cost';
+
+  @override
+  String get catalogItemSaved => 'Catalog item saved';
+
+  @override
+  String get catalogItemDeleted => 'Catalog item removed';
+
+  @override
+  String get confirmDeleteCatalogItem => 'Remove this item from the catalog?';
+
+  @override
+  String get refreshItemPrice => 'Refresh price';
+
+  @override
+  String get editItemPricing => 'Edit pricing';
+
+  @override
+  String get selectCatalogItems => 'Select products or selling products';
+
+  @override
+  String selectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get applyPricingAndAdd => 'Apply pricing & add';
+
+  @override
+  String get catalogImportPriceMode => 'Price mode';
+
+  @override
+  String get catalogImportCopyPrices => 'Copy prices';
+
+  @override
+  String get catalogImportRecalculate => 'Recalculate from cost';
+
+  @override
+  String get catalogImportConflicts => 'If item already exists';
+
+  @override
+  String get catalogImportSkipAll => 'Skip duplicates';
+
+  @override
+  String get catalogImportReplaceAll => 'Replace duplicates';
+
+  @override
+  String catalogImportDone(int added, int replaced, int skipped) {
+    return 'Added $added, replaced $replaced, skipped $skipped';
+  }
+
+  @override
+  String get selectSourceCatalog => 'Select source catalog';
+
+  @override
+  String get catalogAssignmentsSection => 'Assigned contacts';
+
+  @override
+  String get assignContact => 'Assign contact';
+
+  @override
+  String get noCatalogAssignments => 'No contacts assigned';
+
+  @override
+  String get catalogAssignmentAdded => 'Contact assigned';
+
+  @override
+  String get catalogAssignmentRemoved => 'Assignment removed';
+
+  @override
+  String get pricingMarkupHint => 'Sell = cost × (1 + %) + fixed';
+
+  @override
+  String get pricingMarginHint =>
+      'Sell = (cost + fixed) ÷ (1 − %); % must be under 100';
 
   @override
   String get sales => 'Sales';
