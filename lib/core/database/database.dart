@@ -164,14 +164,36 @@ class Orders extends Table {
 class OrderItems extends Table {
   TextColumn get uuid => text()();
   TextColumn get orderUuid => text().references(Orders, #uuid)();
-  TextColumn get productUuid => text().references(Products, #uuid)();
+
+  /// Direct product line. Null when the line is a selling-product offer.
+  TextColumn get productUuid => text().nullable().references(Products, #uuid)();
+
+  /// Catalog line this sale was picked from (optional snapshot ref).
+  TextColumn get catalogItemUuid =>
+      text().nullable().references(CatalogItems, #uuid)();
+
+  /// Selling-product / bundle line. Null for direct product lines.
+  TextColumn get sellingProductUuid =>
+      text().nullable().references(SellingProducts, #uuid)();
+
   TextColumn get productNameSnapshot => text()();
 
   /// Ordered qty (PO/SO commitment).
   RealColumn get quantity => real()();
+
+  /// List / catalog unit price (before line discount).
   RealColumn get unitPrice => real()();
+
+  /// Unit price after discount (what the customer pays per unit).
+  /// Null on legacy rows — treat as [unitPrice] − discount/qty.
+  RealColumn get discountedUnitPrice => real().nullable()();
+
+  /// Absolute line discount = ([unitPrice] − [discountedUnitPrice]) × qty.
   RealColumn get discountAmount => real().withDefault(const Constant(0.0))();
   RealColumn get taxRate => real().withDefault(const Constant(0.0))();
+
+  /// Catalog name when the line was picked (sale snapshot).
+  TextColumn get catalogNameSnapshot => text().nullable()();
 
   /// Cumulative qty received against this PO line (purchases).
   RealColumn get receivedQuantity => real().withDefault(const Constant(0.0))();
@@ -520,6 +542,14 @@ class Catalogs extends Table {
   DateTimeColumn get validUntil => dateTime().nullable()();
   BoolColumn get isDefault => boolean().withDefault(const Constant(false))();
 
+  /// Prefill for new catalog lines (copied onto items at add time).
+  TextColumn get defaultPricingApproach =>
+      text().withDefault(const Constant('MARKUP'))();
+  RealColumn get defaultMarkupOrMarginPercent =>
+      real().withDefault(const Constant(0.0))();
+  RealColumn get defaultFixedAmount =>
+      real().withDefault(const Constant(0.0))();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
@@ -755,6 +785,12 @@ typedef CategoriesCompanion = ProductCategoriesCompanion;
   SyncMetadata,
   Products,
   ProductBatches,
+  SellingProducts,
+  SellingProductComponents,
+  Catalogs,
+  CatalogItems,
+  CatalogAssignments,
+  CatalogTieredDiscounts,
   Orders,
   OrderItems,
   GoodsReceipts,
@@ -770,19 +806,13 @@ typedef CategoriesCompanion = ProductCategoriesCompanion;
   ProductionConsumptions,
   OrderReturns,
   OrderReturnItems,
-  SellingProducts,
-  SellingProductComponents,
-  Catalogs,
-  CatalogItems,
-  CatalogAssignments,
-  CatalogTieredDiscounts,
 ])
 class AppDatabase extends _$AppDatabase {
   AppDatabase({String fileName = 'flowkarobar.db', QueryExecutor? executor})
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 15;
 
   // Compatibility getters and helpers for deprecated tables
   $ProductCategoriesTable get categories => productCategories;
@@ -863,8 +893,143 @@ class AppDatabase extends _$AppDatabase {
           if (from < 12) {
             await _migrateCatalogDiscountsToV12();
           }
+          if (from < 13) {
+            await _migrateOrderItemsCatalogRefsToV13();
+          }
+          if (from < 14) {
+            await _migrateCatalogPricingDefaultsToV14();
+          }
+          if (from < 15) {
+            await _migrateOrderItemsDiscountedPriceToV15();
+          }
         },
       );
+
+  Future<void> _migrateOrderItemsDiscountedPriceToV15() async {
+    try {
+      await customStatement(
+        'ALTER TABLE order_items ADD COLUMN discounted_unit_price REAL',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v15 discounted_unit_price skipped: $e');
+      }
+    }
+    try {
+      await customStatement(
+        'ALTER TABLE order_items ADD COLUMN catalog_name_snapshot TEXT',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v15 catalog_name_snapshot skipped: $e');
+      }
+    }
+    try {
+      // Backfill from list unit price and existing line discount.
+      await customStatement('''
+UPDATE order_items
+SET discounted_unit_price = CASE
+  WHEN quantity IS NULL OR quantity = 0 THEN unit_price
+  ELSE MAX(0.0, unit_price - (COALESCE(discount_amount, 0.0) / quantity))
+END
+WHERE discounted_unit_price IS NULL
+''');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v15 discounted_unit_price backfill skipped: $e');
+      }
+    }
+  }
+
+  Future<void> _migrateCatalogPricingDefaultsToV14() async {
+    try {
+      await customStatement(
+        "ALTER TABLE catalogs ADD COLUMN default_pricing_approach TEXT "
+        "NOT NULL DEFAULT 'MARKUP'",
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v14 default_pricing_approach skipped: $e');
+      }
+    }
+    try {
+      await customStatement(
+        'ALTER TABLE catalogs ADD COLUMN default_markup_or_margin_percent '
+        'REAL NOT NULL DEFAULT 0.0',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print(
+          'Database migrate v14 default_markup_or_margin_percent skipped: $e',
+        );
+      }
+    }
+    try {
+      await customStatement(
+        'ALTER TABLE catalogs ADD COLUMN default_fixed_amount REAL '
+        'NOT NULL DEFAULT 0.0',
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v14 default_fixed_amount skipped: $e');
+      }
+    }
+  }
+
+  /// Nullable [productUuid] + catalog/selling-product refs on order lines.
+  Future<void> _migrateOrderItemsCatalogRefsToV13() async {
+    try {
+      await customStatement('PRAGMA foreign_keys = OFF');
+      await customStatement('''
+CREATE TABLE IF NOT EXISTS order_items_new (
+  uuid TEXT NOT NULL PRIMARY KEY,
+  order_uuid TEXT NOT NULL REFERENCES orders (uuid),
+  product_uuid TEXT REFERENCES products (uuid),
+  catalog_item_uuid TEXT REFERENCES catalog_items (uuid),
+  selling_product_uuid TEXT REFERENCES selling_products (uuid),
+  product_name_snapshot TEXT NOT NULL,
+  quantity REAL NOT NULL,
+  unit_price REAL NOT NULL,
+  discount_amount REAL NOT NULL DEFAULT 0.0,
+  tax_rate REAL NOT NULL DEFAULT 0.0,
+  received_quantity REAL NOT NULL DEFAULT 0.0,
+  batch_uuid TEXT REFERENCES product_batches (uuid),
+  purchase_price_snapshot REAL NOT NULL DEFAULT 0.0,
+  unit TEXT NOT NULL DEFAULT 'Pcs',
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  is_deleted INTEGER NOT NULL DEFAULT 0 CHECK (is_deleted IN (0, 1)),
+  is_not_synced INTEGER NOT NULL DEFAULT 1 CHECK (is_not_synced IN (0, 1))
+)
+''');
+      await customStatement('''
+INSERT INTO order_items_new (
+  uuid, order_uuid, product_uuid, catalog_item_uuid, selling_product_uuid,
+  product_name_snapshot, quantity, unit_price, discount_amount, tax_rate,
+  received_quantity, batch_uuid, purchase_price_snapshot, unit,
+  created_at, updated_at, is_deleted, is_not_synced
+)
+SELECT
+  uuid, order_uuid, product_uuid, NULL, NULL,
+  product_name_snapshot, quantity, unit_price, discount_amount, tax_rate,
+  received_quantity, batch_uuid, purchase_price_snapshot, unit,
+  created_at, updated_at, is_deleted, is_not_synced
+FROM order_items
+''');
+      await customStatement('DROP TABLE order_items');
+      await customStatement(
+        'ALTER TABLE order_items_new RENAME TO order_items',
+      );
+      await customStatement('PRAGMA foreign_keys = ON');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v13 order_items catalog refs skipped: $e');
+      }
+      try {
+        await customStatement('PRAGMA foreign_keys = ON');
+      } catch (_) {}
+    }
+  }
 
   Future<void> _migrateCatalogDiscountsToV12() async {
     try {

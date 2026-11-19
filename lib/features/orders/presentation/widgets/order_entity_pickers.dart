@@ -4,11 +4,14 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/icon_helper.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_sale_pick.dart';
+import 'package:flowpaisa/features/catalog/presentation/providers/catalog_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/add_contact_screen.dart';
 import 'package:flowpaisa/features/categories/presentation/screens/add_category_screen.dart';
 import 'package:flowpaisa/features/inventory/presentation/providers/inventory_provider.dart';
 import 'package:flowpaisa/features/inventory/presentation/screens/add_product_screen.dart';
+import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dart';
 import 'package:flowpaisa/features/transactions/domain/models.dart' show Category;
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/entity_picker_sheet.dart';
@@ -125,6 +128,104 @@ Future<EntityPickResult<Product>?> showOrderProductPicker({
             product: p,
             category: p.categoryUuid == null ? null : byId[p.categoryUuid],
           ),
+        ),
+    ],
+  );
+}
+
+/// Bottom drawer to pick which active catalog drives this sale.
+Future<EntityPickResult<Catalog>?> showOrderCatalogPicker({
+  required BuildContext context,
+  required WidgetRef ref,
+  required List<Catalog> catalogs,
+  Catalog? selected,
+  Set<String> openCatalogUuids = const {},
+}) async {
+  final l10n = AppLocalizations.of(context)!;
+  return showEntityPickerSheet<Catalog>(
+    context: context,
+    title: l10n.selectCatalog,
+    selected: selected,
+    searchHint: l10n.search,
+    items: [
+      for (final c in catalogs)
+        EntityPickerItem(
+          value: c,
+          title: c.name,
+          subtitle: () {
+            final parts = <String>[
+              if (c.isDefault) l10n.defaultCatalog,
+              if (openCatalogUuids.contains(c.uuid))
+                l10n.catalogAvailableToAll,
+            ];
+            return parts.isEmpty ? null : parts.join(' · ');
+          }(),
+          leading: categoryLeadingAvatar(
+            color: AppColors.receivableColor,
+            icon: Icons.price_change_outlined,
+          ),
+        ),
+    ],
+  );
+}
+
+/// Sale picker from a resolved catalog (name + stored sell price).
+Future<EntityPickResult<CatalogSalePick>?> showOrderCatalogItemPicker({
+  required BuildContext context,
+  required WidgetRef ref,
+  required String catalogUuid,
+  String? catalogName,
+}) async {
+  final l10n = AppLocalizations.of(context)!;
+  final catalogRepo = ref.read(catalogRepositoryProvider);
+
+  final items = await catalogRepo.getItems(catalogUuid);
+  final categories = ref.read(productCategoriesStreamProvider).value ??
+      const <ProductCategory>[];
+  final byCategory = {for (final c in categories) c.uuid: c};
+
+  final picks = <CatalogSalePick>[];
+  for (final item in items) {
+    final pick = await catalogRepo.buildSalePick(item);
+    if (pick != null) picks.add(pick);
+  }
+
+  if (!context.mounted) return null;
+
+  return showEntityPickerSheet<CatalogSalePick>(
+    context: context,
+    title: catalogName == null || catalogName.trim().isEmpty
+        ? l10n.selectCatalogItem
+        : l10n.selectFromCatalog(catalogName),
+    searchHint: l10n.search,
+    items: [
+      for (final pick in picks)
+        EntityPickerItem(
+          value: pick,
+          title: pick.displayName,
+          subtitle: [
+            formatOrderAmount(ref, pick.sellPrice),
+            if (pick.unit.isNotEmpty) '/ ${pick.unit}',
+            if (pick.sellingProduct != null) ' · ${l10n.sellingProductOffer}',
+          ].join(),
+          leading: pick.product != null
+              ? productLeadingAvatar(
+                  product: pick.product!,
+                  category: pick.categoryUuid == null
+                      ? null
+                      : byCategory[pick.categoryUuid],
+                )
+              : categoryLeadingAvatar(
+                  color: parseCategoryColor(
+                    pick.categoryUuid == null
+                        ? null
+                        : byCategory[pick.categoryUuid]?.color,
+                    AppColors.receivableColor,
+                  ),
+                  icon: pick.categoryUuid == null
+                      ? Icons.sell_outlined
+                      : categoryIconData(byCategory[pick.categoryUuid]),
+                ),
         ),
     ],
   );

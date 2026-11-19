@@ -136,6 +136,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get supplier => 'Supplier';
 
   @override
+  String get contactRoles => 'Roles';
+
+  @override
+  String get contactRolesHint =>
+      'Controls where this contact appears on sales and purchases.';
+
+  @override
+  String get contactRoleCustomerHint => 'Show in New Sale contact list';
+
+  @override
+  String get contactRoleSupplierHint => 'Show in New Purchase contact list';
+
+  @override
+  String get contactRoleRequired =>
+      'Select at least one role: Customer or Supplier';
+
+  @override
   String get taxInvoice => 'Tax Invoice';
 
   @override
@@ -179,6 +196,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setAsDefaultCatalog => 'Set as default catalog';
+
+  @override
+  String get catalogDefaultPricing => 'Default pricing for new items';
+
+  @override
+  String get catalogDefaultPricingHint =>
+      'Prefills approach, percent, and fixed amount when you add items. Each line still stores its own copy.';
+
+  @override
+  String saleUsingCatalog(String catalogName) {
+    return 'Prices from catalog: $catalogName';
+  }
+
+  @override
+  String get saleUsingRetailPrices =>
+      'No catalog — using product retail prices';
+
+  @override
+  String get saleNoActiveCatalog =>
+      'No active catalog for this customer. Assign this customer to a catalog, or use a catalog with no customer assignments (available to all / walk-in).';
+
+  @override
+  String get selectCatalog => 'Select catalog';
+
+  @override
+  String get catalogAvailableToAll => 'All customers / walk-in';
+
+  @override
+  String get saleCatalogLinesInvalidTitle => 'Catalog items need review';
+
+  @override
+  String saleCatalogLinesInvalidBody(int count) {
+    return '$count line(s) reference a deleted item or an expired/deleted catalog. You can still proceed with the saved prices.';
+  }
+
+  @override
+  String get saleLineCatalogItemUnavailable => 'Catalog item removed';
+
+  @override
+  String get saleLineCatalogDeleted => 'Catalog deleted';
+
+  @override
+  String get saleLineCatalogExpired => 'Catalog expired';
+
+  @override
+  String get discountedUnitPrice => 'Discounted unit price';
+
+  @override
+  String get editDiscountedUnitPrice => 'Edit discounted unit price';
+
+  @override
+  String get hideDiscountedUnitPrice => 'Hide discounted unit price editor';
+
+  @override
+  String get discountedUnitPriceManualHint =>
+      'Manual price — qty changes keep this unit price until you refresh from catalog';
+
+  @override
+  String get unitDiscountDetail => 'Unit discount';
+
+  @override
+  String get lineDiscountDetail => 'Line discount';
+
+  @override
+  String get lineTotal => 'Line total';
+
+  @override
+  String get refreshSaleLinePrices => 'Refresh prices from catalog';
+
+  @override
+  String get saleLinePricesRefreshed => 'Prices refreshed from catalog';
+
+  @override
+  String get saleLineCatalogRefreshFailed =>
+      'Could not refresh — catalog item missing or deleted';
 
   @override
   String get catalogValidUntil => 'Valid until';
@@ -489,6 +581,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectProduct => 'Select Product';
+
+  @override
+  String get selectCatalogItem => 'Select catalog item';
+
+  @override
+  String selectFromCatalog(String catalogName) {
+    return 'Select from $catalogName';
+  }
+
+  @override
+  String get sellingProductOffer => 'Offer';
 
   @override
   String get noProductsAvailable =>

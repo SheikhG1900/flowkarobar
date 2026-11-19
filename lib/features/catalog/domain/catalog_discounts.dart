@@ -81,4 +81,95 @@ abstract final class CatalogDiscounts {
     }
     return sellPrice.isFinite ? sellPrice : 0.0;
   }
+
+  /// Absolute line discount so list [sellPrice] × qty stays on the unit field.
+  static double lineDiscountAmount({
+    required double sellPrice,
+    String? defaultType,
+    double defaultValue = 0,
+    required double quantity,
+    required List<({double minQuantity, String type, double value})> tiers,
+  }) {
+    final qty = quantity.isFinite && quantity > 0 ? quantity : 0.0;
+    final unitAfter = unitPriceAfterDiscounts(
+      sellPrice: sellPrice,
+      defaultType: defaultType,
+      defaultValue: defaultValue,
+      quantity: qty,
+      tiers: tiers,
+    );
+    return SaleLinePricing.lineDiscountFixed(
+      listUnitPrice: sellPrice,
+      discountedUnitPrice: unitAfter,
+      quantity: qty,
+    );
+  }
+}
+
+/// Sale line math from list unit price vs discounted unit price.
+abstract final class SaleLinePricing {
+  static double unitDiscountFixed({
+    required double listUnitPrice,
+    required double discountedUnitPrice,
+  }) {
+    final list = listUnitPrice.isFinite ? listUnitPrice : 0.0;
+    final disc = discountedUnitPrice.isFinite ? discountedUnitPrice : 0.0;
+    final diff = list - disc;
+    return diff < 0 ? 0 : diff;
+  }
+
+  static double unitDiscountPercent({
+    required double listUnitPrice,
+    required double discountedUnitPrice,
+  }) {
+    final list = listUnitPrice.isFinite ? listUnitPrice : 0.0;
+    if (list <= 1e-12) return 0;
+    return (unitDiscountFixed(
+              listUnitPrice: list,
+              discountedUnitPrice: discountedUnitPrice,
+            ) /
+            list) *
+        100;
+  }
+
+  static double lineDiscountFixed({
+    required double listUnitPrice,
+    required double discountedUnitPrice,
+    required double quantity,
+  }) {
+    final qty = quantity.isFinite && quantity > 0 ? quantity : 0.0;
+    return unitDiscountFixed(
+          listUnitPrice: listUnitPrice,
+          discountedUnitPrice: discountedUnitPrice,
+        ) *
+        qty;
+  }
+
+  /// Overall line discount % equals unit discount % (uniform per-unit).
+  static double lineDiscountPercent({
+    required double listUnitPrice,
+    required double discountedUnitPrice,
+  }) =>
+      unitDiscountPercent(
+        listUnitPrice: listUnitPrice,
+        discountedUnitPrice: discountedUnitPrice,
+      );
+
+  static double lineGross({
+    required double listUnitPrice,
+    required double quantity,
+  }) {
+    final qty = quantity.isFinite && quantity > 0 ? quantity : 0.0;
+    final list = listUnitPrice.isFinite ? listUnitPrice : 0.0;
+    return list * qty;
+  }
+
+  static double lineTotal({
+    required double discountedUnitPrice,
+    required double quantity,
+  }) {
+    final qty = quantity.isFinite && quantity > 0 ? quantity : 0.0;
+    final disc = discountedUnitPrice.isFinite ? discountedUnitPrice : 0.0;
+    return disc * qty;
+  }
 }

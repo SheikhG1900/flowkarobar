@@ -41,6 +41,11 @@
   "customer": "گاہک",
   "suppliers": "فراہم کنندہ",
   "supplier": "فراہم کنندہ",
+  "contactRoles": "کردار",
+  "contactRolesHint": "کنٹرول کرتا ہے کہ یہ رابطہ فروخت اور خریداری میں کہاں دکھے گا۔",
+  "contactRoleCustomerHint": "نئی فروخت کے رابطہ فہرست میں دکھائیں",
+  "contactRoleSupplierHint": "نئی خریداری کے رابطہ فہرست میں دکھائیں",
+  "contactRoleRequired": "کم از کم ایک کردار منتخب کریں: گاہک یا فراہم کنندہ",
   "taxInvoice": "ٹیکس انوائس",
   "purchaseReceipt": "خریداری کی رسید",
   "reconcileInventory": "انوینٹری کی مطابقت",
@@ -56,6 +61,42 @@
   "catalogHint": "مصنوعات اور فروختی پیشکشوں کی قیمت فہرست",
   "defaultCatalog": "طے شدہ کیٹلاگ",
   "setAsDefaultCatalog": "طے شدہ کیٹلاگ بنائیں",
+  "catalogDefaultPricing": "نئے آئٹمز کے لیے طے شدہ قیمت بندی",
+  "catalogDefaultPricingHint": "آئٹم شامل کرتے وقت طریقہ، فیصد اور فکسڈ رقم پہلے سے بھرتا ہے۔ ہر لائن اپنی کاپی رکھتی ہے۔",
+  "saleUsingCatalog": "کیٹلاگ سے قیمتیں: {catalogName}",
+  "@saleUsingCatalog": {
+    "placeholders": {
+      "catalogName": {
+        "type": "String"
+      }
+    }
+  },
+  "saleUsingRetailPrices": "کوئی کیٹلاگ نہیں — مصنوعات کی ریٹیل قیمتیں",
+  "saleNoActiveCatalog": "اس گاہک کے لیے کوئی فعال کیٹلاگ نہیں۔ گاہک کو کیٹلاگ تفویض کریں، یا بغیر تفویض والا کیٹلاگ استعمال کریں (سب / واک اِن)۔",
+  "selectCatalog": "کیٹلاگ منتخب کریں",
+  "catalogAvailableToAll": "تمام گاہک / واک اِن",
+  "saleCatalogLinesInvalidTitle": "کیٹلاگ آئٹمز کا جائزہ لیں",
+  "saleCatalogLinesInvalidBody": "{count} لائن(ز) حذف شدہ آئٹم یا ختم/حذف شدہ کیٹلاگ کی طرف اشارہ کرتی ہیں۔ آپ محفوظ قیمتوں کے ساتھ آگے بڑھ سکتے ہیں۔",
+  "@saleCatalogLinesInvalidBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "saleLineCatalogItemUnavailable": "کیٹلاگ آئٹم ہٹا دیا گیا",
+  "saleLineCatalogDeleted": "کیٹلاگ حذف",
+  "saleLineCatalogExpired": "کیٹلاگ ختم",
+  "discountedUnitPrice": "رعایت کے بعد یونٹ قیمت",
+  "editDiscountedUnitPrice": "رعایت کے بعد یونٹ قیمت ترمیم کریں",
+  "hideDiscountedUnitPrice": "رعایت کے بعد یونٹ قیمت ایڈیٹر چھپائیں",
+  "discountedUnitPriceManualHint": "دستی قیمت — مقدار بدلنے پر یہ یونٹ قیمت کیٹلاگ سے تازہ کرنے تک برقرار رہے گی",
+  "unitDiscountDetail": "یونٹ رعایت",
+  "lineDiscountDetail": "لائن رعایت",
+  "lineTotal": "لائن کل",
+  "refreshSaleLinePrices": "کیٹلاگ سے قیمتیں تازہ کریں",
+  "saleLinePricesRefreshed": "کیٹلاگ سے قیمتیں تازہ ہو گئیں",
+  "saleLineCatalogRefreshFailed": "تازہ نہیں ہو سکی — کیٹلاگ آئٹم غائب یا حذف",
   "catalogValidUntil": "میعاد تک",
   "expired": "میعاد ختم",
   "catalogItemsEmpty": "اس کیٹلاگ میں ابھی کوئی آئٹم نہیں",
@@ -154,6 +195,16 @@
   "orderNotFound": "آرڈر نہیں ملا",
   "addItem": "آئٹم شامل کریں",
   "selectProduct": "مصنوعات منتخب کریں",
+  "selectCatalogItem": "کیٹلاگ آئٹم منتخب کریں",
+  "selectFromCatalog": "{catalogName} سے منتخب کریں",
+  "@selectFromCatalog": {
+    "placeholders": {
+      "catalogName": {
+        "type": "String"
+      }
+    }
+  },
+  "sellingProductOffer": "آفر",
   "noProductsAvailable": "کوئی مصنوعات دستیاب نہیں۔ پہلے مصنوعات شامل کریں۔",
   "items": "آئٹمز",
   "quantity": "مقدار",

@@ -233,6 +233,44 @@ class ContactDetailsScreen extends ConsumerWidget {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
+                            if (contact.isCustomer || contact.isSupplier) ...[
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 4,
+                                alignment: WrapAlignment.center,
+                                children: [
+                                  if (contact.isCustomer)
+                                    Chip(
+                                      visualDensity: VisualDensity.compact,
+                                      avatar: Icon(
+                                        Icons.person_outline,
+                                        size: 16,
+                                        color: AppColors.receivableColor,
+                                      ),
+                                      label: Text(l10n.customer),
+                                      side: BorderSide(
+                                        color: AppColors.receivableColor
+                                            .withValues(alpha: 0.4),
+                                      ),
+                                    ),
+                                  if (contact.isSupplier)
+                                    Chip(
+                                      visualDensity: VisualDensity.compact,
+                                      avatar: Icon(
+                                        Icons.storefront_outlined,
+                                        size: 16,
+                                        color: AppColors.payableColor,
+                                      ),
+                                      label: Text(l10n.supplier),
+                                      side: BorderSide(
+                                        color: AppColors.payableColor
+                                            .withValues(alpha: 0.4),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ],
                             if (contact.phone != null &&
                                 contact.phone!.isNotEmpty) ...[
                               const SizedBox(height: 4),

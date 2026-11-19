@@ -73,6 +73,22 @@ class _AddCatalogItemsScreenState extends ConsumerState<AddCatalogItemsScreen>
   void initState() {
     super.initState();
     _tabs = TabController(length: 2, vsync: this);
+    _loadCatalogDefaults();
+  }
+
+  Future<void> _loadCatalogDefaults() async {
+    final catalog =
+        await ref.read(catalogRepositoryProvider).getCatalog(widget.catalogUuid);
+    if (!mounted || catalog == null) return;
+    final approach =
+        CatalogPricingApproach.all.contains(catalog.defaultPricingApproach)
+            ? catalog.defaultPricingApproach
+            : CatalogPricingApproach.markup;
+    setState(() {
+      _approach = approach;
+      _percent.text = catalog.defaultMarkupOrMarginPercent.toString();
+      _fixed.text = catalog.defaultFixedAmount.toString();
+    });
   }
 
   @override

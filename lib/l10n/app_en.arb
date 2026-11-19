@@ -41,6 +41,11 @@
   "customer": "Customer",
   "suppliers": "Suppliers",
   "supplier": "Supplier",
+  "contactRoles": "Roles",
+  "contactRolesHint": "Controls where this contact appears on sales and purchases.",
+  "contactRoleCustomerHint": "Show in New Sale contact list",
+  "contactRoleSupplierHint": "Show in New Purchase contact list",
+  "contactRoleRequired": "Select at least one role: Customer or Supplier",
   "taxInvoice": "Tax Invoice",
   "purchaseReceipt": "Purchase Receipt",
   "reconcileInventory": "Reconcile Inventory",
@@ -56,6 +61,42 @@
   "catalogHint": "Price list for products and selling offers",
   "defaultCatalog": "Default catalog",
   "setAsDefaultCatalog": "Set as default catalog",
+  "catalogDefaultPricing": "Default pricing for new items",
+  "catalogDefaultPricingHint": "Prefills approach, percent, and fixed amount when you add items. Each line still stores its own copy.",
+  "saleUsingCatalog": "Prices from catalog: {catalogName}",
+  "@saleUsingCatalog": {
+    "placeholders": {
+      "catalogName": {
+        "type": "String"
+      }
+    }
+  },
+  "saleUsingRetailPrices": "No catalog — using product retail prices",
+  "saleNoActiveCatalog": "No active catalog for this customer. Assign this customer to a catalog, or use a catalog with no customer assignments (available to all / walk-in).",
+  "selectCatalog": "Select catalog",
+  "catalogAvailableToAll": "All customers / walk-in",
+  "saleCatalogLinesInvalidTitle": "Catalog items need review",
+  "saleCatalogLinesInvalidBody": "{count} line(s) reference a deleted item or an expired/deleted catalog. You can still proceed with the saved prices.",
+  "@saleCatalogLinesInvalidBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "saleLineCatalogItemUnavailable": "Catalog item removed",
+  "saleLineCatalogDeleted": "Catalog deleted",
+  "saleLineCatalogExpired": "Catalog expired",
+  "discountedUnitPrice": "Discounted unit price",
+  "editDiscountedUnitPrice": "Edit discounted unit price",
+  "hideDiscountedUnitPrice": "Hide discounted unit price editor",
+  "discountedUnitPriceManualHint": "Manual price — qty changes keep this unit price until you refresh from catalog",
+  "unitDiscountDetail": "Unit discount",
+  "lineDiscountDetail": "Line discount",
+  "lineTotal": "Line total",
+  "refreshSaleLinePrices": "Refresh prices from catalog",
+  "saleLinePricesRefreshed": "Prices refreshed from catalog",
+  "saleLineCatalogRefreshFailed": "Could not refresh — catalog item missing or deleted",
   "catalogValidUntil": "Valid until",
   "expired": "Expired",
   "catalogItemsEmpty": "No items in this catalog yet",
@@ -172,6 +213,16 @@
   "orderNotFound": "Order not found",
   "addItem": "Add Item",
   "selectProduct": "Select Product",
+  "selectCatalogItem": "Select catalog item",
+  "selectFromCatalog": "Select from {catalogName}",
+  "@selectFromCatalog": {
+    "placeholders": {
+      "catalogName": {
+        "type": "String"
+      }
+    }
+  },
+  "sellingProductOffer": "Offer",
   "noProductsAvailable": "No products available. Add a product first.",
   "items": "Items",
   "quantity": "Quantity",

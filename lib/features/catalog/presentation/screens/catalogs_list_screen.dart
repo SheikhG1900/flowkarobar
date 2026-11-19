@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_availability.dart';
 import 'package:flowpaisa/features/catalog/presentation/providers/catalog_provider.dart';
 import 'package:flowpaisa/features/catalog/presentation/screens/add_edit_catalog_screen.dart';
 import 'package:flowpaisa/features/catalog/presentation/screens/catalog_detail_screen.dart';
@@ -204,10 +205,7 @@ class _CatalogCard extends ConsumerWidget {
       fontWeight: FontWeight.w600,
     );
     final validUntil = catalog.validUntil;
-    final isExpired = validUntil != null &&
-        validUntil.isBefore(
-          DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day),
-        );
+    final isExpired = CatalogAvailability.isExpired(catalog);
 
     return HoverBorderCard(
       accent: accent,
@@ -305,7 +303,7 @@ class _CatalogCard extends ConsumerWidget {
                   if (isExpired) ...[
                     Tooltip(
                       message:
-                          '${l10n.catalogValidUntil}: ${AppDateFormatter.formatDate(validUntil)}',
+                          '${l10n.catalogValidUntil}: ${AppDateFormatter.formatDate(validUntil!)}',
                       child: OrderStatusChip(
                         label: l10n.expired,
                         color: AppColors.warning,

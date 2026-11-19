@@ -10,6 +10,9 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/account_picker.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_discounts.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_sale_pick.dart';
+import 'package:flowpaisa/features/catalog/presentation/providers/catalog_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/inventory/presentation/providers/inventory_provider.dart';
 import 'package:flowpaisa/features/orders/presentation/providers/orders_provider.dart';
@@ -24,34 +27,206 @@ import 'package:flowpaisa/shared/widgets/form_section_card.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 
 class _OrderLine {
-  final Product product;
+  final Product? product;
+  final String? catalogItemUuid;
+  final String? sellingProductUuid;
+  final String displayName;
+  final String unit;
+  final String? categoryUuid;
+  final bool isService;
+  final bool applyCatalogDiscounts;
+
+  /// Mutable so refresh-from-catalog can update the snapshot.
+  double listUnitPrice;
+  String? defaultDiscountType;
+  double defaultDiscountValue;
+  List<({double minQuantity, String type, double value})> discountTiers;
+  String? catalogName;
+
+  /// When true, qty changes keep the edited discounted unit price.
+  bool manualDiscountedPrice;
+
   final TextEditingController quantity;
   final TextEditingController unitPrice;
+  final TextEditingController discountedUnitPrice;
   final TextEditingController discount;
   /// Service sale COGS; stamped to [OrderItem.purchasePriceSnapshot].
   final TextEditingController unitCost;
 
   _OrderLine({
-    required this.product,
+    required this.displayName,
+    required this.unit,
+    required double price,
+    required double defaultUnitCost,
+    this.product,
+    this.catalogItemUuid,
+    this.sellingProductUuid,
+    this.categoryUuid,
+    this.isService = false,
+    this.listUnitPrice = 0,
+    this.defaultDiscountType,
+    this.defaultDiscountValue = 0,
+    this.discountTiers = const [],
+    this.applyCatalogDiscounts = false,
+    this.catalogName,
+    double? initialDiscountedUnitPrice,
+    double initialDiscount = 0,
+  })  : manualDiscountedPrice = false,
+        quantity = TextEditingController(text: '1'),
+        unitPrice = TextEditingController(text: _plain(price)),
+        discountedUnitPrice = TextEditingController(
+          text: _plain(initialDiscountedUnitPrice ?? price),
+        ),
+        discount = TextEditingController(text: _plain(initialDiscount)),
+        unitCost = TextEditingController(text: _plain(defaultUnitCost));
+
+  factory _OrderLine.fromProduct({
+    required Product product,
     required double price,
     double? defaultUnitCost,
-  })  : quantity = TextEditingController(text: '1'),
-        unitPrice = TextEditingController(text: _plain(price)),
-        discount = TextEditingController(text: '0'),
-        unitCost = TextEditingController(
-          text: _plain(defaultUnitCost ?? product.purchasePrice),
-        );
+  }) {
+    return _OrderLine(
+      product: product,
+      displayName: product.name,
+      unit: product.unit,
+      categoryUuid: product.categoryUuid,
+      isService: product.isService,
+      price: price,
+      listUnitPrice: price,
+      defaultUnitCost: defaultUnitCost ?? product.purchasePrice,
+    );
+  }
+
+  factory _OrderLine.fromCatalogPick(CatalogSalePick pick) {
+    final discounted = pick.discountedUnitForQty(1);
+    final discount = SaleLinePricing.lineDiscountFixed(
+      listUnitPrice: pick.sellPrice,
+      discountedUnitPrice: discounted,
+      quantity: 1,
+    );
+    return _OrderLine(
+      product: pick.product,
+      catalogItemUuid: pick.item.uuid,
+      sellingProductUuid: pick.sellingProductUuid,
+      displayName: pick.displayName,
+      unit: pick.unit,
+      categoryUuid: pick.categoryUuid,
+      isService: pick.isService,
+      price: pick.sellPrice,
+      listUnitPrice: pick.sellPrice,
+      defaultDiscountType: pick.item.defaultDiscountType,
+      defaultDiscountValue: pick.item.defaultDiscountValue,
+      discountTiers: pick.discountTiers,
+      applyCatalogDiscounts: true,
+      catalogName: pick.catalogName,
+      defaultUnitCost: pick.unitCost,
+      initialDiscountedUnitPrice: discounted,
+      initialDiscount: discount,
+    );
+  }
 
   double get quantityValue => _parse(quantity);
   double get unitPriceValue => _parse(unitPrice);
-  double get discountValue => _parse(discount);
+  double get discountedUnitPriceValue => _parse(discountedUnitPrice);
   double get unitCostValue => _parse(unitCost);
-  double get gross => quantityValue * unitPriceValue;
-  double get lineTotal => (gross - discountValue).clamp(0, double.infinity);
+
+  double get effectiveListUnitPrice =>
+      applyCatalogDiscounts ? listUnitPrice : unitPriceValue;
+
+  double get effectiveDiscountedUnitPrice => applyCatalogDiscounts
+      ? discountedUnitPriceValue
+      : unitPriceValue;
+
+  double get discountValue {
+    if (applyCatalogDiscounts) {
+      return SaleLinePricing.lineDiscountFixed(
+        listUnitPrice: listUnitPrice,
+        discountedUnitPrice: discountedUnitPriceValue,
+        quantity: quantityValue,
+      );
+    }
+    return _parse(discount);
+  }
+
+  double get gross {
+    if (applyCatalogDiscounts) {
+      return SaleLinePricing.lineGross(
+        listUnitPrice: listUnitPrice,
+        quantity: quantityValue,
+      );
+    }
+    return quantityValue * unitPriceValue;
+  }
+
+  double get lineTotal {
+    if (applyCatalogDiscounts) {
+      return SaleLinePricing.lineTotal(
+        discountedUnitPrice: discountedUnitPriceValue,
+        quantity: quantityValue,
+      );
+    }
+    return (gross - discountValue).clamp(0, double.infinity);
+  }
+
+  double get unitDiscountFixed => SaleLinePricing.unitDiscountFixed(
+        listUnitPrice: effectiveListUnitPrice,
+        discountedUnitPrice: effectiveDiscountedUnitPrice,
+      );
+
+  double get unitDiscountPercent => SaleLinePricing.unitDiscountPercent(
+        listUnitPrice: effectiveListUnitPrice,
+        discountedUnitPrice: effectiveDiscountedUnitPrice,
+      );
+
+  double get lineDiscountPercent => SaleLinePricing.lineDiscountPercent(
+        listUnitPrice: effectiveListUnitPrice,
+        discountedUnitPrice: effectiveDiscountedUnitPrice,
+      );
+
+  void _syncDiscountController() {
+    if (!applyCatalogDiscounts) return;
+    discount.text = _plain(discountValue);
+  }
+
+  /// Recalc discounted unit from catalog tiers unless manually overridden.
+  void syncCatalogDiscountFromQty() {
+    if (!applyCatalogDiscounts) return;
+    if (!manualDiscountedPrice) {
+      final after = CatalogDiscounts.unitPriceAfterDiscounts(
+        sellPrice: listUnitPrice,
+        defaultType: defaultDiscountType,
+        defaultValue: defaultDiscountValue,
+        quantity: quantityValue,
+        tiers: discountTiers,
+      );
+      discountedUnitPrice.text = _plain(after);
+      unitPrice.text = _plain(listUnitPrice);
+    }
+    _syncDiscountController();
+  }
+
+  void onDiscountedUnitPriceEdited() {
+    if (!applyCatalogDiscounts) return;
+    manualDiscountedPrice = true;
+    _syncDiscountController();
+  }
+
+  void applyCatalogRefresh(CatalogSalePick pick) {
+    listUnitPrice = pick.sellPrice;
+    unitPrice.text = _plain(pick.sellPrice);
+    defaultDiscountType = pick.item.defaultDiscountType;
+    defaultDiscountValue = pick.item.defaultDiscountValue;
+    discountTiers = List.of(pick.discountTiers);
+    catalogName = pick.catalogName;
+    unitCost.text = _plain(pick.unitCost);
+    manualDiscountedPrice = false;
+    syncCatalogDiscountFromQty();
+  }
 
   void dispose() {
     quantity.dispose();
     unitPrice.dispose();
+    discountedUnitPrice.dispose();
     discount.dispose();
     unitCost.dispose();
   }
@@ -61,6 +236,13 @@ class _OrderLine {
 
 double _parse(TextEditingController controller) =>
     double.tryParse(controller.text.trim()) ?? 0;
+
+/// Round to 1 decimal; drop trailing `.0` (3.0 → "3", 3.5 → "3.5").
+String _formatDiscountPercent(double value) {
+  if (!value.isFinite) return '0';
+  final rounded = (value * 10).roundToDouble() / 10.0;
+  return AmountFormatter.formatQuantity(rounded, maxDecimals: 1);
+}
 
 class AddOrderScreen extends ConsumerStatefulWidget {
   final String orderType;
@@ -79,6 +261,8 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
 
   String? _contactUuid;
   String? _accountUuid;
+  /// User-selected sale catalog (must be an active catalog uuid).
+  String? _saleCatalogUuid;
   bool _showAllContacts = false;
   bool _delivered = false;
   bool _saving = false;
@@ -103,23 +287,82 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
     super.dispose();
   }
 
+  Future<Catalog?> _resolveSelectedSaleCatalog() async {
+    final repo = ref.read(catalogRepositoryProvider);
+    final active = await repo.listActiveCatalogsForContact(_contactUuid);
+    if (active.isEmpty) return null;
+    final selectedId = _saleCatalogUuid;
+    if (selectedId != null) {
+      final match = active.where((c) => c.uuid == selectedId).firstOrNull;
+      if (match != null) return match;
+    }
+    return active.first;
+  }
+
   Future<void> _pickProduct() async {
+    final l10n = AppLocalizations.of(context)!;
+    if (_isSale) {
+      final catalog = await _resolveSelectedSaleCatalog();
+      if (!mounted) return;
+      if (catalog == null) {
+        ToastUtils.showErrorToast(context, ref, l10n.saleNoActiveCatalog);
+        return;
+      }
+      if (_saleCatalogUuid != catalog.uuid) {
+        setState(() => _saleCatalogUuid = catalog.uuid);
+      }
+      final result = await showOrderCatalogItemPicker(
+        context: context,
+        ref: ref,
+        catalogUuid: catalog.uuid,
+        catalogName: catalog.name,
+      );
+      final pick = result?.value;
+      if (pick == null || !mounted) return;
+      _addOrBumpCatalogLine(pick.withCatalogName(catalog.name));
+      return;
+    }
+
     final result = await showOrderProductPicker(context: context, ref: ref);
     final product = result?.value;
     if (product == null || !mounted) return;
+    _addOrBumpProductLine(product);
+  }
 
-    final existing =
-        _lines.where((l) => l.product.uuid == product.uuid).firstOrNull;
+  void _addOrBumpProductLine(Product product) {
+    final existing = _lines.where((l) {
+      return l.catalogItemUuid == null &&
+          l.sellingProductUuid == null &&
+          l.product?.uuid == product.uuid;
+    }).firstOrNull;
     setState(() {
       if (existing != null) {
         existing.quantity.text =
             AmountFormatter.formatQuantity(existing.quantityValue + 1);
+        existing.syncCatalogDiscountFromQty();
       } else {
-        _lines.add(_OrderLine(
-          product: product,
-          price: _isSale ? product.retailPrice : product.purchasePrice,
-          defaultUnitCost: product.purchasePrice,
-        ));
+        _lines.add(
+          _OrderLine.fromProduct(
+            product: product,
+            price: _isSale ? product.retailPrice : product.purchasePrice,
+            defaultUnitCost: product.purchasePrice,
+          ),
+        );
+      }
+    });
+  }
+
+  void _addOrBumpCatalogLine(CatalogSalePick pick) {
+    final existing = _lines
+        .where((l) => l.catalogItemUuid == pick.item.uuid)
+        .firstOrNull;
+    setState(() {
+      if (existing != null) {
+        existing.quantity.text =
+            AmountFormatter.formatQuantity(existing.quantityValue + 1);
+        existing.syncCatalogDiscountFromQty();
+      } else {
+        _lines.add(_OrderLine.fromCatalogPick(pick));
       }
     });
   }
@@ -136,13 +379,114 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
       showAll: _showAllContacts,
     );
     if (result == null || !mounted) return;
-    setState(() => _contactUuid = result.value?.uuid);
+    setState(() {
+      _contactUuid = result.value?.uuid;
+      _saleCatalogUuid = null; // re-resolve for the new contact
+    });
   }
 
   void _removeLine(int index) {
     final line = _lines[index];
     setState(() => _lines.removeAt(index));
     WidgetsBinding.instance.addPostFrameCallback((_) => line.dispose());
+  }
+
+  Future<void> _refreshLineFromCatalog(_OrderLine line) async {
+    final l10n = AppLocalizations.of(context)!;
+    final itemUuid = line.catalogItemUuid;
+    if (itemUuid == null) return;
+    final pick =
+        await ref.read(catalogRepositoryProvider).resolveSalePick(itemUuid);
+    if (!mounted) return;
+    if (pick == null) {
+      ToastUtils.showErrorToast(context, ref, l10n.saleLineCatalogRefreshFailed);
+      return;
+    }
+    setState(() => line.applyCatalogRefresh(pick));
+    ToastUtils.showSuccessToast(context, ref, l10n.saleLinePricesRefreshed);
+  }
+
+  Future<void> _editDiscountedUnitPrice(_OrderLine line) async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final currency = ref.read(currentCurrencyProvider).value;
+    final currencyAffix = AmountFormatter.currencyAffix(
+      currency?.symbol ?? ref.read(currencySymbolProvider),
+      isRtl: isRtl,
+    );
+    final controller = TextEditingController(
+      text: line.discountedUnitPrice.text,
+    );
+    final applied = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final bottomInset = MediaQuery.viewInsetsOf(sheetContext).bottom;
+        return Padding(
+          padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + bottomInset),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.editDiscountedUnitPrice,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                line.displayName,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: controller,
+                autofocus: true,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: _decimalFormatters,
+                decoration: InputDecoration(
+                  labelText: l10n.discountedUnitPrice,
+                  helperText: l10n.discountedUnitPriceManualHint,
+                  prefixText: currencyAffix.prefixText,
+                  suffixText: currencyAffix.suffixText,
+                  filled: true,
+                ),
+              ),
+              const SizedBox(height: 16),
+              GradientButton(
+                label: l10n.save,
+                icon: Icons.check_rounded,
+                width: double.infinity,
+                gradient: AppColors.getPrimaryGradient(_color),
+                onPressed: () {
+                  final value = double.tryParse(controller.text.trim());
+                  if (value == null || value < 0) {
+                    ToastUtils.showErrorToast(
+                      sheetContext,
+                      ref,
+                      l10n.invalidNumber,
+                    );
+                    return;
+                  }
+                  line.discountedUnitPrice.text =
+                      AmountFormatter.formatQuantity(value);
+                  line.onDiscountedUnitPriceEdited();
+                  Navigator.pop(sheetContext, true);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    controller.dispose();
+    if (applied == true && mounted) setState(() {});
   }
 
   Future<void> _pickDate() async {
@@ -207,24 +551,32 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
         notes: drift.Value(notes.isEmpty ? null : notes),
       );
 
-      final items = _lines
-          .map((line) => OrderItemsCompanion.insert(
-                uuid: const Uuid().v4(),
-                orderUuid: orderUuid,
-                productUuid: line.product.uuid,
-                productNameSnapshot: line.product.name,
-                quantity: line.quantityValue,
-                unitPrice: line.unitPriceValue,
-                discountAmount: drift.Value(line.discountValue),
-                // Services: freeze line COGS. Goods: FEFO overwrites on deliver.
-                purchasePriceSnapshot: drift.Value(
-                  line.product.isService
-                      ? line.unitCostValue
-                      : line.product.purchasePrice,
-                ),
-                unit: drift.Value(line.product.unit),
-              ))
-          .toList();
+      final items = _lines.map((line) {
+        final isService = line.isService;
+        final stampedCogs = isService
+            ? line.unitCostValue
+            : (line.product?.purchasePrice ?? line.unitCostValue);
+        return OrderItemsCompanion.insert(
+          uuid: const Uuid().v4(),
+          orderUuid: orderUuid,
+          productUuid: drift.Value(line.product?.uuid),
+          catalogItemUuid: drift.Value(line.catalogItemUuid),
+          sellingProductUuid: drift.Value(line.sellingProductUuid),
+          productNameSnapshot: line.displayName,
+          quantity: line.quantityValue,
+          unitPrice: line.effectiveListUnitPrice,
+          discountedUnitPrice: drift.Value(
+            line.applyCatalogDiscounts
+                ? line.discountedUnitPriceValue
+                : line.unitPriceValue,
+          ),
+          discountAmount: drift.Value(line.discountValue),
+          catalogNameSnapshot: drift.Value(line.catalogName),
+          // Services: freeze line COGS. Goods / bundles: FEFO overwrites on deliver.
+          purchasePriceSnapshot: drift.Value(stampedCogs),
+          unit: drift.Value(line.unit),
+        );
+      }).toList();
 
       await repository.createOrder(
         order: order,
@@ -266,6 +618,24 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
         contacts.where((c) => c.uuid == _contactUuid).firstOrNull;
     final selectedAccount =
         accounts.where((a) => a.uuid == _accountUuid).firstOrNull;
+    final saleCatalogsAsync = _isSale
+        ? ref.watch(activeCatalogsForContactProvider(_contactUuid))
+        : null;
+    final saleCatalogs = saleCatalogsAsync?.asData?.value;
+    final canAddSaleItems = !_isSale ||
+        saleCatalogsAsync == null ||
+        saleCatalogsAsync.isLoading ||
+        (saleCatalogs != null && saleCatalogs.isNotEmpty);
+    final selectedSaleCatalogName = () {
+      final list = saleCatalogs;
+      if (list == null || list.isEmpty) return null;
+      final id = _saleCatalogUuid;
+      if (id != null) {
+        final match = list.where((c) => c.uuid == id).firstOrNull;
+        if (match != null) return match.name;
+      }
+      return list.first.name;
+    }();
 
     final total = _total;
     final payment = _parse(_paymentController).clamp(0, total).toDouble();
@@ -312,9 +682,19 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
                   placeholderIcon: Icons.person_outline,
                   onClear: selectedContact == null
                       ? null
-                      : () => setState(() => _contactUuid = null),
+                      : () => setState(() {
+                            _contactUuid = null;
+                            _saleCatalogUuid = null;
+                          }),
                   onTap: _pickContact,
                 ),
+                if (_isSale)
+                  _SaleCatalogPicker(
+                    contactUuid: _contactUuid,
+                    selectedCatalogUuid: _saleCatalogUuid,
+                    onSelected: (uuid) =>
+                        setState(() => _saleCatalogUuid = uuid),
+                  ),
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   dense: true,
@@ -368,25 +748,44 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
               icon: Icons.shopping_bag_outlined,
               accentColor: _color,
               trailing: TextButton.icon(
-                onPressed: _pickProduct,
+                onPressed: canAddSaleItems ? _pickProduct : null,
                 icon: const Icon(Icons.add_rounded, size: 18),
                 label: Text(l10n.addItem),
               ),
               children: [
                 if (_lines.isEmpty)
-                  _EmptyItemsHint(onAdd: _pickProduct, color: _color)
+                  _EmptyItemsHint(
+                    onAdd: canAddSaleItems
+                        ? _pickProduct
+                        : () => ToastUtils.showErrorToast(
+                              context,
+                              ref,
+                              l10n.saleNoActiveCatalog,
+                            ),
+                    color: _color,
+                  )
                 else
                   for (var i = 0; i < _lines.length; i++)
                     _OrderLineCard(
                       key: ObjectKey(_lines[i]),
                       line: _lines[i],
                       color: _color,
-                      category: _lines[i].product.categoryUuid == null
+                      isSale: _isSale,
+                      category: _lines[i].categoryUuid == null
                           ? null
-                          : categoryById[_lines[i].product.categoryUuid],
+                          : categoryById[_lines[i].categoryUuid],
                       amountLabel: formatOrderAmount(ref, _lines[i].lineTotal),
-                      showUnitCost: _isSale && _lines[i].product.isService,
-                      onChanged: () => setState(() {}),
+                      catalogNameFallback: selectedSaleCatalogName,
+                      showUnitCost: _isSale && _lines[i].isService,
+                      onChanged: () {
+                        _lines[i].syncCatalogDiscountFromQty();
+                        setState(() {});
+                      },
+                      onEditDiscountedPrice: () =>
+                          _editDiscountedUnitPrice(_lines[i]),
+                      onRefreshFromCatalog: _lines[i].catalogItemUuid == null
+                          ? null
+                          : () => _refreshLineFromCatalog(_lines[i]),
                       onRemove: () => _removeLine(i),
                     ),
               ],
@@ -554,20 +953,28 @@ class _EmptyItemsHint extends StatelessWidget {
 class _OrderLineCard extends ConsumerWidget {
   final _OrderLine line;
   final Color color;
+  final bool isSale;
   final ProductCategory? category;
   final String amountLabel;
+  final String? catalogNameFallback;
   final bool showUnitCost;
   final VoidCallback onChanged;
+  final VoidCallback onEditDiscountedPrice;
+  final VoidCallback? onRefreshFromCatalog;
   final VoidCallback onRemove;
 
   const _OrderLineCard({
     super.key,
     required this.line,
     required this.color,
+    required this.isSale,
     required this.amountLabel,
     required this.onChanged,
+    required this.onEditDiscountedPrice,
     required this.onRemove,
+    this.onRefreshFromCatalog,
     this.category,
+    this.catalogNameFallback,
     this.showUnitCost = false,
   });
 
@@ -592,86 +999,304 @@ class _OrderLineCard extends ConsumerWidget {
       return number == null || number < 0 ? l10n.invalidNumber : null;
     }
 
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    final leading = line.product != null
+        ? productLeadingAvatar(product: line.product!, category: category)
+        : categoryLeadingAvatar(
+            color: parseCategoryColor(
+              category?.color,
+              AppColors.receivableColor,
+            ),
+            icon: category == null
+                ? Icons.sell_outlined
+                : categoryIconData(category),
+          );
+
+    final storedCatalog = line.catalogName?.trim();
+    final fallbackCatalog = catalogNameFallback?.trim();
+    final catalogLabel =
+        (storedCatalog != null && storedCatalog.isNotEmpty)
+            ? storedCatalog
+            : ((fallbackCatalog != null && fallbackCatalog.isNotEmpty)
+                ? fallbackCatalog
+                : null);
+    final showSalePricing = isSale && line.applyCatalogDiscounts;
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final showRefresh =
+        showSalePricing && onRefreshFromCatalog != null;
+
+    final metaParts = <String>[
+      if (category != null) category!.name,
+      if (line.sellingProductUuid != null) l10n.sellingProductOffer,
+      if (!showSalePricing) amountLabel,
+    ];
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.fromLTRB(
+            showRefresh ? 18 : 12,
+            10,
+            18,
+            12,
+          ),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withValues(alpha: 0.2)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              productLeadingAvatar(
-                product: line.product,
-                category: category,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              if (showSalePricing) ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Text(
-                      line.product.name,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
+                    // Left: title/meta above, quantity below
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              leading,
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Wrap(
+                                      spacing: 6,
+                                      runSpacing: 2,
+                                      crossAxisAlignment:
+                                          WrapCrossAlignment.center,
+                                      children: [
+                                        Text(
+                                          line.displayName,
+                                          style: theme.textTheme.titleSmall
+                                              ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        Tooltip(
+                                          message: l10n.editDiscountedUnitPrice,
+                                          child: InkWell(
+                                            onTap: onEditDiscountedPrice,
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(2),
+                                              child: Icon(
+                                                line.manualDiscountedPrice
+                                                    ? Icons.lock_open_rounded
+                                                    : Icons.edit_outlined,
+                                                size: 16,
+                                                color: line.manualDiscountedPrice
+                                                    ? color
+                                                    : muted,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    if ((showSalePricing &&
+                                            catalogLabel != null &&
+                                            catalogLabel.isNotEmpty) ||
+                                        metaParts.isNotEmpty) ...[
+                                      const SizedBox(height: 1),
+                                      Text.rich(
+                                        TextSpan(
+                                          children: [
+                                            if (showSalePricing &&
+                                                catalogLabel != null &&
+                                                catalogLabel.isNotEmpty)
+                                              TextSpan(
+                                                text: catalogLabel,
+                                                style: theme
+                                                    .textTheme.labelSmall
+                                                    ?.copyWith(
+                                                  color: color,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                            if (showSalePricing &&
+                                                catalogLabel != null &&
+                                                catalogLabel.isNotEmpty &&
+                                                metaParts.isNotEmpty)
+                                              TextSpan(
+                                                text: ' · ',
+                                                style: theme
+                                                    .textTheme.labelSmall
+                                                    ?.copyWith(color: muted),
+                                              ),
+                                            if (metaParts.isNotEmpty)
+                                              TextSpan(
+                                                text: metaParts.join(' · '),
+                                                style: theme
+                                                    .textTheme.labelSmall
+                                                    ?.copyWith(
+                                                  color: muted,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: 120,
+                            child: TextFormField(
+                              controller: line.quantity,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                decimal: true,
+                              ),
+                              inputFormatters: _decimalFormatters,
+                              decoration: InputDecoration(
+                                labelText: l10n.quantity,
+                                suffixText: line.unit,
+                                filled: true,
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 8,
+                                ),
+                              ),
+                              validator: positive,
+                              onChanged: (_) => onChanged(),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Text(
-                      [
-                        if (category != null) category!.name,
-                        amountLabel,
-                      ].join(' · '),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: color,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: 10),
+                    // Right: prices
+                    _SaleLinePriceBlock(
+                      line: line,
+                      ref: ref,
+                      accent: color,
+                    ),
+                  ],
+                ),
+              ] else ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    leading,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            line.displayName,
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          if (metaParts.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              metaParts.join(' · '),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: color,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ),
-              IconButton(
-                visualDensity: VisualDensity.compact,
-                tooltip: l10n.delete,
-                icon: Icon(Icons.close_rounded,
-                    color: theme.colorScheme.onSurfaceVariant),
-                onPressed: onRemove,
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 3,
-                child: TextFormField(
-                  controller: line.quantity,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: _decimalFormatters,
-                  decoration: InputDecoration(
-                    labelText: l10n.quantity,
-                    suffixText: line.product.unit,
-                    filled: true,
-                    isDense: true,
+                const SizedBox(height: 8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: TextFormField(
+                    controller: line.quantity,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: _decimalFormatters,
+                    decoration: InputDecoration(
+                      labelText: l10n.quantity,
+                      suffixText: line.unit,
+                      filled: true,
+                      isDense: true,
+                    ),
+                    validator: positive,
+                    onChanged: (_) => onChanged(),
                   ),
-                  validator: positive,
-                  onChanged: (_) => onChanged(),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 4,
-                child: TextFormField(
-                  controller: line.unitPrice,
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 4,
+                  child: TextFormField(
+                    controller: line.unitPrice,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: _decimalFormatters,
+                    decoration: InputDecoration(
+                      labelText: l10n.unitPrice,
+                      prefixText: currencyAffix.prefixText,
+                      suffixText: currencyAffix.suffixText,
+                      filled: true,
+                      isDense: true,
+                    ),
+                    validator: nonNegative,
+                    onChanged: (_) => onChanged(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  flex: 3,
+                  child: TextFormField(
+                    controller: line.discount,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    inputFormatters: _decimalFormatters,
+                    decoration: InputDecoration(
+                      labelText: l10n.discount,
+                      prefixText: currencyAffix.prefixText,
+                      suffixText: currencyAffix.suffixText,
+                      filled: true,
+                      isDense: true,
+                    ),
+                    validator: (value) {
+                      final error = nonNegative(value);
+                      if (error != null) return error;
+                      return _parse(line.discount) > line.gross
+                          ? l10n.invalidNumber
+                          : null;
+                    },
+                    onChanged: (_) => onChanged(),
+                  ),
+                ),
+              ],
+            ),
+          ],
+              if (showUnitCost) ...[
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: line.unitCost,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
                   inputFormatters: _decimalFormatters,
                   decoration: InputDecoration(
-                    labelText: l10n.unitPrice,
+                    labelText: l10n.lineUnitCost,
+                    helperText: l10n.serviceUnitCostHint,
                     prefixText: currencyAffix.prefixText,
                     suffixText: currencyAffix.suffixText,
                     filled: true,
@@ -680,55 +1305,203 @@ class _OrderLineCard extends ConsumerWidget {
                   validator: nonNegative,
                   onChanged: (_) => onChanged(),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 3,
-                child: TextFormField(
-                  controller: line.discount,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: _decimalFormatters,
-                  decoration: InputDecoration(
-                    labelText: l10n.discount,
-                    prefixText: currencyAffix.prefixText,
-                    suffixText: currencyAffix.suffixText,
-                    filled: true,
-                    isDense: true,
-                  ),
-                  validator: (value) {
-                    final error = nonNegative(value);
-                    if (error != null) return error;
-                    return _parse(line.discount) > line.gross
-                        ? l10n.invalidNumber
-                        : null;
-                  },
-                  onChanged: (_) => onChanged(),
+              ],
+            ],
+          ),
+        ),
+        if (showRefresh)
+          Positioned(
+            top: -4,
+            left: -4,
+            child: _LineCornerButton(
+              tooltip: l10n.refreshSaleLinePrices,
+              icon: Icons.refresh_rounded,
+              onPressed: onRefreshFromCatalog!,
+            ),
+          ),
+        Positioned(
+          top: -4,
+          right: -4,
+          child: _LineCornerButton(
+            tooltip: l10n.delete,
+            icon: Icons.close_rounded,
+            onPressed: onRemove,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LineCornerButton extends StatelessWidget {
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _LineCornerButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final outline = CircleBorder(
+      side: BorderSide(
+        color: theme.colorScheme.outline.withValues(alpha: 0.55),
+        width: 1,
+      ),
+    );
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: theme.colorScheme.surface,
+        shape: outline,
+        elevation: 1.5,
+        shadowColor: Colors.black26,
+        child: InkWell(
+          customBorder: outline,
+          onTap: onPressed,
+          child: Padding(
+            padding: const EdgeInsets.all(5),
+            child: Icon(
+              icon,
+              size: 14,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Compact sale price hierarchy: list → discounted unit → line total.
+class _SaleLinePriceBlock extends StatelessWidget {
+  final _OrderLine line;
+  final WidgetRef ref;
+  final Color accent;
+
+  const _SaleLinePriceBlock({
+    required this.line,
+    required this.ref,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final qty = line.quantityValue;
+    final multiQty = qty > 1.0000001;
+    final hasDiscount = line.unitDiscountFixed > 1e-9;
+    final pct = _formatDiscountPercent(line.unitDiscountPercent);
+    final listText = formatOrderAmount(ref, line.listUnitPrice);
+    final discountedUnitText =
+        formatOrderAmount(ref, line.discountedUnitPriceValue);
+    final unitDiscText = formatOrderAmount(ref, line.unitDiscountFixed);
+    final lineTotalText = formatOrderAmount(ref, line.lineTotal);
+    final lineDiscText = formatOrderAmount(ref, line.discountValue);
+    final qtyText = AmountFormatter.formatQuantity(qty);
+
+    // Keep minus + amount in LTR so the sign stays on the correct side in RTL UIs.
+    Widget discountAmountText({
+      required String amountText,
+      required Color color,
+      TextStyle? baseStyle,
+    }) {
+      return Text(
+        '−$amountText ($pct%)',
+        style: (baseStyle ?? theme.textTheme.labelSmall)?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.end,
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (hasDiscount)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                listText,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: muted,
+                  decoration: TextDecoration.lineThrough,
+                  decorationColor: muted.withValues(alpha: 0.7),
+                  fontWeight: FontWeight.w500,
                 ),
+                textDirection: TextDirection.ltr,
+              ),
+              const SizedBox(width: 4),
+              discountAmountText(
+                amountText: unitDiscText,
+                color: AppColors.expenseColor,
               ),
             ],
           ),
-          if (showUnitCost) ...[
-            const SizedBox(height: 8),
-            TextFormField(
-              controller: line.unitCost,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: _decimalFormatters,
-              decoration: InputDecoration(
-                labelText: l10n.lineUnitCost,
-                helperText: l10n.serviceUnitCostHint,
-                prefixText: currencyAffix.prefixText,
-                suffixText: currencyAffix.suffixText,
-                filled: true,
-                isDense: true,
-              ),
-              validator: nonNegative,
-              onChanged: (_) => onChanged(),
+        if (hasDiscount) const SizedBox(height: 2),
+        if (multiQty)
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: discountedUnitText,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: accent,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                TextSpan(
+                  text: ' × $qtyText',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: muted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
-          ],
+            textDirection: TextDirection.ltr,
+            textAlign: TextAlign.end,
+          )
+        else
+          Text(
+            discountedUnitText,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: accent,
+              fontWeight: FontWeight.w800,
+              height: 1.15,
+            ),
+            textDirection: TextDirection.ltr,
+            textAlign: TextAlign.end,
+          ),
+        if (multiQty) ...[
+          const SizedBox(height: 2),
+          Text(
+            lineTotalText,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: accent,
+              fontWeight: FontWeight.w800,
+              height: 1.15,
+            ),
+            textDirection: TextDirection.ltr,
+            textAlign: TextAlign.end,
+          ),
         ],
-      ),
+        if (hasDiscount && multiQty) ...[
+          const SizedBox(height: 1),
+          discountAmountText(
+            amountText: lineDiscText,
+            color: AppColors.incomeColor,
+          ),
+        ],
+      ],
     );
   }
 }
@@ -760,6 +1533,126 @@ class _SummaryRow extends StatelessWidget {
         Text(label, style: style),
         Text(formatOrderAmount(ref, value), style: style),
       ],
+    );
+  }
+}
+
+/// Catalog field that opens a bottom drawer of catalogs allowed for this sale.
+class _SaleCatalogPicker extends ConsumerWidget {
+  final String? contactUuid;
+  final String? selectedCatalogUuid;
+  final ValueChanged<String> onSelected;
+
+  const _SaleCatalogPicker({
+    required this.contactUuid,
+    required this.selectedCatalogUuid,
+    required this.onSelected,
+  });
+
+  Future<void> _openPicker(
+    BuildContext context,
+    WidgetRef ref,
+    List<Catalog> catalogs,
+    Catalog? selected,
+  ) async {
+    final restricted = await ref
+        .read(catalogRepositoryProvider)
+        .catalogUuidsWithAssignments();
+    if (!context.mounted) return;
+    final openIds = {
+      for (final c in catalogs)
+        if (!restricted.contains(c.uuid)) c.uuid,
+    };
+    final result = await showOrderCatalogPicker(
+      context: context,
+      ref: ref,
+      catalogs: catalogs,
+      selected: selected,
+      openCatalogUuids: openIds,
+    );
+    final picked = result?.value;
+    if (picked != null) onSelected(picked.uuid);
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final async = ref.watch(activeCatalogsForContactProvider(contactUuid));
+    final preferred =
+        ref.watch(resolvedCatalogForContactProvider(contactUuid)).asData?.value;
+
+    return async.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.only(top: 8),
+        child: LinearProgressIndicator(minHeight: 2),
+      ),
+      error: (e, _) => Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Text(
+          l10n.errorOccurred(e.toString()),
+          style: theme.textTheme.bodySmall?.copyWith(color: AppColors.warning),
+        ),
+      ),
+      data: (catalogs) {
+        if (catalogs.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.warning_amber_rounded,
+                    size: 18, color: AppColors.warning),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l10n.saleNoActiveCatalog,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.warning,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final preferredId = preferred?.uuid;
+        final effectiveId = selectedCatalogUuid != null &&
+                catalogs.any((c) => c.uuid == selectedCatalogUuid)
+            ? selectedCatalogUuid!
+            : (preferredId != null &&
+                    catalogs.any((c) => c.uuid == preferredId)
+                ? preferredId
+                : catalogs.first.uuid);
+        final selected =
+            catalogs.where((c) => c.uuid == effectiveId).firstOrNull;
+
+        if (selectedCatalogUuid != effectiveId) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            onSelected(effectiveId);
+          });
+        }
+
+        return Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: EntityPickerField(
+            label: l10n.catalog,
+            valueText: selected?.name,
+            valueSubtitle: selected == null || !selected.isDefault
+                ? null
+                : l10n.defaultCatalog,
+            accentColor: AppColors.receivableColor,
+            placeholderIcon: Icons.price_change_outlined,
+            leading: categoryLeadingAvatar(
+              color: AppColors.receivableColor,
+              icon: Icons.price_change_outlined,
+            ),
+            onTap: () => _openPicker(context, ref, catalogs, selected),
+          ),
+        );
+      },
     );
   }
 }

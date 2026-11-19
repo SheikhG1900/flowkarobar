@@ -8,6 +8,8 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/account_picker.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_availability.dart';
+import 'package:flowpaisa/features/catalog/presentation/providers/catalog_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/orders/presentation/providers/orders_provider.dart';
 import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dart';
@@ -34,6 +36,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   void _refresh() {
     ref.invalidate(singleOrderProvider(widget.orderUuid));
     ref.invalidate(orderPaidAmountProvider(widget.orderUuid));
+    ref.invalidate(saleOrderCatalogLineIssuesProvider(widget.orderUuid));
   }
 
   Future<void> _recordPayment(Order order, double balance) async {
@@ -74,6 +77,33 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       if (landed == null || !mounted) return;
       freight = landed.freight;
       duty = landed.duty;
+    } else if (order.orderType == orderTypeSale) {
+      final issues = await ref
+          .read(catalogRepositoryProvider)
+          .saleLineCatalogIssuesForOrder(order.uuid);
+      final problemCount =
+          issues.values.where((i) => i.isProblem).length;
+      if (problemCount > 0) {
+        if (!mounted) return;
+        final proceed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(l10n.saleCatalogLinesInvalidTitle),
+            content: Text(l10n.saleCatalogLinesInvalidBody(problemCount)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text(l10n.cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(l10n.proceed),
+              ),
+            ],
+          ),
+        );
+        if (proceed != true || !mounted) return;
+      }
     }
 
     setState(() => _busy = true);
@@ -164,6 +194,13 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     final contact =
         contacts.where((c) => c.uuid == order.contactUuid).firstOrNull;
     final itemsAsync = ref.watch(orderItemsStreamProvider(order.uuid));
+    final catalogIssues = isSale
+        ? ref.watch(saleOrderCatalogLineIssuesProvider(order.uuid)).asData?.value
+        : null;
+    final invalidCatalogCount = catalogIssues?.values
+            .where((i) => i.isProblem)
+            .length ??
+        0;
     final paid = ref.watch(orderPaidAmountProvider(order.uuid)).value ?? 0.0;
     final balance =
         (order.totalAmount - paid).clamp(0, double.infinity).toDouble();
@@ -175,6 +212,33 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
       children: [
+        if (isSale && invalidCatalogCount > 0)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Material(
+              color: AppColors.warning.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.warning_amber_rounded,
+                        color: AppColors.warning),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        l10n.saleCatalogLinesInvalidBody(invalidCatalogCount),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         Stack(
           clipBehavior: Clip.none,
           children: [
@@ -254,7 +318,13 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                   children: [
                     for (var i = 0; i < items.length; i++) ...[
                       if (i > 0) const Divider(height: 16),
-                      _ItemTile(item: items[i], ref: ref),
+                      _ItemTile(
+                        item: items[i],
+                        ref: ref,
+                        catalogIssue:
+                            catalogIssues?[items[i].uuid] ??
+                                SaleCatalogLineIssue.none,
+                      ),
                     ],
                   ],
                 );
@@ -374,27 +444,53 @@ class _InfoRow extends StatelessWidget {
 class _ItemTile extends StatelessWidget {
   final OrderItem item;
   final WidgetRef ref;
+  final SaleCatalogLineIssue catalogIssue;
 
-  const _ItemTile({required this.item, required this.ref});
+  const _ItemTile({
+    required this.item,
+    required this.ref,
+    this.catalogIssue = SaleCatalogLineIssue.none,
+  });
+
+  String? _issueLabel(AppLocalizations l10n) {
+    switch (catalogIssue) {
+      case SaleCatalogLineIssue.catalogItemUnavailable:
+        return l10n.saleLineCatalogItemUnavailable;
+      case SaleCatalogLineIssue.catalogDeleted:
+        return l10n.saleLineCatalogDeleted;
+      case SaleCatalogLineIssue.catalogExpired:
+        return l10n.saleLineCatalogExpired;
+      case SaleCatalogLineIssue.none:
+        return null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final lineTotal = item.quantity * item.unitPrice - item.discountAmount;
-    return Row(
+    final issueLabel = _issueLabel(l10n);
+    final warn = catalogIssue.isProblem;
+
+    final row = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: theme.colorScheme.primaryContainer.withValues(alpha: 0.6),
+            color: warn
+                ? AppColors.warning.withValues(alpha: 0.25)
+                : theme.colorScheme.primaryContainer.withValues(alpha: 0.6),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
-            Icons.inventory_2_outlined,
+            warn ? Icons.warning_amber_rounded : Icons.inventory_2_outlined,
             size: 18,
-            color: theme.colorScheme.onPrimaryContainer,
+            color: warn
+                ? AppColors.warning
+                : theme.colorScheme.onPrimaryContainer,
           ),
         ),
         const SizedBox(width: 12),
@@ -416,6 +512,16 @@ class _ItemTile extends StatelessWidget {
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
+              if (issueLabel != null) ...[
+                const SizedBox(height: 4),
+                Text(
+                  issueLabel,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppColors.warning,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -426,6 +532,17 @@ class _ItemTile extends StatelessWidget {
           ),
         ),
       ],
+    );
+
+    if (!warn) return row;
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.warning.withValues(alpha: 0.45)),
+      ),
+      child: row,
     );
   }
 }

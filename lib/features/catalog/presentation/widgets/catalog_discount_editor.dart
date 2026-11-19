@@ -153,7 +153,6 @@ class CatalogDiscountEditor extends StatelessWidget {
               l10n: l10n,
               accent: accent,
               draft: tiers[i],
-              striped: i.isOdd,
               onTypeChanged: () => onTierTypeChanged(i),
               onRemove: () => onRemoveTier(i),
             ),
@@ -167,78 +166,69 @@ class CatalogDiscountEditor extends StatelessWidget {
     required AppLocalizations l10n,
     required Color accent,
     required CatalogDiscountTierDraft draft,
-    required bool striped,
     required VoidCallback onTypeChanged,
     required VoidCallback onRemove,
   }) {
-    final theme = Theme.of(context);
-    final fill = striped
-        ? accent.withValues(alpha: 0.08)
-        : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.28);
-
-    return ColoredBox(
-      color: fill,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 3,
-              child: TextField(
-                controller: draft.minQty,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                ],
-                decoration: InputDecoration(
-                  labelText: l10n.minQuantity,
-                  filled: true,
-                  isDense: true,
-                ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: TextField(
+              controller: draft.minQty,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+              ],
+              decoration: InputDecoration(
+                labelText: l10n.minQuantity,
+                filled: true,
+                isDense: true,
               ),
             ),
-            const SizedBox(width: 6),
-            _DiscountTypeToggle(
-              value: draft.type,
-              accent: accent,
-              percentTooltip: l10n.discountTypePercent,
-              fixedTooltip: l10n.discountTypeFixed,
-              onChanged: (v) {
-                draft.type = v;
-                onTypeChanged();
-              },
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              flex: 3,
-              child: TextField(
-                controller: draft.value,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-                ],
-                decoration: InputDecoration(
-                  labelText: draft.type == CatalogDiscountType.fixed
-                      ? l10n.discountAmount
-                      : l10n.discountPercent,
-                  filled: true,
-                  isDense: true,
-                ),
+          ),
+          const SizedBox(width: 6),
+          _DiscountTypeToggle(
+            value: draft.type,
+            accent: accent,
+            percentTooltip: l10n.discountTypePercent,
+            fixedTooltip: l10n.discountTypeFixed,
+            onChanged: (v) {
+              draft.type = v;
+              onTypeChanged();
+            },
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            flex: 3,
+            child: TextField(
+              controller: draft.value,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+              ],
+              decoration: InputDecoration(
+                labelText: draft.type == CatalogDiscountType.fixed
+                    ? l10n.discountAmount
+                    : l10n.discountPercent,
+                filled: true,
+                isDense: true,
               ),
             ),
-            IconButton(
-              tooltip: l10n.delete,
-              onPressed: onRemove,
-              iconSize: 20,
-              padding: const EdgeInsets.all(6),
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-              icon: Icon(Icons.close, color: AppColors.error),
-            ),
-          ],
-        ),
+          ),
+          IconButton(
+            tooltip: l10n.delete,
+            onPressed: onRemove,
+            iconSize: 20,
+            padding: const EdgeInsets.all(6),
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+            icon: Icon(Icons.close, color: AppColors.error),
+          ),
+        ],
       ),
     );
   }

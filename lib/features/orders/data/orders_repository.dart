@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_pricing.dart';
 import 'package:flowpaisa/features/inventory/data/inventory_repository.dart';
 import 'package:flowpaisa/features/inventory/domain/batch_models.dart';
 import 'package:flowpaisa/features/inventory/domain/order_costing.dart';
@@ -307,7 +308,9 @@ class OrdersRepository {
 
     final lines = <ReceiveLineInput>[];
     for (final item in items) {
-      final product = await _inventory.getProduct(item.productUuid);
+      final productUuid = item.productUuid;
+      if (productUuid == null || productUuid.isEmpty) continue;
+      final product = await _inventory.getProduct(productUuid);
       if (product == null || product.isService) continue;
       final open = item.quantity - item.receivedQuantity;
       if (open <= 1e-9) continue;
@@ -330,7 +333,16 @@ class OrdersRepository {
 
   Future<void> _applySaleStock(List<OrderItem> items) async {
     for (final item in items) {
-      final product = await _inventory.getProduct(item.productUuid);
+      final spUuid = item.sellingProductUuid?.trim();
+      if (spUuid != null && spUuid.isNotEmpty) {
+        await _applySellingProductSaleStock(item, spUuid);
+        continue;
+      }
+
+      final productUuid = item.productUuid;
+      if (productUuid == null || productUuid.isEmpty) continue;
+
+      final product = await _inventory.getProduct(productUuid);
       if (product == null || product.isService) continue;
 
       String? batchUuid = item.batchUuid;
@@ -348,7 +360,7 @@ class OrdersRepository {
         cogs = batch.effectiveCost;
       } else {
         final allocations = await _inventory.consumeFefo(
-          productUuid: item.productUuid,
+          productUuid: productUuid,
           quantity: item.quantity,
         );
         if (allocations.isEmpty) continue;
@@ -370,6 +382,56 @@ class OrdersRepository {
         ),
       );
     }
+  }
+
+  /// Explode selling-product components and FEFO/BATCH-consume each.
+  /// Bundle COGS = sum of component allocation costs / ordered qty.
+  Future<void> _applySellingProductSaleStock(
+    OrderItem item,
+    String sellingProductUuid,
+  ) async {
+    final components = await (_db.select(_db.sellingProductComponents)
+          ..where((c) =>
+              c.sellingProductUuid.equals(sellingProductUuid) &
+              c.isDeleted.equals(false)))
+        .get();
+    if (components.isEmpty) return;
+
+    var costSum = 0.0;
+    for (final component in components) {
+      final needQty = component.quantity * item.quantity;
+      if (needQty <= 1e-9) continue;
+
+      final product = await _inventory.getProduct(component.productUuid);
+      if (product == null) continue;
+      if (product.isService) {
+        costSum += product.purchasePrice * needQty;
+        continue;
+      }
+
+      final batchScope = component.consumeMode == SellingConsumeMode.batch
+          ? component.batchNumber
+          : null;
+      final allocations = await _inventory.consumeFefo(
+        productUuid: component.productUuid,
+        quantity: needQty,
+        batchNumber: batchScope,
+      );
+      for (final a in allocations) {
+        costSum += a.quantity * a.effectiveCost;
+      }
+    }
+
+    final unitCogs = item.quantity > 1e-9 ? costSum / item.quantity : costSum;
+    await (_db.update(_db.orderItems)..where((oi) => oi.uuid.equals(item.uuid)))
+        .write(
+      OrderItemsCompanion(
+        // Multi-lot bundles: leave batchUuid null (lineage backlog 4.6).
+        purchasePriceSnapshot: Value(unitCogs),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   // ==========================================

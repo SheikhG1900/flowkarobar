@@ -352,6 +352,36 @@ abstract class AppLocalizations {
   /// **'Supplier'**
   String get supplier;
 
+  /// No description provided for @contactRoles.
+  ///
+  /// In en, this message translates to:
+  /// **'Roles'**
+  String get contactRoles;
+
+  /// No description provided for @contactRolesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Controls where this contact appears on sales and purchases.'**
+  String get contactRolesHint;
+
+  /// No description provided for @contactRoleCustomerHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in New Sale contact list'**
+  String get contactRoleCustomerHint;
+
+  /// No description provided for @contactRoleSupplierHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Show in New Purchase contact list'**
+  String get contactRoleSupplierHint;
+
+  /// No description provided for @contactRoleRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one role: Customer or Supplier'**
+  String get contactRoleRequired;
+
   /// No description provided for @taxInvoice.
   ///
   /// In en, this message translates to:
@@ -441,6 +471,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Set as default catalog'**
   String get setAsDefaultCatalog;
+
+  /// No description provided for @catalogDefaultPricing.
+  ///
+  /// In en, this message translates to:
+  /// **'Default pricing for new items'**
+  String get catalogDefaultPricing;
+
+  /// No description provided for @catalogDefaultPricingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefills approach, percent, and fixed amount when you add items. Each line still stores its own copy.'**
+  String get catalogDefaultPricingHint;
+
+  /// No description provided for @saleUsingCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices from catalog: {catalogName}'**
+  String saleUsingCatalog(String catalogName);
+
+  /// No description provided for @saleUsingRetailPrices.
+  ///
+  /// In en, this message translates to:
+  /// **'No catalog — using product retail prices'**
+  String get saleUsingRetailPrices;
+
+  /// No description provided for @saleNoActiveCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'No active catalog for this customer. Assign this customer to a catalog, or use a catalog with no customer assignments (available to all / walk-in).'**
+  String get saleNoActiveCatalog;
+
+  /// No description provided for @selectCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Select catalog'**
+  String get selectCatalog;
+
+  /// No description provided for @catalogAvailableToAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All customers / walk-in'**
+  String get catalogAvailableToAll;
+
+  /// No description provided for @saleCatalogLinesInvalidTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog items need review'**
+  String get saleCatalogLinesInvalidTitle;
+
+  /// No description provided for @saleCatalogLinesInvalidBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} line(s) reference a deleted item or an expired/deleted catalog. You can still proceed with the saved prices.'**
+  String saleCatalogLinesInvalidBody(int count);
+
+  /// No description provided for @saleLineCatalogItemUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog item removed'**
+  String get saleLineCatalogItemUnavailable;
+
+  /// No description provided for @saleLineCatalogDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog deleted'**
+  String get saleLineCatalogDeleted;
+
+  /// No description provided for @saleLineCatalogExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Catalog expired'**
+  String get saleLineCatalogExpired;
+
+  /// No description provided for @discountedUnitPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Discounted unit price'**
+  String get discountedUnitPrice;
+
+  /// No description provided for @editDiscountedUnitPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit discounted unit price'**
+  String get editDiscountedUnitPrice;
+
+  /// No description provided for @hideDiscountedUnitPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide discounted unit price editor'**
+  String get hideDiscountedUnitPrice;
+
+  /// No description provided for @discountedUnitPriceManualHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Manual price — qty changes keep this unit price until you refresh from catalog'**
+  String get discountedUnitPriceManualHint;
+
+  /// No description provided for @unitDiscountDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit discount'**
+  String get unitDiscountDetail;
+
+  /// No description provided for @lineDiscountDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Line discount'**
+  String get lineDiscountDetail;
+
+  /// No description provided for @lineTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Line total'**
+  String get lineTotal;
+
+  /// No description provided for @refreshSaleLinePrices.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh prices from catalog'**
+  String get refreshSaleLinePrices;
+
+  /// No description provided for @saleLinePricesRefreshed.
+  ///
+  /// In en, this message translates to:
+  /// **'Prices refreshed from catalog'**
+  String get saleLinePricesRefreshed;
+
+  /// No description provided for @saleLineCatalogRefreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not refresh — catalog item missing or deleted'**
+  String get saleLineCatalogRefreshFailed;
 
   /// No description provided for @catalogValidUntil.
   ///
@@ -1029,6 +1191,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select Product'**
   String get selectProduct;
+
+  /// No description provided for @selectCatalogItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Select catalog item'**
+  String get selectCatalogItem;
+
+  /// No description provided for @selectFromCatalog.
+  ///
+  /// In en, this message translates to:
+  /// **'Select from {catalogName}'**
+  String selectFromCatalog(String catalogName);
+
+  /// No description provided for @sellingProductOffer.
+  ///
+  /// In en, this message translates to:
+  /// **'Offer'**
+  String get sellingProductOffer;
 
   /// No description provided for @noProductsAvailable.
   ///

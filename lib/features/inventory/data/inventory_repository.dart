@@ -817,7 +817,9 @@ class InventoryRepository {
         if (item == null) {
           throw StateError('Order item not found: ${line.orderItemUuid}');
         }
-        final product = await getProduct(item.productUuid);
+        final productUuid = item.productUuid;
+        if (productUuid == null || productUuid.isEmpty) continue;
+        final product = await getProduct(productUuid);
         if (product == null || product.isService) continue;
         if (line.quantity <= 0) {
           throw ArgumentError('receive qty must be > 0');
@@ -864,7 +866,9 @@ class InventoryRepository {
 
       for (final line in lines) {
         final item = byId[line.orderItemUuid]!;
-        final product = await getProduct(item.productUuid);
+        final productUuid = item.productUuid;
+        if (productUuid == null || productUuid.isEmpty) continue;
+        final product = await getProduct(productUuid);
         if (product == null || product.isService) continue;
 
         final unitCost = landedUnitByLine[item.uuid] ??
@@ -877,7 +881,7 @@ class InventoryRepository {
                 uuid: lineUuid,
                 receiptUuid: receiptUuid,
                 orderItemUuid: item.uuid,
-                productUuid: item.productUuid,
+                productUuid: productUuid,
                 quantity: line.quantity,
                 effectiveUnitCost: Value(unitCost),
                 batchNumber: Value(line.batchNumber ?? ''),
@@ -887,7 +891,7 @@ class InventoryRepository {
             );
 
         final lotUuid = await receiveIntoBatch(
-          productUuid: item.productUuid,
+          productUuid: productUuid,
           quantity: line.quantity,
           effectiveCost: unitCost,
           isManual: false,
@@ -924,7 +928,7 @@ class InventoryRepository {
         );
 
         await (_db.update(_db.products)
-              ..where((p) => p.uuid.equals(item.productUuid)))
+              ..where((p) => p.uuid.equals(productUuid)))
             .write(
           ProductsCompanion(
             purchasePrice: Value(unitCost),
@@ -950,7 +954,9 @@ class InventoryRepository {
     var allDone = true;
     var anyReceived = false;
     for (final i in items) {
-      final product = await getProduct(i.productUuid);
+      final productUuid = i.productUuid;
+      if (productUuid == null || productUuid.isEmpty) continue;
+      final product = await getProduct(productUuid);
       if (product == null || product.isService) continue;
       if (i.receivedQuantity > 1e-9) anyReceived = true;
       if (i.receivedQuantity + 1e-9 < i.quantity) allDone = false;

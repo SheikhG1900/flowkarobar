@@ -136,6 +136,24 @@ class AppLocalizationsUr extends AppLocalizations {
   String get supplier => 'فراہم کنندہ';
 
   @override
+  String get contactRoles => 'کردار';
+
+  @override
+  String get contactRolesHint =>
+      'کنٹرول کرتا ہے کہ یہ رابطہ فروخت اور خریداری میں کہاں دکھے گا۔';
+
+  @override
+  String get contactRoleCustomerHint => 'نئی فروخت کے رابطہ فہرست میں دکھائیں';
+
+  @override
+  String get contactRoleSupplierHint =>
+      'نئی خریداری کے رابطہ فہرست میں دکھائیں';
+
+  @override
+  String get contactRoleRequired =>
+      'کم از کم ایک کردار منتخب کریں: گاہک یا فراہم کنندہ';
+
+  @override
   String get taxInvoice => 'ٹیکس انوائس';
 
   @override
@@ -179,6 +197,81 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get setAsDefaultCatalog => 'طے شدہ کیٹلاگ بنائیں';
+
+  @override
+  String get catalogDefaultPricing => 'نئے آئٹمز کے لیے طے شدہ قیمت بندی';
+
+  @override
+  String get catalogDefaultPricingHint =>
+      'آئٹم شامل کرتے وقت طریقہ، فیصد اور فکسڈ رقم پہلے سے بھرتا ہے۔ ہر لائن اپنی کاپی رکھتی ہے۔';
+
+  @override
+  String saleUsingCatalog(String catalogName) {
+    return 'کیٹلاگ سے قیمتیں: $catalogName';
+  }
+
+  @override
+  String get saleUsingRetailPrices =>
+      'کوئی کیٹلاگ نہیں — مصنوعات کی ریٹیل قیمتیں';
+
+  @override
+  String get saleNoActiveCatalog =>
+      'اس گاہک کے لیے کوئی فعال کیٹلاگ نہیں۔ گاہک کو کیٹلاگ تفویض کریں، یا بغیر تفویض والا کیٹلاگ استعمال کریں (سب / واک اِن)۔';
+
+  @override
+  String get selectCatalog => 'کیٹلاگ منتخب کریں';
+
+  @override
+  String get catalogAvailableToAll => 'تمام گاہک / واک اِن';
+
+  @override
+  String get saleCatalogLinesInvalidTitle => 'کیٹلاگ آئٹمز کا جائزہ لیں';
+
+  @override
+  String saleCatalogLinesInvalidBody(int count) {
+    return '$count لائن(ز) حذف شدہ آئٹم یا ختم/حذف شدہ کیٹلاگ کی طرف اشارہ کرتی ہیں۔ آپ محفوظ قیمتوں کے ساتھ آگے بڑھ سکتے ہیں۔';
+  }
+
+  @override
+  String get saleLineCatalogItemUnavailable => 'کیٹلاگ آئٹم ہٹا دیا گیا';
+
+  @override
+  String get saleLineCatalogDeleted => 'کیٹلاگ حذف';
+
+  @override
+  String get saleLineCatalogExpired => 'کیٹلاگ ختم';
+
+  @override
+  String get discountedUnitPrice => 'رعایت کے بعد یونٹ قیمت';
+
+  @override
+  String get editDiscountedUnitPrice => 'رعایت کے بعد یونٹ قیمت ترمیم کریں';
+
+  @override
+  String get hideDiscountedUnitPrice => 'رعایت کے بعد یونٹ قیمت ایڈیٹر چھپائیں';
+
+  @override
+  String get discountedUnitPriceManualHint =>
+      'دستی قیمت — مقدار بدلنے پر یہ یونٹ قیمت کیٹلاگ سے تازہ کرنے تک برقرار رہے گی';
+
+  @override
+  String get unitDiscountDetail => 'یونٹ رعایت';
+
+  @override
+  String get lineDiscountDetail => 'لائن رعایت';
+
+  @override
+  String get lineTotal => 'لائن کل';
+
+  @override
+  String get refreshSaleLinePrices => 'کیٹلاگ سے قیمتیں تازہ کریں';
+
+  @override
+  String get saleLinePricesRefreshed => 'کیٹلاگ سے قیمتیں تازہ ہو گئیں';
+
+  @override
+  String get saleLineCatalogRefreshFailed =>
+      'تازہ نہیں ہو سکی — کیٹلاگ آئٹم غائب یا حذف';
 
   @override
   String get catalogValidUntil => 'میعاد تک';
@@ -489,6 +582,17 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get selectProduct => 'مصنوعات منتخب کریں';
+
+  @override
+  String get selectCatalogItem => 'کیٹلاگ آئٹم منتخب کریں';
+
+  @override
+  String selectFromCatalog(String catalogName) {
+    return '$catalogName سے منتخب کریں';
+  }
+
+  @override
+  String get sellingProductOffer => 'آفر';
 
   @override
   String get noProductsAvailable =>

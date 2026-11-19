@@ -213,7 +213,8 @@ class _EntityPickerSheetState<T> extends State<_EntityPickerSheet<T>> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          subtitle: item.subtitle == null
+                          subtitle: (item.subtitle == null ||
+                                  item.subtitle!.trim().isEmpty)
                               ? null
                               : Text(
                                   item.subtitle!,
@@ -325,7 +326,9 @@ class EntityPickerField extends StatelessWidget {
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
                   ),
-                  if (selected && valueSubtitle != null)
+                  if (selected &&
+                      valueSubtitle != null &&
+                      valueSubtitle!.trim().isNotEmpty)
                     Text(
                       valueSubtitle!,
                       maxLines: 1,

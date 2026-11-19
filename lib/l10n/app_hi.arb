@@ -41,6 +41,11 @@
   "customer": "ग्राहक",
   "suppliers": "विक्रेता",
   "supplier": "विक्रेता",
+  "contactRoles": "भूमिकाएँ",
+  "contactRolesHint": "निर्धारित करता है कि संपर्क बिक्री और खरीद में कहाँ दिखेगा।",
+  "contactRoleCustomerHint": "नई बिक्री संपर्क सूची में दिखाएँ",
+  "contactRoleSupplierHint": "नई खरीद संपर्क सूची में दिखाएँ",
+  "contactRoleRequired": "कम से कम एक भूमिका चुनें: ग्राहक या विक्रेता",
   "taxInvoice": "टैक्स इनवॉइस",
   "purchaseReceipt": "खरीद रसीद",
   "reconcileInventory": "इन्वेंटरी मिलान करें",
@@ -56,6 +61,42 @@
   "catalogHint": "उत्पादों और बिक्री ऑफ़र की मूल्य सूची",
   "defaultCatalog": "डिफ़ॉल्ट कैटलॉग",
   "setAsDefaultCatalog": "डिफ़ॉल्ट कैटलॉग बनाएँ",
+  "catalogDefaultPricing": "नए आइटम के लिए डिफ़ॉल्ट मूल्य निर्धारण",
+  "catalogDefaultPricingHint": "आइटम जोड़ते समय दृष्टिकोण, प्रतिशत और निश्चित राशि पहले से भरता है। प्रत्येक पंक्ति अपनी कॉपी रखती है।",
+  "saleUsingCatalog": "कैटलॉग से मूल्य: {catalogName}",
+  "@saleUsingCatalog": {
+    "placeholders": {
+      "catalogName": {
+        "type": "String"
+      }
+    }
+  },
+  "saleUsingRetailPrices": "कोई कैटलॉग नहीं — उत्पाद खुदरा मूल्य उपयोग होंगे",
+  "saleNoActiveCatalog": "इस ग्राहक के लिए कोई सक्रिय कैटलॉग नहीं है। ग्राहक को कैटलॉग असाइन करें, या बिना असाइनमेंट वाला कैटलॉग उपयोग करें (सभी / वॉक-इन)।",
+  "selectCatalog": "कैटलॉग चुनें",
+  "catalogAvailableToAll": "सभी ग्राहक / वॉक-इन",
+  "saleCatalogLinesInvalidTitle": "कैटलॉग आइटम की समीक्षा करें",
+  "saleCatalogLinesInvalidBody": "{count} पंक्ति(याँ) हटाए गए आइटम या समाप्त/हटाए गए कैटलॉग को संदर्भित करती हैं। आप सहेजे गए मूल्यों के साथ आगे बढ़ सकते हैं।",
+  "@saleCatalogLinesInvalidBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "saleLineCatalogItemUnavailable": "कैटलॉग आइटम हटा दिया गया",
+  "saleLineCatalogDeleted": "कैटलॉग हटा दिया गया",
+  "saleLineCatalogExpired": "कैटलॉग समाप्त",
+  "discountedUnitPrice": "छूट के बाद इकाई मूल्य",
+  "editDiscountedUnitPrice": "छूट के बाद इकाई मूल्य संपादित करें",
+  "hideDiscountedUnitPrice": "छूट के बाद इकाई मूल्य संपादक छिपाएँ",
+  "discountedUnitPriceManualHint": "मैन्युअल मूल्य — मात्रा बदलने पर यह इकाई मूल्य तब तक रहेगा जब तक कैटलॉग से ताज़ा न करें",
+  "unitDiscountDetail": "इकाई छूट",
+  "lineDiscountDetail": "पंक्ति छूट",
+  "lineTotal": "पंक्ति कुल",
+  "refreshSaleLinePrices": "कैटलॉग से मूल्य ताज़ा करें",
+  "saleLinePricesRefreshed": "कैटलॉग से मूल्य ताज़ा किए गए",
+  "saleLineCatalogRefreshFailed": "ताज़ा नहीं हो सका — कैटलॉग आइटम अनुपलब्ध या हटाया गया",
   "catalogValidUntil": "मान्य तक",
   "expired": "समाप्त",
   "catalogItemsEmpty": "इस कैटलॉग में अभी कोई आइटम नहीं",
@@ -154,6 +195,16 @@
   "orderNotFound": "ऑर्डर नहीं मिला",
   "addItem": "आइटम जोड़ें",
   "selectProduct": "उत्पाद चुनें",
+  "selectCatalogItem": "कैटलॉग आइटम चुनें",
+  "selectFromCatalog": "{catalogName} से चुनें",
+  "@selectFromCatalog": {
+    "placeholders": {
+      "catalogName": {
+        "type": "String"
+      }
+    }
+  },
+  "sellingProductOffer": "ऑफ़र",
   "noProductsAvailable": "कोई उत्पाद उपलब्ध नहीं। पहले उत्पाद जोड़ें।",
   "items": "आइटम",
   "quantity": "मात्रा",

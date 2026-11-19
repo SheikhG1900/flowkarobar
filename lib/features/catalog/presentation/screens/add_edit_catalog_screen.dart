@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_pricing.dart';
 import 'package:flowpaisa/features/catalog/presentation/providers/catalog_provider.dart';
+import 'package:flowpaisa/features/catalog/presentation/widgets/catalog_pricing_approach_picker.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/form_section_card.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
@@ -25,8 +28,11 @@ class _AddEditCatalogScreenState extends ConsumerState<AddEditCatalogScreen> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _name;
   late final TextEditingController _description;
+  late final TextEditingController _defaultPercent;
+  late final TextEditingController _defaultFixed;
   DateTime? _validUntil;
   late bool _isDefault;
+  late String _defaultApproach;
   bool _saving = false;
   bool _deleting = false;
 
@@ -40,12 +46,23 @@ class _AddEditCatalogScreenState extends ConsumerState<AddEditCatalogScreen> {
     _description = TextEditingController(text: c?.description ?? '');
     _validUntil = c?.validUntil;
     _isDefault = c?.isDefault ?? false;
+    _defaultApproach = CatalogPricingApproach.all.contains(c?.defaultPricingApproach)
+        ? c!.defaultPricingApproach
+        : CatalogPricingApproach.markup;
+    _defaultPercent = TextEditingController(
+      text: (c?.defaultMarkupOrMarginPercent ?? 0).toString(),
+    );
+    _defaultFixed = TextEditingController(
+      text: (c?.defaultFixedAmount ?? 0).toString(),
+    );
   }
 
   @override
   void dispose() {
     _name.dispose();
     _description.dispose();
+    _defaultPercent.dispose();
+    _defaultFixed.dispose();
     super.dispose();
   }
 
@@ -64,6 +81,13 @@ class _AddEditCatalogScreenState extends ConsumerState<AddEditCatalogScreen> {
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
+    final percent = double.tryParse(_defaultPercent.text.trim()) ?? 0;
+    final fixed = double.tryParse(_defaultFixed.text.trim()) ?? 0;
+    if (CatalogPricingApproach.isMarginBased(_defaultApproach) &&
+        percent >= 100) {
+      ToastUtils.showErrorToast(context, ref, l10n.pricingFixedThenMarginHint);
+      return;
+    }
     setState(() => _saving = true);
     try {
       final repo = ref.read(catalogRepositoryProvider);
@@ -74,6 +98,9 @@ class _AddEditCatalogScreenState extends ConsumerState<AddEditCatalogScreen> {
           description: _description.text.trim(),
           validUntil: _validUntil,
           isDefault: _isDefault,
+          defaultPricingApproach: _defaultApproach,
+          defaultMarkupOrMarginPercent: percent,
+          defaultFixedAmount: fixed,
         );
       } else {
         await repo.createCatalog(
@@ -81,6 +108,9 @@ class _AddEditCatalogScreenState extends ConsumerState<AddEditCatalogScreen> {
           description: _description.text.trim(),
           validUntil: _validUntil,
           isDefault: _isDefault,
+          defaultPricingApproach: _defaultApproach,
+          defaultMarkupOrMarginPercent: percent,
+          defaultFixedAmount: fixed,
         );
       }
       if (!mounted) return;
@@ -323,6 +353,67 @@ class _AddEditCatalogScreenState extends ConsumerState<AddEditCatalogScreen> {
                   value: _isDefault,
                   activeThumbColor: accent,
                   onChanged: (v) => setState(() => _isDefault = v),
+                ),
+              ],
+            ),
+            FormSectionCard(
+              title: l10n.catalogDefaultPricing,
+              icon: Icons.calculate_outlined,
+              accentColor: accent,
+              children: [
+                Text(
+                  l10n.catalogDefaultPricingHint,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                CatalogPricingApproachPicker(
+                  value: _defaultApproach,
+                  accentColor: accent,
+                  onChanged: (v) => setState(() => _defaultApproach = v),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _defaultPercent,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d*'),
+                          ),
+                        ],
+                        decoration: InputDecoration(
+                          labelText: l10n.markupOrMarginPercent,
+                          filled: true,
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _defaultFixed,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d*'),
+                          ),
+                        ],
+                        decoration: InputDecoration(
+                          labelText: l10n.fixedAmount,
+                          filled: true,
+                          isDense: true,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

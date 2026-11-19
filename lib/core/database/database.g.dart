@@ -7991,6 +7991,3691 @@ class ProductBatchesCompanion extends UpdateCompanion<ProductBatche> {
   }
 }
 
+class $SellingProductsTable extends SellingProducts
+    with TableInfo<$SellingProductsTable, SellingProduct> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SellingProductsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 200),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _skuMeta = const VerificationMeta('sku');
+  @override
+  late final GeneratedColumn<String> sku = GeneratedColumn<String>(
+      'sku', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _categoryUuidMeta =
+      const VerificationMeta('categoryUuid');
+  @override
+  late final GeneratedColumn<String> categoryUuid = GeneratedColumn<String>(
+      'category_uuid', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES product_categories (uuid)'));
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+      'unit', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        name,
+        sku,
+        description,
+        categoryUuid,
+        unit,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'selling_products';
+  @override
+  VerificationContext validateIntegrity(Insertable<SellingProduct> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('sku')) {
+      context.handle(
+          _skuMeta, sku.isAcceptableOrUnknown(data['sku']!, _skuMeta));
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('category_uuid')) {
+      context.handle(
+          _categoryUuidMeta,
+          categoryUuid.isAcceptableOrUnknown(
+              data['category_uuid']!, _categoryUuidMeta));
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+          _unitMeta, unit.isAcceptableOrUnknown(data['unit']!, _unitMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  SellingProduct map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SellingProduct(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      sku: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sku']),
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description']),
+      categoryUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category_uuid']),
+      unit: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}unit']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $SellingProductsTable createAlias(String alias) {
+    return $SellingProductsTable(attachedDatabase, alias);
+  }
+}
+
+class SellingProduct extends DataClass implements Insertable<SellingProduct> {
+  final String uuid;
+  final String name;
+  final String? sku;
+  final String? description;
+
+  /// Optional category; if unset at save, defaults from first component product.
+  final String? categoryUuid;
+
+  /// Optional sell unit; if unset at save, defaults from first component product.
+  final String? unit;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const SellingProduct(
+      {required this.uuid,
+      required this.name,
+      this.sku,
+      this.description,
+      this.categoryUuid,
+      this.unit,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || sku != null) {
+      map['sku'] = Variable<String>(sku);
+    }
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || categoryUuid != null) {
+      map['category_uuid'] = Variable<String>(categoryUuid);
+    }
+    if (!nullToAbsent || unit != null) {
+      map['unit'] = Variable<String>(unit);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  SellingProductsCompanion toCompanion(bool nullToAbsent) {
+    return SellingProductsCompanion(
+      uuid: Value(uuid),
+      name: Value(name),
+      sku: sku == null && nullToAbsent ? const Value.absent() : Value(sku),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      categoryUuid: categoryUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryUuid),
+      unit: unit == null && nullToAbsent ? const Value.absent() : Value(unit),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory SellingProduct.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SellingProduct(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      name: serializer.fromJson<String>(json['name']),
+      sku: serializer.fromJson<String?>(json['sku']),
+      description: serializer.fromJson<String?>(json['description']),
+      categoryUuid: serializer.fromJson<String?>(json['categoryUuid']),
+      unit: serializer.fromJson<String?>(json['unit']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'name': serializer.toJson<String>(name),
+      'sku': serializer.toJson<String?>(sku),
+      'description': serializer.toJson<String?>(description),
+      'categoryUuid': serializer.toJson<String?>(categoryUuid),
+      'unit': serializer.toJson<String?>(unit),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  SellingProduct copyWith(
+          {String? uuid,
+          String? name,
+          Value<String?> sku = const Value.absent(),
+          Value<String?> description = const Value.absent(),
+          Value<String?> categoryUuid = const Value.absent(),
+          Value<String?> unit = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      SellingProduct(
+        uuid: uuid ?? this.uuid,
+        name: name ?? this.name,
+        sku: sku.present ? sku.value : this.sku,
+        description: description.present ? description.value : this.description,
+        categoryUuid:
+            categoryUuid.present ? categoryUuid.value : this.categoryUuid,
+        unit: unit.present ? unit.value : this.unit,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  SellingProduct copyWithCompanion(SellingProductsCompanion data) {
+    return SellingProduct(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      name: data.name.present ? data.name.value : this.name,
+      sku: data.sku.present ? data.sku.value : this.sku,
+      description:
+          data.description.present ? data.description.value : this.description,
+      categoryUuid: data.categoryUuid.present
+          ? data.categoryUuid.value
+          : this.categoryUuid,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SellingProduct(')
+          ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
+          ..write('sku: $sku, ')
+          ..write('description: $description, ')
+          ..write('categoryUuid: $categoryUuid, ')
+          ..write('unit: $unit, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(uuid, name, sku, description, categoryUuid,
+      unit, createdAt, updatedAt, isDeleted, isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SellingProduct &&
+          other.uuid == this.uuid &&
+          other.name == this.name &&
+          other.sku == this.sku &&
+          other.description == this.description &&
+          other.categoryUuid == this.categoryUuid &&
+          other.unit == this.unit &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class SellingProductsCompanion extends UpdateCompanion<SellingProduct> {
+  final Value<String> uuid;
+  final Value<String> name;
+  final Value<String?> sku;
+  final Value<String?> description;
+  final Value<String?> categoryUuid;
+  final Value<String?> unit;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const SellingProductsCompanion({
+    this.uuid = const Value.absent(),
+    this.name = const Value.absent(),
+    this.sku = const Value.absent(),
+    this.description = const Value.absent(),
+    this.categoryUuid = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SellingProductsCompanion.insert({
+    required String uuid,
+    required String name,
+    this.sku = const Value.absent(),
+    this.description = const Value.absent(),
+    this.categoryUuid = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        name = Value(name);
+  static Insertable<SellingProduct> custom({
+    Expression<String>? uuid,
+    Expression<String>? name,
+    Expression<String>? sku,
+    Expression<String>? description,
+    Expression<String>? categoryUuid,
+    Expression<String>? unit,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (name != null) 'name': name,
+      if (sku != null) 'sku': sku,
+      if (description != null) 'description': description,
+      if (categoryUuid != null) 'category_uuid': categoryUuid,
+      if (unit != null) 'unit': unit,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SellingProductsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? name,
+      Value<String?>? sku,
+      Value<String?>? description,
+      Value<String?>? categoryUuid,
+      Value<String?>? unit,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return SellingProductsCompanion(
+      uuid: uuid ?? this.uuid,
+      name: name ?? this.name,
+      sku: sku ?? this.sku,
+      description: description ?? this.description,
+      categoryUuid: categoryUuid ?? this.categoryUuid,
+      unit: unit ?? this.unit,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (sku.present) {
+      map['sku'] = Variable<String>(sku.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (categoryUuid.present) {
+      map['category_uuid'] = Variable<String>(categoryUuid.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SellingProductsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
+          ..write('sku: $sku, ')
+          ..write('description: $description, ')
+          ..write('categoryUuid: $categoryUuid, ')
+          ..write('unit: $unit, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SellingProductComponentsTable extends SellingProductComponents
+    with TableInfo<$SellingProductComponentsTable, SellingProductComponent> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SellingProductComponentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _sellingProductUuidMeta =
+      const VerificationMeta('sellingProductUuid');
+  @override
+  late final GeneratedColumn<String> sellingProductUuid =
+      GeneratedColumn<String>('selling_product_uuid', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: true,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES selling_products (uuid)'));
+  static const VerificationMeta _productUuidMeta =
+      const VerificationMeta('productUuid');
+  @override
+  late final GeneratedColumn<String> productUuid = GeneratedColumn<String>(
+      'product_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES products (uuid)'));
+  static const VerificationMeta _quantityMeta =
+      const VerificationMeta('quantity');
+  @override
+  late final GeneratedColumn<double> quantity = GeneratedColumn<double>(
+      'quantity', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _consumeModeMeta =
+      const VerificationMeta('consumeMode');
+  @override
+  late final GeneratedColumn<String> consumeMode = GeneratedColumn<String>(
+      'consume_mode', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('AUTO'));
+  static const VerificationMeta _batchNumberMeta =
+      const VerificationMeta('batchNumber');
+  @override
+  late final GeneratedColumn<String> batchNumber = GeneratedColumn<String>(
+      'batch_number', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        sellingProductUuid,
+        productUuid,
+        quantity,
+        consumeMode,
+        batchNumber,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'selling_product_components';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<SellingProductComponent> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('selling_product_uuid')) {
+      context.handle(
+          _sellingProductUuidMeta,
+          sellingProductUuid.isAcceptableOrUnknown(
+              data['selling_product_uuid']!, _sellingProductUuidMeta));
+    } else if (isInserting) {
+      context.missing(_sellingProductUuidMeta);
+    }
+    if (data.containsKey('product_uuid')) {
+      context.handle(
+          _productUuidMeta,
+          productUuid.isAcceptableOrUnknown(
+              data['product_uuid']!, _productUuidMeta));
+    } else if (isInserting) {
+      context.missing(_productUuidMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(_quantityMeta,
+          quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta));
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    if (data.containsKey('consume_mode')) {
+      context.handle(
+          _consumeModeMeta,
+          consumeMode.isAcceptableOrUnknown(
+              data['consume_mode']!, _consumeModeMeta));
+    }
+    if (data.containsKey('batch_number')) {
+      context.handle(
+          _batchNumberMeta,
+          batchNumber.isAcceptableOrUnknown(
+              data['batch_number']!, _batchNumberMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  SellingProductComponent map(Map<String, dynamic> data,
+      {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SellingProductComponent(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      sellingProductUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}selling_product_uuid'])!,
+      productUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}product_uuid'])!,
+      quantity: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}quantity'])!,
+      consumeMode: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}consume_mode'])!,
+      batchNumber: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}batch_number']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $SellingProductComponentsTable createAlias(String alias) {
+    return $SellingProductComponentsTable(attachedDatabase, alias);
+  }
+}
+
+class SellingProductComponent extends DataClass
+    implements Insertable<SellingProductComponent> {
+  final String uuid;
+  final String sellingProductUuid;
+  final String productUuid;
+  final double quantity;
+
+  /// AUTO | BATCH — same idea as recipe / production inputs.
+  final String consumeMode;
+
+  /// Required when [consumeMode] is BATCH.
+  final String? batchNumber;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const SellingProductComponent(
+      {required this.uuid,
+      required this.sellingProductUuid,
+      required this.productUuid,
+      required this.quantity,
+      required this.consumeMode,
+      this.batchNumber,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['selling_product_uuid'] = Variable<String>(sellingProductUuid);
+    map['product_uuid'] = Variable<String>(productUuid);
+    map['quantity'] = Variable<double>(quantity);
+    map['consume_mode'] = Variable<String>(consumeMode);
+    if (!nullToAbsent || batchNumber != null) {
+      map['batch_number'] = Variable<String>(batchNumber);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  SellingProductComponentsCompanion toCompanion(bool nullToAbsent) {
+    return SellingProductComponentsCompanion(
+      uuid: Value(uuid),
+      sellingProductUuid: Value(sellingProductUuid),
+      productUuid: Value(productUuid),
+      quantity: Value(quantity),
+      consumeMode: Value(consumeMode),
+      batchNumber: batchNumber == null && nullToAbsent
+          ? const Value.absent()
+          : Value(batchNumber),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory SellingProductComponent.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SellingProductComponent(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      sellingProductUuid:
+          serializer.fromJson<String>(json['sellingProductUuid']),
+      productUuid: serializer.fromJson<String>(json['productUuid']),
+      quantity: serializer.fromJson<double>(json['quantity']),
+      consumeMode: serializer.fromJson<String>(json['consumeMode']),
+      batchNumber: serializer.fromJson<String?>(json['batchNumber']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'sellingProductUuid': serializer.toJson<String>(sellingProductUuid),
+      'productUuid': serializer.toJson<String>(productUuid),
+      'quantity': serializer.toJson<double>(quantity),
+      'consumeMode': serializer.toJson<String>(consumeMode),
+      'batchNumber': serializer.toJson<String?>(batchNumber),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  SellingProductComponent copyWith(
+          {String? uuid,
+          String? sellingProductUuid,
+          String? productUuid,
+          double? quantity,
+          String? consumeMode,
+          Value<String?> batchNumber = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      SellingProductComponent(
+        uuid: uuid ?? this.uuid,
+        sellingProductUuid: sellingProductUuid ?? this.sellingProductUuid,
+        productUuid: productUuid ?? this.productUuid,
+        quantity: quantity ?? this.quantity,
+        consumeMode: consumeMode ?? this.consumeMode,
+        batchNumber: batchNumber.present ? batchNumber.value : this.batchNumber,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  SellingProductComponent copyWithCompanion(
+      SellingProductComponentsCompanion data) {
+    return SellingProductComponent(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      sellingProductUuid: data.sellingProductUuid.present
+          ? data.sellingProductUuid.value
+          : this.sellingProductUuid,
+      productUuid:
+          data.productUuid.present ? data.productUuid.value : this.productUuid,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      consumeMode:
+          data.consumeMode.present ? data.consumeMode.value : this.consumeMode,
+      batchNumber:
+          data.batchNumber.present ? data.batchNumber.value : this.batchNumber,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SellingProductComponent(')
+          ..write('uuid: $uuid, ')
+          ..write('sellingProductUuid: $sellingProductUuid, ')
+          ..write('productUuid: $productUuid, ')
+          ..write('quantity: $quantity, ')
+          ..write('consumeMode: $consumeMode, ')
+          ..write('batchNumber: $batchNumber, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid,
+      sellingProductUuid,
+      productUuid,
+      quantity,
+      consumeMode,
+      batchNumber,
+      createdAt,
+      updatedAt,
+      isDeleted,
+      isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SellingProductComponent &&
+          other.uuid == this.uuid &&
+          other.sellingProductUuid == this.sellingProductUuid &&
+          other.productUuid == this.productUuid &&
+          other.quantity == this.quantity &&
+          other.consumeMode == this.consumeMode &&
+          other.batchNumber == this.batchNumber &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class SellingProductComponentsCompanion
+    extends UpdateCompanion<SellingProductComponent> {
+  final Value<String> uuid;
+  final Value<String> sellingProductUuid;
+  final Value<String> productUuid;
+  final Value<double> quantity;
+  final Value<String> consumeMode;
+  final Value<String?> batchNumber;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const SellingProductComponentsCompanion({
+    this.uuid = const Value.absent(),
+    this.sellingProductUuid = const Value.absent(),
+    this.productUuid = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.consumeMode = const Value.absent(),
+    this.batchNumber = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SellingProductComponentsCompanion.insert({
+    required String uuid,
+    required String sellingProductUuid,
+    required String productUuid,
+    required double quantity,
+    this.consumeMode = const Value.absent(),
+    this.batchNumber = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        sellingProductUuid = Value(sellingProductUuid),
+        productUuid = Value(productUuid),
+        quantity = Value(quantity);
+  static Insertable<SellingProductComponent> custom({
+    Expression<String>? uuid,
+    Expression<String>? sellingProductUuid,
+    Expression<String>? productUuid,
+    Expression<double>? quantity,
+    Expression<String>? consumeMode,
+    Expression<String>? batchNumber,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (sellingProductUuid != null)
+        'selling_product_uuid': sellingProductUuid,
+      if (productUuid != null) 'product_uuid': productUuid,
+      if (quantity != null) 'quantity': quantity,
+      if (consumeMode != null) 'consume_mode': consumeMode,
+      if (batchNumber != null) 'batch_number': batchNumber,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SellingProductComponentsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? sellingProductUuid,
+      Value<String>? productUuid,
+      Value<double>? quantity,
+      Value<String>? consumeMode,
+      Value<String?>? batchNumber,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return SellingProductComponentsCompanion(
+      uuid: uuid ?? this.uuid,
+      sellingProductUuid: sellingProductUuid ?? this.sellingProductUuid,
+      productUuid: productUuid ?? this.productUuid,
+      quantity: quantity ?? this.quantity,
+      consumeMode: consumeMode ?? this.consumeMode,
+      batchNumber: batchNumber ?? this.batchNumber,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (sellingProductUuid.present) {
+      map['selling_product_uuid'] = Variable<String>(sellingProductUuid.value);
+    }
+    if (productUuid.present) {
+      map['product_uuid'] = Variable<String>(productUuid.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<double>(quantity.value);
+    }
+    if (consumeMode.present) {
+      map['consume_mode'] = Variable<String>(consumeMode.value);
+    }
+    if (batchNumber.present) {
+      map['batch_number'] = Variable<String>(batchNumber.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SellingProductComponentsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('sellingProductUuid: $sellingProductUuid, ')
+          ..write('productUuid: $productUuid, ')
+          ..write('quantity: $quantity, ')
+          ..write('consumeMode: $consumeMode, ')
+          ..write('batchNumber: $batchNumber, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CatalogsTable extends Catalogs with TableInfo<$CatalogsTable, Catalog> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CatalogsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      additionalChecks:
+          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 100),
+      type: DriftSqlType.string,
+      requiredDuringInsert: true);
+  static const VerificationMeta _descriptionMeta =
+      const VerificationMeta('description');
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+      'description', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _validUntilMeta =
+      const VerificationMeta('validUntil');
+  @override
+  late final GeneratedColumn<DateTime> validUntil = GeneratedColumn<DateTime>(
+      'valid_until', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _isDefaultMeta =
+      const VerificationMeta('isDefault');
+  @override
+  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
+      'is_default', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_default" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _defaultPricingApproachMeta =
+      const VerificationMeta('defaultPricingApproach');
+  @override
+  late final GeneratedColumn<String> defaultPricingApproach =
+      GeneratedColumn<String>('default_pricing_approach', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultValue: const Constant('MARKUP'));
+  static const VerificationMeta _defaultMarkupOrMarginPercentMeta =
+      const VerificationMeta('defaultMarkupOrMarginPercent');
+  @override
+  late final GeneratedColumn<double> defaultMarkupOrMarginPercent =
+      GeneratedColumn<double>(
+          'default_markup_or_margin_percent', aliasedName, false,
+          type: DriftSqlType.double,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0.0));
+  static const VerificationMeta _defaultFixedAmountMeta =
+      const VerificationMeta('defaultFixedAmount');
+  @override
+  late final GeneratedColumn<double> defaultFixedAmount =
+      GeneratedColumn<double>('default_fixed_amount', aliasedName, false,
+          type: DriftSqlType.double,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0.0));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        name,
+        description,
+        validUntil,
+        isDefault,
+        defaultPricingApproach,
+        defaultMarkupOrMarginPercent,
+        defaultFixedAmount,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'catalogs';
+  @override
+  VerificationContext validateIntegrity(Insertable<Catalog> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+          _descriptionMeta,
+          description.isAcceptableOrUnknown(
+              data['description']!, _descriptionMeta));
+    }
+    if (data.containsKey('valid_until')) {
+      context.handle(
+          _validUntilMeta,
+          validUntil.isAcceptableOrUnknown(
+              data['valid_until']!, _validUntilMeta));
+    }
+    if (data.containsKey('is_default')) {
+      context.handle(_isDefaultMeta,
+          isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta));
+    }
+    if (data.containsKey('default_pricing_approach')) {
+      context.handle(
+          _defaultPricingApproachMeta,
+          defaultPricingApproach.isAcceptableOrUnknown(
+              data['default_pricing_approach']!, _defaultPricingApproachMeta));
+    }
+    if (data.containsKey('default_markup_or_margin_percent')) {
+      context.handle(
+          _defaultMarkupOrMarginPercentMeta,
+          defaultMarkupOrMarginPercent.isAcceptableOrUnknown(
+              data['default_markup_or_margin_percent']!,
+              _defaultMarkupOrMarginPercentMeta));
+    }
+    if (data.containsKey('default_fixed_amount')) {
+      context.handle(
+          _defaultFixedAmountMeta,
+          defaultFixedAmount.isAcceptableOrUnknown(
+              data['default_fixed_amount']!, _defaultFixedAmountMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  Catalog map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Catalog(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      description: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}description']),
+      validUntil: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}valid_until']),
+      isDefault: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_default'])!,
+      defaultPricingApproach: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}default_pricing_approach'])!,
+      defaultMarkupOrMarginPercent: attachedDatabase.typeMapping.read(
+          DriftSqlType.double,
+          data['${effectivePrefix}default_markup_or_margin_percent'])!,
+      defaultFixedAmount: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}default_fixed_amount'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $CatalogsTable createAlias(String alias) {
+    return $CatalogsTable(attachedDatabase, alias);
+  }
+}
+
+class Catalog extends DataClass implements Insertable<Catalog> {
+  final String uuid;
+  final String name;
+  final String? description;
+  final DateTime? validUntil;
+  final bool isDefault;
+
+  /// Prefill for new catalog lines (copied onto items at add time).
+  final String defaultPricingApproach;
+  final double defaultMarkupOrMarginPercent;
+  final double defaultFixedAmount;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const Catalog(
+      {required this.uuid,
+      required this.name,
+      this.description,
+      this.validUntil,
+      required this.isDefault,
+      required this.defaultPricingApproach,
+      required this.defaultMarkupOrMarginPercent,
+      required this.defaultFixedAmount,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['name'] = Variable<String>(name);
+    if (!nullToAbsent || description != null) {
+      map['description'] = Variable<String>(description);
+    }
+    if (!nullToAbsent || validUntil != null) {
+      map['valid_until'] = Variable<DateTime>(validUntil);
+    }
+    map['is_default'] = Variable<bool>(isDefault);
+    map['default_pricing_approach'] = Variable<String>(defaultPricingApproach);
+    map['default_markup_or_margin_percent'] =
+        Variable<double>(defaultMarkupOrMarginPercent);
+    map['default_fixed_amount'] = Variable<double>(defaultFixedAmount);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  CatalogsCompanion toCompanion(bool nullToAbsent) {
+    return CatalogsCompanion(
+      uuid: Value(uuid),
+      name: Value(name),
+      description: description == null && nullToAbsent
+          ? const Value.absent()
+          : Value(description),
+      validUntil: validUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(validUntil),
+      isDefault: Value(isDefault),
+      defaultPricingApproach: Value(defaultPricingApproach),
+      defaultMarkupOrMarginPercent: Value(defaultMarkupOrMarginPercent),
+      defaultFixedAmount: Value(defaultFixedAmount),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory Catalog.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Catalog(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      name: serializer.fromJson<String>(json['name']),
+      description: serializer.fromJson<String?>(json['description']),
+      validUntil: serializer.fromJson<DateTime?>(json['validUntil']),
+      isDefault: serializer.fromJson<bool>(json['isDefault']),
+      defaultPricingApproach:
+          serializer.fromJson<String>(json['defaultPricingApproach']),
+      defaultMarkupOrMarginPercent:
+          serializer.fromJson<double>(json['defaultMarkupOrMarginPercent']),
+      defaultFixedAmount:
+          serializer.fromJson<double>(json['defaultFixedAmount']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'name': serializer.toJson<String>(name),
+      'description': serializer.toJson<String?>(description),
+      'validUntil': serializer.toJson<DateTime?>(validUntil),
+      'isDefault': serializer.toJson<bool>(isDefault),
+      'defaultPricingApproach':
+          serializer.toJson<String>(defaultPricingApproach),
+      'defaultMarkupOrMarginPercent':
+          serializer.toJson<double>(defaultMarkupOrMarginPercent),
+      'defaultFixedAmount': serializer.toJson<double>(defaultFixedAmount),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  Catalog copyWith(
+          {String? uuid,
+          String? name,
+          Value<String?> description = const Value.absent(),
+          Value<DateTime?> validUntil = const Value.absent(),
+          bool? isDefault,
+          String? defaultPricingApproach,
+          double? defaultMarkupOrMarginPercent,
+          double? defaultFixedAmount,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      Catalog(
+        uuid: uuid ?? this.uuid,
+        name: name ?? this.name,
+        description: description.present ? description.value : this.description,
+        validUntil: validUntil.present ? validUntil.value : this.validUntil,
+        isDefault: isDefault ?? this.isDefault,
+        defaultPricingApproach:
+            defaultPricingApproach ?? this.defaultPricingApproach,
+        defaultMarkupOrMarginPercent:
+            defaultMarkupOrMarginPercent ?? this.defaultMarkupOrMarginPercent,
+        defaultFixedAmount: defaultFixedAmount ?? this.defaultFixedAmount,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  Catalog copyWithCompanion(CatalogsCompanion data) {
+    return Catalog(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      name: data.name.present ? data.name.value : this.name,
+      description:
+          data.description.present ? data.description.value : this.description,
+      validUntil:
+          data.validUntil.present ? data.validUntil.value : this.validUntil,
+      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
+      defaultPricingApproach: data.defaultPricingApproach.present
+          ? data.defaultPricingApproach.value
+          : this.defaultPricingApproach,
+      defaultMarkupOrMarginPercent: data.defaultMarkupOrMarginPercent.present
+          ? data.defaultMarkupOrMarginPercent.value
+          : this.defaultMarkupOrMarginPercent,
+      defaultFixedAmount: data.defaultFixedAmount.present
+          ? data.defaultFixedAmount.value
+          : this.defaultFixedAmount,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Catalog(')
+          ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('validUntil: $validUntil, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('defaultPricingApproach: $defaultPricingApproach, ')
+          ..write(
+              'defaultMarkupOrMarginPercent: $defaultMarkupOrMarginPercent, ')
+          ..write('defaultFixedAmount: $defaultFixedAmount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid,
+      name,
+      description,
+      validUntil,
+      isDefault,
+      defaultPricingApproach,
+      defaultMarkupOrMarginPercent,
+      defaultFixedAmount,
+      createdAt,
+      updatedAt,
+      isDeleted,
+      isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Catalog &&
+          other.uuid == this.uuid &&
+          other.name == this.name &&
+          other.description == this.description &&
+          other.validUntil == this.validUntil &&
+          other.isDefault == this.isDefault &&
+          other.defaultPricingApproach == this.defaultPricingApproach &&
+          other.defaultMarkupOrMarginPercent ==
+              this.defaultMarkupOrMarginPercent &&
+          other.defaultFixedAmount == this.defaultFixedAmount &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class CatalogsCompanion extends UpdateCompanion<Catalog> {
+  final Value<String> uuid;
+  final Value<String> name;
+  final Value<String?> description;
+  final Value<DateTime?> validUntil;
+  final Value<bool> isDefault;
+  final Value<String> defaultPricingApproach;
+  final Value<double> defaultMarkupOrMarginPercent;
+  final Value<double> defaultFixedAmount;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const CatalogsCompanion({
+    this.uuid = const Value.absent(),
+    this.name = const Value.absent(),
+    this.description = const Value.absent(),
+    this.validUntil = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.defaultPricingApproach = const Value.absent(),
+    this.defaultMarkupOrMarginPercent = const Value.absent(),
+    this.defaultFixedAmount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CatalogsCompanion.insert({
+    required String uuid,
+    required String name,
+    this.description = const Value.absent(),
+    this.validUntil = const Value.absent(),
+    this.isDefault = const Value.absent(),
+    this.defaultPricingApproach = const Value.absent(),
+    this.defaultMarkupOrMarginPercent = const Value.absent(),
+    this.defaultFixedAmount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        name = Value(name);
+  static Insertable<Catalog> custom({
+    Expression<String>? uuid,
+    Expression<String>? name,
+    Expression<String>? description,
+    Expression<DateTime>? validUntil,
+    Expression<bool>? isDefault,
+    Expression<String>? defaultPricingApproach,
+    Expression<double>? defaultMarkupOrMarginPercent,
+    Expression<double>? defaultFixedAmount,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (name != null) 'name': name,
+      if (description != null) 'description': description,
+      if (validUntil != null) 'valid_until': validUntil,
+      if (isDefault != null) 'is_default': isDefault,
+      if (defaultPricingApproach != null)
+        'default_pricing_approach': defaultPricingApproach,
+      if (defaultMarkupOrMarginPercent != null)
+        'default_markup_or_margin_percent': defaultMarkupOrMarginPercent,
+      if (defaultFixedAmount != null)
+        'default_fixed_amount': defaultFixedAmount,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CatalogsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? name,
+      Value<String?>? description,
+      Value<DateTime?>? validUntil,
+      Value<bool>? isDefault,
+      Value<String>? defaultPricingApproach,
+      Value<double>? defaultMarkupOrMarginPercent,
+      Value<double>? defaultFixedAmount,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return CatalogsCompanion(
+      uuid: uuid ?? this.uuid,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      validUntil: validUntil ?? this.validUntil,
+      isDefault: isDefault ?? this.isDefault,
+      defaultPricingApproach:
+          defaultPricingApproach ?? this.defaultPricingApproach,
+      defaultMarkupOrMarginPercent:
+          defaultMarkupOrMarginPercent ?? this.defaultMarkupOrMarginPercent,
+      defaultFixedAmount: defaultFixedAmount ?? this.defaultFixedAmount,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (validUntil.present) {
+      map['valid_until'] = Variable<DateTime>(validUntil.value);
+    }
+    if (isDefault.present) {
+      map['is_default'] = Variable<bool>(isDefault.value);
+    }
+    if (defaultPricingApproach.present) {
+      map['default_pricing_approach'] =
+          Variable<String>(defaultPricingApproach.value);
+    }
+    if (defaultMarkupOrMarginPercent.present) {
+      map['default_markup_or_margin_percent'] =
+          Variable<double>(defaultMarkupOrMarginPercent.value);
+    }
+    if (defaultFixedAmount.present) {
+      map['default_fixed_amount'] = Variable<double>(defaultFixedAmount.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CatalogsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('name: $name, ')
+          ..write('description: $description, ')
+          ..write('validUntil: $validUntil, ')
+          ..write('isDefault: $isDefault, ')
+          ..write('defaultPricingApproach: $defaultPricingApproach, ')
+          ..write(
+              'defaultMarkupOrMarginPercent: $defaultMarkupOrMarginPercent, ')
+          ..write('defaultFixedAmount: $defaultFixedAmount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CatalogItemsTable extends CatalogItems
+    with TableInfo<$CatalogItemsTable, CatalogItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CatalogItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _catalogUuidMeta =
+      const VerificationMeta('catalogUuid');
+  @override
+  late final GeneratedColumn<String> catalogUuid = GeneratedColumn<String>(
+      'catalog_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES catalogs (uuid)'));
+  static const VerificationMeta _productUuidMeta =
+      const VerificationMeta('productUuid');
+  @override
+  late final GeneratedColumn<String> productUuid = GeneratedColumn<String>(
+      'product_uuid', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES products (uuid)'));
+  static const VerificationMeta _sellingProductUuidMeta =
+      const VerificationMeta('sellingProductUuid');
+  @override
+  late final GeneratedColumn<String> sellingProductUuid =
+      GeneratedColumn<String>('selling_product_uuid', aliasedName, true,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES selling_products (uuid)'));
+  static const VerificationMeta _customPriceMeta =
+      const VerificationMeta('customPrice');
+  @override
+  late final GeneratedColumn<double> customPrice = GeneratedColumn<double>(
+      'custom_price', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _batchUuidMeta =
+      const VerificationMeta('batchUuid');
+  @override
+  late final GeneratedColumn<String> batchUuid = GeneratedColumn<String>(
+      'batch_uuid', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES product_batches (uuid)'));
+  static const VerificationMeta _validUntilMeta =
+      const VerificationMeta('validUntil');
+  @override
+  late final GeneratedColumn<DateTime> validUntil = GeneratedColumn<DateTime>(
+      'valid_until', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _batchSelectionStrategyMeta =
+      const VerificationMeta('batchSelectionStrategy');
+  @override
+  late final GeneratedColumn<String> batchSelectionStrategy =
+      GeneratedColumn<String>('batch_selection_strategy', aliasedName, false,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultValue: const Constant('FEFO_AUTO'));
+  static const VerificationMeta _pricingApproachMeta =
+      const VerificationMeta('pricingApproach');
+  @override
+  late final GeneratedColumn<String> pricingApproach = GeneratedColumn<String>(
+      'pricing_approach', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('MARKUP'));
+  static const VerificationMeta _markupOrMarginPercentMeta =
+      const VerificationMeta('markupOrMarginPercent');
+  @override
+  late final GeneratedColumn<double> markupOrMarginPercent =
+      GeneratedColumn<double>('markup_or_margin_percent', aliasedName, false,
+          type: DriftSqlType.double,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0.0));
+  static const VerificationMeta _fixedAmountMeta =
+      const VerificationMeta('fixedAmount');
+  @override
+  late final GeneratedColumn<double> fixedAmount = GeneratedColumn<double>(
+      'fixed_amount', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _sellPriceMeta =
+      const VerificationMeta('sellPrice');
+  @override
+  late final GeneratedColumn<double> sellPrice = GeneratedColumn<double>(
+      'sell_price', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _unitCostSnapshotMeta =
+      const VerificationMeta('unitCostSnapshot');
+  @override
+  late final GeneratedColumn<double> unitCostSnapshot = GeneratedColumn<double>(
+      'unit_cost_snapshot', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _priceComputedAtMeta =
+      const VerificationMeta('priceComputedAt');
+  @override
+  late final GeneratedColumn<DateTime> priceComputedAt =
+      GeneratedColumn<DateTime>('price_computed_at', aliasedName, true,
+          type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _priceOverrideMeta =
+      const VerificationMeta('priceOverride');
+  @override
+  late final GeneratedColumn<bool> priceOverride = GeneratedColumn<bool>(
+      'price_override', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("price_override" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _defaultDiscountTypeMeta =
+      const VerificationMeta('defaultDiscountType');
+  @override
+  late final GeneratedColumn<String> defaultDiscountType =
+      GeneratedColumn<String>('default_discount_type', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _defaultDiscountValueMeta =
+      const VerificationMeta('defaultDiscountValue');
+  @override
+  late final GeneratedColumn<double> defaultDiscountValue =
+      GeneratedColumn<double>('default_discount_value', aliasedName, false,
+          type: DriftSqlType.double,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0.0));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        catalogUuid,
+        productUuid,
+        sellingProductUuid,
+        customPrice,
+        batchUuid,
+        validUntil,
+        batchSelectionStrategy,
+        pricingApproach,
+        markupOrMarginPercent,
+        fixedAmount,
+        sellPrice,
+        unitCostSnapshot,
+        priceComputedAt,
+        priceOverride,
+        defaultDiscountType,
+        defaultDiscountValue,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'catalog_items';
+  @override
+  VerificationContext validateIntegrity(Insertable<CatalogItem> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('catalog_uuid')) {
+      context.handle(
+          _catalogUuidMeta,
+          catalogUuid.isAcceptableOrUnknown(
+              data['catalog_uuid']!, _catalogUuidMeta));
+    } else if (isInserting) {
+      context.missing(_catalogUuidMeta);
+    }
+    if (data.containsKey('product_uuid')) {
+      context.handle(
+          _productUuidMeta,
+          productUuid.isAcceptableOrUnknown(
+              data['product_uuid']!, _productUuidMeta));
+    }
+    if (data.containsKey('selling_product_uuid')) {
+      context.handle(
+          _sellingProductUuidMeta,
+          sellingProductUuid.isAcceptableOrUnknown(
+              data['selling_product_uuid']!, _sellingProductUuidMeta));
+    }
+    if (data.containsKey('custom_price')) {
+      context.handle(
+          _customPriceMeta,
+          customPrice.isAcceptableOrUnknown(
+              data['custom_price']!, _customPriceMeta));
+    }
+    if (data.containsKey('batch_uuid')) {
+      context.handle(_batchUuidMeta,
+          batchUuid.isAcceptableOrUnknown(data['batch_uuid']!, _batchUuidMeta));
+    }
+    if (data.containsKey('valid_until')) {
+      context.handle(
+          _validUntilMeta,
+          validUntil.isAcceptableOrUnknown(
+              data['valid_until']!, _validUntilMeta));
+    }
+    if (data.containsKey('batch_selection_strategy')) {
+      context.handle(
+          _batchSelectionStrategyMeta,
+          batchSelectionStrategy.isAcceptableOrUnknown(
+              data['batch_selection_strategy']!, _batchSelectionStrategyMeta));
+    }
+    if (data.containsKey('pricing_approach')) {
+      context.handle(
+          _pricingApproachMeta,
+          pricingApproach.isAcceptableOrUnknown(
+              data['pricing_approach']!, _pricingApproachMeta));
+    }
+    if (data.containsKey('markup_or_margin_percent')) {
+      context.handle(
+          _markupOrMarginPercentMeta,
+          markupOrMarginPercent.isAcceptableOrUnknown(
+              data['markup_or_margin_percent']!, _markupOrMarginPercentMeta));
+    }
+    if (data.containsKey('fixed_amount')) {
+      context.handle(
+          _fixedAmountMeta,
+          fixedAmount.isAcceptableOrUnknown(
+              data['fixed_amount']!, _fixedAmountMeta));
+    }
+    if (data.containsKey('sell_price')) {
+      context.handle(_sellPriceMeta,
+          sellPrice.isAcceptableOrUnknown(data['sell_price']!, _sellPriceMeta));
+    }
+    if (data.containsKey('unit_cost_snapshot')) {
+      context.handle(
+          _unitCostSnapshotMeta,
+          unitCostSnapshot.isAcceptableOrUnknown(
+              data['unit_cost_snapshot']!, _unitCostSnapshotMeta));
+    }
+    if (data.containsKey('price_computed_at')) {
+      context.handle(
+          _priceComputedAtMeta,
+          priceComputedAt.isAcceptableOrUnknown(
+              data['price_computed_at']!, _priceComputedAtMeta));
+    }
+    if (data.containsKey('price_override')) {
+      context.handle(
+          _priceOverrideMeta,
+          priceOverride.isAcceptableOrUnknown(
+              data['price_override']!, _priceOverrideMeta));
+    }
+    if (data.containsKey('default_discount_type')) {
+      context.handle(
+          _defaultDiscountTypeMeta,
+          defaultDiscountType.isAcceptableOrUnknown(
+              data['default_discount_type']!, _defaultDiscountTypeMeta));
+    }
+    if (data.containsKey('default_discount_value')) {
+      context.handle(
+          _defaultDiscountValueMeta,
+          defaultDiscountValue.isAcceptableOrUnknown(
+              data['default_discount_value']!, _defaultDiscountValueMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  CatalogItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CatalogItem(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      catalogUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}catalog_uuid'])!,
+      productUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}product_uuid']),
+      sellingProductUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}selling_product_uuid']),
+      customPrice: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}custom_price']),
+      batchUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}batch_uuid']),
+      validUntil: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}valid_until']),
+      batchSelectionStrategy: attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}batch_selection_strategy'])!,
+      pricingApproach: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}pricing_approach'])!,
+      markupOrMarginPercent: attachedDatabase.typeMapping.read(
+          DriftSqlType.double,
+          data['${effectivePrefix}markup_or_margin_percent'])!,
+      fixedAmount: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}fixed_amount'])!,
+      sellPrice: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}sell_price'])!,
+      unitCostSnapshot: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}unit_cost_snapshot']),
+      priceComputedAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}price_computed_at']),
+      priceOverride: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}price_override'])!,
+      defaultDiscountType: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}default_discount_type']),
+      defaultDiscountValue: attachedDatabase.typeMapping.read(
+          DriftSqlType.double,
+          data['${effectivePrefix}default_discount_value'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $CatalogItemsTable createAlias(String alias) {
+    return $CatalogItemsTable(attachedDatabase, alias);
+  }
+}
+
+class CatalogItem extends DataClass implements Insertable<CatalogItem> {
+  final String uuid;
+  final String catalogUuid;
+
+  /// Direct stock/service product. XOR with [sellingProductUuid].
+  final String? productUuid;
+
+  /// Virtual offer / bundle. XOR with [productUuid].
+  final String? sellingProductUuid;
+
+  /// Legacy; prefer [sellPrice]. Migrated into sellPrice when present.
+  final double? customPrice;
+
+  /// Deprecated — batch strategy lives on selling-product components.
+  final String? batchUuid;
+  final DateTime? validUntil;
+
+  /// Deprecated — unused for new catalog pricing.
+  final String batchSelectionStrategy;
+
+  /// MARKUP | MARGIN
+  final String pricingApproach;
+  final double markupOrMarginPercent;
+  final double fixedAmount;
+
+  /// Final sell price used on orders (snapshot source).
+  final double sellPrice;
+  final double? unitCostSnapshot;
+  final DateTime? priceComputedAt;
+
+  /// True when sell price was set manually; skipped by catalog recalculate.
+  final bool priceOverride;
+
+  /// Optional always-on discount: PERCENT | FIXED. Null/empty = none.
+  final String? defaultDiscountType;
+  final double defaultDiscountValue;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const CatalogItem(
+      {required this.uuid,
+      required this.catalogUuid,
+      this.productUuid,
+      this.sellingProductUuid,
+      this.customPrice,
+      this.batchUuid,
+      this.validUntil,
+      required this.batchSelectionStrategy,
+      required this.pricingApproach,
+      required this.markupOrMarginPercent,
+      required this.fixedAmount,
+      required this.sellPrice,
+      this.unitCostSnapshot,
+      this.priceComputedAt,
+      required this.priceOverride,
+      this.defaultDiscountType,
+      required this.defaultDiscountValue,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['catalog_uuid'] = Variable<String>(catalogUuid);
+    if (!nullToAbsent || productUuid != null) {
+      map['product_uuid'] = Variable<String>(productUuid);
+    }
+    if (!nullToAbsent || sellingProductUuid != null) {
+      map['selling_product_uuid'] = Variable<String>(sellingProductUuid);
+    }
+    if (!nullToAbsent || customPrice != null) {
+      map['custom_price'] = Variable<double>(customPrice);
+    }
+    if (!nullToAbsent || batchUuid != null) {
+      map['batch_uuid'] = Variable<String>(batchUuid);
+    }
+    if (!nullToAbsent || validUntil != null) {
+      map['valid_until'] = Variable<DateTime>(validUntil);
+    }
+    map['batch_selection_strategy'] = Variable<String>(batchSelectionStrategy);
+    map['pricing_approach'] = Variable<String>(pricingApproach);
+    map['markup_or_margin_percent'] = Variable<double>(markupOrMarginPercent);
+    map['fixed_amount'] = Variable<double>(fixedAmount);
+    map['sell_price'] = Variable<double>(sellPrice);
+    if (!nullToAbsent || unitCostSnapshot != null) {
+      map['unit_cost_snapshot'] = Variable<double>(unitCostSnapshot);
+    }
+    if (!nullToAbsent || priceComputedAt != null) {
+      map['price_computed_at'] = Variable<DateTime>(priceComputedAt);
+    }
+    map['price_override'] = Variable<bool>(priceOverride);
+    if (!nullToAbsent || defaultDiscountType != null) {
+      map['default_discount_type'] = Variable<String>(defaultDiscountType);
+    }
+    map['default_discount_value'] = Variable<double>(defaultDiscountValue);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  CatalogItemsCompanion toCompanion(bool nullToAbsent) {
+    return CatalogItemsCompanion(
+      uuid: Value(uuid),
+      catalogUuid: Value(catalogUuid),
+      productUuid: productUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productUuid),
+      sellingProductUuid: sellingProductUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sellingProductUuid),
+      customPrice: customPrice == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customPrice),
+      batchUuid: batchUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(batchUuid),
+      validUntil: validUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(validUntil),
+      batchSelectionStrategy: Value(batchSelectionStrategy),
+      pricingApproach: Value(pricingApproach),
+      markupOrMarginPercent: Value(markupOrMarginPercent),
+      fixedAmount: Value(fixedAmount),
+      sellPrice: Value(sellPrice),
+      unitCostSnapshot: unitCostSnapshot == null && nullToAbsent
+          ? const Value.absent()
+          : Value(unitCostSnapshot),
+      priceComputedAt: priceComputedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(priceComputedAt),
+      priceOverride: Value(priceOverride),
+      defaultDiscountType: defaultDiscountType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(defaultDiscountType),
+      defaultDiscountValue: Value(defaultDiscountValue),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory CatalogItem.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CatalogItem(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      catalogUuid: serializer.fromJson<String>(json['catalogUuid']),
+      productUuid: serializer.fromJson<String?>(json['productUuid']),
+      sellingProductUuid:
+          serializer.fromJson<String?>(json['sellingProductUuid']),
+      customPrice: serializer.fromJson<double?>(json['customPrice']),
+      batchUuid: serializer.fromJson<String?>(json['batchUuid']),
+      validUntil: serializer.fromJson<DateTime?>(json['validUntil']),
+      batchSelectionStrategy:
+          serializer.fromJson<String>(json['batchSelectionStrategy']),
+      pricingApproach: serializer.fromJson<String>(json['pricingApproach']),
+      markupOrMarginPercent:
+          serializer.fromJson<double>(json['markupOrMarginPercent']),
+      fixedAmount: serializer.fromJson<double>(json['fixedAmount']),
+      sellPrice: serializer.fromJson<double>(json['sellPrice']),
+      unitCostSnapshot: serializer.fromJson<double?>(json['unitCostSnapshot']),
+      priceComputedAt: serializer.fromJson<DateTime?>(json['priceComputedAt']),
+      priceOverride: serializer.fromJson<bool>(json['priceOverride']),
+      defaultDiscountType:
+          serializer.fromJson<String?>(json['defaultDiscountType']),
+      defaultDiscountValue:
+          serializer.fromJson<double>(json['defaultDiscountValue']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'catalogUuid': serializer.toJson<String>(catalogUuid),
+      'productUuid': serializer.toJson<String?>(productUuid),
+      'sellingProductUuid': serializer.toJson<String?>(sellingProductUuid),
+      'customPrice': serializer.toJson<double?>(customPrice),
+      'batchUuid': serializer.toJson<String?>(batchUuid),
+      'validUntil': serializer.toJson<DateTime?>(validUntil),
+      'batchSelectionStrategy':
+          serializer.toJson<String>(batchSelectionStrategy),
+      'pricingApproach': serializer.toJson<String>(pricingApproach),
+      'markupOrMarginPercent': serializer.toJson<double>(markupOrMarginPercent),
+      'fixedAmount': serializer.toJson<double>(fixedAmount),
+      'sellPrice': serializer.toJson<double>(sellPrice),
+      'unitCostSnapshot': serializer.toJson<double?>(unitCostSnapshot),
+      'priceComputedAt': serializer.toJson<DateTime?>(priceComputedAt),
+      'priceOverride': serializer.toJson<bool>(priceOverride),
+      'defaultDiscountType': serializer.toJson<String?>(defaultDiscountType),
+      'defaultDiscountValue': serializer.toJson<double>(defaultDiscountValue),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  CatalogItem copyWith(
+          {String? uuid,
+          String? catalogUuid,
+          Value<String?> productUuid = const Value.absent(),
+          Value<String?> sellingProductUuid = const Value.absent(),
+          Value<double?> customPrice = const Value.absent(),
+          Value<String?> batchUuid = const Value.absent(),
+          Value<DateTime?> validUntil = const Value.absent(),
+          String? batchSelectionStrategy,
+          String? pricingApproach,
+          double? markupOrMarginPercent,
+          double? fixedAmount,
+          double? sellPrice,
+          Value<double?> unitCostSnapshot = const Value.absent(),
+          Value<DateTime?> priceComputedAt = const Value.absent(),
+          bool? priceOverride,
+          Value<String?> defaultDiscountType = const Value.absent(),
+          double? defaultDiscountValue,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      CatalogItem(
+        uuid: uuid ?? this.uuid,
+        catalogUuid: catalogUuid ?? this.catalogUuid,
+        productUuid: productUuid.present ? productUuid.value : this.productUuid,
+        sellingProductUuid: sellingProductUuid.present
+            ? sellingProductUuid.value
+            : this.sellingProductUuid,
+        customPrice: customPrice.present ? customPrice.value : this.customPrice,
+        batchUuid: batchUuid.present ? batchUuid.value : this.batchUuid,
+        validUntil: validUntil.present ? validUntil.value : this.validUntil,
+        batchSelectionStrategy:
+            batchSelectionStrategy ?? this.batchSelectionStrategy,
+        pricingApproach: pricingApproach ?? this.pricingApproach,
+        markupOrMarginPercent:
+            markupOrMarginPercent ?? this.markupOrMarginPercent,
+        fixedAmount: fixedAmount ?? this.fixedAmount,
+        sellPrice: sellPrice ?? this.sellPrice,
+        unitCostSnapshot: unitCostSnapshot.present
+            ? unitCostSnapshot.value
+            : this.unitCostSnapshot,
+        priceComputedAt: priceComputedAt.present
+            ? priceComputedAt.value
+            : this.priceComputedAt,
+        priceOverride: priceOverride ?? this.priceOverride,
+        defaultDiscountType: defaultDiscountType.present
+            ? defaultDiscountType.value
+            : this.defaultDiscountType,
+        defaultDiscountValue: defaultDiscountValue ?? this.defaultDiscountValue,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  CatalogItem copyWithCompanion(CatalogItemsCompanion data) {
+    return CatalogItem(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      catalogUuid:
+          data.catalogUuid.present ? data.catalogUuid.value : this.catalogUuid,
+      productUuid:
+          data.productUuid.present ? data.productUuid.value : this.productUuid,
+      sellingProductUuid: data.sellingProductUuid.present
+          ? data.sellingProductUuid.value
+          : this.sellingProductUuid,
+      customPrice:
+          data.customPrice.present ? data.customPrice.value : this.customPrice,
+      batchUuid: data.batchUuid.present ? data.batchUuid.value : this.batchUuid,
+      validUntil:
+          data.validUntil.present ? data.validUntil.value : this.validUntil,
+      batchSelectionStrategy: data.batchSelectionStrategy.present
+          ? data.batchSelectionStrategy.value
+          : this.batchSelectionStrategy,
+      pricingApproach: data.pricingApproach.present
+          ? data.pricingApproach.value
+          : this.pricingApproach,
+      markupOrMarginPercent: data.markupOrMarginPercent.present
+          ? data.markupOrMarginPercent.value
+          : this.markupOrMarginPercent,
+      fixedAmount:
+          data.fixedAmount.present ? data.fixedAmount.value : this.fixedAmount,
+      sellPrice: data.sellPrice.present ? data.sellPrice.value : this.sellPrice,
+      unitCostSnapshot: data.unitCostSnapshot.present
+          ? data.unitCostSnapshot.value
+          : this.unitCostSnapshot,
+      priceComputedAt: data.priceComputedAt.present
+          ? data.priceComputedAt.value
+          : this.priceComputedAt,
+      priceOverride: data.priceOverride.present
+          ? data.priceOverride.value
+          : this.priceOverride,
+      defaultDiscountType: data.defaultDiscountType.present
+          ? data.defaultDiscountType.value
+          : this.defaultDiscountType,
+      defaultDiscountValue: data.defaultDiscountValue.present
+          ? data.defaultDiscountValue.value
+          : this.defaultDiscountValue,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CatalogItem(')
+          ..write('uuid: $uuid, ')
+          ..write('catalogUuid: $catalogUuid, ')
+          ..write('productUuid: $productUuid, ')
+          ..write('sellingProductUuid: $sellingProductUuid, ')
+          ..write('customPrice: $customPrice, ')
+          ..write('batchUuid: $batchUuid, ')
+          ..write('validUntil: $validUntil, ')
+          ..write('batchSelectionStrategy: $batchSelectionStrategy, ')
+          ..write('pricingApproach: $pricingApproach, ')
+          ..write('markupOrMarginPercent: $markupOrMarginPercent, ')
+          ..write('fixedAmount: $fixedAmount, ')
+          ..write('sellPrice: $sellPrice, ')
+          ..write('unitCostSnapshot: $unitCostSnapshot, ')
+          ..write('priceComputedAt: $priceComputedAt, ')
+          ..write('priceOverride: $priceOverride, ')
+          ..write('defaultDiscountType: $defaultDiscountType, ')
+          ..write('defaultDiscountValue: $defaultDiscountValue, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hashAll([
+        uuid,
+        catalogUuid,
+        productUuid,
+        sellingProductUuid,
+        customPrice,
+        batchUuid,
+        validUntil,
+        batchSelectionStrategy,
+        pricingApproach,
+        markupOrMarginPercent,
+        fixedAmount,
+        sellPrice,
+        unitCostSnapshot,
+        priceComputedAt,
+        priceOverride,
+        defaultDiscountType,
+        defaultDiscountValue,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ]);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CatalogItem &&
+          other.uuid == this.uuid &&
+          other.catalogUuid == this.catalogUuid &&
+          other.productUuid == this.productUuid &&
+          other.sellingProductUuid == this.sellingProductUuid &&
+          other.customPrice == this.customPrice &&
+          other.batchUuid == this.batchUuid &&
+          other.validUntil == this.validUntil &&
+          other.batchSelectionStrategy == this.batchSelectionStrategy &&
+          other.pricingApproach == this.pricingApproach &&
+          other.markupOrMarginPercent == this.markupOrMarginPercent &&
+          other.fixedAmount == this.fixedAmount &&
+          other.sellPrice == this.sellPrice &&
+          other.unitCostSnapshot == this.unitCostSnapshot &&
+          other.priceComputedAt == this.priceComputedAt &&
+          other.priceOverride == this.priceOverride &&
+          other.defaultDiscountType == this.defaultDiscountType &&
+          other.defaultDiscountValue == this.defaultDiscountValue &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
+  final Value<String> uuid;
+  final Value<String> catalogUuid;
+  final Value<String?> productUuid;
+  final Value<String?> sellingProductUuid;
+  final Value<double?> customPrice;
+  final Value<String?> batchUuid;
+  final Value<DateTime?> validUntil;
+  final Value<String> batchSelectionStrategy;
+  final Value<String> pricingApproach;
+  final Value<double> markupOrMarginPercent;
+  final Value<double> fixedAmount;
+  final Value<double> sellPrice;
+  final Value<double?> unitCostSnapshot;
+  final Value<DateTime?> priceComputedAt;
+  final Value<bool> priceOverride;
+  final Value<String?> defaultDiscountType;
+  final Value<double> defaultDiscountValue;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const CatalogItemsCompanion({
+    this.uuid = const Value.absent(),
+    this.catalogUuid = const Value.absent(),
+    this.productUuid = const Value.absent(),
+    this.sellingProductUuid = const Value.absent(),
+    this.customPrice = const Value.absent(),
+    this.batchUuid = const Value.absent(),
+    this.validUntil = const Value.absent(),
+    this.batchSelectionStrategy = const Value.absent(),
+    this.pricingApproach = const Value.absent(),
+    this.markupOrMarginPercent = const Value.absent(),
+    this.fixedAmount = const Value.absent(),
+    this.sellPrice = const Value.absent(),
+    this.unitCostSnapshot = const Value.absent(),
+    this.priceComputedAt = const Value.absent(),
+    this.priceOverride = const Value.absent(),
+    this.defaultDiscountType = const Value.absent(),
+    this.defaultDiscountValue = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CatalogItemsCompanion.insert({
+    required String uuid,
+    required String catalogUuid,
+    this.productUuid = const Value.absent(),
+    this.sellingProductUuid = const Value.absent(),
+    this.customPrice = const Value.absent(),
+    this.batchUuid = const Value.absent(),
+    this.validUntil = const Value.absent(),
+    this.batchSelectionStrategy = const Value.absent(),
+    this.pricingApproach = const Value.absent(),
+    this.markupOrMarginPercent = const Value.absent(),
+    this.fixedAmount = const Value.absent(),
+    this.sellPrice = const Value.absent(),
+    this.unitCostSnapshot = const Value.absent(),
+    this.priceComputedAt = const Value.absent(),
+    this.priceOverride = const Value.absent(),
+    this.defaultDiscountType = const Value.absent(),
+    this.defaultDiscountValue = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        catalogUuid = Value(catalogUuid);
+  static Insertable<CatalogItem> custom({
+    Expression<String>? uuid,
+    Expression<String>? catalogUuid,
+    Expression<String>? productUuid,
+    Expression<String>? sellingProductUuid,
+    Expression<double>? customPrice,
+    Expression<String>? batchUuid,
+    Expression<DateTime>? validUntil,
+    Expression<String>? batchSelectionStrategy,
+    Expression<String>? pricingApproach,
+    Expression<double>? markupOrMarginPercent,
+    Expression<double>? fixedAmount,
+    Expression<double>? sellPrice,
+    Expression<double>? unitCostSnapshot,
+    Expression<DateTime>? priceComputedAt,
+    Expression<bool>? priceOverride,
+    Expression<String>? defaultDiscountType,
+    Expression<double>? defaultDiscountValue,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (catalogUuid != null) 'catalog_uuid': catalogUuid,
+      if (productUuid != null) 'product_uuid': productUuid,
+      if (sellingProductUuid != null)
+        'selling_product_uuid': sellingProductUuid,
+      if (customPrice != null) 'custom_price': customPrice,
+      if (batchUuid != null) 'batch_uuid': batchUuid,
+      if (validUntil != null) 'valid_until': validUntil,
+      if (batchSelectionStrategy != null)
+        'batch_selection_strategy': batchSelectionStrategy,
+      if (pricingApproach != null) 'pricing_approach': pricingApproach,
+      if (markupOrMarginPercent != null)
+        'markup_or_margin_percent': markupOrMarginPercent,
+      if (fixedAmount != null) 'fixed_amount': fixedAmount,
+      if (sellPrice != null) 'sell_price': sellPrice,
+      if (unitCostSnapshot != null) 'unit_cost_snapshot': unitCostSnapshot,
+      if (priceComputedAt != null) 'price_computed_at': priceComputedAt,
+      if (priceOverride != null) 'price_override': priceOverride,
+      if (defaultDiscountType != null)
+        'default_discount_type': defaultDiscountType,
+      if (defaultDiscountValue != null)
+        'default_discount_value': defaultDiscountValue,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CatalogItemsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? catalogUuid,
+      Value<String?>? productUuid,
+      Value<String?>? sellingProductUuid,
+      Value<double?>? customPrice,
+      Value<String?>? batchUuid,
+      Value<DateTime?>? validUntil,
+      Value<String>? batchSelectionStrategy,
+      Value<String>? pricingApproach,
+      Value<double>? markupOrMarginPercent,
+      Value<double>? fixedAmount,
+      Value<double>? sellPrice,
+      Value<double?>? unitCostSnapshot,
+      Value<DateTime?>? priceComputedAt,
+      Value<bool>? priceOverride,
+      Value<String?>? defaultDiscountType,
+      Value<double>? defaultDiscountValue,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return CatalogItemsCompanion(
+      uuid: uuid ?? this.uuid,
+      catalogUuid: catalogUuid ?? this.catalogUuid,
+      productUuid: productUuid ?? this.productUuid,
+      sellingProductUuid: sellingProductUuid ?? this.sellingProductUuid,
+      customPrice: customPrice ?? this.customPrice,
+      batchUuid: batchUuid ?? this.batchUuid,
+      validUntil: validUntil ?? this.validUntil,
+      batchSelectionStrategy:
+          batchSelectionStrategy ?? this.batchSelectionStrategy,
+      pricingApproach: pricingApproach ?? this.pricingApproach,
+      markupOrMarginPercent:
+          markupOrMarginPercent ?? this.markupOrMarginPercent,
+      fixedAmount: fixedAmount ?? this.fixedAmount,
+      sellPrice: sellPrice ?? this.sellPrice,
+      unitCostSnapshot: unitCostSnapshot ?? this.unitCostSnapshot,
+      priceComputedAt: priceComputedAt ?? this.priceComputedAt,
+      priceOverride: priceOverride ?? this.priceOverride,
+      defaultDiscountType: defaultDiscountType ?? this.defaultDiscountType,
+      defaultDiscountValue: defaultDiscountValue ?? this.defaultDiscountValue,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (catalogUuid.present) {
+      map['catalog_uuid'] = Variable<String>(catalogUuid.value);
+    }
+    if (productUuid.present) {
+      map['product_uuid'] = Variable<String>(productUuid.value);
+    }
+    if (sellingProductUuid.present) {
+      map['selling_product_uuid'] = Variable<String>(sellingProductUuid.value);
+    }
+    if (customPrice.present) {
+      map['custom_price'] = Variable<double>(customPrice.value);
+    }
+    if (batchUuid.present) {
+      map['batch_uuid'] = Variable<String>(batchUuid.value);
+    }
+    if (validUntil.present) {
+      map['valid_until'] = Variable<DateTime>(validUntil.value);
+    }
+    if (batchSelectionStrategy.present) {
+      map['batch_selection_strategy'] =
+          Variable<String>(batchSelectionStrategy.value);
+    }
+    if (pricingApproach.present) {
+      map['pricing_approach'] = Variable<String>(pricingApproach.value);
+    }
+    if (markupOrMarginPercent.present) {
+      map['markup_or_margin_percent'] =
+          Variable<double>(markupOrMarginPercent.value);
+    }
+    if (fixedAmount.present) {
+      map['fixed_amount'] = Variable<double>(fixedAmount.value);
+    }
+    if (sellPrice.present) {
+      map['sell_price'] = Variable<double>(sellPrice.value);
+    }
+    if (unitCostSnapshot.present) {
+      map['unit_cost_snapshot'] = Variable<double>(unitCostSnapshot.value);
+    }
+    if (priceComputedAt.present) {
+      map['price_computed_at'] = Variable<DateTime>(priceComputedAt.value);
+    }
+    if (priceOverride.present) {
+      map['price_override'] = Variable<bool>(priceOverride.value);
+    }
+    if (defaultDiscountType.present) {
+      map['default_discount_type'] =
+          Variable<String>(defaultDiscountType.value);
+    }
+    if (defaultDiscountValue.present) {
+      map['default_discount_value'] =
+          Variable<double>(defaultDiscountValue.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CatalogItemsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('catalogUuid: $catalogUuid, ')
+          ..write('productUuid: $productUuid, ')
+          ..write('sellingProductUuid: $sellingProductUuid, ')
+          ..write('customPrice: $customPrice, ')
+          ..write('batchUuid: $batchUuid, ')
+          ..write('validUntil: $validUntil, ')
+          ..write('batchSelectionStrategy: $batchSelectionStrategy, ')
+          ..write('pricingApproach: $pricingApproach, ')
+          ..write('markupOrMarginPercent: $markupOrMarginPercent, ')
+          ..write('fixedAmount: $fixedAmount, ')
+          ..write('sellPrice: $sellPrice, ')
+          ..write('unitCostSnapshot: $unitCostSnapshot, ')
+          ..write('priceComputedAt: $priceComputedAt, ')
+          ..write('priceOverride: $priceOverride, ')
+          ..write('defaultDiscountType: $defaultDiscountType, ')
+          ..write('defaultDiscountValue: $defaultDiscountValue, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CatalogAssignmentsTable extends CatalogAssignments
+    with TableInfo<$CatalogAssignmentsTable, CatalogAssignment> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CatalogAssignmentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _catalogUuidMeta =
+      const VerificationMeta('catalogUuid');
+  @override
+  late final GeneratedColumn<String> catalogUuid = GeneratedColumn<String>(
+      'catalog_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES catalogs (uuid)'));
+  static const VerificationMeta _contactUuidMeta =
+      const VerificationMeta('contactUuid');
+  @override
+  late final GeneratedColumn<String> contactUuid = GeneratedColumn<String>(
+      'contact_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES contacts (uuid)'));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns =>
+      [uuid, catalogUuid, contactUuid, createdAt, isDeleted, isNotSynced];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'catalog_assignments';
+  @override
+  VerificationContext validateIntegrity(Insertable<CatalogAssignment> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('catalog_uuid')) {
+      context.handle(
+          _catalogUuidMeta,
+          catalogUuid.isAcceptableOrUnknown(
+              data['catalog_uuid']!, _catalogUuidMeta));
+    } else if (isInserting) {
+      context.missing(_catalogUuidMeta);
+    }
+    if (data.containsKey('contact_uuid')) {
+      context.handle(
+          _contactUuidMeta,
+          contactUuid.isAcceptableOrUnknown(
+              data['contact_uuid']!, _contactUuidMeta));
+    } else if (isInserting) {
+      context.missing(_contactUuidMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  CatalogAssignment map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CatalogAssignment(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      catalogUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}catalog_uuid'])!,
+      contactUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}contact_uuid'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $CatalogAssignmentsTable createAlias(String alias) {
+    return $CatalogAssignmentsTable(attachedDatabase, alias);
+  }
+}
+
+class CatalogAssignment extends DataClass
+    implements Insertable<CatalogAssignment> {
+  final String uuid;
+  final String catalogUuid;
+  final String contactUuid;
+  final DateTime createdAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const CatalogAssignment(
+      {required this.uuid,
+      required this.catalogUuid,
+      required this.contactUuid,
+      required this.createdAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['catalog_uuid'] = Variable<String>(catalogUuid);
+    map['contact_uuid'] = Variable<String>(contactUuid);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  CatalogAssignmentsCompanion toCompanion(bool nullToAbsent) {
+    return CatalogAssignmentsCompanion(
+      uuid: Value(uuid),
+      catalogUuid: Value(catalogUuid),
+      contactUuid: Value(contactUuid),
+      createdAt: Value(createdAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory CatalogAssignment.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CatalogAssignment(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      catalogUuid: serializer.fromJson<String>(json['catalogUuid']),
+      contactUuid: serializer.fromJson<String>(json['contactUuid']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'catalogUuid': serializer.toJson<String>(catalogUuid),
+      'contactUuid': serializer.toJson<String>(contactUuid),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  CatalogAssignment copyWith(
+          {String? uuid,
+          String? catalogUuid,
+          String? contactUuid,
+          DateTime? createdAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      CatalogAssignment(
+        uuid: uuid ?? this.uuid,
+        catalogUuid: catalogUuid ?? this.catalogUuid,
+        contactUuid: contactUuid ?? this.contactUuid,
+        createdAt: createdAt ?? this.createdAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  CatalogAssignment copyWithCompanion(CatalogAssignmentsCompanion data) {
+    return CatalogAssignment(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      catalogUuid:
+          data.catalogUuid.present ? data.catalogUuid.value : this.catalogUuid,
+      contactUuid:
+          data.contactUuid.present ? data.contactUuid.value : this.contactUuid,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CatalogAssignment(')
+          ..write('uuid: $uuid, ')
+          ..write('catalogUuid: $catalogUuid, ')
+          ..write('contactUuid: $contactUuid, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid, catalogUuid, contactUuid, createdAt, isDeleted, isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CatalogAssignment &&
+          other.uuid == this.uuid &&
+          other.catalogUuid == this.catalogUuid &&
+          other.contactUuid == this.contactUuid &&
+          other.createdAt == this.createdAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class CatalogAssignmentsCompanion extends UpdateCompanion<CatalogAssignment> {
+  final Value<String> uuid;
+  final Value<String> catalogUuid;
+  final Value<String> contactUuid;
+  final Value<DateTime> createdAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const CatalogAssignmentsCompanion({
+    this.uuid = const Value.absent(),
+    this.catalogUuid = const Value.absent(),
+    this.contactUuid = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CatalogAssignmentsCompanion.insert({
+    required String uuid,
+    required String catalogUuid,
+    required String contactUuid,
+    this.createdAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        catalogUuid = Value(catalogUuid),
+        contactUuid = Value(contactUuid);
+  static Insertable<CatalogAssignment> custom({
+    Expression<String>? uuid,
+    Expression<String>? catalogUuid,
+    Expression<String>? contactUuid,
+    Expression<DateTime>? createdAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (catalogUuid != null) 'catalog_uuid': catalogUuid,
+      if (contactUuid != null) 'contact_uuid': contactUuid,
+      if (createdAt != null) 'created_at': createdAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CatalogAssignmentsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? catalogUuid,
+      Value<String>? contactUuid,
+      Value<DateTime>? createdAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return CatalogAssignmentsCompanion(
+      uuid: uuid ?? this.uuid,
+      catalogUuid: catalogUuid ?? this.catalogUuid,
+      contactUuid: contactUuid ?? this.contactUuid,
+      createdAt: createdAt ?? this.createdAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (catalogUuid.present) {
+      map['catalog_uuid'] = Variable<String>(catalogUuid.value);
+    }
+    if (contactUuid.present) {
+      map['contact_uuid'] = Variable<String>(contactUuid.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CatalogAssignmentsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('catalogUuid: $catalogUuid, ')
+          ..write('contactUuid: $contactUuid, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $CatalogTieredDiscountsTable extends CatalogTieredDiscounts
+    with TableInfo<$CatalogTieredDiscountsTable, CatalogTieredDiscount> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CatalogTieredDiscountsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _catalogItemUuidMeta =
+      const VerificationMeta('catalogItemUuid');
+  @override
+  late final GeneratedColumn<String> catalogItemUuid = GeneratedColumn<String>(
+      'catalog_item_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES catalog_items (uuid)'));
+  static const VerificationMeta _minQuantityMeta =
+      const VerificationMeta('minQuantity');
+  @override
+  late final GeneratedColumn<double> minQuantity = GeneratedColumn<double>(
+      'min_quantity', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _discountPercentageMeta =
+      const VerificationMeta('discountPercentage');
+  @override
+  late final GeneratedColumn<double> discountPercentage =
+      GeneratedColumn<double>('discount_percentage', aliasedName, false,
+          type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _discountTypeMeta =
+      const VerificationMeta('discountType');
+  @override
+  late final GeneratedColumn<String> discountType = GeneratedColumn<String>(
+      'discount_type', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('PERCENT'));
+  static const VerificationMeta _discountAmountMeta =
+      const VerificationMeta('discountAmount');
+  @override
+  late final GeneratedColumn<double> discountAmount = GeneratedColumn<double>(
+      'discount_amount', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        catalogItemUuid,
+        minQuantity,
+        discountPercentage,
+        discountType,
+        discountAmount,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'catalog_tiered_discounts';
+  @override
+  VerificationContext validateIntegrity(
+      Insertable<CatalogTieredDiscount> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('catalog_item_uuid')) {
+      context.handle(
+          _catalogItemUuidMeta,
+          catalogItemUuid.isAcceptableOrUnknown(
+              data['catalog_item_uuid']!, _catalogItemUuidMeta));
+    } else if (isInserting) {
+      context.missing(_catalogItemUuidMeta);
+    }
+    if (data.containsKey('min_quantity')) {
+      context.handle(
+          _minQuantityMeta,
+          minQuantity.isAcceptableOrUnknown(
+              data['min_quantity']!, _minQuantityMeta));
+    } else if (isInserting) {
+      context.missing(_minQuantityMeta);
+    }
+    if (data.containsKey('discount_percentage')) {
+      context.handle(
+          _discountPercentageMeta,
+          discountPercentage.isAcceptableOrUnknown(
+              data['discount_percentage']!, _discountPercentageMeta));
+    } else if (isInserting) {
+      context.missing(_discountPercentageMeta);
+    }
+    if (data.containsKey('discount_type')) {
+      context.handle(
+          _discountTypeMeta,
+          discountType.isAcceptableOrUnknown(
+              data['discount_type']!, _discountTypeMeta));
+    }
+    if (data.containsKey('discount_amount')) {
+      context.handle(
+          _discountAmountMeta,
+          discountAmount.isAcceptableOrUnknown(
+              data['discount_amount']!, _discountAmountMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  CatalogTieredDiscount map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CatalogTieredDiscount(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      catalogItemUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}catalog_item_uuid'])!,
+      minQuantity: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}min_quantity'])!,
+      discountPercentage: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}discount_percentage'])!,
+      discountType: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}discount_type'])!,
+      discountAmount: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}discount_amount'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $CatalogTieredDiscountsTable createAlias(String alias) {
+    return $CatalogTieredDiscountsTable(attachedDatabase, alias);
+  }
+}
+
+class CatalogTieredDiscount extends DataClass
+    implements Insertable<CatalogTieredDiscount> {
+  final String uuid;
+  final String catalogItemUuid;
+  final double minQuantity;
+
+  /// Legacy / PERCENT value. Prefer [discountType] + [discountAmount] for FIXED.
+  final double discountPercentage;
+
+  /// PERCENT | FIXED — qty tier replaces item default when matched.
+  final String discountType;
+  final double discountAmount;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const CatalogTieredDiscount(
+      {required this.uuid,
+      required this.catalogItemUuid,
+      required this.minQuantity,
+      required this.discountPercentage,
+      required this.discountType,
+      required this.discountAmount,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['catalog_item_uuid'] = Variable<String>(catalogItemUuid);
+    map['min_quantity'] = Variable<double>(minQuantity);
+    map['discount_percentage'] = Variable<double>(discountPercentage);
+    map['discount_type'] = Variable<String>(discountType);
+    map['discount_amount'] = Variable<double>(discountAmount);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  CatalogTieredDiscountsCompanion toCompanion(bool nullToAbsent) {
+    return CatalogTieredDiscountsCompanion(
+      uuid: Value(uuid),
+      catalogItemUuid: Value(catalogItemUuid),
+      minQuantity: Value(minQuantity),
+      discountPercentage: Value(discountPercentage),
+      discountType: Value(discountType),
+      discountAmount: Value(discountAmount),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory CatalogTieredDiscount.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CatalogTieredDiscount(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      catalogItemUuid: serializer.fromJson<String>(json['catalogItemUuid']),
+      minQuantity: serializer.fromJson<double>(json['minQuantity']),
+      discountPercentage:
+          serializer.fromJson<double>(json['discountPercentage']),
+      discountType: serializer.fromJson<String>(json['discountType']),
+      discountAmount: serializer.fromJson<double>(json['discountAmount']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'catalogItemUuid': serializer.toJson<String>(catalogItemUuid),
+      'minQuantity': serializer.toJson<double>(minQuantity),
+      'discountPercentage': serializer.toJson<double>(discountPercentage),
+      'discountType': serializer.toJson<String>(discountType),
+      'discountAmount': serializer.toJson<double>(discountAmount),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  CatalogTieredDiscount copyWith(
+          {String? uuid,
+          String? catalogItemUuid,
+          double? minQuantity,
+          double? discountPercentage,
+          String? discountType,
+          double? discountAmount,
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      CatalogTieredDiscount(
+        uuid: uuid ?? this.uuid,
+        catalogItemUuid: catalogItemUuid ?? this.catalogItemUuid,
+        minQuantity: minQuantity ?? this.minQuantity,
+        discountPercentage: discountPercentage ?? this.discountPercentage,
+        discountType: discountType ?? this.discountType,
+        discountAmount: discountAmount ?? this.discountAmount,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  CatalogTieredDiscount copyWithCompanion(
+      CatalogTieredDiscountsCompanion data) {
+    return CatalogTieredDiscount(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      catalogItemUuid: data.catalogItemUuid.present
+          ? data.catalogItemUuid.value
+          : this.catalogItemUuid,
+      minQuantity:
+          data.minQuantity.present ? data.minQuantity.value : this.minQuantity,
+      discountPercentage: data.discountPercentage.present
+          ? data.discountPercentage.value
+          : this.discountPercentage,
+      discountType: data.discountType.present
+          ? data.discountType.value
+          : this.discountType,
+      discountAmount: data.discountAmount.present
+          ? data.discountAmount.value
+          : this.discountAmount,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CatalogTieredDiscount(')
+          ..write('uuid: $uuid, ')
+          ..write('catalogItemUuid: $catalogItemUuid, ')
+          ..write('minQuantity: $minQuantity, ')
+          ..write('discountPercentage: $discountPercentage, ')
+          ..write('discountType: $discountType, ')
+          ..write('discountAmount: $discountAmount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid,
+      catalogItemUuid,
+      minQuantity,
+      discountPercentage,
+      discountType,
+      discountAmount,
+      createdAt,
+      updatedAt,
+      isDeleted,
+      isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CatalogTieredDiscount &&
+          other.uuid == this.uuid &&
+          other.catalogItemUuid == this.catalogItemUuid &&
+          other.minQuantity == this.minQuantity &&
+          other.discountPercentage == this.discountPercentage &&
+          other.discountType == this.discountType &&
+          other.discountAmount == this.discountAmount &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class CatalogTieredDiscountsCompanion
+    extends UpdateCompanion<CatalogTieredDiscount> {
+  final Value<String> uuid;
+  final Value<String> catalogItemUuid;
+  final Value<double> minQuantity;
+  final Value<double> discountPercentage;
+  final Value<String> discountType;
+  final Value<double> discountAmount;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const CatalogTieredDiscountsCompanion({
+    this.uuid = const Value.absent(),
+    this.catalogItemUuid = const Value.absent(),
+    this.minQuantity = const Value.absent(),
+    this.discountPercentage = const Value.absent(),
+    this.discountType = const Value.absent(),
+    this.discountAmount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CatalogTieredDiscountsCompanion.insert({
+    required String uuid,
+    required String catalogItemUuid,
+    required double minQuantity,
+    required double discountPercentage,
+    this.discountType = const Value.absent(),
+    this.discountAmount = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        catalogItemUuid = Value(catalogItemUuid),
+        minQuantity = Value(minQuantity),
+        discountPercentage = Value(discountPercentage);
+  static Insertable<CatalogTieredDiscount> custom({
+    Expression<String>? uuid,
+    Expression<String>? catalogItemUuid,
+    Expression<double>? minQuantity,
+    Expression<double>? discountPercentage,
+    Expression<String>? discountType,
+    Expression<double>? discountAmount,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (catalogItemUuid != null) 'catalog_item_uuid': catalogItemUuid,
+      if (minQuantity != null) 'min_quantity': minQuantity,
+      if (discountPercentage != null) 'discount_percentage': discountPercentage,
+      if (discountType != null) 'discount_type': discountType,
+      if (discountAmount != null) 'discount_amount': discountAmount,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CatalogTieredDiscountsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? catalogItemUuid,
+      Value<double>? minQuantity,
+      Value<double>? discountPercentage,
+      Value<String>? discountType,
+      Value<double>? discountAmount,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return CatalogTieredDiscountsCompanion(
+      uuid: uuid ?? this.uuid,
+      catalogItemUuid: catalogItemUuid ?? this.catalogItemUuid,
+      minQuantity: minQuantity ?? this.minQuantity,
+      discountPercentage: discountPercentage ?? this.discountPercentage,
+      discountType: discountType ?? this.discountType,
+      discountAmount: discountAmount ?? this.discountAmount,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (catalogItemUuid.present) {
+      map['catalog_item_uuid'] = Variable<String>(catalogItemUuid.value);
+    }
+    if (minQuantity.present) {
+      map['min_quantity'] = Variable<double>(minQuantity.value);
+    }
+    if (discountPercentage.present) {
+      map['discount_percentage'] = Variable<double>(discountPercentage.value);
+    }
+    if (discountType.present) {
+      map['discount_type'] = Variable<String>(discountType.value);
+    }
+    if (discountAmount.present) {
+      map['discount_amount'] = Variable<double>(discountAmount.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CatalogTieredDiscountsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('catalogItemUuid: $catalogItemUuid, ')
+          ..write('minQuantity: $minQuantity, ')
+          ..write('discountPercentage: $discountPercentage, ')
+          ..write('discountType: $discountType, ')
+          ..write('discountAmount: $discountAmount, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $OrderItemsTable extends OrderItems
     with TableInfo<$OrderItemsTable, OrderItem> {
   @override
@@ -8015,11 +11700,29 @@ class $OrderItemsTable extends OrderItems
       const VerificationMeta('productUuid');
   @override
   late final GeneratedColumn<String> productUuid = GeneratedColumn<String>(
-      'product_uuid', aliasedName, false,
+      'product_uuid', aliasedName, true,
       type: DriftSqlType.string,
-      requiredDuringInsert: true,
+      requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('REFERENCES products (uuid)'));
+  static const VerificationMeta _catalogItemUuidMeta =
+      const VerificationMeta('catalogItemUuid');
+  @override
+  late final GeneratedColumn<String> catalogItemUuid = GeneratedColumn<String>(
+      'catalog_item_uuid', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES catalog_items (uuid)'));
+  static const VerificationMeta _sellingProductUuidMeta =
+      const VerificationMeta('sellingProductUuid');
+  @override
+  late final GeneratedColumn<String> sellingProductUuid =
+      GeneratedColumn<String>('selling_product_uuid', aliasedName, true,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES selling_products (uuid)'));
   static const VerificationMeta _productNameSnapshotMeta =
       const VerificationMeta('productNameSnapshot');
   @override
@@ -8038,6 +11741,12 @@ class $OrderItemsTable extends OrderItems
   late final GeneratedColumn<double> unitPrice = GeneratedColumn<double>(
       'unit_price', aliasedName, false,
       type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _discountedUnitPriceMeta =
+      const VerificationMeta('discountedUnitPrice');
+  @override
+  late final GeneratedColumn<double> discountedUnitPrice =
+      GeneratedColumn<double>('discounted_unit_price', aliasedName, true,
+          type: DriftSqlType.double, requiredDuringInsert: false);
   static const VerificationMeta _discountAmountMeta =
       const VerificationMeta('discountAmount');
   @override
@@ -8054,6 +11763,12 @@ class $OrderItemsTable extends OrderItems
       type: DriftSqlType.double,
       requiredDuringInsert: false,
       defaultValue: const Constant(0.0));
+  static const VerificationMeta _catalogNameSnapshotMeta =
+      const VerificationMeta('catalogNameSnapshot');
+  @override
+  late final GeneratedColumn<String> catalogNameSnapshot =
+      GeneratedColumn<String>('catalog_name_snapshot', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _receivedQuantityMeta =
       const VerificationMeta('receivedQuantity');
   @override
@@ -8127,11 +11842,15 @@ class $OrderItemsTable extends OrderItems
         uuid,
         orderUuid,
         productUuid,
+        catalogItemUuid,
+        sellingProductUuid,
         productNameSnapshot,
         quantity,
         unitPrice,
+        discountedUnitPrice,
         discountAmount,
         taxRate,
+        catalogNameSnapshot,
         receivedQuantity,
         batchUuid,
         purchasePriceSnapshot,
@@ -8168,8 +11887,18 @@ class $OrderItemsTable extends OrderItems
           _productUuidMeta,
           productUuid.isAcceptableOrUnknown(
               data['product_uuid']!, _productUuidMeta));
-    } else if (isInserting) {
-      context.missing(_productUuidMeta);
+    }
+    if (data.containsKey('catalog_item_uuid')) {
+      context.handle(
+          _catalogItemUuidMeta,
+          catalogItemUuid.isAcceptableOrUnknown(
+              data['catalog_item_uuid']!, _catalogItemUuidMeta));
+    }
+    if (data.containsKey('selling_product_uuid')) {
+      context.handle(
+          _sellingProductUuidMeta,
+          sellingProductUuid.isAcceptableOrUnknown(
+              data['selling_product_uuid']!, _sellingProductUuidMeta));
     }
     if (data.containsKey('product_name_snapshot')) {
       context.handle(
@@ -8191,6 +11920,12 @@ class $OrderItemsTable extends OrderItems
     } else if (isInserting) {
       context.missing(_unitPriceMeta);
     }
+    if (data.containsKey('discounted_unit_price')) {
+      context.handle(
+          _discountedUnitPriceMeta,
+          discountedUnitPrice.isAcceptableOrUnknown(
+              data['discounted_unit_price']!, _discountedUnitPriceMeta));
+    }
     if (data.containsKey('discount_amount')) {
       context.handle(
           _discountAmountMeta,
@@ -8200,6 +11935,12 @@ class $OrderItemsTable extends OrderItems
     if (data.containsKey('tax_rate')) {
       context.handle(_taxRateMeta,
           taxRate.isAcceptableOrUnknown(data['tax_rate']!, _taxRateMeta));
+    }
+    if (data.containsKey('catalog_name_snapshot')) {
+      context.handle(
+          _catalogNameSnapshotMeta,
+          catalogNameSnapshot.isAcceptableOrUnknown(
+              data['catalog_name_snapshot']!, _catalogNameSnapshotMeta));
     }
     if (data.containsKey('received_quantity')) {
       context.handle(
@@ -8253,7 +11994,11 @@ class $OrderItemsTable extends OrderItems
       orderUuid: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}order_uuid'])!,
       productUuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}product_uuid'])!,
+          .read(DriftSqlType.string, data['${effectivePrefix}product_uuid']),
+      catalogItemUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}catalog_item_uuid']),
+      sellingProductUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}selling_product_uuid']),
       productNameSnapshot: attachedDatabase.typeMapping.read(
           DriftSqlType.string,
           data['${effectivePrefix}product_name_snapshot'])!,
@@ -8261,10 +12006,14 @@ class $OrderItemsTable extends OrderItems
           .read(DriftSqlType.double, data['${effectivePrefix}quantity'])!,
       unitPrice: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}unit_price'])!,
+      discountedUnitPrice: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}discounted_unit_price']),
       discountAmount: attachedDatabase.typeMapping.read(
           DriftSqlType.double, data['${effectivePrefix}discount_amount'])!,
       taxRate: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}tax_rate'])!,
+      catalogNameSnapshot: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}catalog_name_snapshot']),
       receivedQuantity: attachedDatabase.typeMapping.read(
           DriftSqlType.double, data['${effectivePrefix}received_quantity'])!,
       batchUuid: attachedDatabase.typeMapping
@@ -8294,14 +12043,33 @@ class $OrderItemsTable extends OrderItems
 class OrderItem extends DataClass implements Insertable<OrderItem> {
   final String uuid;
   final String orderUuid;
-  final String productUuid;
+
+  /// Direct product line. Null when the line is a selling-product offer.
+  final String? productUuid;
+
+  /// Catalog line this sale was picked from (optional snapshot ref).
+  final String? catalogItemUuid;
+
+  /// Selling-product / bundle line. Null for direct product lines.
+  final String? sellingProductUuid;
   final String productNameSnapshot;
 
   /// Ordered qty (PO/SO commitment).
   final double quantity;
+
+  /// List / catalog unit price (before line discount).
   final double unitPrice;
+
+  /// Unit price after discount (what the customer pays per unit).
+  /// Null on legacy rows — treat as [unitPrice] − discount/qty.
+  final double? discountedUnitPrice;
+
+  /// Absolute line discount = ([unitPrice] − [discountedUnitPrice]) × qty.
   final double discountAmount;
   final double taxRate;
+
+  /// Catalog name when the line was picked (sale snapshot).
+  final String? catalogNameSnapshot;
 
   /// Cumulative qty received against this PO line (purchases).
   final double receivedQuantity;
@@ -8317,12 +12085,16 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
   const OrderItem(
       {required this.uuid,
       required this.orderUuid,
-      required this.productUuid,
+      this.productUuid,
+      this.catalogItemUuid,
+      this.sellingProductUuid,
       required this.productNameSnapshot,
       required this.quantity,
       required this.unitPrice,
+      this.discountedUnitPrice,
       required this.discountAmount,
       required this.taxRate,
+      this.catalogNameSnapshot,
       required this.receivedQuantity,
       this.batchUuid,
       required this.purchasePriceSnapshot,
@@ -8336,12 +12108,26 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
     final map = <String, Expression>{};
     map['uuid'] = Variable<String>(uuid);
     map['order_uuid'] = Variable<String>(orderUuid);
-    map['product_uuid'] = Variable<String>(productUuid);
+    if (!nullToAbsent || productUuid != null) {
+      map['product_uuid'] = Variable<String>(productUuid);
+    }
+    if (!nullToAbsent || catalogItemUuid != null) {
+      map['catalog_item_uuid'] = Variable<String>(catalogItemUuid);
+    }
+    if (!nullToAbsent || sellingProductUuid != null) {
+      map['selling_product_uuid'] = Variable<String>(sellingProductUuid);
+    }
     map['product_name_snapshot'] = Variable<String>(productNameSnapshot);
     map['quantity'] = Variable<double>(quantity);
     map['unit_price'] = Variable<double>(unitPrice);
+    if (!nullToAbsent || discountedUnitPrice != null) {
+      map['discounted_unit_price'] = Variable<double>(discountedUnitPrice);
+    }
     map['discount_amount'] = Variable<double>(discountAmount);
     map['tax_rate'] = Variable<double>(taxRate);
+    if (!nullToAbsent || catalogNameSnapshot != null) {
+      map['catalog_name_snapshot'] = Variable<String>(catalogNameSnapshot);
+    }
     map['received_quantity'] = Variable<double>(receivedQuantity);
     if (!nullToAbsent || batchUuid != null) {
       map['batch_uuid'] = Variable<String>(batchUuid);
@@ -8359,12 +12145,26 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
     return OrderItemsCompanion(
       uuid: Value(uuid),
       orderUuid: Value(orderUuid),
-      productUuid: Value(productUuid),
+      productUuid: productUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(productUuid),
+      catalogItemUuid: catalogItemUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(catalogItemUuid),
+      sellingProductUuid: sellingProductUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sellingProductUuid),
       productNameSnapshot: Value(productNameSnapshot),
       quantity: Value(quantity),
       unitPrice: Value(unitPrice),
+      discountedUnitPrice: discountedUnitPrice == null && nullToAbsent
+          ? const Value.absent()
+          : Value(discountedUnitPrice),
       discountAmount: Value(discountAmount),
       taxRate: Value(taxRate),
+      catalogNameSnapshot: catalogNameSnapshot == null && nullToAbsent
+          ? const Value.absent()
+          : Value(catalogNameSnapshot),
       receivedQuantity: Value(receivedQuantity),
       batchUuid: batchUuid == null && nullToAbsent
           ? const Value.absent()
@@ -8384,13 +12184,20 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
     return OrderItem(
       uuid: serializer.fromJson<String>(json['uuid']),
       orderUuid: serializer.fromJson<String>(json['orderUuid']),
-      productUuid: serializer.fromJson<String>(json['productUuid']),
+      productUuid: serializer.fromJson<String?>(json['productUuid']),
+      catalogItemUuid: serializer.fromJson<String?>(json['catalogItemUuid']),
+      sellingProductUuid:
+          serializer.fromJson<String?>(json['sellingProductUuid']),
       productNameSnapshot:
           serializer.fromJson<String>(json['productNameSnapshot']),
       quantity: serializer.fromJson<double>(json['quantity']),
       unitPrice: serializer.fromJson<double>(json['unitPrice']),
+      discountedUnitPrice:
+          serializer.fromJson<double?>(json['discountedUnitPrice']),
       discountAmount: serializer.fromJson<double>(json['discountAmount']),
       taxRate: serializer.fromJson<double>(json['taxRate']),
+      catalogNameSnapshot:
+          serializer.fromJson<String?>(json['catalogNameSnapshot']),
       receivedQuantity: serializer.fromJson<double>(json['receivedQuantity']),
       batchUuid: serializer.fromJson<String?>(json['batchUuid']),
       purchasePriceSnapshot:
@@ -8408,12 +12215,16 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
     return <String, dynamic>{
       'uuid': serializer.toJson<String>(uuid),
       'orderUuid': serializer.toJson<String>(orderUuid),
-      'productUuid': serializer.toJson<String>(productUuid),
+      'productUuid': serializer.toJson<String?>(productUuid),
+      'catalogItemUuid': serializer.toJson<String?>(catalogItemUuid),
+      'sellingProductUuid': serializer.toJson<String?>(sellingProductUuid),
       'productNameSnapshot': serializer.toJson<String>(productNameSnapshot),
       'quantity': serializer.toJson<double>(quantity),
       'unitPrice': serializer.toJson<double>(unitPrice),
+      'discountedUnitPrice': serializer.toJson<double?>(discountedUnitPrice),
       'discountAmount': serializer.toJson<double>(discountAmount),
       'taxRate': serializer.toJson<double>(taxRate),
+      'catalogNameSnapshot': serializer.toJson<String?>(catalogNameSnapshot),
       'receivedQuantity': serializer.toJson<double>(receivedQuantity),
       'batchUuid': serializer.toJson<String?>(batchUuid),
       'purchasePriceSnapshot': serializer.toJson<double>(purchasePriceSnapshot),
@@ -8428,12 +12239,16 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
   OrderItem copyWith(
           {String? uuid,
           String? orderUuid,
-          String? productUuid,
+          Value<String?> productUuid = const Value.absent(),
+          Value<String?> catalogItemUuid = const Value.absent(),
+          Value<String?> sellingProductUuid = const Value.absent(),
           String? productNameSnapshot,
           double? quantity,
           double? unitPrice,
+          Value<double?> discountedUnitPrice = const Value.absent(),
           double? discountAmount,
           double? taxRate,
+          Value<String?> catalogNameSnapshot = const Value.absent(),
           double? receivedQuantity,
           Value<String?> batchUuid = const Value.absent(),
           double? purchasePriceSnapshot,
@@ -8445,12 +12260,24 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
       OrderItem(
         uuid: uuid ?? this.uuid,
         orderUuid: orderUuid ?? this.orderUuid,
-        productUuid: productUuid ?? this.productUuid,
+        productUuid: productUuid.present ? productUuid.value : this.productUuid,
+        catalogItemUuid: catalogItemUuid.present
+            ? catalogItemUuid.value
+            : this.catalogItemUuid,
+        sellingProductUuid: sellingProductUuid.present
+            ? sellingProductUuid.value
+            : this.sellingProductUuid,
         productNameSnapshot: productNameSnapshot ?? this.productNameSnapshot,
         quantity: quantity ?? this.quantity,
         unitPrice: unitPrice ?? this.unitPrice,
+        discountedUnitPrice: discountedUnitPrice.present
+            ? discountedUnitPrice.value
+            : this.discountedUnitPrice,
         discountAmount: discountAmount ?? this.discountAmount,
         taxRate: taxRate ?? this.taxRate,
+        catalogNameSnapshot: catalogNameSnapshot.present
+            ? catalogNameSnapshot.value
+            : this.catalogNameSnapshot,
         receivedQuantity: receivedQuantity ?? this.receivedQuantity,
         batchUuid: batchUuid.present ? batchUuid.value : this.batchUuid,
         purchasePriceSnapshot:
@@ -8467,15 +12294,27 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
       orderUuid: data.orderUuid.present ? data.orderUuid.value : this.orderUuid,
       productUuid:
           data.productUuid.present ? data.productUuid.value : this.productUuid,
+      catalogItemUuid: data.catalogItemUuid.present
+          ? data.catalogItemUuid.value
+          : this.catalogItemUuid,
+      sellingProductUuid: data.sellingProductUuid.present
+          ? data.sellingProductUuid.value
+          : this.sellingProductUuid,
       productNameSnapshot: data.productNameSnapshot.present
           ? data.productNameSnapshot.value
           : this.productNameSnapshot,
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
       unitPrice: data.unitPrice.present ? data.unitPrice.value : this.unitPrice,
+      discountedUnitPrice: data.discountedUnitPrice.present
+          ? data.discountedUnitPrice.value
+          : this.discountedUnitPrice,
       discountAmount: data.discountAmount.present
           ? data.discountAmount.value
           : this.discountAmount,
       taxRate: data.taxRate.present ? data.taxRate.value : this.taxRate,
+      catalogNameSnapshot: data.catalogNameSnapshot.present
+          ? data.catalogNameSnapshot.value
+          : this.catalogNameSnapshot,
       receivedQuantity: data.receivedQuantity.present
           ? data.receivedQuantity.value
           : this.receivedQuantity,
@@ -8498,11 +12337,15 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
           ..write('uuid: $uuid, ')
           ..write('orderUuid: $orderUuid, ')
           ..write('productUuid: $productUuid, ')
+          ..write('catalogItemUuid: $catalogItemUuid, ')
+          ..write('sellingProductUuid: $sellingProductUuid, ')
           ..write('productNameSnapshot: $productNameSnapshot, ')
           ..write('quantity: $quantity, ')
           ..write('unitPrice: $unitPrice, ')
+          ..write('discountedUnitPrice: $discountedUnitPrice, ')
           ..write('discountAmount: $discountAmount, ')
           ..write('taxRate: $taxRate, ')
+          ..write('catalogNameSnapshot: $catalogNameSnapshot, ')
           ..write('receivedQuantity: $receivedQuantity, ')
           ..write('batchUuid: $batchUuid, ')
           ..write('purchasePriceSnapshot: $purchasePriceSnapshot, ')
@@ -8520,11 +12363,15 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
       uuid,
       orderUuid,
       productUuid,
+      catalogItemUuid,
+      sellingProductUuid,
       productNameSnapshot,
       quantity,
       unitPrice,
+      discountedUnitPrice,
       discountAmount,
       taxRate,
+      catalogNameSnapshot,
       receivedQuantity,
       batchUuid,
       purchasePriceSnapshot,
@@ -8540,11 +12387,15 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
           other.uuid == this.uuid &&
           other.orderUuid == this.orderUuid &&
           other.productUuid == this.productUuid &&
+          other.catalogItemUuid == this.catalogItemUuid &&
+          other.sellingProductUuid == this.sellingProductUuid &&
           other.productNameSnapshot == this.productNameSnapshot &&
           other.quantity == this.quantity &&
           other.unitPrice == this.unitPrice &&
+          other.discountedUnitPrice == this.discountedUnitPrice &&
           other.discountAmount == this.discountAmount &&
           other.taxRate == this.taxRate &&
+          other.catalogNameSnapshot == this.catalogNameSnapshot &&
           other.receivedQuantity == this.receivedQuantity &&
           other.batchUuid == this.batchUuid &&
           other.purchasePriceSnapshot == this.purchasePriceSnapshot &&
@@ -8558,12 +12409,16 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
 class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
   final Value<String> uuid;
   final Value<String> orderUuid;
-  final Value<String> productUuid;
+  final Value<String?> productUuid;
+  final Value<String?> catalogItemUuid;
+  final Value<String?> sellingProductUuid;
   final Value<String> productNameSnapshot;
   final Value<double> quantity;
   final Value<double> unitPrice;
+  final Value<double?> discountedUnitPrice;
   final Value<double> discountAmount;
   final Value<double> taxRate;
+  final Value<String?> catalogNameSnapshot;
   final Value<double> receivedQuantity;
   final Value<String?> batchUuid;
   final Value<double> purchasePriceSnapshot;
@@ -8577,11 +12432,15 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
     this.uuid = const Value.absent(),
     this.orderUuid = const Value.absent(),
     this.productUuid = const Value.absent(),
+    this.catalogItemUuid = const Value.absent(),
+    this.sellingProductUuid = const Value.absent(),
     this.productNameSnapshot = const Value.absent(),
     this.quantity = const Value.absent(),
     this.unitPrice = const Value.absent(),
+    this.discountedUnitPrice = const Value.absent(),
     this.discountAmount = const Value.absent(),
     this.taxRate = const Value.absent(),
+    this.catalogNameSnapshot = const Value.absent(),
     this.receivedQuantity = const Value.absent(),
     this.batchUuid = const Value.absent(),
     this.purchasePriceSnapshot = const Value.absent(),
@@ -8595,12 +12454,16 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
   OrderItemsCompanion.insert({
     required String uuid,
     required String orderUuid,
-    required String productUuid,
+    this.productUuid = const Value.absent(),
+    this.catalogItemUuid = const Value.absent(),
+    this.sellingProductUuid = const Value.absent(),
     required String productNameSnapshot,
     required double quantity,
     required double unitPrice,
+    this.discountedUnitPrice = const Value.absent(),
     this.discountAmount = const Value.absent(),
     this.taxRate = const Value.absent(),
+    this.catalogNameSnapshot = const Value.absent(),
     this.receivedQuantity = const Value.absent(),
     this.batchUuid = const Value.absent(),
     this.purchasePriceSnapshot = const Value.absent(),
@@ -8612,7 +12475,6 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
     this.rowid = const Value.absent(),
   })  : uuid = Value(uuid),
         orderUuid = Value(orderUuid),
-        productUuid = Value(productUuid),
         productNameSnapshot = Value(productNameSnapshot),
         quantity = Value(quantity),
         unitPrice = Value(unitPrice);
@@ -8620,11 +12482,15 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
     Expression<String>? uuid,
     Expression<String>? orderUuid,
     Expression<String>? productUuid,
+    Expression<String>? catalogItemUuid,
+    Expression<String>? sellingProductUuid,
     Expression<String>? productNameSnapshot,
     Expression<double>? quantity,
     Expression<double>? unitPrice,
+    Expression<double>? discountedUnitPrice,
     Expression<double>? discountAmount,
     Expression<double>? taxRate,
+    Expression<String>? catalogNameSnapshot,
     Expression<double>? receivedQuantity,
     Expression<String>? batchUuid,
     Expression<double>? purchasePriceSnapshot,
@@ -8639,12 +12505,19 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
       if (uuid != null) 'uuid': uuid,
       if (orderUuid != null) 'order_uuid': orderUuid,
       if (productUuid != null) 'product_uuid': productUuid,
+      if (catalogItemUuid != null) 'catalog_item_uuid': catalogItemUuid,
+      if (sellingProductUuid != null)
+        'selling_product_uuid': sellingProductUuid,
       if (productNameSnapshot != null)
         'product_name_snapshot': productNameSnapshot,
       if (quantity != null) 'quantity': quantity,
       if (unitPrice != null) 'unit_price': unitPrice,
+      if (discountedUnitPrice != null)
+        'discounted_unit_price': discountedUnitPrice,
       if (discountAmount != null) 'discount_amount': discountAmount,
       if (taxRate != null) 'tax_rate': taxRate,
+      if (catalogNameSnapshot != null)
+        'catalog_name_snapshot': catalogNameSnapshot,
       if (receivedQuantity != null) 'received_quantity': receivedQuantity,
       if (batchUuid != null) 'batch_uuid': batchUuid,
       if (purchasePriceSnapshot != null)
@@ -8661,12 +12534,16 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
   OrderItemsCompanion copyWith(
       {Value<String>? uuid,
       Value<String>? orderUuid,
-      Value<String>? productUuid,
+      Value<String?>? productUuid,
+      Value<String?>? catalogItemUuid,
+      Value<String?>? sellingProductUuid,
       Value<String>? productNameSnapshot,
       Value<double>? quantity,
       Value<double>? unitPrice,
+      Value<double?>? discountedUnitPrice,
       Value<double>? discountAmount,
       Value<double>? taxRate,
+      Value<String?>? catalogNameSnapshot,
       Value<double>? receivedQuantity,
       Value<String?>? batchUuid,
       Value<double>? purchasePriceSnapshot,
@@ -8680,11 +12557,15 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
       uuid: uuid ?? this.uuid,
       orderUuid: orderUuid ?? this.orderUuid,
       productUuid: productUuid ?? this.productUuid,
+      catalogItemUuid: catalogItemUuid ?? this.catalogItemUuid,
+      sellingProductUuid: sellingProductUuid ?? this.sellingProductUuid,
       productNameSnapshot: productNameSnapshot ?? this.productNameSnapshot,
       quantity: quantity ?? this.quantity,
       unitPrice: unitPrice ?? this.unitPrice,
+      discountedUnitPrice: discountedUnitPrice ?? this.discountedUnitPrice,
       discountAmount: discountAmount ?? this.discountAmount,
       taxRate: taxRate ?? this.taxRate,
+      catalogNameSnapshot: catalogNameSnapshot ?? this.catalogNameSnapshot,
       receivedQuantity: receivedQuantity ?? this.receivedQuantity,
       batchUuid: batchUuid ?? this.batchUuid,
       purchasePriceSnapshot:
@@ -8710,6 +12591,12 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
     if (productUuid.present) {
       map['product_uuid'] = Variable<String>(productUuid.value);
     }
+    if (catalogItemUuid.present) {
+      map['catalog_item_uuid'] = Variable<String>(catalogItemUuid.value);
+    }
+    if (sellingProductUuid.present) {
+      map['selling_product_uuid'] = Variable<String>(sellingProductUuid.value);
+    }
     if (productNameSnapshot.present) {
       map['product_name_snapshot'] =
           Variable<String>(productNameSnapshot.value);
@@ -8720,11 +12607,19 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
     if (unitPrice.present) {
       map['unit_price'] = Variable<double>(unitPrice.value);
     }
+    if (discountedUnitPrice.present) {
+      map['discounted_unit_price'] =
+          Variable<double>(discountedUnitPrice.value);
+    }
     if (discountAmount.present) {
       map['discount_amount'] = Variable<double>(discountAmount.value);
     }
     if (taxRate.present) {
       map['tax_rate'] = Variable<double>(taxRate.value);
+    }
+    if (catalogNameSnapshot.present) {
+      map['catalog_name_snapshot'] =
+          Variable<String>(catalogNameSnapshot.value);
     }
     if (receivedQuantity.present) {
       map['received_quantity'] = Variable<double>(receivedQuantity.value);
@@ -8763,11 +12658,15 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
           ..write('uuid: $uuid, ')
           ..write('orderUuid: $orderUuid, ')
           ..write('productUuid: $productUuid, ')
+          ..write('catalogItemUuid: $catalogItemUuid, ')
+          ..write('sellingProductUuid: $sellingProductUuid, ')
           ..write('productNameSnapshot: $productNameSnapshot, ')
           ..write('quantity: $quantity, ')
           ..write('unitPrice: $unitPrice, ')
+          ..write('discountedUnitPrice: $discountedUnitPrice, ')
           ..write('discountAmount: $discountAmount, ')
           ..write('taxRate: $taxRate, ')
+          ..write('catalogNameSnapshot: $catalogNameSnapshot, ')
           ..write('receivedQuantity: $receivedQuantity, ')
           ..write('batchUuid: $batchUuid, ')
           ..write('purchasePriceSnapshot: $purchasePriceSnapshot, ')
@@ -16295,3533 +20194,6 @@ class OrderReturnItemsCompanion extends UpdateCompanion<OrderReturnItem> {
   }
 }
 
-class $SellingProductsTable extends SellingProducts
-    with TableInfo<$SellingProductsTable, SellingProduct> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $SellingProductsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
-  @override
-  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
-      'uuid', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 200),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
-  static const VerificationMeta _skuMeta = const VerificationMeta('sku');
-  @override
-  late final GeneratedColumn<String> sku = GeneratedColumn<String>(
-      'sku', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _descriptionMeta =
-      const VerificationMeta('description');
-  @override
-  late final GeneratedColumn<String> description = GeneratedColumn<String>(
-      'description', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _categoryUuidMeta =
-      const VerificationMeta('categoryUuid');
-  @override
-  late final GeneratedColumn<String> categoryUuid = GeneratedColumn<String>(
-      'category_uuid', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES product_categories (uuid)'));
-  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
-  @override
-  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
-      'unit', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _updatedAtMeta =
-      const VerificationMeta('updatedAt');
-  @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-      'updated_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _isDeletedMeta =
-      const VerificationMeta('isDeleted');
-  @override
-  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
-      'is_deleted', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isNotSyncedMeta =
-      const VerificationMeta('isNotSynced');
-  @override
-  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
-      'is_not_synced', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_not_synced" IN (0, 1))'),
-      defaultValue: const Constant(true));
-  @override
-  List<GeneratedColumn> get $columns => [
-        uuid,
-        name,
-        sku,
-        description,
-        categoryUuid,
-        unit,
-        createdAt,
-        updatedAt,
-        isDeleted,
-        isNotSynced
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'selling_products';
-  @override
-  VerificationContext validateIntegrity(Insertable<SellingProduct> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('uuid')) {
-      context.handle(
-          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
-    } else if (isInserting) {
-      context.missing(_uuidMeta);
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    if (data.containsKey('sku')) {
-      context.handle(
-          _skuMeta, sku.isAcceptableOrUnknown(data['sku']!, _skuMeta));
-    }
-    if (data.containsKey('description')) {
-      context.handle(
-          _descriptionMeta,
-          description.isAcceptableOrUnknown(
-              data['description']!, _descriptionMeta));
-    }
-    if (data.containsKey('category_uuid')) {
-      context.handle(
-          _categoryUuidMeta,
-          categoryUuid.isAcceptableOrUnknown(
-              data['category_uuid']!, _categoryUuidMeta));
-    }
-    if (data.containsKey('unit')) {
-      context.handle(
-          _unitMeta, unit.isAcceptableOrUnknown(data['unit']!, _unitMeta));
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(_updatedAtMeta,
-          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
-    }
-    if (data.containsKey('is_deleted')) {
-      context.handle(_isDeletedMeta,
-          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
-    }
-    if (data.containsKey('is_not_synced')) {
-      context.handle(
-          _isNotSyncedMeta,
-          isNotSynced.isAcceptableOrUnknown(
-              data['is_not_synced']!, _isNotSyncedMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {uuid};
-  @override
-  SellingProduct map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SellingProduct(
-      uuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      sku: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}sku']),
-      description: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}description']),
-      categoryUuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}category_uuid']),
-      unit: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}unit']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      updatedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
-      isDeleted: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
-      isNotSynced: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
-    );
-  }
-
-  @override
-  $SellingProductsTable createAlias(String alias) {
-    return $SellingProductsTable(attachedDatabase, alias);
-  }
-}
-
-class SellingProduct extends DataClass implements Insertable<SellingProduct> {
-  final String uuid;
-  final String name;
-  final String? sku;
-  final String? description;
-
-  /// Optional category; if unset at save, defaults from first component product.
-  final String? categoryUuid;
-
-  /// Optional sell unit; if unset at save, defaults from first component product.
-  final String? unit;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final bool isDeleted;
-  final bool isNotSynced;
-  const SellingProduct(
-      {required this.uuid,
-      required this.name,
-      this.sku,
-      this.description,
-      this.categoryUuid,
-      this.unit,
-      required this.createdAt,
-      required this.updatedAt,
-      required this.isDeleted,
-      required this.isNotSynced});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['uuid'] = Variable<String>(uuid);
-    map['name'] = Variable<String>(name);
-    if (!nullToAbsent || sku != null) {
-      map['sku'] = Variable<String>(sku);
-    }
-    if (!nullToAbsent || description != null) {
-      map['description'] = Variable<String>(description);
-    }
-    if (!nullToAbsent || categoryUuid != null) {
-      map['category_uuid'] = Variable<String>(categoryUuid);
-    }
-    if (!nullToAbsent || unit != null) {
-      map['unit'] = Variable<String>(unit);
-    }
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
-    map['is_deleted'] = Variable<bool>(isDeleted);
-    map['is_not_synced'] = Variable<bool>(isNotSynced);
-    return map;
-  }
-
-  SellingProductsCompanion toCompanion(bool nullToAbsent) {
-    return SellingProductsCompanion(
-      uuid: Value(uuid),
-      name: Value(name),
-      sku: sku == null && nullToAbsent ? const Value.absent() : Value(sku),
-      description: description == null && nullToAbsent
-          ? const Value.absent()
-          : Value(description),
-      categoryUuid: categoryUuid == null && nullToAbsent
-          ? const Value.absent()
-          : Value(categoryUuid),
-      unit: unit == null && nullToAbsent ? const Value.absent() : Value(unit),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-      isDeleted: Value(isDeleted),
-      isNotSynced: Value(isNotSynced),
-    );
-  }
-
-  factory SellingProduct.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SellingProduct(
-      uuid: serializer.fromJson<String>(json['uuid']),
-      name: serializer.fromJson<String>(json['name']),
-      sku: serializer.fromJson<String?>(json['sku']),
-      description: serializer.fromJson<String?>(json['description']),
-      categoryUuid: serializer.fromJson<String?>(json['categoryUuid']),
-      unit: serializer.fromJson<String?>(json['unit']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
-      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'uuid': serializer.toJson<String>(uuid),
-      'name': serializer.toJson<String>(name),
-      'sku': serializer.toJson<String?>(sku),
-      'description': serializer.toJson<String?>(description),
-      'categoryUuid': serializer.toJson<String?>(categoryUuid),
-      'unit': serializer.toJson<String?>(unit),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'isDeleted': serializer.toJson<bool>(isDeleted),
-      'isNotSynced': serializer.toJson<bool>(isNotSynced),
-    };
-  }
-
-  SellingProduct copyWith(
-          {String? uuid,
-          String? name,
-          Value<String?> sku = const Value.absent(),
-          Value<String?> description = const Value.absent(),
-          Value<String?> categoryUuid = const Value.absent(),
-          Value<String?> unit = const Value.absent(),
-          DateTime? createdAt,
-          DateTime? updatedAt,
-          bool? isDeleted,
-          bool? isNotSynced}) =>
-      SellingProduct(
-        uuid: uuid ?? this.uuid,
-        name: name ?? this.name,
-        sku: sku.present ? sku.value : this.sku,
-        description: description.present ? description.value : this.description,
-        categoryUuid:
-            categoryUuid.present ? categoryUuid.value : this.categoryUuid,
-        unit: unit.present ? unit.value : this.unit,
-        createdAt: createdAt ?? this.createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-        isDeleted: isDeleted ?? this.isDeleted,
-        isNotSynced: isNotSynced ?? this.isNotSynced,
-      );
-  SellingProduct copyWithCompanion(SellingProductsCompanion data) {
-    return SellingProduct(
-      uuid: data.uuid.present ? data.uuid.value : this.uuid,
-      name: data.name.present ? data.name.value : this.name,
-      sku: data.sku.present ? data.sku.value : this.sku,
-      description:
-          data.description.present ? data.description.value : this.description,
-      categoryUuid: data.categoryUuid.present
-          ? data.categoryUuid.value
-          : this.categoryUuid,
-      unit: data.unit.present ? data.unit.value : this.unit,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
-      isNotSynced:
-          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SellingProduct(')
-          ..write('uuid: $uuid, ')
-          ..write('name: $name, ')
-          ..write('sku: $sku, ')
-          ..write('description: $description, ')
-          ..write('categoryUuid: $categoryUuid, ')
-          ..write('unit: $unit, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(uuid, name, sku, description, categoryUuid,
-      unit, createdAt, updatedAt, isDeleted, isNotSynced);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is SellingProduct &&
-          other.uuid == this.uuid &&
-          other.name == this.name &&
-          other.sku == this.sku &&
-          other.description == this.description &&
-          other.categoryUuid == this.categoryUuid &&
-          other.unit == this.unit &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt &&
-          other.isDeleted == this.isDeleted &&
-          other.isNotSynced == this.isNotSynced);
-}
-
-class SellingProductsCompanion extends UpdateCompanion<SellingProduct> {
-  final Value<String> uuid;
-  final Value<String> name;
-  final Value<String?> sku;
-  final Value<String?> description;
-  final Value<String?> categoryUuid;
-  final Value<String?> unit;
-  final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
-  final Value<bool> isDeleted;
-  final Value<bool> isNotSynced;
-  final Value<int> rowid;
-  const SellingProductsCompanion({
-    this.uuid = const Value.absent(),
-    this.name = const Value.absent(),
-    this.sku = const Value.absent(),
-    this.description = const Value.absent(),
-    this.categoryUuid = const Value.absent(),
-    this.unit = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.isDeleted = const Value.absent(),
-    this.isNotSynced = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  SellingProductsCompanion.insert({
-    required String uuid,
-    required String name,
-    this.sku = const Value.absent(),
-    this.description = const Value.absent(),
-    this.categoryUuid = const Value.absent(),
-    this.unit = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.isDeleted = const Value.absent(),
-    this.isNotSynced = const Value.absent(),
-    this.rowid = const Value.absent(),
-  })  : uuid = Value(uuid),
-        name = Value(name);
-  static Insertable<SellingProduct> custom({
-    Expression<String>? uuid,
-    Expression<String>? name,
-    Expression<String>? sku,
-    Expression<String>? description,
-    Expression<String>? categoryUuid,
-    Expression<String>? unit,
-    Expression<DateTime>? createdAt,
-    Expression<DateTime>? updatedAt,
-    Expression<bool>? isDeleted,
-    Expression<bool>? isNotSynced,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (uuid != null) 'uuid': uuid,
-      if (name != null) 'name': name,
-      if (sku != null) 'sku': sku,
-      if (description != null) 'description': description,
-      if (categoryUuid != null) 'category_uuid': categoryUuid,
-      if (unit != null) 'unit': unit,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (isDeleted != null) 'is_deleted': isDeleted,
-      if (isNotSynced != null) 'is_not_synced': isNotSynced,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  SellingProductsCompanion copyWith(
-      {Value<String>? uuid,
-      Value<String>? name,
-      Value<String?>? sku,
-      Value<String?>? description,
-      Value<String?>? categoryUuid,
-      Value<String?>? unit,
-      Value<DateTime>? createdAt,
-      Value<DateTime>? updatedAt,
-      Value<bool>? isDeleted,
-      Value<bool>? isNotSynced,
-      Value<int>? rowid}) {
-    return SellingProductsCompanion(
-      uuid: uuid ?? this.uuid,
-      name: name ?? this.name,
-      sku: sku ?? this.sku,
-      description: description ?? this.description,
-      categoryUuid: categoryUuid ?? this.categoryUuid,
-      unit: unit ?? this.unit,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      isDeleted: isDeleted ?? this.isDeleted,
-      isNotSynced: isNotSynced ?? this.isNotSynced,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (uuid.present) {
-      map['uuid'] = Variable<String>(uuid.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (sku.present) {
-      map['sku'] = Variable<String>(sku.value);
-    }
-    if (description.present) {
-      map['description'] = Variable<String>(description.value);
-    }
-    if (categoryUuid.present) {
-      map['category_uuid'] = Variable<String>(categoryUuid.value);
-    }
-    if (unit.present) {
-      map['unit'] = Variable<String>(unit.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    if (isDeleted.present) {
-      map['is_deleted'] = Variable<bool>(isDeleted.value);
-    }
-    if (isNotSynced.present) {
-      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SellingProductsCompanion(')
-          ..write('uuid: $uuid, ')
-          ..write('name: $name, ')
-          ..write('sku: $sku, ')
-          ..write('description: $description, ')
-          ..write('categoryUuid: $categoryUuid, ')
-          ..write('unit: $unit, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $SellingProductComponentsTable extends SellingProductComponents
-    with TableInfo<$SellingProductComponentsTable, SellingProductComponent> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $SellingProductComponentsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
-  @override
-  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
-      'uuid', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _sellingProductUuidMeta =
-      const VerificationMeta('sellingProductUuid');
-  @override
-  late final GeneratedColumn<String> sellingProductUuid =
-      GeneratedColumn<String>('selling_product_uuid', aliasedName, false,
-          type: DriftSqlType.string,
-          requiredDuringInsert: true,
-          defaultConstraints: GeneratedColumn.constraintIsAlways(
-              'REFERENCES selling_products (uuid)'));
-  static const VerificationMeta _productUuidMeta =
-      const VerificationMeta('productUuid');
-  @override
-  late final GeneratedColumn<String> productUuid = GeneratedColumn<String>(
-      'product_uuid', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES products (uuid)'));
-  static const VerificationMeta _quantityMeta =
-      const VerificationMeta('quantity');
-  @override
-  late final GeneratedColumn<double> quantity = GeneratedColumn<double>(
-      'quantity', aliasedName, false,
-      type: DriftSqlType.double, requiredDuringInsert: true);
-  static const VerificationMeta _consumeModeMeta =
-      const VerificationMeta('consumeMode');
-  @override
-  late final GeneratedColumn<String> consumeMode = GeneratedColumn<String>(
-      'consume_mode', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('AUTO'));
-  static const VerificationMeta _batchNumberMeta =
-      const VerificationMeta('batchNumber');
-  @override
-  late final GeneratedColumn<String> batchNumber = GeneratedColumn<String>(
-      'batch_number', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _updatedAtMeta =
-      const VerificationMeta('updatedAt');
-  @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-      'updated_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _isDeletedMeta =
-      const VerificationMeta('isDeleted');
-  @override
-  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
-      'is_deleted', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isNotSyncedMeta =
-      const VerificationMeta('isNotSynced');
-  @override
-  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
-      'is_not_synced', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_not_synced" IN (0, 1))'),
-      defaultValue: const Constant(true));
-  @override
-  List<GeneratedColumn> get $columns => [
-        uuid,
-        sellingProductUuid,
-        productUuid,
-        quantity,
-        consumeMode,
-        batchNumber,
-        createdAt,
-        updatedAt,
-        isDeleted,
-        isNotSynced
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'selling_product_components';
-  @override
-  VerificationContext validateIntegrity(
-      Insertable<SellingProductComponent> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('uuid')) {
-      context.handle(
-          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
-    } else if (isInserting) {
-      context.missing(_uuidMeta);
-    }
-    if (data.containsKey('selling_product_uuid')) {
-      context.handle(
-          _sellingProductUuidMeta,
-          sellingProductUuid.isAcceptableOrUnknown(
-              data['selling_product_uuid']!, _sellingProductUuidMeta));
-    } else if (isInserting) {
-      context.missing(_sellingProductUuidMeta);
-    }
-    if (data.containsKey('product_uuid')) {
-      context.handle(
-          _productUuidMeta,
-          productUuid.isAcceptableOrUnknown(
-              data['product_uuid']!, _productUuidMeta));
-    } else if (isInserting) {
-      context.missing(_productUuidMeta);
-    }
-    if (data.containsKey('quantity')) {
-      context.handle(_quantityMeta,
-          quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta));
-    } else if (isInserting) {
-      context.missing(_quantityMeta);
-    }
-    if (data.containsKey('consume_mode')) {
-      context.handle(
-          _consumeModeMeta,
-          consumeMode.isAcceptableOrUnknown(
-              data['consume_mode']!, _consumeModeMeta));
-    }
-    if (data.containsKey('batch_number')) {
-      context.handle(
-          _batchNumberMeta,
-          batchNumber.isAcceptableOrUnknown(
-              data['batch_number']!, _batchNumberMeta));
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(_updatedAtMeta,
-          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
-    }
-    if (data.containsKey('is_deleted')) {
-      context.handle(_isDeletedMeta,
-          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
-    }
-    if (data.containsKey('is_not_synced')) {
-      context.handle(
-          _isNotSyncedMeta,
-          isNotSynced.isAcceptableOrUnknown(
-              data['is_not_synced']!, _isNotSyncedMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {uuid};
-  @override
-  SellingProductComponent map(Map<String, dynamic> data,
-      {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return SellingProductComponent(
-      uuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
-      sellingProductUuid: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}selling_product_uuid'])!,
-      productUuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}product_uuid'])!,
-      quantity: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}quantity'])!,
-      consumeMode: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}consume_mode'])!,
-      batchNumber: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}batch_number']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      updatedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
-      isDeleted: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
-      isNotSynced: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
-    );
-  }
-
-  @override
-  $SellingProductComponentsTable createAlias(String alias) {
-    return $SellingProductComponentsTable(attachedDatabase, alias);
-  }
-}
-
-class SellingProductComponent extends DataClass
-    implements Insertable<SellingProductComponent> {
-  final String uuid;
-  final String sellingProductUuid;
-  final String productUuid;
-  final double quantity;
-
-  /// AUTO | BATCH — same idea as recipe / production inputs.
-  final String consumeMode;
-
-  /// Required when [consumeMode] is BATCH.
-  final String? batchNumber;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final bool isDeleted;
-  final bool isNotSynced;
-  const SellingProductComponent(
-      {required this.uuid,
-      required this.sellingProductUuid,
-      required this.productUuid,
-      required this.quantity,
-      required this.consumeMode,
-      this.batchNumber,
-      required this.createdAt,
-      required this.updatedAt,
-      required this.isDeleted,
-      required this.isNotSynced});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['uuid'] = Variable<String>(uuid);
-    map['selling_product_uuid'] = Variable<String>(sellingProductUuid);
-    map['product_uuid'] = Variable<String>(productUuid);
-    map['quantity'] = Variable<double>(quantity);
-    map['consume_mode'] = Variable<String>(consumeMode);
-    if (!nullToAbsent || batchNumber != null) {
-      map['batch_number'] = Variable<String>(batchNumber);
-    }
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
-    map['is_deleted'] = Variable<bool>(isDeleted);
-    map['is_not_synced'] = Variable<bool>(isNotSynced);
-    return map;
-  }
-
-  SellingProductComponentsCompanion toCompanion(bool nullToAbsent) {
-    return SellingProductComponentsCompanion(
-      uuid: Value(uuid),
-      sellingProductUuid: Value(sellingProductUuid),
-      productUuid: Value(productUuid),
-      quantity: Value(quantity),
-      consumeMode: Value(consumeMode),
-      batchNumber: batchNumber == null && nullToAbsent
-          ? const Value.absent()
-          : Value(batchNumber),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-      isDeleted: Value(isDeleted),
-      isNotSynced: Value(isNotSynced),
-    );
-  }
-
-  factory SellingProductComponent.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return SellingProductComponent(
-      uuid: serializer.fromJson<String>(json['uuid']),
-      sellingProductUuid:
-          serializer.fromJson<String>(json['sellingProductUuid']),
-      productUuid: serializer.fromJson<String>(json['productUuid']),
-      quantity: serializer.fromJson<double>(json['quantity']),
-      consumeMode: serializer.fromJson<String>(json['consumeMode']),
-      batchNumber: serializer.fromJson<String?>(json['batchNumber']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
-      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'uuid': serializer.toJson<String>(uuid),
-      'sellingProductUuid': serializer.toJson<String>(sellingProductUuid),
-      'productUuid': serializer.toJson<String>(productUuid),
-      'quantity': serializer.toJson<double>(quantity),
-      'consumeMode': serializer.toJson<String>(consumeMode),
-      'batchNumber': serializer.toJson<String?>(batchNumber),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'isDeleted': serializer.toJson<bool>(isDeleted),
-      'isNotSynced': serializer.toJson<bool>(isNotSynced),
-    };
-  }
-
-  SellingProductComponent copyWith(
-          {String? uuid,
-          String? sellingProductUuid,
-          String? productUuid,
-          double? quantity,
-          String? consumeMode,
-          Value<String?> batchNumber = const Value.absent(),
-          DateTime? createdAt,
-          DateTime? updatedAt,
-          bool? isDeleted,
-          bool? isNotSynced}) =>
-      SellingProductComponent(
-        uuid: uuid ?? this.uuid,
-        sellingProductUuid: sellingProductUuid ?? this.sellingProductUuid,
-        productUuid: productUuid ?? this.productUuid,
-        quantity: quantity ?? this.quantity,
-        consumeMode: consumeMode ?? this.consumeMode,
-        batchNumber: batchNumber.present ? batchNumber.value : this.batchNumber,
-        createdAt: createdAt ?? this.createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-        isDeleted: isDeleted ?? this.isDeleted,
-        isNotSynced: isNotSynced ?? this.isNotSynced,
-      );
-  SellingProductComponent copyWithCompanion(
-      SellingProductComponentsCompanion data) {
-    return SellingProductComponent(
-      uuid: data.uuid.present ? data.uuid.value : this.uuid,
-      sellingProductUuid: data.sellingProductUuid.present
-          ? data.sellingProductUuid.value
-          : this.sellingProductUuid,
-      productUuid:
-          data.productUuid.present ? data.productUuid.value : this.productUuid,
-      quantity: data.quantity.present ? data.quantity.value : this.quantity,
-      consumeMode:
-          data.consumeMode.present ? data.consumeMode.value : this.consumeMode,
-      batchNumber:
-          data.batchNumber.present ? data.batchNumber.value : this.batchNumber,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
-      isNotSynced:
-          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SellingProductComponent(')
-          ..write('uuid: $uuid, ')
-          ..write('sellingProductUuid: $sellingProductUuid, ')
-          ..write('productUuid: $productUuid, ')
-          ..write('quantity: $quantity, ')
-          ..write('consumeMode: $consumeMode, ')
-          ..write('batchNumber: $batchNumber, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-      uuid,
-      sellingProductUuid,
-      productUuid,
-      quantity,
-      consumeMode,
-      batchNumber,
-      createdAt,
-      updatedAt,
-      isDeleted,
-      isNotSynced);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is SellingProductComponent &&
-          other.uuid == this.uuid &&
-          other.sellingProductUuid == this.sellingProductUuid &&
-          other.productUuid == this.productUuid &&
-          other.quantity == this.quantity &&
-          other.consumeMode == this.consumeMode &&
-          other.batchNumber == this.batchNumber &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt &&
-          other.isDeleted == this.isDeleted &&
-          other.isNotSynced == this.isNotSynced);
-}
-
-class SellingProductComponentsCompanion
-    extends UpdateCompanion<SellingProductComponent> {
-  final Value<String> uuid;
-  final Value<String> sellingProductUuid;
-  final Value<String> productUuid;
-  final Value<double> quantity;
-  final Value<String> consumeMode;
-  final Value<String?> batchNumber;
-  final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
-  final Value<bool> isDeleted;
-  final Value<bool> isNotSynced;
-  final Value<int> rowid;
-  const SellingProductComponentsCompanion({
-    this.uuid = const Value.absent(),
-    this.sellingProductUuid = const Value.absent(),
-    this.productUuid = const Value.absent(),
-    this.quantity = const Value.absent(),
-    this.consumeMode = const Value.absent(),
-    this.batchNumber = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.isDeleted = const Value.absent(),
-    this.isNotSynced = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  SellingProductComponentsCompanion.insert({
-    required String uuid,
-    required String sellingProductUuid,
-    required String productUuid,
-    required double quantity,
-    this.consumeMode = const Value.absent(),
-    this.batchNumber = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.isDeleted = const Value.absent(),
-    this.isNotSynced = const Value.absent(),
-    this.rowid = const Value.absent(),
-  })  : uuid = Value(uuid),
-        sellingProductUuid = Value(sellingProductUuid),
-        productUuid = Value(productUuid),
-        quantity = Value(quantity);
-  static Insertable<SellingProductComponent> custom({
-    Expression<String>? uuid,
-    Expression<String>? sellingProductUuid,
-    Expression<String>? productUuid,
-    Expression<double>? quantity,
-    Expression<String>? consumeMode,
-    Expression<String>? batchNumber,
-    Expression<DateTime>? createdAt,
-    Expression<DateTime>? updatedAt,
-    Expression<bool>? isDeleted,
-    Expression<bool>? isNotSynced,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (uuid != null) 'uuid': uuid,
-      if (sellingProductUuid != null)
-        'selling_product_uuid': sellingProductUuid,
-      if (productUuid != null) 'product_uuid': productUuid,
-      if (quantity != null) 'quantity': quantity,
-      if (consumeMode != null) 'consume_mode': consumeMode,
-      if (batchNumber != null) 'batch_number': batchNumber,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (isDeleted != null) 'is_deleted': isDeleted,
-      if (isNotSynced != null) 'is_not_synced': isNotSynced,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  SellingProductComponentsCompanion copyWith(
-      {Value<String>? uuid,
-      Value<String>? sellingProductUuid,
-      Value<String>? productUuid,
-      Value<double>? quantity,
-      Value<String>? consumeMode,
-      Value<String?>? batchNumber,
-      Value<DateTime>? createdAt,
-      Value<DateTime>? updatedAt,
-      Value<bool>? isDeleted,
-      Value<bool>? isNotSynced,
-      Value<int>? rowid}) {
-    return SellingProductComponentsCompanion(
-      uuid: uuid ?? this.uuid,
-      sellingProductUuid: sellingProductUuid ?? this.sellingProductUuid,
-      productUuid: productUuid ?? this.productUuid,
-      quantity: quantity ?? this.quantity,
-      consumeMode: consumeMode ?? this.consumeMode,
-      batchNumber: batchNumber ?? this.batchNumber,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      isDeleted: isDeleted ?? this.isDeleted,
-      isNotSynced: isNotSynced ?? this.isNotSynced,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (uuid.present) {
-      map['uuid'] = Variable<String>(uuid.value);
-    }
-    if (sellingProductUuid.present) {
-      map['selling_product_uuid'] = Variable<String>(sellingProductUuid.value);
-    }
-    if (productUuid.present) {
-      map['product_uuid'] = Variable<String>(productUuid.value);
-    }
-    if (quantity.present) {
-      map['quantity'] = Variable<double>(quantity.value);
-    }
-    if (consumeMode.present) {
-      map['consume_mode'] = Variable<String>(consumeMode.value);
-    }
-    if (batchNumber.present) {
-      map['batch_number'] = Variable<String>(batchNumber.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    if (isDeleted.present) {
-      map['is_deleted'] = Variable<bool>(isDeleted.value);
-    }
-    if (isNotSynced.present) {
-      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('SellingProductComponentsCompanion(')
-          ..write('uuid: $uuid, ')
-          ..write('sellingProductUuid: $sellingProductUuid, ')
-          ..write('productUuid: $productUuid, ')
-          ..write('quantity: $quantity, ')
-          ..write('consumeMode: $consumeMode, ')
-          ..write('batchNumber: $batchNumber, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $CatalogsTable extends Catalogs with TableInfo<$CatalogsTable, Catalog> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $CatalogsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
-  @override
-  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
-      'uuid', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _nameMeta = const VerificationMeta('name');
-  @override
-  late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      additionalChecks:
-          GeneratedColumn.checkTextLength(minTextLength: 1, maxTextLength: 100),
-      type: DriftSqlType.string,
-      requiredDuringInsert: true);
-  static const VerificationMeta _descriptionMeta =
-      const VerificationMeta('description');
-  @override
-  late final GeneratedColumn<String> description = GeneratedColumn<String>(
-      'description', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _validUntilMeta =
-      const VerificationMeta('validUntil');
-  @override
-  late final GeneratedColumn<DateTime> validUntil = GeneratedColumn<DateTime>(
-      'valid_until', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _isDefaultMeta =
-      const VerificationMeta('isDefault');
-  @override
-  late final GeneratedColumn<bool> isDefault = GeneratedColumn<bool>(
-      'is_default', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_default" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _updatedAtMeta =
-      const VerificationMeta('updatedAt');
-  @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-      'updated_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _isDeletedMeta =
-      const VerificationMeta('isDeleted');
-  @override
-  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
-      'is_deleted', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isNotSyncedMeta =
-      const VerificationMeta('isNotSynced');
-  @override
-  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
-      'is_not_synced', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_not_synced" IN (0, 1))'),
-      defaultValue: const Constant(true));
-  @override
-  List<GeneratedColumn> get $columns => [
-        uuid,
-        name,
-        description,
-        validUntil,
-        isDefault,
-        createdAt,
-        updatedAt,
-        isDeleted,
-        isNotSynced
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'catalogs';
-  @override
-  VerificationContext validateIntegrity(Insertable<Catalog> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('uuid')) {
-      context.handle(
-          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
-    } else if (isInserting) {
-      context.missing(_uuidMeta);
-    }
-    if (data.containsKey('name')) {
-      context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
-    } else if (isInserting) {
-      context.missing(_nameMeta);
-    }
-    if (data.containsKey('description')) {
-      context.handle(
-          _descriptionMeta,
-          description.isAcceptableOrUnknown(
-              data['description']!, _descriptionMeta));
-    }
-    if (data.containsKey('valid_until')) {
-      context.handle(
-          _validUntilMeta,
-          validUntil.isAcceptableOrUnknown(
-              data['valid_until']!, _validUntilMeta));
-    }
-    if (data.containsKey('is_default')) {
-      context.handle(_isDefaultMeta,
-          isDefault.isAcceptableOrUnknown(data['is_default']!, _isDefaultMeta));
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(_updatedAtMeta,
-          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
-    }
-    if (data.containsKey('is_deleted')) {
-      context.handle(_isDeletedMeta,
-          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
-    }
-    if (data.containsKey('is_not_synced')) {
-      context.handle(
-          _isNotSyncedMeta,
-          isNotSynced.isAcceptableOrUnknown(
-              data['is_not_synced']!, _isNotSyncedMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {uuid};
-  @override
-  Catalog map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Catalog(
-      uuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      description: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}description']),
-      validUntil: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}valid_until']),
-      isDefault: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_default'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      updatedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
-      isDeleted: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
-      isNotSynced: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
-    );
-  }
-
-  @override
-  $CatalogsTable createAlias(String alias) {
-    return $CatalogsTable(attachedDatabase, alias);
-  }
-}
-
-class Catalog extends DataClass implements Insertable<Catalog> {
-  final String uuid;
-  final String name;
-  final String? description;
-  final DateTime? validUntil;
-  final bool isDefault;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final bool isDeleted;
-  final bool isNotSynced;
-  const Catalog(
-      {required this.uuid,
-      required this.name,
-      this.description,
-      this.validUntil,
-      required this.isDefault,
-      required this.createdAt,
-      required this.updatedAt,
-      required this.isDeleted,
-      required this.isNotSynced});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['uuid'] = Variable<String>(uuid);
-    map['name'] = Variable<String>(name);
-    if (!nullToAbsent || description != null) {
-      map['description'] = Variable<String>(description);
-    }
-    if (!nullToAbsent || validUntil != null) {
-      map['valid_until'] = Variable<DateTime>(validUntil);
-    }
-    map['is_default'] = Variable<bool>(isDefault);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
-    map['is_deleted'] = Variable<bool>(isDeleted);
-    map['is_not_synced'] = Variable<bool>(isNotSynced);
-    return map;
-  }
-
-  CatalogsCompanion toCompanion(bool nullToAbsent) {
-    return CatalogsCompanion(
-      uuid: Value(uuid),
-      name: Value(name),
-      description: description == null && nullToAbsent
-          ? const Value.absent()
-          : Value(description),
-      validUntil: validUntil == null && nullToAbsent
-          ? const Value.absent()
-          : Value(validUntil),
-      isDefault: Value(isDefault),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-      isDeleted: Value(isDeleted),
-      isNotSynced: Value(isNotSynced),
-    );
-  }
-
-  factory Catalog.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Catalog(
-      uuid: serializer.fromJson<String>(json['uuid']),
-      name: serializer.fromJson<String>(json['name']),
-      description: serializer.fromJson<String?>(json['description']),
-      validUntil: serializer.fromJson<DateTime?>(json['validUntil']),
-      isDefault: serializer.fromJson<bool>(json['isDefault']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
-      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'uuid': serializer.toJson<String>(uuid),
-      'name': serializer.toJson<String>(name),
-      'description': serializer.toJson<String?>(description),
-      'validUntil': serializer.toJson<DateTime?>(validUntil),
-      'isDefault': serializer.toJson<bool>(isDefault),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'isDeleted': serializer.toJson<bool>(isDeleted),
-      'isNotSynced': serializer.toJson<bool>(isNotSynced),
-    };
-  }
-
-  Catalog copyWith(
-          {String? uuid,
-          String? name,
-          Value<String?> description = const Value.absent(),
-          Value<DateTime?> validUntil = const Value.absent(),
-          bool? isDefault,
-          DateTime? createdAt,
-          DateTime? updatedAt,
-          bool? isDeleted,
-          bool? isNotSynced}) =>
-      Catalog(
-        uuid: uuid ?? this.uuid,
-        name: name ?? this.name,
-        description: description.present ? description.value : this.description,
-        validUntil: validUntil.present ? validUntil.value : this.validUntil,
-        isDefault: isDefault ?? this.isDefault,
-        createdAt: createdAt ?? this.createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-        isDeleted: isDeleted ?? this.isDeleted,
-        isNotSynced: isNotSynced ?? this.isNotSynced,
-      );
-  Catalog copyWithCompanion(CatalogsCompanion data) {
-    return Catalog(
-      uuid: data.uuid.present ? data.uuid.value : this.uuid,
-      name: data.name.present ? data.name.value : this.name,
-      description:
-          data.description.present ? data.description.value : this.description,
-      validUntil:
-          data.validUntil.present ? data.validUntil.value : this.validUntil,
-      isDefault: data.isDefault.present ? data.isDefault.value : this.isDefault,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
-      isNotSynced:
-          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('Catalog(')
-          ..write('uuid: $uuid, ')
-          ..write('name: $name, ')
-          ..write('description: $description, ')
-          ..write('validUntil: $validUntil, ')
-          ..write('isDefault: $isDefault, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(uuid, name, description, validUntil,
-      isDefault, createdAt, updatedAt, isDeleted, isNotSynced);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is Catalog &&
-          other.uuid == this.uuid &&
-          other.name == this.name &&
-          other.description == this.description &&
-          other.validUntil == this.validUntil &&
-          other.isDefault == this.isDefault &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt &&
-          other.isDeleted == this.isDeleted &&
-          other.isNotSynced == this.isNotSynced);
-}
-
-class CatalogsCompanion extends UpdateCompanion<Catalog> {
-  final Value<String> uuid;
-  final Value<String> name;
-  final Value<String?> description;
-  final Value<DateTime?> validUntil;
-  final Value<bool> isDefault;
-  final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
-  final Value<bool> isDeleted;
-  final Value<bool> isNotSynced;
-  final Value<int> rowid;
-  const CatalogsCompanion({
-    this.uuid = const Value.absent(),
-    this.name = const Value.absent(),
-    this.description = const Value.absent(),
-    this.validUntil = const Value.absent(),
-    this.isDefault = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.isDeleted = const Value.absent(),
-    this.isNotSynced = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  CatalogsCompanion.insert({
-    required String uuid,
-    required String name,
-    this.description = const Value.absent(),
-    this.validUntil = const Value.absent(),
-    this.isDefault = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.isDeleted = const Value.absent(),
-    this.isNotSynced = const Value.absent(),
-    this.rowid = const Value.absent(),
-  })  : uuid = Value(uuid),
-        name = Value(name);
-  static Insertable<Catalog> custom({
-    Expression<String>? uuid,
-    Expression<String>? name,
-    Expression<String>? description,
-    Expression<DateTime>? validUntil,
-    Expression<bool>? isDefault,
-    Expression<DateTime>? createdAt,
-    Expression<DateTime>? updatedAt,
-    Expression<bool>? isDeleted,
-    Expression<bool>? isNotSynced,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (uuid != null) 'uuid': uuid,
-      if (name != null) 'name': name,
-      if (description != null) 'description': description,
-      if (validUntil != null) 'valid_until': validUntil,
-      if (isDefault != null) 'is_default': isDefault,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (isDeleted != null) 'is_deleted': isDeleted,
-      if (isNotSynced != null) 'is_not_synced': isNotSynced,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  CatalogsCompanion copyWith(
-      {Value<String>? uuid,
-      Value<String>? name,
-      Value<String?>? description,
-      Value<DateTime?>? validUntil,
-      Value<bool>? isDefault,
-      Value<DateTime>? createdAt,
-      Value<DateTime>? updatedAt,
-      Value<bool>? isDeleted,
-      Value<bool>? isNotSynced,
-      Value<int>? rowid}) {
-    return CatalogsCompanion(
-      uuid: uuid ?? this.uuid,
-      name: name ?? this.name,
-      description: description ?? this.description,
-      validUntil: validUntil ?? this.validUntil,
-      isDefault: isDefault ?? this.isDefault,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      isDeleted: isDeleted ?? this.isDeleted,
-      isNotSynced: isNotSynced ?? this.isNotSynced,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (uuid.present) {
-      map['uuid'] = Variable<String>(uuid.value);
-    }
-    if (name.present) {
-      map['name'] = Variable<String>(name.value);
-    }
-    if (description.present) {
-      map['description'] = Variable<String>(description.value);
-    }
-    if (validUntil.present) {
-      map['valid_until'] = Variable<DateTime>(validUntil.value);
-    }
-    if (isDefault.present) {
-      map['is_default'] = Variable<bool>(isDefault.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    if (isDeleted.present) {
-      map['is_deleted'] = Variable<bool>(isDeleted.value);
-    }
-    if (isNotSynced.present) {
-      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('CatalogsCompanion(')
-          ..write('uuid: $uuid, ')
-          ..write('name: $name, ')
-          ..write('description: $description, ')
-          ..write('validUntil: $validUntil, ')
-          ..write('isDefault: $isDefault, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $CatalogItemsTable extends CatalogItems
-    with TableInfo<$CatalogItemsTable, CatalogItem> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $CatalogItemsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
-  @override
-  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
-      'uuid', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _catalogUuidMeta =
-      const VerificationMeta('catalogUuid');
-  @override
-  late final GeneratedColumn<String> catalogUuid = GeneratedColumn<String>(
-      'catalog_uuid', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES catalogs (uuid)'));
-  static const VerificationMeta _productUuidMeta =
-      const VerificationMeta('productUuid');
-  @override
-  late final GeneratedColumn<String> productUuid = GeneratedColumn<String>(
-      'product_uuid', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES products (uuid)'));
-  static const VerificationMeta _sellingProductUuidMeta =
-      const VerificationMeta('sellingProductUuid');
-  @override
-  late final GeneratedColumn<String> sellingProductUuid =
-      GeneratedColumn<String>('selling_product_uuid', aliasedName, true,
-          type: DriftSqlType.string,
-          requiredDuringInsert: false,
-          defaultConstraints: GeneratedColumn.constraintIsAlways(
-              'REFERENCES selling_products (uuid)'));
-  static const VerificationMeta _customPriceMeta =
-      const VerificationMeta('customPrice');
-  @override
-  late final GeneratedColumn<double> customPrice = GeneratedColumn<double>(
-      'custom_price', aliasedName, true,
-      type: DriftSqlType.double, requiredDuringInsert: false);
-  static const VerificationMeta _batchUuidMeta =
-      const VerificationMeta('batchUuid');
-  @override
-  late final GeneratedColumn<String> batchUuid = GeneratedColumn<String>(
-      'batch_uuid', aliasedName, true,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES product_batches (uuid)'));
-  static const VerificationMeta _validUntilMeta =
-      const VerificationMeta('validUntil');
-  @override
-  late final GeneratedColumn<DateTime> validUntil = GeneratedColumn<DateTime>(
-      'valid_until', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _batchSelectionStrategyMeta =
-      const VerificationMeta('batchSelectionStrategy');
-  @override
-  late final GeneratedColumn<String> batchSelectionStrategy =
-      GeneratedColumn<String>('batch_selection_strategy', aliasedName, false,
-          type: DriftSqlType.string,
-          requiredDuringInsert: false,
-          defaultValue: const Constant('FEFO_AUTO'));
-  static const VerificationMeta _pricingApproachMeta =
-      const VerificationMeta('pricingApproach');
-  @override
-  late final GeneratedColumn<String> pricingApproach = GeneratedColumn<String>(
-      'pricing_approach', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('MARKUP'));
-  static const VerificationMeta _markupOrMarginPercentMeta =
-      const VerificationMeta('markupOrMarginPercent');
-  @override
-  late final GeneratedColumn<double> markupOrMarginPercent =
-      GeneratedColumn<double>('markup_or_margin_percent', aliasedName, false,
-          type: DriftSqlType.double,
-          requiredDuringInsert: false,
-          defaultValue: const Constant(0.0));
-  static const VerificationMeta _fixedAmountMeta =
-      const VerificationMeta('fixedAmount');
-  @override
-  late final GeneratedColumn<double> fixedAmount = GeneratedColumn<double>(
-      'fixed_amount', aliasedName, false,
-      type: DriftSqlType.double,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0.0));
-  static const VerificationMeta _sellPriceMeta =
-      const VerificationMeta('sellPrice');
-  @override
-  late final GeneratedColumn<double> sellPrice = GeneratedColumn<double>(
-      'sell_price', aliasedName, false,
-      type: DriftSqlType.double,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0.0));
-  static const VerificationMeta _unitCostSnapshotMeta =
-      const VerificationMeta('unitCostSnapshot');
-  @override
-  late final GeneratedColumn<double> unitCostSnapshot = GeneratedColumn<double>(
-      'unit_cost_snapshot', aliasedName, true,
-      type: DriftSqlType.double, requiredDuringInsert: false);
-  static const VerificationMeta _priceComputedAtMeta =
-      const VerificationMeta('priceComputedAt');
-  @override
-  late final GeneratedColumn<DateTime> priceComputedAt =
-      GeneratedColumn<DateTime>('price_computed_at', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _priceOverrideMeta =
-      const VerificationMeta('priceOverride');
-  @override
-  late final GeneratedColumn<bool> priceOverride = GeneratedColumn<bool>(
-      'price_override', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("price_override" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _defaultDiscountTypeMeta =
-      const VerificationMeta('defaultDiscountType');
-  @override
-  late final GeneratedColumn<String> defaultDiscountType =
-      GeneratedColumn<String>('default_discount_type', aliasedName, true,
-          type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _defaultDiscountValueMeta =
-      const VerificationMeta('defaultDiscountValue');
-  @override
-  late final GeneratedColumn<double> defaultDiscountValue =
-      GeneratedColumn<double>('default_discount_value', aliasedName, false,
-          type: DriftSqlType.double,
-          requiredDuringInsert: false,
-          defaultValue: const Constant(0.0));
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _updatedAtMeta =
-      const VerificationMeta('updatedAt');
-  @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-      'updated_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _isDeletedMeta =
-      const VerificationMeta('isDeleted');
-  @override
-  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
-      'is_deleted', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isNotSyncedMeta =
-      const VerificationMeta('isNotSynced');
-  @override
-  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
-      'is_not_synced', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_not_synced" IN (0, 1))'),
-      defaultValue: const Constant(true));
-  @override
-  List<GeneratedColumn> get $columns => [
-        uuid,
-        catalogUuid,
-        productUuid,
-        sellingProductUuid,
-        customPrice,
-        batchUuid,
-        validUntil,
-        batchSelectionStrategy,
-        pricingApproach,
-        markupOrMarginPercent,
-        fixedAmount,
-        sellPrice,
-        unitCostSnapshot,
-        priceComputedAt,
-        priceOverride,
-        defaultDiscountType,
-        defaultDiscountValue,
-        createdAt,
-        updatedAt,
-        isDeleted,
-        isNotSynced
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'catalog_items';
-  @override
-  VerificationContext validateIntegrity(Insertable<CatalogItem> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('uuid')) {
-      context.handle(
-          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
-    } else if (isInserting) {
-      context.missing(_uuidMeta);
-    }
-    if (data.containsKey('catalog_uuid')) {
-      context.handle(
-          _catalogUuidMeta,
-          catalogUuid.isAcceptableOrUnknown(
-              data['catalog_uuid']!, _catalogUuidMeta));
-    } else if (isInserting) {
-      context.missing(_catalogUuidMeta);
-    }
-    if (data.containsKey('product_uuid')) {
-      context.handle(
-          _productUuidMeta,
-          productUuid.isAcceptableOrUnknown(
-              data['product_uuid']!, _productUuidMeta));
-    }
-    if (data.containsKey('selling_product_uuid')) {
-      context.handle(
-          _sellingProductUuidMeta,
-          sellingProductUuid.isAcceptableOrUnknown(
-              data['selling_product_uuid']!, _sellingProductUuidMeta));
-    }
-    if (data.containsKey('custom_price')) {
-      context.handle(
-          _customPriceMeta,
-          customPrice.isAcceptableOrUnknown(
-              data['custom_price']!, _customPriceMeta));
-    }
-    if (data.containsKey('batch_uuid')) {
-      context.handle(_batchUuidMeta,
-          batchUuid.isAcceptableOrUnknown(data['batch_uuid']!, _batchUuidMeta));
-    }
-    if (data.containsKey('valid_until')) {
-      context.handle(
-          _validUntilMeta,
-          validUntil.isAcceptableOrUnknown(
-              data['valid_until']!, _validUntilMeta));
-    }
-    if (data.containsKey('batch_selection_strategy')) {
-      context.handle(
-          _batchSelectionStrategyMeta,
-          batchSelectionStrategy.isAcceptableOrUnknown(
-              data['batch_selection_strategy']!, _batchSelectionStrategyMeta));
-    }
-    if (data.containsKey('pricing_approach')) {
-      context.handle(
-          _pricingApproachMeta,
-          pricingApproach.isAcceptableOrUnknown(
-              data['pricing_approach']!, _pricingApproachMeta));
-    }
-    if (data.containsKey('markup_or_margin_percent')) {
-      context.handle(
-          _markupOrMarginPercentMeta,
-          markupOrMarginPercent.isAcceptableOrUnknown(
-              data['markup_or_margin_percent']!, _markupOrMarginPercentMeta));
-    }
-    if (data.containsKey('fixed_amount')) {
-      context.handle(
-          _fixedAmountMeta,
-          fixedAmount.isAcceptableOrUnknown(
-              data['fixed_amount']!, _fixedAmountMeta));
-    }
-    if (data.containsKey('sell_price')) {
-      context.handle(_sellPriceMeta,
-          sellPrice.isAcceptableOrUnknown(data['sell_price']!, _sellPriceMeta));
-    }
-    if (data.containsKey('unit_cost_snapshot')) {
-      context.handle(
-          _unitCostSnapshotMeta,
-          unitCostSnapshot.isAcceptableOrUnknown(
-              data['unit_cost_snapshot']!, _unitCostSnapshotMeta));
-    }
-    if (data.containsKey('price_computed_at')) {
-      context.handle(
-          _priceComputedAtMeta,
-          priceComputedAt.isAcceptableOrUnknown(
-              data['price_computed_at']!, _priceComputedAtMeta));
-    }
-    if (data.containsKey('price_override')) {
-      context.handle(
-          _priceOverrideMeta,
-          priceOverride.isAcceptableOrUnknown(
-              data['price_override']!, _priceOverrideMeta));
-    }
-    if (data.containsKey('default_discount_type')) {
-      context.handle(
-          _defaultDiscountTypeMeta,
-          defaultDiscountType.isAcceptableOrUnknown(
-              data['default_discount_type']!, _defaultDiscountTypeMeta));
-    }
-    if (data.containsKey('default_discount_value')) {
-      context.handle(
-          _defaultDiscountValueMeta,
-          defaultDiscountValue.isAcceptableOrUnknown(
-              data['default_discount_value']!, _defaultDiscountValueMeta));
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(_updatedAtMeta,
-          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
-    }
-    if (data.containsKey('is_deleted')) {
-      context.handle(_isDeletedMeta,
-          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
-    }
-    if (data.containsKey('is_not_synced')) {
-      context.handle(
-          _isNotSyncedMeta,
-          isNotSynced.isAcceptableOrUnknown(
-              data['is_not_synced']!, _isNotSyncedMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {uuid};
-  @override
-  CatalogItem map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return CatalogItem(
-      uuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
-      catalogUuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}catalog_uuid'])!,
-      productUuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}product_uuid']),
-      sellingProductUuid: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}selling_product_uuid']),
-      customPrice: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}custom_price']),
-      batchUuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}batch_uuid']),
-      validUntil: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}valid_until']),
-      batchSelectionStrategy: attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}batch_selection_strategy'])!,
-      pricingApproach: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}pricing_approach'])!,
-      markupOrMarginPercent: attachedDatabase.typeMapping.read(
-          DriftSqlType.double,
-          data['${effectivePrefix}markup_or_margin_percent'])!,
-      fixedAmount: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}fixed_amount'])!,
-      sellPrice: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}sell_price'])!,
-      unitCostSnapshot: attachedDatabase.typeMapping.read(
-          DriftSqlType.double, data['${effectivePrefix}unit_cost_snapshot']),
-      priceComputedAt: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}price_computed_at']),
-      priceOverride: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}price_override'])!,
-      defaultDiscountType: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}default_discount_type']),
-      defaultDiscountValue: attachedDatabase.typeMapping.read(
-          DriftSqlType.double,
-          data['${effectivePrefix}default_discount_value'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      updatedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
-      isDeleted: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
-      isNotSynced: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
-    );
-  }
-
-  @override
-  $CatalogItemsTable createAlias(String alias) {
-    return $CatalogItemsTable(attachedDatabase, alias);
-  }
-}
-
-class CatalogItem extends DataClass implements Insertable<CatalogItem> {
-  final String uuid;
-  final String catalogUuid;
-
-  /// Direct stock/service product. XOR with [sellingProductUuid].
-  final String? productUuid;
-
-  /// Virtual offer / bundle. XOR with [productUuid].
-  final String? sellingProductUuid;
-
-  /// Legacy; prefer [sellPrice]. Migrated into sellPrice when present.
-  final double? customPrice;
-
-  /// Deprecated — batch strategy lives on selling-product components.
-  final String? batchUuid;
-  final DateTime? validUntil;
-
-  /// Deprecated — unused for new catalog pricing.
-  final String batchSelectionStrategy;
-
-  /// MARKUP | MARGIN
-  final String pricingApproach;
-  final double markupOrMarginPercent;
-  final double fixedAmount;
-
-  /// Final sell price used on orders (snapshot source).
-  final double sellPrice;
-  final double? unitCostSnapshot;
-  final DateTime? priceComputedAt;
-
-  /// True when sell price was set manually; skipped by catalog recalculate.
-  final bool priceOverride;
-
-  /// Optional always-on discount: PERCENT | FIXED. Null/empty = none.
-  final String? defaultDiscountType;
-  final double defaultDiscountValue;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final bool isDeleted;
-  final bool isNotSynced;
-  const CatalogItem(
-      {required this.uuid,
-      required this.catalogUuid,
-      this.productUuid,
-      this.sellingProductUuid,
-      this.customPrice,
-      this.batchUuid,
-      this.validUntil,
-      required this.batchSelectionStrategy,
-      required this.pricingApproach,
-      required this.markupOrMarginPercent,
-      required this.fixedAmount,
-      required this.sellPrice,
-      this.unitCostSnapshot,
-      this.priceComputedAt,
-      required this.priceOverride,
-      this.defaultDiscountType,
-      required this.defaultDiscountValue,
-      required this.createdAt,
-      required this.updatedAt,
-      required this.isDeleted,
-      required this.isNotSynced});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['uuid'] = Variable<String>(uuid);
-    map['catalog_uuid'] = Variable<String>(catalogUuid);
-    if (!nullToAbsent || productUuid != null) {
-      map['product_uuid'] = Variable<String>(productUuid);
-    }
-    if (!nullToAbsent || sellingProductUuid != null) {
-      map['selling_product_uuid'] = Variable<String>(sellingProductUuid);
-    }
-    if (!nullToAbsent || customPrice != null) {
-      map['custom_price'] = Variable<double>(customPrice);
-    }
-    if (!nullToAbsent || batchUuid != null) {
-      map['batch_uuid'] = Variable<String>(batchUuid);
-    }
-    if (!nullToAbsent || validUntil != null) {
-      map['valid_until'] = Variable<DateTime>(validUntil);
-    }
-    map['batch_selection_strategy'] = Variable<String>(batchSelectionStrategy);
-    map['pricing_approach'] = Variable<String>(pricingApproach);
-    map['markup_or_margin_percent'] = Variable<double>(markupOrMarginPercent);
-    map['fixed_amount'] = Variable<double>(fixedAmount);
-    map['sell_price'] = Variable<double>(sellPrice);
-    if (!nullToAbsent || unitCostSnapshot != null) {
-      map['unit_cost_snapshot'] = Variable<double>(unitCostSnapshot);
-    }
-    if (!nullToAbsent || priceComputedAt != null) {
-      map['price_computed_at'] = Variable<DateTime>(priceComputedAt);
-    }
-    map['price_override'] = Variable<bool>(priceOverride);
-    if (!nullToAbsent || defaultDiscountType != null) {
-      map['default_discount_type'] = Variable<String>(defaultDiscountType);
-    }
-    map['default_discount_value'] = Variable<double>(defaultDiscountValue);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
-    map['is_deleted'] = Variable<bool>(isDeleted);
-    map['is_not_synced'] = Variable<bool>(isNotSynced);
-    return map;
-  }
-
-  CatalogItemsCompanion toCompanion(bool nullToAbsent) {
-    return CatalogItemsCompanion(
-      uuid: Value(uuid),
-      catalogUuid: Value(catalogUuid),
-      productUuid: productUuid == null && nullToAbsent
-          ? const Value.absent()
-          : Value(productUuid),
-      sellingProductUuid: sellingProductUuid == null && nullToAbsent
-          ? const Value.absent()
-          : Value(sellingProductUuid),
-      customPrice: customPrice == null && nullToAbsent
-          ? const Value.absent()
-          : Value(customPrice),
-      batchUuid: batchUuid == null && nullToAbsent
-          ? const Value.absent()
-          : Value(batchUuid),
-      validUntil: validUntil == null && nullToAbsent
-          ? const Value.absent()
-          : Value(validUntil),
-      batchSelectionStrategy: Value(batchSelectionStrategy),
-      pricingApproach: Value(pricingApproach),
-      markupOrMarginPercent: Value(markupOrMarginPercent),
-      fixedAmount: Value(fixedAmount),
-      sellPrice: Value(sellPrice),
-      unitCostSnapshot: unitCostSnapshot == null && nullToAbsent
-          ? const Value.absent()
-          : Value(unitCostSnapshot),
-      priceComputedAt: priceComputedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(priceComputedAt),
-      priceOverride: Value(priceOverride),
-      defaultDiscountType: defaultDiscountType == null && nullToAbsent
-          ? const Value.absent()
-          : Value(defaultDiscountType),
-      defaultDiscountValue: Value(defaultDiscountValue),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-      isDeleted: Value(isDeleted),
-      isNotSynced: Value(isNotSynced),
-    );
-  }
-
-  factory CatalogItem.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return CatalogItem(
-      uuid: serializer.fromJson<String>(json['uuid']),
-      catalogUuid: serializer.fromJson<String>(json['catalogUuid']),
-      productUuid: serializer.fromJson<String?>(json['productUuid']),
-      sellingProductUuid:
-          serializer.fromJson<String?>(json['sellingProductUuid']),
-      customPrice: serializer.fromJson<double?>(json['customPrice']),
-      batchUuid: serializer.fromJson<String?>(json['batchUuid']),
-      validUntil: serializer.fromJson<DateTime?>(json['validUntil']),
-      batchSelectionStrategy:
-          serializer.fromJson<String>(json['batchSelectionStrategy']),
-      pricingApproach: serializer.fromJson<String>(json['pricingApproach']),
-      markupOrMarginPercent:
-          serializer.fromJson<double>(json['markupOrMarginPercent']),
-      fixedAmount: serializer.fromJson<double>(json['fixedAmount']),
-      sellPrice: serializer.fromJson<double>(json['sellPrice']),
-      unitCostSnapshot: serializer.fromJson<double?>(json['unitCostSnapshot']),
-      priceComputedAt: serializer.fromJson<DateTime?>(json['priceComputedAt']),
-      priceOverride: serializer.fromJson<bool>(json['priceOverride']),
-      defaultDiscountType:
-          serializer.fromJson<String?>(json['defaultDiscountType']),
-      defaultDiscountValue:
-          serializer.fromJson<double>(json['defaultDiscountValue']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
-      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'uuid': serializer.toJson<String>(uuid),
-      'catalogUuid': serializer.toJson<String>(catalogUuid),
-      'productUuid': serializer.toJson<String?>(productUuid),
-      'sellingProductUuid': serializer.toJson<String?>(sellingProductUuid),
-      'customPrice': serializer.toJson<double?>(customPrice),
-      'batchUuid': serializer.toJson<String?>(batchUuid),
-      'validUntil': serializer.toJson<DateTime?>(validUntil),
-      'batchSelectionStrategy':
-          serializer.toJson<String>(batchSelectionStrategy),
-      'pricingApproach': serializer.toJson<String>(pricingApproach),
-      'markupOrMarginPercent': serializer.toJson<double>(markupOrMarginPercent),
-      'fixedAmount': serializer.toJson<double>(fixedAmount),
-      'sellPrice': serializer.toJson<double>(sellPrice),
-      'unitCostSnapshot': serializer.toJson<double?>(unitCostSnapshot),
-      'priceComputedAt': serializer.toJson<DateTime?>(priceComputedAt),
-      'priceOverride': serializer.toJson<bool>(priceOverride),
-      'defaultDiscountType': serializer.toJson<String?>(defaultDiscountType),
-      'defaultDiscountValue': serializer.toJson<double>(defaultDiscountValue),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'isDeleted': serializer.toJson<bool>(isDeleted),
-      'isNotSynced': serializer.toJson<bool>(isNotSynced),
-    };
-  }
-
-  CatalogItem copyWith(
-          {String? uuid,
-          String? catalogUuid,
-          Value<String?> productUuid = const Value.absent(),
-          Value<String?> sellingProductUuid = const Value.absent(),
-          Value<double?> customPrice = const Value.absent(),
-          Value<String?> batchUuid = const Value.absent(),
-          Value<DateTime?> validUntil = const Value.absent(),
-          String? batchSelectionStrategy,
-          String? pricingApproach,
-          double? markupOrMarginPercent,
-          double? fixedAmount,
-          double? sellPrice,
-          Value<double?> unitCostSnapshot = const Value.absent(),
-          Value<DateTime?> priceComputedAt = const Value.absent(),
-          bool? priceOverride,
-          Value<String?> defaultDiscountType = const Value.absent(),
-          double? defaultDiscountValue,
-          DateTime? createdAt,
-          DateTime? updatedAt,
-          bool? isDeleted,
-          bool? isNotSynced}) =>
-      CatalogItem(
-        uuid: uuid ?? this.uuid,
-        catalogUuid: catalogUuid ?? this.catalogUuid,
-        productUuid: productUuid.present ? productUuid.value : this.productUuid,
-        sellingProductUuid: sellingProductUuid.present
-            ? sellingProductUuid.value
-            : this.sellingProductUuid,
-        customPrice: customPrice.present ? customPrice.value : this.customPrice,
-        batchUuid: batchUuid.present ? batchUuid.value : this.batchUuid,
-        validUntil: validUntil.present ? validUntil.value : this.validUntil,
-        batchSelectionStrategy:
-            batchSelectionStrategy ?? this.batchSelectionStrategy,
-        pricingApproach: pricingApproach ?? this.pricingApproach,
-        markupOrMarginPercent:
-            markupOrMarginPercent ?? this.markupOrMarginPercent,
-        fixedAmount: fixedAmount ?? this.fixedAmount,
-        sellPrice: sellPrice ?? this.sellPrice,
-        unitCostSnapshot: unitCostSnapshot.present
-            ? unitCostSnapshot.value
-            : this.unitCostSnapshot,
-        priceComputedAt: priceComputedAt.present
-            ? priceComputedAt.value
-            : this.priceComputedAt,
-        priceOverride: priceOverride ?? this.priceOverride,
-        defaultDiscountType: defaultDiscountType.present
-            ? defaultDiscountType.value
-            : this.defaultDiscountType,
-        defaultDiscountValue: defaultDiscountValue ?? this.defaultDiscountValue,
-        createdAt: createdAt ?? this.createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-        isDeleted: isDeleted ?? this.isDeleted,
-        isNotSynced: isNotSynced ?? this.isNotSynced,
-      );
-  CatalogItem copyWithCompanion(CatalogItemsCompanion data) {
-    return CatalogItem(
-      uuid: data.uuid.present ? data.uuid.value : this.uuid,
-      catalogUuid:
-          data.catalogUuid.present ? data.catalogUuid.value : this.catalogUuid,
-      productUuid:
-          data.productUuid.present ? data.productUuid.value : this.productUuid,
-      sellingProductUuid: data.sellingProductUuid.present
-          ? data.sellingProductUuid.value
-          : this.sellingProductUuid,
-      customPrice:
-          data.customPrice.present ? data.customPrice.value : this.customPrice,
-      batchUuid: data.batchUuid.present ? data.batchUuid.value : this.batchUuid,
-      validUntil:
-          data.validUntil.present ? data.validUntil.value : this.validUntil,
-      batchSelectionStrategy: data.batchSelectionStrategy.present
-          ? data.batchSelectionStrategy.value
-          : this.batchSelectionStrategy,
-      pricingApproach: data.pricingApproach.present
-          ? data.pricingApproach.value
-          : this.pricingApproach,
-      markupOrMarginPercent: data.markupOrMarginPercent.present
-          ? data.markupOrMarginPercent.value
-          : this.markupOrMarginPercent,
-      fixedAmount:
-          data.fixedAmount.present ? data.fixedAmount.value : this.fixedAmount,
-      sellPrice: data.sellPrice.present ? data.sellPrice.value : this.sellPrice,
-      unitCostSnapshot: data.unitCostSnapshot.present
-          ? data.unitCostSnapshot.value
-          : this.unitCostSnapshot,
-      priceComputedAt: data.priceComputedAt.present
-          ? data.priceComputedAt.value
-          : this.priceComputedAt,
-      priceOverride: data.priceOverride.present
-          ? data.priceOverride.value
-          : this.priceOverride,
-      defaultDiscountType: data.defaultDiscountType.present
-          ? data.defaultDiscountType.value
-          : this.defaultDiscountType,
-      defaultDiscountValue: data.defaultDiscountValue.present
-          ? data.defaultDiscountValue.value
-          : this.defaultDiscountValue,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
-      isNotSynced:
-          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('CatalogItem(')
-          ..write('uuid: $uuid, ')
-          ..write('catalogUuid: $catalogUuid, ')
-          ..write('productUuid: $productUuid, ')
-          ..write('sellingProductUuid: $sellingProductUuid, ')
-          ..write('customPrice: $customPrice, ')
-          ..write('batchUuid: $batchUuid, ')
-          ..write('validUntil: $validUntil, ')
-          ..write('batchSelectionStrategy: $batchSelectionStrategy, ')
-          ..write('pricingApproach: $pricingApproach, ')
-          ..write('markupOrMarginPercent: $markupOrMarginPercent, ')
-          ..write('fixedAmount: $fixedAmount, ')
-          ..write('sellPrice: $sellPrice, ')
-          ..write('unitCostSnapshot: $unitCostSnapshot, ')
-          ..write('priceComputedAt: $priceComputedAt, ')
-          ..write('priceOverride: $priceOverride, ')
-          ..write('defaultDiscountType: $defaultDiscountType, ')
-          ..write('defaultDiscountValue: $defaultDiscountValue, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hashAll([
-        uuid,
-        catalogUuid,
-        productUuid,
-        sellingProductUuid,
-        customPrice,
-        batchUuid,
-        validUntil,
-        batchSelectionStrategy,
-        pricingApproach,
-        markupOrMarginPercent,
-        fixedAmount,
-        sellPrice,
-        unitCostSnapshot,
-        priceComputedAt,
-        priceOverride,
-        defaultDiscountType,
-        defaultDiscountValue,
-        createdAt,
-        updatedAt,
-        isDeleted,
-        isNotSynced
-      ]);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is CatalogItem &&
-          other.uuid == this.uuid &&
-          other.catalogUuid == this.catalogUuid &&
-          other.productUuid == this.productUuid &&
-          other.sellingProductUuid == this.sellingProductUuid &&
-          other.customPrice == this.customPrice &&
-          other.batchUuid == this.batchUuid &&
-          other.validUntil == this.validUntil &&
-          other.batchSelectionStrategy == this.batchSelectionStrategy &&
-          other.pricingApproach == this.pricingApproach &&
-          other.markupOrMarginPercent == this.markupOrMarginPercent &&
-          other.fixedAmount == this.fixedAmount &&
-          other.sellPrice == this.sellPrice &&
-          other.unitCostSnapshot == this.unitCostSnapshot &&
-          other.priceComputedAt == this.priceComputedAt &&
-          other.priceOverride == this.priceOverride &&
-          other.defaultDiscountType == this.defaultDiscountType &&
-          other.defaultDiscountValue == this.defaultDiscountValue &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt &&
-          other.isDeleted == this.isDeleted &&
-          other.isNotSynced == this.isNotSynced);
-}
-
-class CatalogItemsCompanion extends UpdateCompanion<CatalogItem> {
-  final Value<String> uuid;
-  final Value<String> catalogUuid;
-  final Value<String?> productUuid;
-  final Value<String?> sellingProductUuid;
-  final Value<double?> customPrice;
-  final Value<String?> batchUuid;
-  final Value<DateTime?> validUntil;
-  final Value<String> batchSelectionStrategy;
-  final Value<String> pricingApproach;
-  final Value<double> markupOrMarginPercent;
-  final Value<double> fixedAmount;
-  final Value<double> sellPrice;
-  final Value<double?> unitCostSnapshot;
-  final Value<DateTime?> priceComputedAt;
-  final Value<bool> priceOverride;
-  final Value<String?> defaultDiscountType;
-  final Value<double> defaultDiscountValue;
-  final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
-  final Value<bool> isDeleted;
-  final Value<bool> isNotSynced;
-  final Value<int> rowid;
-  const CatalogItemsCompanion({
-    this.uuid = const Value.absent(),
-    this.catalogUuid = const Value.absent(),
-    this.productUuid = const Value.absent(),
-    this.sellingProductUuid = const Value.absent(),
-    this.customPrice = const Value.absent(),
-    this.batchUuid = const Value.absent(),
-    this.validUntil = const Value.absent(),
-    this.batchSelectionStrategy = const Value.absent(),
-    this.pricingApproach = const Value.absent(),
-    this.markupOrMarginPercent = const Value.absent(),
-    this.fixedAmount = const Value.absent(),
-    this.sellPrice = const Value.absent(),
-    this.unitCostSnapshot = const Value.absent(),
-    this.priceComputedAt = const Value.absent(),
-    this.priceOverride = const Value.absent(),
-    this.defaultDiscountType = const Value.absent(),
-    this.defaultDiscountValue = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.isDeleted = const Value.absent(),
-    this.isNotSynced = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  CatalogItemsCompanion.insert({
-    required String uuid,
-    required String catalogUuid,
-    this.productUuid = const Value.absent(),
-    this.sellingProductUuid = const Value.absent(),
-    this.customPrice = const Value.absent(),
-    this.batchUuid = const Value.absent(),
-    this.validUntil = const Value.absent(),
-    this.batchSelectionStrategy = const Value.absent(),
-    this.pricingApproach = const Value.absent(),
-    this.markupOrMarginPercent = const Value.absent(),
-    this.fixedAmount = const Value.absent(),
-    this.sellPrice = const Value.absent(),
-    this.unitCostSnapshot = const Value.absent(),
-    this.priceComputedAt = const Value.absent(),
-    this.priceOverride = const Value.absent(),
-    this.defaultDiscountType = const Value.absent(),
-    this.defaultDiscountValue = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.isDeleted = const Value.absent(),
-    this.isNotSynced = const Value.absent(),
-    this.rowid = const Value.absent(),
-  })  : uuid = Value(uuid),
-        catalogUuid = Value(catalogUuid);
-  static Insertable<CatalogItem> custom({
-    Expression<String>? uuid,
-    Expression<String>? catalogUuid,
-    Expression<String>? productUuid,
-    Expression<String>? sellingProductUuid,
-    Expression<double>? customPrice,
-    Expression<String>? batchUuid,
-    Expression<DateTime>? validUntil,
-    Expression<String>? batchSelectionStrategy,
-    Expression<String>? pricingApproach,
-    Expression<double>? markupOrMarginPercent,
-    Expression<double>? fixedAmount,
-    Expression<double>? sellPrice,
-    Expression<double>? unitCostSnapshot,
-    Expression<DateTime>? priceComputedAt,
-    Expression<bool>? priceOverride,
-    Expression<String>? defaultDiscountType,
-    Expression<double>? defaultDiscountValue,
-    Expression<DateTime>? createdAt,
-    Expression<DateTime>? updatedAt,
-    Expression<bool>? isDeleted,
-    Expression<bool>? isNotSynced,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (uuid != null) 'uuid': uuid,
-      if (catalogUuid != null) 'catalog_uuid': catalogUuid,
-      if (productUuid != null) 'product_uuid': productUuid,
-      if (sellingProductUuid != null)
-        'selling_product_uuid': sellingProductUuid,
-      if (customPrice != null) 'custom_price': customPrice,
-      if (batchUuid != null) 'batch_uuid': batchUuid,
-      if (validUntil != null) 'valid_until': validUntil,
-      if (batchSelectionStrategy != null)
-        'batch_selection_strategy': batchSelectionStrategy,
-      if (pricingApproach != null) 'pricing_approach': pricingApproach,
-      if (markupOrMarginPercent != null)
-        'markup_or_margin_percent': markupOrMarginPercent,
-      if (fixedAmount != null) 'fixed_amount': fixedAmount,
-      if (sellPrice != null) 'sell_price': sellPrice,
-      if (unitCostSnapshot != null) 'unit_cost_snapshot': unitCostSnapshot,
-      if (priceComputedAt != null) 'price_computed_at': priceComputedAt,
-      if (priceOverride != null) 'price_override': priceOverride,
-      if (defaultDiscountType != null)
-        'default_discount_type': defaultDiscountType,
-      if (defaultDiscountValue != null)
-        'default_discount_value': defaultDiscountValue,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (isDeleted != null) 'is_deleted': isDeleted,
-      if (isNotSynced != null) 'is_not_synced': isNotSynced,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  CatalogItemsCompanion copyWith(
-      {Value<String>? uuid,
-      Value<String>? catalogUuid,
-      Value<String?>? productUuid,
-      Value<String?>? sellingProductUuid,
-      Value<double?>? customPrice,
-      Value<String?>? batchUuid,
-      Value<DateTime?>? validUntil,
-      Value<String>? batchSelectionStrategy,
-      Value<String>? pricingApproach,
-      Value<double>? markupOrMarginPercent,
-      Value<double>? fixedAmount,
-      Value<double>? sellPrice,
-      Value<double?>? unitCostSnapshot,
-      Value<DateTime?>? priceComputedAt,
-      Value<bool>? priceOverride,
-      Value<String?>? defaultDiscountType,
-      Value<double>? defaultDiscountValue,
-      Value<DateTime>? createdAt,
-      Value<DateTime>? updatedAt,
-      Value<bool>? isDeleted,
-      Value<bool>? isNotSynced,
-      Value<int>? rowid}) {
-    return CatalogItemsCompanion(
-      uuid: uuid ?? this.uuid,
-      catalogUuid: catalogUuid ?? this.catalogUuid,
-      productUuid: productUuid ?? this.productUuid,
-      sellingProductUuid: sellingProductUuid ?? this.sellingProductUuid,
-      customPrice: customPrice ?? this.customPrice,
-      batchUuid: batchUuid ?? this.batchUuid,
-      validUntil: validUntil ?? this.validUntil,
-      batchSelectionStrategy:
-          batchSelectionStrategy ?? this.batchSelectionStrategy,
-      pricingApproach: pricingApproach ?? this.pricingApproach,
-      markupOrMarginPercent:
-          markupOrMarginPercent ?? this.markupOrMarginPercent,
-      fixedAmount: fixedAmount ?? this.fixedAmount,
-      sellPrice: sellPrice ?? this.sellPrice,
-      unitCostSnapshot: unitCostSnapshot ?? this.unitCostSnapshot,
-      priceComputedAt: priceComputedAt ?? this.priceComputedAt,
-      priceOverride: priceOverride ?? this.priceOverride,
-      defaultDiscountType: defaultDiscountType ?? this.defaultDiscountType,
-      defaultDiscountValue: defaultDiscountValue ?? this.defaultDiscountValue,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      isDeleted: isDeleted ?? this.isDeleted,
-      isNotSynced: isNotSynced ?? this.isNotSynced,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (uuid.present) {
-      map['uuid'] = Variable<String>(uuid.value);
-    }
-    if (catalogUuid.present) {
-      map['catalog_uuid'] = Variable<String>(catalogUuid.value);
-    }
-    if (productUuid.present) {
-      map['product_uuid'] = Variable<String>(productUuid.value);
-    }
-    if (sellingProductUuid.present) {
-      map['selling_product_uuid'] = Variable<String>(sellingProductUuid.value);
-    }
-    if (customPrice.present) {
-      map['custom_price'] = Variable<double>(customPrice.value);
-    }
-    if (batchUuid.present) {
-      map['batch_uuid'] = Variable<String>(batchUuid.value);
-    }
-    if (validUntil.present) {
-      map['valid_until'] = Variable<DateTime>(validUntil.value);
-    }
-    if (batchSelectionStrategy.present) {
-      map['batch_selection_strategy'] =
-          Variable<String>(batchSelectionStrategy.value);
-    }
-    if (pricingApproach.present) {
-      map['pricing_approach'] = Variable<String>(pricingApproach.value);
-    }
-    if (markupOrMarginPercent.present) {
-      map['markup_or_margin_percent'] =
-          Variable<double>(markupOrMarginPercent.value);
-    }
-    if (fixedAmount.present) {
-      map['fixed_amount'] = Variable<double>(fixedAmount.value);
-    }
-    if (sellPrice.present) {
-      map['sell_price'] = Variable<double>(sellPrice.value);
-    }
-    if (unitCostSnapshot.present) {
-      map['unit_cost_snapshot'] = Variable<double>(unitCostSnapshot.value);
-    }
-    if (priceComputedAt.present) {
-      map['price_computed_at'] = Variable<DateTime>(priceComputedAt.value);
-    }
-    if (priceOverride.present) {
-      map['price_override'] = Variable<bool>(priceOverride.value);
-    }
-    if (defaultDiscountType.present) {
-      map['default_discount_type'] =
-          Variable<String>(defaultDiscountType.value);
-    }
-    if (defaultDiscountValue.present) {
-      map['default_discount_value'] =
-          Variable<double>(defaultDiscountValue.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    if (isDeleted.present) {
-      map['is_deleted'] = Variable<bool>(isDeleted.value);
-    }
-    if (isNotSynced.present) {
-      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('CatalogItemsCompanion(')
-          ..write('uuid: $uuid, ')
-          ..write('catalogUuid: $catalogUuid, ')
-          ..write('productUuid: $productUuid, ')
-          ..write('sellingProductUuid: $sellingProductUuid, ')
-          ..write('customPrice: $customPrice, ')
-          ..write('batchUuid: $batchUuid, ')
-          ..write('validUntil: $validUntil, ')
-          ..write('batchSelectionStrategy: $batchSelectionStrategy, ')
-          ..write('pricingApproach: $pricingApproach, ')
-          ..write('markupOrMarginPercent: $markupOrMarginPercent, ')
-          ..write('fixedAmount: $fixedAmount, ')
-          ..write('sellPrice: $sellPrice, ')
-          ..write('unitCostSnapshot: $unitCostSnapshot, ')
-          ..write('priceComputedAt: $priceComputedAt, ')
-          ..write('priceOverride: $priceOverride, ')
-          ..write('defaultDiscountType: $defaultDiscountType, ')
-          ..write('defaultDiscountValue: $defaultDiscountValue, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $CatalogAssignmentsTable extends CatalogAssignments
-    with TableInfo<$CatalogAssignmentsTable, CatalogAssignment> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $CatalogAssignmentsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
-  @override
-  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
-      'uuid', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _catalogUuidMeta =
-      const VerificationMeta('catalogUuid');
-  @override
-  late final GeneratedColumn<String> catalogUuid = GeneratedColumn<String>(
-      'catalog_uuid', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES catalogs (uuid)'));
-  static const VerificationMeta _contactUuidMeta =
-      const VerificationMeta('contactUuid');
-  @override
-  late final GeneratedColumn<String> contactUuid = GeneratedColumn<String>(
-      'contact_uuid', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('REFERENCES contacts (uuid)'));
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _isDeletedMeta =
-      const VerificationMeta('isDeleted');
-  @override
-  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
-      'is_deleted', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isNotSyncedMeta =
-      const VerificationMeta('isNotSynced');
-  @override
-  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
-      'is_not_synced', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_not_synced" IN (0, 1))'),
-      defaultValue: const Constant(true));
-  @override
-  List<GeneratedColumn> get $columns =>
-      [uuid, catalogUuid, contactUuid, createdAt, isDeleted, isNotSynced];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'catalog_assignments';
-  @override
-  VerificationContext validateIntegrity(Insertable<CatalogAssignment> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('uuid')) {
-      context.handle(
-          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
-    } else if (isInserting) {
-      context.missing(_uuidMeta);
-    }
-    if (data.containsKey('catalog_uuid')) {
-      context.handle(
-          _catalogUuidMeta,
-          catalogUuid.isAcceptableOrUnknown(
-              data['catalog_uuid']!, _catalogUuidMeta));
-    } else if (isInserting) {
-      context.missing(_catalogUuidMeta);
-    }
-    if (data.containsKey('contact_uuid')) {
-      context.handle(
-          _contactUuidMeta,
-          contactUuid.isAcceptableOrUnknown(
-              data['contact_uuid']!, _contactUuidMeta));
-    } else if (isInserting) {
-      context.missing(_contactUuidMeta);
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    }
-    if (data.containsKey('is_deleted')) {
-      context.handle(_isDeletedMeta,
-          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
-    }
-    if (data.containsKey('is_not_synced')) {
-      context.handle(
-          _isNotSyncedMeta,
-          isNotSynced.isAcceptableOrUnknown(
-              data['is_not_synced']!, _isNotSyncedMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {uuid};
-  @override
-  CatalogAssignment map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return CatalogAssignment(
-      uuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
-      catalogUuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}catalog_uuid'])!,
-      contactUuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}contact_uuid'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      isDeleted: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
-      isNotSynced: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
-    );
-  }
-
-  @override
-  $CatalogAssignmentsTable createAlias(String alias) {
-    return $CatalogAssignmentsTable(attachedDatabase, alias);
-  }
-}
-
-class CatalogAssignment extends DataClass
-    implements Insertable<CatalogAssignment> {
-  final String uuid;
-  final String catalogUuid;
-  final String contactUuid;
-  final DateTime createdAt;
-  final bool isDeleted;
-  final bool isNotSynced;
-  const CatalogAssignment(
-      {required this.uuid,
-      required this.catalogUuid,
-      required this.contactUuid,
-      required this.createdAt,
-      required this.isDeleted,
-      required this.isNotSynced});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['uuid'] = Variable<String>(uuid);
-    map['catalog_uuid'] = Variable<String>(catalogUuid);
-    map['contact_uuid'] = Variable<String>(contactUuid);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['is_deleted'] = Variable<bool>(isDeleted);
-    map['is_not_synced'] = Variable<bool>(isNotSynced);
-    return map;
-  }
-
-  CatalogAssignmentsCompanion toCompanion(bool nullToAbsent) {
-    return CatalogAssignmentsCompanion(
-      uuid: Value(uuid),
-      catalogUuid: Value(catalogUuid),
-      contactUuid: Value(contactUuid),
-      createdAt: Value(createdAt),
-      isDeleted: Value(isDeleted),
-      isNotSynced: Value(isNotSynced),
-    );
-  }
-
-  factory CatalogAssignment.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return CatalogAssignment(
-      uuid: serializer.fromJson<String>(json['uuid']),
-      catalogUuid: serializer.fromJson<String>(json['catalogUuid']),
-      contactUuid: serializer.fromJson<String>(json['contactUuid']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
-      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'uuid': serializer.toJson<String>(uuid),
-      'catalogUuid': serializer.toJson<String>(catalogUuid),
-      'contactUuid': serializer.toJson<String>(contactUuid),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-      'isDeleted': serializer.toJson<bool>(isDeleted),
-      'isNotSynced': serializer.toJson<bool>(isNotSynced),
-    };
-  }
-
-  CatalogAssignment copyWith(
-          {String? uuid,
-          String? catalogUuid,
-          String? contactUuid,
-          DateTime? createdAt,
-          bool? isDeleted,
-          bool? isNotSynced}) =>
-      CatalogAssignment(
-        uuid: uuid ?? this.uuid,
-        catalogUuid: catalogUuid ?? this.catalogUuid,
-        contactUuid: contactUuid ?? this.contactUuid,
-        createdAt: createdAt ?? this.createdAt,
-        isDeleted: isDeleted ?? this.isDeleted,
-        isNotSynced: isNotSynced ?? this.isNotSynced,
-      );
-  CatalogAssignment copyWithCompanion(CatalogAssignmentsCompanion data) {
-    return CatalogAssignment(
-      uuid: data.uuid.present ? data.uuid.value : this.uuid,
-      catalogUuid:
-          data.catalogUuid.present ? data.catalogUuid.value : this.catalogUuid,
-      contactUuid:
-          data.contactUuid.present ? data.contactUuid.value : this.contactUuid,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
-      isNotSynced:
-          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('CatalogAssignment(')
-          ..write('uuid: $uuid, ')
-          ..write('catalogUuid: $catalogUuid, ')
-          ..write('contactUuid: $contactUuid, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-      uuid, catalogUuid, contactUuid, createdAt, isDeleted, isNotSynced);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is CatalogAssignment &&
-          other.uuid == this.uuid &&
-          other.catalogUuid == this.catalogUuid &&
-          other.contactUuid == this.contactUuid &&
-          other.createdAt == this.createdAt &&
-          other.isDeleted == this.isDeleted &&
-          other.isNotSynced == this.isNotSynced);
-}
-
-class CatalogAssignmentsCompanion extends UpdateCompanion<CatalogAssignment> {
-  final Value<String> uuid;
-  final Value<String> catalogUuid;
-  final Value<String> contactUuid;
-  final Value<DateTime> createdAt;
-  final Value<bool> isDeleted;
-  final Value<bool> isNotSynced;
-  final Value<int> rowid;
-  const CatalogAssignmentsCompanion({
-    this.uuid = const Value.absent(),
-    this.catalogUuid = const Value.absent(),
-    this.contactUuid = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.isDeleted = const Value.absent(),
-    this.isNotSynced = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  CatalogAssignmentsCompanion.insert({
-    required String uuid,
-    required String catalogUuid,
-    required String contactUuid,
-    this.createdAt = const Value.absent(),
-    this.isDeleted = const Value.absent(),
-    this.isNotSynced = const Value.absent(),
-    this.rowid = const Value.absent(),
-  })  : uuid = Value(uuid),
-        catalogUuid = Value(catalogUuid),
-        contactUuid = Value(contactUuid);
-  static Insertable<CatalogAssignment> custom({
-    Expression<String>? uuid,
-    Expression<String>? catalogUuid,
-    Expression<String>? contactUuid,
-    Expression<DateTime>? createdAt,
-    Expression<bool>? isDeleted,
-    Expression<bool>? isNotSynced,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (uuid != null) 'uuid': uuid,
-      if (catalogUuid != null) 'catalog_uuid': catalogUuid,
-      if (contactUuid != null) 'contact_uuid': contactUuid,
-      if (createdAt != null) 'created_at': createdAt,
-      if (isDeleted != null) 'is_deleted': isDeleted,
-      if (isNotSynced != null) 'is_not_synced': isNotSynced,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  CatalogAssignmentsCompanion copyWith(
-      {Value<String>? uuid,
-      Value<String>? catalogUuid,
-      Value<String>? contactUuid,
-      Value<DateTime>? createdAt,
-      Value<bool>? isDeleted,
-      Value<bool>? isNotSynced,
-      Value<int>? rowid}) {
-    return CatalogAssignmentsCompanion(
-      uuid: uuid ?? this.uuid,
-      catalogUuid: catalogUuid ?? this.catalogUuid,
-      contactUuid: contactUuid ?? this.contactUuid,
-      createdAt: createdAt ?? this.createdAt,
-      isDeleted: isDeleted ?? this.isDeleted,
-      isNotSynced: isNotSynced ?? this.isNotSynced,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (uuid.present) {
-      map['uuid'] = Variable<String>(uuid.value);
-    }
-    if (catalogUuid.present) {
-      map['catalog_uuid'] = Variable<String>(catalogUuid.value);
-    }
-    if (contactUuid.present) {
-      map['contact_uuid'] = Variable<String>(contactUuid.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (isDeleted.present) {
-      map['is_deleted'] = Variable<bool>(isDeleted.value);
-    }
-    if (isNotSynced.present) {
-      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('CatalogAssignmentsCompanion(')
-          ..write('uuid: $uuid, ')
-          ..write('catalogUuid: $catalogUuid, ')
-          ..write('contactUuid: $contactUuid, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $CatalogTieredDiscountsTable extends CatalogTieredDiscounts
-    with TableInfo<$CatalogTieredDiscountsTable, CatalogTieredDiscount> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $CatalogTieredDiscountsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
-  @override
-  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
-      'uuid', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _catalogItemUuidMeta =
-      const VerificationMeta('catalogItemUuid');
-  @override
-  late final GeneratedColumn<String> catalogItemUuid = GeneratedColumn<String>(
-      'catalog_item_uuid', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'REFERENCES catalog_items (uuid)'));
-  static const VerificationMeta _minQuantityMeta =
-      const VerificationMeta('minQuantity');
-  @override
-  late final GeneratedColumn<double> minQuantity = GeneratedColumn<double>(
-      'min_quantity', aliasedName, false,
-      type: DriftSqlType.double, requiredDuringInsert: true);
-  static const VerificationMeta _discountPercentageMeta =
-      const VerificationMeta('discountPercentage');
-  @override
-  late final GeneratedColumn<double> discountPercentage =
-      GeneratedColumn<double>('discount_percentage', aliasedName, false,
-          type: DriftSqlType.double, requiredDuringInsert: true);
-  static const VerificationMeta _discountTypeMeta =
-      const VerificationMeta('discountType');
-  @override
-  late final GeneratedColumn<String> discountType = GeneratedColumn<String>(
-      'discount_type', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('PERCENT'));
-  static const VerificationMeta _discountAmountMeta =
-      const VerificationMeta('discountAmount');
-  @override
-  late final GeneratedColumn<double> discountAmount = GeneratedColumn<double>(
-      'discount_amount', aliasedName, false,
-      type: DriftSqlType.double,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0.0));
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _updatedAtMeta =
-      const VerificationMeta('updatedAt');
-  @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-      'updated_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _isDeletedMeta =
-      const VerificationMeta('isDeleted');
-  @override
-  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
-      'is_deleted', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _isNotSyncedMeta =
-      const VerificationMeta('isNotSynced');
-  @override
-  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
-      'is_not_synced', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("is_not_synced" IN (0, 1))'),
-      defaultValue: const Constant(true));
-  @override
-  List<GeneratedColumn> get $columns => [
-        uuid,
-        catalogItemUuid,
-        minQuantity,
-        discountPercentage,
-        discountType,
-        discountAmount,
-        createdAt,
-        updatedAt,
-        isDeleted,
-        isNotSynced
-      ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'catalog_tiered_discounts';
-  @override
-  VerificationContext validateIntegrity(
-      Insertable<CatalogTieredDiscount> instance,
-      {bool isInserting = false}) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('uuid')) {
-      context.handle(
-          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
-    } else if (isInserting) {
-      context.missing(_uuidMeta);
-    }
-    if (data.containsKey('catalog_item_uuid')) {
-      context.handle(
-          _catalogItemUuidMeta,
-          catalogItemUuid.isAcceptableOrUnknown(
-              data['catalog_item_uuid']!, _catalogItemUuidMeta));
-    } else if (isInserting) {
-      context.missing(_catalogItemUuidMeta);
-    }
-    if (data.containsKey('min_quantity')) {
-      context.handle(
-          _minQuantityMeta,
-          minQuantity.isAcceptableOrUnknown(
-              data['min_quantity']!, _minQuantityMeta));
-    } else if (isInserting) {
-      context.missing(_minQuantityMeta);
-    }
-    if (data.containsKey('discount_percentage')) {
-      context.handle(
-          _discountPercentageMeta,
-          discountPercentage.isAcceptableOrUnknown(
-              data['discount_percentage']!, _discountPercentageMeta));
-    } else if (isInserting) {
-      context.missing(_discountPercentageMeta);
-    }
-    if (data.containsKey('discount_type')) {
-      context.handle(
-          _discountTypeMeta,
-          discountType.isAcceptableOrUnknown(
-              data['discount_type']!, _discountTypeMeta));
-    }
-    if (data.containsKey('discount_amount')) {
-      context.handle(
-          _discountAmountMeta,
-          discountAmount.isAcceptableOrUnknown(
-              data['discount_amount']!, _discountAmountMeta));
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(_updatedAtMeta,
-          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
-    }
-    if (data.containsKey('is_deleted')) {
-      context.handle(_isDeletedMeta,
-          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
-    }
-    if (data.containsKey('is_not_synced')) {
-      context.handle(
-          _isNotSyncedMeta,
-          isNotSynced.isAcceptableOrUnknown(
-              data['is_not_synced']!, _isNotSyncedMeta));
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {uuid};
-  @override
-  CatalogTieredDiscount map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return CatalogTieredDiscount(
-      uuid: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
-      catalogItemUuid: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}catalog_item_uuid'])!,
-      minQuantity: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}min_quantity'])!,
-      discountPercentage: attachedDatabase.typeMapping.read(
-          DriftSqlType.double, data['${effectivePrefix}discount_percentage'])!,
-      discountType: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}discount_type'])!,
-      discountAmount: attachedDatabase.typeMapping.read(
-          DriftSqlType.double, data['${effectivePrefix}discount_amount'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      updatedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
-      isDeleted: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
-      isNotSynced: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
-    );
-  }
-
-  @override
-  $CatalogTieredDiscountsTable createAlias(String alias) {
-    return $CatalogTieredDiscountsTable(attachedDatabase, alias);
-  }
-}
-
-class CatalogTieredDiscount extends DataClass
-    implements Insertable<CatalogTieredDiscount> {
-  final String uuid;
-  final String catalogItemUuid;
-  final double minQuantity;
-
-  /// Legacy / PERCENT value. Prefer [discountType] + [discountAmount] for FIXED.
-  final double discountPercentage;
-
-  /// PERCENT | FIXED — qty tier replaces item default when matched.
-  final String discountType;
-  final double discountAmount;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  final bool isDeleted;
-  final bool isNotSynced;
-  const CatalogTieredDiscount(
-      {required this.uuid,
-      required this.catalogItemUuid,
-      required this.minQuantity,
-      required this.discountPercentage,
-      required this.discountType,
-      required this.discountAmount,
-      required this.createdAt,
-      required this.updatedAt,
-      required this.isDeleted,
-      required this.isNotSynced});
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['uuid'] = Variable<String>(uuid);
-    map['catalog_item_uuid'] = Variable<String>(catalogItemUuid);
-    map['min_quantity'] = Variable<double>(minQuantity);
-    map['discount_percentage'] = Variable<double>(discountPercentage);
-    map['discount_type'] = Variable<String>(discountType);
-    map['discount_amount'] = Variable<double>(discountAmount);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
-    map['is_deleted'] = Variable<bool>(isDeleted);
-    map['is_not_synced'] = Variable<bool>(isNotSynced);
-    return map;
-  }
-
-  CatalogTieredDiscountsCompanion toCompanion(bool nullToAbsent) {
-    return CatalogTieredDiscountsCompanion(
-      uuid: Value(uuid),
-      catalogItemUuid: Value(catalogItemUuid),
-      minQuantity: Value(minQuantity),
-      discountPercentage: Value(discountPercentage),
-      discountType: Value(discountType),
-      discountAmount: Value(discountAmount),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-      isDeleted: Value(isDeleted),
-      isNotSynced: Value(isNotSynced),
-    );
-  }
-
-  factory CatalogTieredDiscount.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return CatalogTieredDiscount(
-      uuid: serializer.fromJson<String>(json['uuid']),
-      catalogItemUuid: serializer.fromJson<String>(json['catalogItemUuid']),
-      minQuantity: serializer.fromJson<double>(json['minQuantity']),
-      discountPercentage:
-          serializer.fromJson<double>(json['discountPercentage']),
-      discountType: serializer.fromJson<String>(json['discountType']),
-      discountAmount: serializer.fromJson<double>(json['discountAmount']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
-      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'uuid': serializer.toJson<String>(uuid),
-      'catalogItemUuid': serializer.toJson<String>(catalogItemUuid),
-      'minQuantity': serializer.toJson<double>(minQuantity),
-      'discountPercentage': serializer.toJson<double>(discountPercentage),
-      'discountType': serializer.toJson<String>(discountType),
-      'discountAmount': serializer.toJson<double>(discountAmount),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-      'isDeleted': serializer.toJson<bool>(isDeleted),
-      'isNotSynced': serializer.toJson<bool>(isNotSynced),
-    };
-  }
-
-  CatalogTieredDiscount copyWith(
-          {String? uuid,
-          String? catalogItemUuid,
-          double? minQuantity,
-          double? discountPercentage,
-          String? discountType,
-          double? discountAmount,
-          DateTime? createdAt,
-          DateTime? updatedAt,
-          bool? isDeleted,
-          bool? isNotSynced}) =>
-      CatalogTieredDiscount(
-        uuid: uuid ?? this.uuid,
-        catalogItemUuid: catalogItemUuid ?? this.catalogItemUuid,
-        minQuantity: minQuantity ?? this.minQuantity,
-        discountPercentage: discountPercentage ?? this.discountPercentage,
-        discountType: discountType ?? this.discountType,
-        discountAmount: discountAmount ?? this.discountAmount,
-        createdAt: createdAt ?? this.createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-        isDeleted: isDeleted ?? this.isDeleted,
-        isNotSynced: isNotSynced ?? this.isNotSynced,
-      );
-  CatalogTieredDiscount copyWithCompanion(
-      CatalogTieredDiscountsCompanion data) {
-    return CatalogTieredDiscount(
-      uuid: data.uuid.present ? data.uuid.value : this.uuid,
-      catalogItemUuid: data.catalogItemUuid.present
-          ? data.catalogItemUuid.value
-          : this.catalogItemUuid,
-      minQuantity:
-          data.minQuantity.present ? data.minQuantity.value : this.minQuantity,
-      discountPercentage: data.discountPercentage.present
-          ? data.discountPercentage.value
-          : this.discountPercentage,
-      discountType: data.discountType.present
-          ? data.discountType.value
-          : this.discountType,
-      discountAmount: data.discountAmount.present
-          ? data.discountAmount.value
-          : this.discountAmount,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
-      isNotSynced:
-          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('CatalogTieredDiscount(')
-          ..write('uuid: $uuid, ')
-          ..write('catalogItemUuid: $catalogItemUuid, ')
-          ..write('minQuantity: $minQuantity, ')
-          ..write('discountPercentage: $discountPercentage, ')
-          ..write('discountType: $discountType, ')
-          ..write('discountAmount: $discountAmount, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-      uuid,
-      catalogItemUuid,
-      minQuantity,
-      discountPercentage,
-      discountType,
-      discountAmount,
-      createdAt,
-      updatedAt,
-      isDeleted,
-      isNotSynced);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is CatalogTieredDiscount &&
-          other.uuid == this.uuid &&
-          other.catalogItemUuid == this.catalogItemUuid &&
-          other.minQuantity == this.minQuantity &&
-          other.discountPercentage == this.discountPercentage &&
-          other.discountType == this.discountType &&
-          other.discountAmount == this.discountAmount &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt &&
-          other.isDeleted == this.isDeleted &&
-          other.isNotSynced == this.isNotSynced);
-}
-
-class CatalogTieredDiscountsCompanion
-    extends UpdateCompanion<CatalogTieredDiscount> {
-  final Value<String> uuid;
-  final Value<String> catalogItemUuid;
-  final Value<double> minQuantity;
-  final Value<double> discountPercentage;
-  final Value<String> discountType;
-  final Value<double> discountAmount;
-  final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
-  final Value<bool> isDeleted;
-  final Value<bool> isNotSynced;
-  final Value<int> rowid;
-  const CatalogTieredDiscountsCompanion({
-    this.uuid = const Value.absent(),
-    this.catalogItemUuid = const Value.absent(),
-    this.minQuantity = const Value.absent(),
-    this.discountPercentage = const Value.absent(),
-    this.discountType = const Value.absent(),
-    this.discountAmount = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.isDeleted = const Value.absent(),
-    this.isNotSynced = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  CatalogTieredDiscountsCompanion.insert({
-    required String uuid,
-    required String catalogItemUuid,
-    required double minQuantity,
-    required double discountPercentage,
-    this.discountType = const Value.absent(),
-    this.discountAmount = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-    this.isDeleted = const Value.absent(),
-    this.isNotSynced = const Value.absent(),
-    this.rowid = const Value.absent(),
-  })  : uuid = Value(uuid),
-        catalogItemUuid = Value(catalogItemUuid),
-        minQuantity = Value(minQuantity),
-        discountPercentage = Value(discountPercentage);
-  static Insertable<CatalogTieredDiscount> custom({
-    Expression<String>? uuid,
-    Expression<String>? catalogItemUuid,
-    Expression<double>? minQuantity,
-    Expression<double>? discountPercentage,
-    Expression<String>? discountType,
-    Expression<double>? discountAmount,
-    Expression<DateTime>? createdAt,
-    Expression<DateTime>? updatedAt,
-    Expression<bool>? isDeleted,
-    Expression<bool>? isNotSynced,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (uuid != null) 'uuid': uuid,
-      if (catalogItemUuid != null) 'catalog_item_uuid': catalogItemUuid,
-      if (minQuantity != null) 'min_quantity': minQuantity,
-      if (discountPercentage != null) 'discount_percentage': discountPercentage,
-      if (discountType != null) 'discount_type': discountType,
-      if (discountAmount != null) 'discount_amount': discountAmount,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-      if (isDeleted != null) 'is_deleted': isDeleted,
-      if (isNotSynced != null) 'is_not_synced': isNotSynced,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  CatalogTieredDiscountsCompanion copyWith(
-      {Value<String>? uuid,
-      Value<String>? catalogItemUuid,
-      Value<double>? minQuantity,
-      Value<double>? discountPercentage,
-      Value<String>? discountType,
-      Value<double>? discountAmount,
-      Value<DateTime>? createdAt,
-      Value<DateTime>? updatedAt,
-      Value<bool>? isDeleted,
-      Value<bool>? isNotSynced,
-      Value<int>? rowid}) {
-    return CatalogTieredDiscountsCompanion(
-      uuid: uuid ?? this.uuid,
-      catalogItemUuid: catalogItemUuid ?? this.catalogItemUuid,
-      minQuantity: minQuantity ?? this.minQuantity,
-      discountPercentage: discountPercentage ?? this.discountPercentage,
-      discountType: discountType ?? this.discountType,
-      discountAmount: discountAmount ?? this.discountAmount,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-      isDeleted: isDeleted ?? this.isDeleted,
-      isNotSynced: isNotSynced ?? this.isNotSynced,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (uuid.present) {
-      map['uuid'] = Variable<String>(uuid.value);
-    }
-    if (catalogItemUuid.present) {
-      map['catalog_item_uuid'] = Variable<String>(catalogItemUuid.value);
-    }
-    if (minQuantity.present) {
-      map['min_quantity'] = Variable<double>(minQuantity.value);
-    }
-    if (discountPercentage.present) {
-      map['discount_percentage'] = Variable<double>(discountPercentage.value);
-    }
-    if (discountType.present) {
-      map['discount_type'] = Variable<String>(discountType.value);
-    }
-    if (discountAmount.present) {
-      map['discount_amount'] = Variable<double>(discountAmount.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    if (isDeleted.present) {
-      map['is_deleted'] = Variable<bool>(isDeleted.value);
-    }
-    if (isNotSynced.present) {
-      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('CatalogTieredDiscountsCompanion(')
-          ..write('uuid: $uuid, ')
-          ..write('catalogItemUuid: $catalogItemUuid, ')
-          ..write('minQuantity: $minQuantity, ')
-          ..write('discountPercentage: $discountPercentage, ')
-          ..write('discountType: $discountType, ')
-          ..write('discountAmount: $discountAmount, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt, ')
-          ..write('isDeleted: $isDeleted, ')
-          ..write('isNotSynced: $isNotSynced, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -19840,6 +20212,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SyncMetadataTable syncMetadata = $SyncMetadataTable(this);
   late final $ProductsTable products = $ProductsTable(this);
   late final $ProductBatchesTable productBatches = $ProductBatchesTable(this);
+  late final $SellingProductsTable sellingProducts =
+      $SellingProductsTable(this);
+  late final $SellingProductComponentsTable sellingProductComponents =
+      $SellingProductComponentsTable(this);
+  late final $CatalogsTable catalogs = $CatalogsTable(this);
+  late final $CatalogItemsTable catalogItems = $CatalogItemsTable(this);
+  late final $CatalogAssignmentsTable catalogAssignments =
+      $CatalogAssignmentsTable(this);
+  late final $CatalogTieredDiscountsTable catalogTieredDiscounts =
+      $CatalogTieredDiscountsTable(this);
   late final $OrderItemsTable orderItems = $OrderItemsTable(this);
   late final $GoodsReceiptsTable goodsReceipts = $GoodsReceiptsTable(this);
   late final $GoodsReceiptLinesTable goodsReceiptLines =
@@ -19861,16 +20243,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $OrderReturnsTable orderReturns = $OrderReturnsTable(this);
   late final $OrderReturnItemsTable orderReturnItems =
       $OrderReturnItemsTable(this);
-  late final $SellingProductsTable sellingProducts =
-      $SellingProductsTable(this);
-  late final $SellingProductComponentsTable sellingProductComponents =
-      $SellingProductComponentsTable(this);
-  late final $CatalogsTable catalogs = $CatalogsTable(this);
-  late final $CatalogItemsTable catalogItems = $CatalogItemsTable(this);
-  late final $CatalogAssignmentsTable catalogAssignments =
-      $CatalogAssignmentsTable(this);
-  late final $CatalogTieredDiscountsTable catalogTieredDiscounts =
-      $CatalogTieredDiscountsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -19888,6 +20260,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         syncMetadata,
         products,
         productBatches,
+        sellingProducts,
+        sellingProductComponents,
+        catalogs,
+        catalogItems,
+        catalogAssignments,
+        catalogTieredDiscounts,
         orderItems,
         goodsReceipts,
         goodsReceiptLines,
@@ -19901,13 +20279,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         productionOrderCharges,
         productionConsumptions,
         orderReturns,
-        orderReturnItems,
-        sellingProducts,
-        sellingProductComponents,
-        catalogs,
-        catalogItems,
-        catalogAssignments,
-        catalogTieredDiscounts
+        orderReturnItems
       ];
 }
 
@@ -20368,21 +20740,6 @@ final class $$ContactsTableReferences
         manager.$state.copyWith(prefetchedData: cache));
   }
 
-  static MultiTypedResultKey<$OrderReturnsTable, List<OrderReturn>>
-      _orderReturnsRefsTable(_$AppDatabase db) =>
-          MultiTypedResultKey.fromTable(db.orderReturns,
-              aliasName: 'contacts__uuid__order_returns__contact_uuid');
-
-  $$OrderReturnsTableProcessedTableManager get orderReturnsRefs {
-    final manager = $$OrderReturnsTableTableManager($_db, $_db.orderReturns)
-        .filter(
-            (f) => f.contactUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
-
-    final cache = $_typedResult.readTableOrNull(_orderReturnsRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
-
   static MultiTypedResultKey<$CatalogAssignmentsTable, List<CatalogAssignment>>
       _catalogAssignmentsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.catalogAssignments,
@@ -20396,6 +20753,21 @@ final class $$ContactsTableReferences
 
     final cache =
         $_typedResult.readTableOrNull(_catalogAssignmentsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$OrderReturnsTable, List<OrderReturn>>
+      _orderReturnsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.orderReturns,
+              aliasName: 'contacts__uuid__order_returns__contact_uuid');
+
+  $$OrderReturnsTableProcessedTableManager get orderReturnsRefs {
+    final manager = $$OrderReturnsTableTableManager($_db, $_db.orderReturns)
+        .filter(
+            (f) => f.contactUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache = $_typedResult.readTableOrNull(_orderReturnsRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -20506,27 +20878,6 @@ class $$ContactsTableFilterComposer
     return f(composer);
   }
 
-  Expression<bool> orderReturnsRefs(
-      Expression<bool> Function($$OrderReturnsTableFilterComposer f) f) {
-    final $$OrderReturnsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.uuid,
-        referencedTable: $db.orderReturns,
-        getReferencedColumn: (t) => t.contactUuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$OrderReturnsTableFilterComposer(
-              $db: $db,
-              $table: $db.orderReturns,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-
   Expression<bool> catalogAssignmentsRefs(
       Expression<bool> Function($$CatalogAssignmentsTableFilterComposer f) f) {
     final $$CatalogAssignmentsTableFilterComposer composer = $composerBuilder(
@@ -20540,6 +20891,27 @@ class $$ContactsTableFilterComposer
             $$CatalogAssignmentsTableFilterComposer(
               $db: $db,
               $table: $db.catalogAssignments,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> orderReturnsRefs(
+      Expression<bool> Function($$OrderReturnsTableFilterComposer f) f) {
+    final $$OrderReturnsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.orderReturns,
+        getReferencedColumn: (t) => t.contactUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderReturnsTableFilterComposer(
+              $db: $db,
+              $table: $db.orderReturns,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -20718,27 +21090,6 @@ class $$ContactsTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> orderReturnsRefs<T extends Object>(
-      Expression<T> Function($$OrderReturnsTableAnnotationComposer a) f) {
-    final $$OrderReturnsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.uuid,
-        referencedTable: $db.orderReturns,
-        getReferencedColumn: (t) => t.contactUuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$OrderReturnsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.orderReturns,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-
   Expression<T> catalogAssignmentsRefs<T extends Object>(
       Expression<T> Function($$CatalogAssignmentsTableAnnotationComposer a) f) {
     final $$CatalogAssignmentsTableAnnotationComposer composer =
@@ -20760,6 +21111,27 @@ class $$ContactsTableAnnotationComposer
                 ));
     return f(composer);
   }
+
+  Expression<T> orderReturnsRefs<T extends Object>(
+      Expression<T> Function($$OrderReturnsTableAnnotationComposer a) f) {
+    final $$OrderReturnsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.orderReturns,
+        getReferencedColumn: (t) => t.contactUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderReturnsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.orderReturns,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
 }
 
 class $$ContactsTableTableManager extends RootTableManager<
@@ -20776,8 +21148,8 @@ class $$ContactsTableTableManager extends RootTableManager<
     PrefetchHooks Function(
         {bool ordersRefs,
         bool transactionsRefs,
-        bool orderReturnsRefs,
-        bool catalogAssignmentsRefs})> {
+        bool catalogAssignmentsRefs,
+        bool orderReturnsRefs})> {
   $$ContactsTableTableManager(_$AppDatabase db, $ContactsTable table)
       : super(TableManagerState(
           db: db,
@@ -20881,15 +21253,15 @@ class $$ContactsTableTableManager extends RootTableManager<
           prefetchHooksCallback: (
               {ordersRefs = false,
               transactionsRefs = false,
-              orderReturnsRefs = false,
-              catalogAssignmentsRefs = false}) {
+              catalogAssignmentsRefs = false,
+              orderReturnsRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (ordersRefs) db.orders,
                 if (transactionsRefs) db.transactions,
-                if (orderReturnsRefs) db.orderReturns,
-                if (catalogAssignmentsRefs) db.catalogAssignments
+                if (catalogAssignmentsRefs) db.catalogAssignments,
+                if (orderReturnsRefs) db.orderReturns
               ],
               addJoins: null,
               getPrefetchedDataCallback: (items) async {
@@ -20917,18 +21289,6 @@ class $$ContactsTableTableManager extends RootTableManager<
                         currentColumn: 'uuid',
                         referencedColumn: 'contact_uuid',
                         typedResults: items),
-                  if (orderReturnsRefs)
-                    await $_getPrefetchedDataByColumns<Contact, $ContactsTable,
-                            OrderReturn, $OrderReturnsTable>(
-                        currentTable: table,
-                        referencedTable: $$ContactsTableReferences
-                            ._orderReturnsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$ContactsTableReferences(db, table, p0)
-                                .orderReturnsRefs,
-                        currentColumn: 'uuid',
-                        referencedColumn: 'contact_uuid',
-                        typedResults: items),
                   if (catalogAssignmentsRefs)
                     await $_getPrefetchedDataByColumns<Contact, $ContactsTable,
                             CatalogAssignment, $CatalogAssignmentsTable>(
@@ -20938,6 +21298,18 @@ class $$ContactsTableTableManager extends RootTableManager<
                         managerFromTypedResult: (p0) =>
                             $$ContactsTableReferences(db, table, p0)
                                 .catalogAssignmentsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'contact_uuid',
+                        typedResults: items),
+                  if (orderReturnsRefs)
+                    await $_getPrefetchedDataByColumns<Contact, $ContactsTable,
+                            OrderReturn, $OrderReturnsTable>(
+                        currentTable: table,
+                        referencedTable: $$ContactsTableReferences
+                            ._orderReturnsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ContactsTableReferences(db, table, p0)
+                                .orderReturnsRefs,
                         currentColumn: 'uuid',
                         referencedColumn: 'contact_uuid',
                         typedResults: items)
@@ -20962,8 +21334,8 @@ typedef $$ContactsTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function(
         {bool ordersRefs,
         bool transactionsRefs,
-        bool orderReturnsRefs,
-        bool catalogAssignmentsRefs})>;
+        bool catalogAssignmentsRefs,
+        bool orderReturnsRefs})>;
 typedef $$AccountsTableCreateCompanionBuilder = AccountsCompanion Function({
   required String uuid,
   required String name,
@@ -24373,6 +24745,41 @@ final class $$ProductsTableReferences
         manager.$state.copyWith(prefetchedData: cache));
   }
 
+  static MultiTypedResultKey<$SellingProductComponentsTable,
+      List<SellingProductComponent>> _sellingProductComponentsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.sellingProductComponents,
+          aliasName:
+              'products__uuid__selling_product_components__product_uuid');
+
+  $$SellingProductComponentsTableProcessedTableManager
+      get sellingProductComponentsRefs {
+    final manager = $$SellingProductComponentsTableTableManager(
+            $_db, $_db.sellingProductComponents)
+        .filter(
+            (f) => f.productUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_sellingProductComponentsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CatalogItemsTable, List<CatalogItem>>
+      _catalogItemsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.catalogItems,
+              aliasName: 'products__uuid__catalog_items__product_uuid');
+
+  $$CatalogItemsTableProcessedTableManager get catalogItemsRefs {
+    final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
+        .filter(
+            (f) => f.productUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache = $_typedResult.readTableOrNull(_catalogItemsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
   static MultiTypedResultKey<$OrderItemsTable, List<OrderItem>>
       _orderItemsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.orderItems,
@@ -24487,41 +24894,6 @@ final class $$ProductsTableReferences
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
-
-  static MultiTypedResultKey<$SellingProductComponentsTable,
-      List<SellingProductComponent>> _sellingProductComponentsRefsTable(
-          _$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(db.sellingProductComponents,
-          aliasName:
-              'products__uuid__selling_product_components__product_uuid');
-
-  $$SellingProductComponentsTableProcessedTableManager
-      get sellingProductComponentsRefs {
-    final manager = $$SellingProductComponentsTableTableManager(
-            $_db, $_db.sellingProductComponents)
-        .filter(
-            (f) => f.productUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
-
-    final cache =
-        $_typedResult.readTableOrNull(_sellingProductComponentsRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
-
-  static MultiTypedResultKey<$CatalogItemsTable, List<CatalogItem>>
-      _catalogItemsRefsTable(_$AppDatabase db) =>
-          MultiTypedResultKey.fromTable(db.catalogItems,
-              aliasName: 'products__uuid__catalog_items__product_uuid');
-
-  $$CatalogItemsTableProcessedTableManager get catalogItemsRefs {
-    final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
-        .filter(
-            (f) => f.productUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
-
-    final cache = $_typedResult.readTableOrNull(_catalogItemsRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
 }
 
 class $$ProductsTableFilterComposer
@@ -24612,6 +24984,50 @@ class $$ProductsTableFilterComposer
             $$ProductBatchesTableFilterComposer(
               $db: $db,
               $table: $db.productBatches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> sellingProductComponentsRefs(
+      Expression<bool> Function($$SellingProductComponentsTableFilterComposer f)
+          f) {
+    final $$SellingProductComponentsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.sellingProductComponents,
+            getReferencedColumn: (t) => t.productUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$SellingProductComponentsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.sellingProductComponents,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> catalogItemsRefs(
+      Expression<bool> Function($$CatalogItemsTableFilterComposer f) f) {
+    final $$CatalogItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.productUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.catalogItems,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -24763,50 +25179,6 @@ class $$ProductsTableFilterComposer
             $$OrderReturnItemsTableFilterComposer(
               $db: $db,
               $table: $db.orderReturnItems,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-
-  Expression<bool> sellingProductComponentsRefs(
-      Expression<bool> Function($$SellingProductComponentsTableFilterComposer f)
-          f) {
-    final $$SellingProductComponentsTableFilterComposer composer =
-        $composerBuilder(
-            composer: this,
-            getCurrentColumn: (t) => t.uuid,
-            referencedTable: $db.sellingProductComponents,
-            getReferencedColumn: (t) => t.productUuid,
-            builder: (joinBuilder,
-                    {$addJoinBuilderToRootComposer,
-                    $removeJoinBuilderFromRootComposer}) =>
-                $$SellingProductComponentsTableFilterComposer(
-                  $db: $db,
-                  $table: $db.sellingProductComponents,
-                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                  joinBuilder: joinBuilder,
-                  $removeJoinBuilderFromRootComposer:
-                      $removeJoinBuilderFromRootComposer,
-                ));
-    return f(composer);
-  }
-
-  Expression<bool> catalogItemsRefs(
-      Expression<bool> Function($$CatalogItemsTableFilterComposer f) f) {
-    final $$CatalogItemsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.uuid,
-        referencedTable: $db.catalogItems,
-        getReferencedColumn: (t) => t.productUuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogItemsTableFilterComposer(
-              $db: $db,
-              $table: $db.catalogItems,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -24991,6 +25363,51 @@ class $$ProductsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> sellingProductComponentsRefs<T extends Object>(
+      Expression<T> Function(
+              $$SellingProductComponentsTableAnnotationComposer a)
+          f) {
+    final $$SellingProductComponentsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.sellingProductComponents,
+            getReferencedColumn: (t) => t.productUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$SellingProductComponentsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.sellingProductComponents,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> catalogItemsRefs<T extends Object>(
+      Expression<T> Function($$CatalogItemsTableAnnotationComposer a) f) {
+    final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.productUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
   Expression<T> orderItemsRefs<T extends Object>(
       Expression<T> Function($$OrderItemsTableAnnotationComposer a) f) {
     final $$OrderItemsTableAnnotationComposer composer = $composerBuilder(
@@ -25142,51 +25559,6 @@ class $$ProductsTableAnnotationComposer
             ));
     return f(composer);
   }
-
-  Expression<T> sellingProductComponentsRefs<T extends Object>(
-      Expression<T> Function(
-              $$SellingProductComponentsTableAnnotationComposer a)
-          f) {
-    final $$SellingProductComponentsTableAnnotationComposer composer =
-        $composerBuilder(
-            composer: this,
-            getCurrentColumn: (t) => t.uuid,
-            referencedTable: $db.sellingProductComponents,
-            getReferencedColumn: (t) => t.productUuid,
-            builder: (joinBuilder,
-                    {$addJoinBuilderToRootComposer,
-                    $removeJoinBuilderFromRootComposer}) =>
-                $$SellingProductComponentsTableAnnotationComposer(
-                  $db: $db,
-                  $table: $db.sellingProductComponents,
-                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                  joinBuilder: joinBuilder,
-                  $removeJoinBuilderFromRootComposer:
-                      $removeJoinBuilderFromRootComposer,
-                ));
-    return f(composer);
-  }
-
-  Expression<T> catalogItemsRefs<T extends Object>(
-      Expression<T> Function($$CatalogItemsTableAnnotationComposer a) f) {
-    final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.uuid,
-        referencedTable: $db.catalogItems,
-        getReferencedColumn: (t) => t.productUuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogItemsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.catalogItems,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
 }
 
 class $$ProductsTableTableManager extends RootTableManager<
@@ -25203,15 +25575,15 @@ class $$ProductsTableTableManager extends RootTableManager<
     PrefetchHooks Function(
         {bool categoryUuid,
         bool productBatchesRefs,
+        bool sellingProductComponentsRefs,
+        bool catalogItemsRefs,
         bool orderItemsRefs,
         bool goodsReceiptLinesRefs,
         bool recipeInputsRefs,
         bool recipeOutputsRefs,
         bool productionOrderInputsRefs,
         bool productionOrderOutputsRefs,
-        bool orderReturnItemsRefs,
-        bool sellingProductComponentsRefs,
-        bool catalogItemsRefs})> {
+        bool orderReturnItemsRefs})> {
   $$ProductsTableTableManager(_$AppDatabase db, $ProductsTable table)
       : super(TableManagerState(
           db: db,
@@ -25307,28 +25679,28 @@ class $$ProductsTableTableManager extends RootTableManager<
           prefetchHooksCallback: (
               {categoryUuid = false,
               productBatchesRefs = false,
+              sellingProductComponentsRefs = false,
+              catalogItemsRefs = false,
               orderItemsRefs = false,
               goodsReceiptLinesRefs = false,
               recipeInputsRefs = false,
               recipeOutputsRefs = false,
               productionOrderInputsRefs = false,
               productionOrderOutputsRefs = false,
-              orderReturnItemsRefs = false,
-              sellingProductComponentsRefs = false,
-              catalogItemsRefs = false}) {
+              orderReturnItemsRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (productBatchesRefs) db.productBatches,
+                if (sellingProductComponentsRefs) db.sellingProductComponents,
+                if (catalogItemsRefs) db.catalogItems,
                 if (orderItemsRefs) db.orderItems,
                 if (goodsReceiptLinesRefs) db.goodsReceiptLines,
                 if (recipeInputsRefs) db.recipeInputs,
                 if (recipeOutputsRefs) db.recipeOutputs,
                 if (productionOrderInputsRefs) db.productionOrderInputs,
                 if (productionOrderOutputsRefs) db.productionOrderOutputs,
-                if (orderReturnItemsRefs) db.orderReturnItems,
-                if (sellingProductComponentsRefs) db.sellingProductComponents,
-                if (catalogItemsRefs) db.catalogItems
+                if (orderReturnItemsRefs) db.orderReturnItems
               ],
               addJoins: <
                   T extends TableManagerState<
@@ -25367,6 +25739,33 @@ class $$ProductsTableTableManager extends RootTableManager<
                         managerFromTypedResult: (p0) =>
                             $$ProductsTableReferences(db, table, p0)
                                 .productBatchesRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'product_uuid',
+                        typedResults: items),
+                  if (sellingProductComponentsRefs)
+                    await $_getPrefetchedDataByColumns<
+                            Product,
+                            $ProductsTable,
+                            SellingProductComponent,
+                            $SellingProductComponentsTable>(
+                        currentTable: table,
+                        referencedTable: $$ProductsTableReferences
+                            ._sellingProductComponentsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductsTableReferences(db, table, p0)
+                                .sellingProductComponentsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'product_uuid',
+                        typedResults: items),
+                  if (catalogItemsRefs)
+                    await $_getPrefetchedDataByColumns<Product, $ProductsTable,
+                            CatalogItem, $CatalogItemsTable>(
+                        currentTable: table,
+                        referencedTable: $$ProductsTableReferences
+                            ._catalogItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductsTableReferences(db, table, p0)
+                                .catalogItemsRefs,
                         currentColumn: 'uuid',
                         referencedColumn: 'product_uuid',
                         typedResults: items),
@@ -25456,33 +25855,6 @@ class $$ProductsTableTableManager extends RootTableManager<
                                 .orderReturnItemsRefs,
                         currentColumn: 'uuid',
                         referencedColumn: 'product_uuid',
-                        typedResults: items),
-                  if (sellingProductComponentsRefs)
-                    await $_getPrefetchedDataByColumns<
-                            Product,
-                            $ProductsTable,
-                            SellingProductComponent,
-                            $SellingProductComponentsTable>(
-                        currentTable: table,
-                        referencedTable: $$ProductsTableReferences
-                            ._sellingProductComponentsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$ProductsTableReferences(db, table, p0)
-                                .sellingProductComponentsRefs,
-                        currentColumn: 'uuid',
-                        referencedColumn: 'product_uuid',
-                        typedResults: items),
-                  if (catalogItemsRefs)
-                    await $_getPrefetchedDataByColumns<Product, $ProductsTable,
-                            CatalogItem, $CatalogItemsTable>(
-                        currentTable: table,
-                        referencedTable: $$ProductsTableReferences
-                            ._catalogItemsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$ProductsTableReferences(db, table, p0)
-                                .catalogItemsRefs,
-                        currentColumn: 'uuid',
-                        referencedColumn: 'product_uuid',
                         typedResults: items)
                 ];
               },
@@ -25505,15 +25877,15 @@ typedef $$ProductsTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function(
         {bool categoryUuid,
         bool productBatchesRefs,
+        bool sellingProductComponentsRefs,
+        bool catalogItemsRefs,
         bool orderItemsRefs,
         bool goodsReceiptLinesRefs,
         bool recipeInputsRefs,
         bool recipeOutputsRefs,
         bool productionOrderInputsRefs,
         bool productionOrderOutputsRefs,
-        bool orderReturnItemsRefs,
-        bool sellingProductComponentsRefs,
-        bool catalogItemsRefs})>;
+        bool orderReturnItemsRefs})>;
 typedef $$ProductBatchesTableCreateCompanionBuilder = ProductBatchesCompanion
     Function({
   required String uuid,
@@ -25582,6 +25954,21 @@ final class $$ProductBatchesTableReferences
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
+  static MultiTypedResultKey<$CatalogItemsTable, List<CatalogItem>>
+      _catalogItemsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.catalogItems,
+              aliasName: 'product_batches__uuid__catalog_items__batch_uuid');
+
+  $$CatalogItemsTableProcessedTableManager get catalogItemsRefs {
+    final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
+        .filter(
+            (f) => f.batchUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache = $_typedResult.readTableOrNull(_catalogItemsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
   static MultiTypedResultKey<$OrderItemsTable, List<OrderItem>>
       _orderItemsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.orderItems,
@@ -25628,21 +26015,6 @@ final class $$ProductBatchesTableReferences
 
     final cache =
         $_typedResult.readTableOrNull(_orderReturnItemsRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
-
-  static MultiTypedResultKey<$CatalogItemsTable, List<CatalogItem>>
-      _catalogItemsRefsTable(_$AppDatabase db) =>
-          MultiTypedResultKey.fromTable(db.catalogItems,
-              aliasName: 'product_batches__uuid__catalog_items__batch_uuid');
-
-  $$CatalogItemsTableProcessedTableManager get catalogItemsRefs {
-    final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
-        .filter(
-            (f) => f.batchUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
-
-    final cache = $_typedResult.readTableOrNull(_catalogItemsRefsTable($_db));
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: cache));
   }
@@ -25739,6 +26111,27 @@ class $$ProductBatchesTableFilterComposer
     return composer;
   }
 
+  Expression<bool> catalogItemsRefs(
+      Expression<bool> Function($$CatalogItemsTableFilterComposer f) f) {
+    final $$CatalogItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.batchUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
   Expression<bool> orderItemsRefs(
       Expression<bool> Function($$OrderItemsTableFilterComposer f) f) {
     final $$OrderItemsTableFilterComposer composer = $composerBuilder(
@@ -25796,27 +26189,6 @@ class $$ProductBatchesTableFilterComposer
             $$OrderReturnItemsTableFilterComposer(
               $db: $db,
               $table: $db.orderReturnItems,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-
-  Expression<bool> catalogItemsRefs(
-      Expression<bool> Function($$CatalogItemsTableFilterComposer f) f) {
-    final $$CatalogItemsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.uuid,
-        referencedTable: $db.catalogItems,
-        getReferencedColumn: (t) => t.batchUuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogItemsTableFilterComposer(
-              $db: $db,
-              $table: $db.catalogItems,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -26008,6 +26380,27 @@ class $$ProductBatchesTableAnnotationComposer
     return composer;
   }
 
+  Expression<T> catalogItemsRefs<T extends Object>(
+      Expression<T> Function($$CatalogItemsTableAnnotationComposer a) f) {
+    final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.batchUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
   Expression<T> orderItemsRefs<T extends Object>(
       Expression<T> Function($$OrderItemsTableAnnotationComposer a) f) {
     final $$OrderItemsTableAnnotationComposer composer = $composerBuilder(
@@ -26072,27 +26465,6 @@ class $$ProductBatchesTableAnnotationComposer
             ));
     return f(composer);
   }
-
-  Expression<T> catalogItemsRefs<T extends Object>(
-      Expression<T> Function($$CatalogItemsTableAnnotationComposer a) f) {
-    final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.uuid,
-        referencedTable: $db.catalogItems,
-        getReferencedColumn: (t) => t.batchUuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogItemsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.catalogItems,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
 }
 
 class $$ProductBatchesTableTableManager extends RootTableManager<
@@ -26108,10 +26480,10 @@ class $$ProductBatchesTableTableManager extends RootTableManager<
     ProductBatche,
     PrefetchHooks Function(
         {bool productUuid,
+        bool catalogItemsRefs,
         bool orderItemsRefs,
         bool productionConsumptionsRefs,
-        bool orderReturnItemsRefs,
-        bool catalogItemsRefs})> {
+        bool orderReturnItemsRefs})> {
   $$ProductBatchesTableTableManager(
       _$AppDatabase db, $ProductBatchesTable table)
       : super(TableManagerState(
@@ -26223,17 +26595,17 @@ class $$ProductBatchesTableTableManager extends RootTableManager<
               .toList(),
           prefetchHooksCallback: (
               {productUuid = false,
+              catalogItemsRefs = false,
               orderItemsRefs = false,
               productionConsumptionsRefs = false,
-              orderReturnItemsRefs = false,
-              catalogItemsRefs = false}) {
+              orderReturnItemsRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
+                if (catalogItemsRefs) db.catalogItems,
                 if (orderItemsRefs) db.orderItems,
                 if (productionConsumptionsRefs) db.productionConsumptions,
-                if (orderReturnItemsRefs) db.orderReturnItems,
-                if (catalogItemsRefs) db.catalogItems
+                if (orderReturnItemsRefs) db.orderReturnItems
               ],
               addJoins: <
                   T extends TableManagerState<
@@ -26264,6 +26636,21 @@ class $$ProductBatchesTableTableManager extends RootTableManager<
               },
               getPrefetchedDataCallback: (items) async {
                 return [
+                  if (catalogItemsRefs)
+                    await $_getPrefetchedDataByColumns<
+                            ProductBatche,
+                            $ProductBatchesTable,
+                            CatalogItem,
+                            $CatalogItemsTable>(
+                        currentTable: table,
+                        referencedTable: $$ProductBatchesTableReferences
+                            ._catalogItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$ProductBatchesTableReferences(db, table, p0)
+                                .catalogItemsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'batch_uuid',
+                        typedResults: items),
                   if (orderItemsRefs)
                     await $_getPrefetchedDataByColumns<ProductBatche,
                             $ProductBatchesTable, OrderItem, $OrderItemsTable>(
@@ -26305,21 +26692,6 @@ class $$ProductBatchesTableTableManager extends RootTableManager<
                                 .orderReturnItemsRefs,
                         currentColumn: 'uuid',
                         referencedColumn: 'batch_uuid',
-                        typedResults: items),
-                  if (catalogItemsRefs)
-                    await $_getPrefetchedDataByColumns<
-                            ProductBatche,
-                            $ProductBatchesTable,
-                            CatalogItem,
-                            $CatalogItemsTable>(
-                        currentTable: table,
-                        referencedTable: $$ProductBatchesTableReferences
-                            ._catalogItemsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$ProductBatchesTableReferences(db, table, p0)
-                                .catalogItemsRefs,
-                        currentColumn: 'uuid',
-                        referencedColumn: 'batch_uuid',
                         typedResults: items)
                 ];
               },
@@ -26341,19 +26713,3164 @@ typedef $$ProductBatchesTableProcessedTableManager = ProcessedTableManager<
     ProductBatche,
     PrefetchHooks Function(
         {bool productUuid,
+        bool catalogItemsRefs,
         bool orderItemsRefs,
         bool productionConsumptionsRefs,
-        bool orderReturnItemsRefs,
-        bool catalogItemsRefs})>;
+        bool orderReturnItemsRefs})>;
+typedef $$SellingProductsTableCreateCompanionBuilder = SellingProductsCompanion
+    Function({
+  required String uuid,
+  required String name,
+  Value<String?> sku,
+  Value<String?> description,
+  Value<String?> categoryUuid,
+  Value<String?> unit,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$SellingProductsTableUpdateCompanionBuilder = SellingProductsCompanion
+    Function({
+  Value<String> uuid,
+  Value<String> name,
+  Value<String?> sku,
+  Value<String?> description,
+  Value<String?> categoryUuid,
+  Value<String?> unit,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$SellingProductsTableReferences extends BaseReferences<
+    _$AppDatabase, $SellingProductsTable, SellingProduct> {
+  $$SellingProductsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $ProductCategoriesTable _categoryUuidTable(_$AppDatabase db) => db
+      .productCategories
+      .createAlias('selling_products__category_uuid__product_categories__uuid');
+
+  $$ProductCategoriesTableProcessedTableManager? get categoryUuid {
+    final $_column = $_itemColumn<String>('category_uuid');
+    if ($_column == null) return null;
+    final manager =
+        $$ProductCategoriesTableTableManager($_db, $_db.productCategories)
+            .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$SellingProductComponentsTable,
+      List<SellingProductComponent>> _sellingProductComponentsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.sellingProductComponents,
+          aliasName:
+              'selling_products__uuid__selling_product_components__selling_product_uuid');
+
+  $$SellingProductComponentsTableProcessedTableManager
+      get sellingProductComponentsRefs {
+    final manager = $$SellingProductComponentsTableTableManager(
+            $_db, $_db.sellingProductComponents)
+        .filter((f) =>
+            f.sellingProductUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_sellingProductComponentsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CatalogItemsTable, List<CatalogItem>>
+      _catalogItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+          db.catalogItems,
+          aliasName:
+              'selling_products__uuid__catalog_items__selling_product_uuid');
+
+  $$CatalogItemsTableProcessedTableManager get catalogItemsRefs {
+    final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
+        .filter((f) =>
+            f.sellingProductUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache = $_typedResult.readTableOrNull(_catalogItemsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$OrderItemsTable, List<OrderItem>>
+      _orderItemsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.orderItems,
+              aliasName:
+                  'selling_products__uuid__order_items__selling_product_uuid');
+
+  $$OrderItemsTableProcessedTableManager get orderItemsRefs {
+    final manager = $$OrderItemsTableTableManager($_db, $_db.orderItems).filter(
+        (f) =>
+            f.sellingProductUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache = $_typedResult.readTableOrNull(_orderItemsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$SellingProductsTableFilterComposer
+    extends Composer<_$AppDatabase, $SellingProductsTable> {
+  $$SellingProductsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get sku => $composableBuilder(
+      column: $table.sku, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$ProductCategoriesTableFilterComposer get categoryUuid {
+    final $$ProductCategoriesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryUuid,
+        referencedTable: $db.productCategories,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductCategoriesTableFilterComposer(
+              $db: $db,
+              $table: $db.productCategories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> sellingProductComponentsRefs(
+      Expression<bool> Function($$SellingProductComponentsTableFilterComposer f)
+          f) {
+    final $$SellingProductComponentsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.sellingProductComponents,
+            getReferencedColumn: (t) => t.sellingProductUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$SellingProductComponentsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.sellingProductComponents,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> catalogItemsRefs(
+      Expression<bool> Function($$CatalogItemsTableFilterComposer f) f) {
+    final $$CatalogItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.sellingProductUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> orderItemsRefs(
+      Expression<bool> Function($$OrderItemsTableFilterComposer f) f) {
+    final $$OrderItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.orderItems,
+        getReferencedColumn: (t) => t.sellingProductUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.orderItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$SellingProductsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SellingProductsTable> {
+  $$SellingProductsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get sku => $composableBuilder(
+      column: $table.sku, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$ProductCategoriesTableOrderingComposer get categoryUuid {
+    final $$ProductCategoriesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.categoryUuid,
+        referencedTable: $db.productCategories,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductCategoriesTableOrderingComposer(
+              $db: $db,
+              $table: $db.productCategories,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SellingProductsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SellingProductsTable> {
+  $$SellingProductsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get sku =>
+      $composableBuilder(column: $table.sku, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$ProductCategoriesTableAnnotationComposer get categoryUuid {
+    final $$ProductCategoriesTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.categoryUuid,
+            referencedTable: $db.productCategories,
+            getReferencedColumn: (t) => t.uuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$ProductCategoriesTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.productCategories,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return composer;
+  }
+
+  Expression<T> sellingProductComponentsRefs<T extends Object>(
+      Expression<T> Function(
+              $$SellingProductComponentsTableAnnotationComposer a)
+          f) {
+    final $$SellingProductComponentsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.sellingProductComponents,
+            getReferencedColumn: (t) => t.sellingProductUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$SellingProductComponentsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.sellingProductComponents,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> catalogItemsRefs<T extends Object>(
+      Expression<T> Function($$CatalogItemsTableAnnotationComposer a) f) {
+    final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.sellingProductUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> orderItemsRefs<T extends Object>(
+      Expression<T> Function($$OrderItemsTableAnnotationComposer a) f) {
+    final $$OrderItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.orderItems,
+        getReferencedColumn: (t) => t.sellingProductUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.orderItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$SellingProductsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SellingProductsTable,
+    SellingProduct,
+    $$SellingProductsTableFilterComposer,
+    $$SellingProductsTableOrderingComposer,
+    $$SellingProductsTableAnnotationComposer,
+    $$SellingProductsTableCreateCompanionBuilder,
+    $$SellingProductsTableUpdateCompanionBuilder,
+    (SellingProduct, $$SellingProductsTableReferences),
+    SellingProduct,
+    PrefetchHooks Function(
+        {bool categoryUuid,
+        bool sellingProductComponentsRefs,
+        bool catalogItemsRefs,
+        bool orderItemsRefs})> {
+  $$SellingProductsTableTableManager(
+      _$AppDatabase db, $SellingProductsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SellingProductsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SellingProductsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SellingProductsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> sku = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<String?> categoryUuid = const Value.absent(),
+            Value<String?> unit = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SellingProductsCompanion(
+            uuid: uuid,
+            name: name,
+            sku: sku,
+            description: description,
+            categoryUuid: categoryUuid,
+            unit: unit,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String name,
+            Value<String?> sku = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<String?> categoryUuid = const Value.absent(),
+            Value<String?> unit = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SellingProductsCompanion.insert(
+            uuid: uuid,
+            name: name,
+            sku: sku,
+            description: description,
+            categoryUuid: categoryUuid,
+            unit: unit,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$SellingProductsTable, SellingProduct>(table),
+                    $$SellingProductsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {categoryUuid = false,
+              sellingProductComponentsRefs = false,
+              catalogItemsRefs = false,
+              orderItemsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (sellingProductComponentsRefs) db.sellingProductComponents,
+                if (catalogItemsRefs) db.catalogItems,
+                if (orderItemsRefs) db.orderItems
+              ],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (categoryUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.categoryUuid,
+                    referencedTable:
+                        $$SellingProductsTableReferences._categoryUuidTable(db),
+                    referencedColumn: $$SellingProductsTableReferences
+                        ._categoryUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (sellingProductComponentsRefs)
+                    await $_getPrefetchedDataByColumns<
+                            SellingProduct,
+                            $SellingProductsTable,
+                            SellingProductComponent,
+                            $SellingProductComponentsTable>(
+                        currentTable: table,
+                        referencedTable: $$SellingProductsTableReferences
+                            ._sellingProductComponentsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SellingProductsTableReferences(db, table, p0)
+                                .sellingProductComponentsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'selling_product_uuid',
+                        typedResults: items),
+                  if (catalogItemsRefs)
+                    await $_getPrefetchedDataByColumns<
+                            SellingProduct,
+                            $SellingProductsTable,
+                            CatalogItem,
+                            $CatalogItemsTable>(
+                        currentTable: table,
+                        referencedTable: $$SellingProductsTableReferences
+                            ._catalogItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SellingProductsTableReferences(db, table, p0)
+                                .catalogItemsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'selling_product_uuid',
+                        typedResults: items),
+                  if (orderItemsRefs)
+                    await $_getPrefetchedDataByColumns<SellingProduct,
+                            $SellingProductsTable, OrderItem, $OrderItemsTable>(
+                        currentTable: table,
+                        referencedTable: $$SellingProductsTableReferences
+                            ._orderItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SellingProductsTableReferences(db, table, p0)
+                                .orderItemsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'selling_product_uuid',
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$SellingProductsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $SellingProductsTable,
+    SellingProduct,
+    $$SellingProductsTableFilterComposer,
+    $$SellingProductsTableOrderingComposer,
+    $$SellingProductsTableAnnotationComposer,
+    $$SellingProductsTableCreateCompanionBuilder,
+    $$SellingProductsTableUpdateCompanionBuilder,
+    (SellingProduct, $$SellingProductsTableReferences),
+    SellingProduct,
+    PrefetchHooks Function(
+        {bool categoryUuid,
+        bool sellingProductComponentsRefs,
+        bool catalogItemsRefs,
+        bool orderItemsRefs})>;
+typedef $$SellingProductComponentsTableCreateCompanionBuilder
+    = SellingProductComponentsCompanion Function({
+  required String uuid,
+  required String sellingProductUuid,
+  required String productUuid,
+  required double quantity,
+  Value<String> consumeMode,
+  Value<String?> batchNumber,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$SellingProductComponentsTableUpdateCompanionBuilder
+    = SellingProductComponentsCompanion Function({
+  Value<String> uuid,
+  Value<String> sellingProductUuid,
+  Value<String> productUuid,
+  Value<double> quantity,
+  Value<String> consumeMode,
+  Value<String?> batchNumber,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$SellingProductComponentsTableReferences extends BaseReferences<
+    _$AppDatabase, $SellingProductComponentsTable, SellingProductComponent> {
+  $$SellingProductComponentsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $SellingProductsTable _sellingProductUuidTable(_$AppDatabase db) =>
+      db.sellingProducts.createAlias(
+          'selling_product_components__selling_product_uuid__selling_products__uuid');
+
+  $$SellingProductsTableProcessedTableManager get sellingProductUuid {
+    final $_column = $_itemColumn<String>('selling_product_uuid')!;
+
+    final manager =
+        $$SellingProductsTableTableManager($_db, $_db.sellingProducts)
+            .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sellingProductUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ProductsTable _productUuidTable(_$AppDatabase db) => db.products
+      .createAlias('selling_product_components__product_uuid__products__uuid');
+
+  $$ProductsTableProcessedTableManager get productUuid {
+    final $_column = $_itemColumn<String>('product_uuid')!;
+
+    final manager = $$ProductsTableTableManager($_db, $_db.products)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$SellingProductComponentsTableFilterComposer
+    extends Composer<_$AppDatabase, $SellingProductComponentsTable> {
+  $$SellingProductComponentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get consumeMode => $composableBuilder(
+      column: $table.consumeMode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$SellingProductsTableFilterComposer get sellingProductUuid {
+    final $$SellingProductsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableFilterComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableFilterComposer get productUuid {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableFilterComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SellingProductComponentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SellingProductComponentsTable> {
+  $$SellingProductComponentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get quantity => $composableBuilder(
+      column: $table.quantity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get consumeMode => $composableBuilder(
+      column: $table.consumeMode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$SellingProductsTableOrderingComposer get sellingProductUuid {
+    final $$SellingProductsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableOrderingComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableOrderingComposer get productUuid {
+    final $$ProductsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableOrderingComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SellingProductComponentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SellingProductComponentsTable> {
+  $$SellingProductComponentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<double> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<String> get consumeMode => $composableBuilder(
+      column: $table.consumeMode, builder: (column) => column);
+
+  GeneratedColumn<String> get batchNumber => $composableBuilder(
+      column: $table.batchNumber, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$SellingProductsTableAnnotationComposer get sellingProductUuid {
+    final $$SellingProductsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableAnnotationComposer get productUuid {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$SellingProductComponentsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $SellingProductComponentsTable,
+    SellingProductComponent,
+    $$SellingProductComponentsTableFilterComposer,
+    $$SellingProductComponentsTableOrderingComposer,
+    $$SellingProductComponentsTableAnnotationComposer,
+    $$SellingProductComponentsTableCreateCompanionBuilder,
+    $$SellingProductComponentsTableUpdateCompanionBuilder,
+    (SellingProductComponent, $$SellingProductComponentsTableReferences),
+    SellingProductComponent,
+    PrefetchHooks Function({bool sellingProductUuid, bool productUuid})> {
+  $$SellingProductComponentsTableTableManager(
+      _$AppDatabase db, $SellingProductComponentsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SellingProductComponentsTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SellingProductComponentsTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SellingProductComponentsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> sellingProductUuid = const Value.absent(),
+            Value<String> productUuid = const Value.absent(),
+            Value<double> quantity = const Value.absent(),
+            Value<String> consumeMode = const Value.absent(),
+            Value<String?> batchNumber = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SellingProductComponentsCompanion(
+            uuid: uuid,
+            sellingProductUuid: sellingProductUuid,
+            productUuid: productUuid,
+            quantity: quantity,
+            consumeMode: consumeMode,
+            batchNumber: batchNumber,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String sellingProductUuid,
+            required String productUuid,
+            required double quantity,
+            Value<String> consumeMode = const Value.absent(),
+            Value<String?> batchNumber = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              SellingProductComponentsCompanion.insert(
+            uuid: uuid,
+            sellingProductUuid: sellingProductUuid,
+            productUuid: productUuid,
+            quantity: quantity,
+            consumeMode: consumeMode,
+            batchNumber: batchNumber,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$SellingProductComponentsTable,
+                        SellingProductComponent>(table),
+                    $$SellingProductComponentsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {sellingProductUuid = false, productUuid = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (sellingProductUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.sellingProductUuid,
+                    referencedTable: $$SellingProductComponentsTableReferences
+                        ._sellingProductUuidTable(db),
+                    referencedColumn: $$SellingProductComponentsTableReferences
+                        ._sellingProductUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (productUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.productUuid,
+                    referencedTable: $$SellingProductComponentsTableReferences
+                        ._productUuidTable(db),
+                    referencedColumn: $$SellingProductComponentsTableReferences
+                        ._productUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$SellingProductComponentsTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $SellingProductComponentsTable,
+        SellingProductComponent,
+        $$SellingProductComponentsTableFilterComposer,
+        $$SellingProductComponentsTableOrderingComposer,
+        $$SellingProductComponentsTableAnnotationComposer,
+        $$SellingProductComponentsTableCreateCompanionBuilder,
+        $$SellingProductComponentsTableUpdateCompanionBuilder,
+        (SellingProductComponent, $$SellingProductComponentsTableReferences),
+        SellingProductComponent,
+        PrefetchHooks Function({bool sellingProductUuid, bool productUuid})>;
+typedef $$CatalogsTableCreateCompanionBuilder = CatalogsCompanion Function({
+  required String uuid,
+  required String name,
+  Value<String?> description,
+  Value<DateTime?> validUntil,
+  Value<bool> isDefault,
+  Value<String> defaultPricingApproach,
+  Value<double> defaultMarkupOrMarginPercent,
+  Value<double> defaultFixedAmount,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$CatalogsTableUpdateCompanionBuilder = CatalogsCompanion Function({
+  Value<String> uuid,
+  Value<String> name,
+  Value<String?> description,
+  Value<DateTime?> validUntil,
+  Value<bool> isDefault,
+  Value<String> defaultPricingApproach,
+  Value<double> defaultMarkupOrMarginPercent,
+  Value<double> defaultFixedAmount,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$CatalogsTableReferences
+    extends BaseReferences<_$AppDatabase, $CatalogsTable, Catalog> {
+  $$CatalogsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$CatalogItemsTable, List<CatalogItem>>
+      _catalogItemsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.catalogItems,
+              aliasName: 'catalogs__uuid__catalog_items__catalog_uuid');
+
+  $$CatalogItemsTableProcessedTableManager get catalogItemsRefs {
+    final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
+        .filter(
+            (f) => f.catalogUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache = $_typedResult.readTableOrNull(_catalogItemsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$CatalogAssignmentsTable, List<CatalogAssignment>>
+      _catalogAssignmentsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.catalogAssignments,
+              aliasName: 'catalogs__uuid__catalog_assignments__catalog_uuid');
+
+  $$CatalogAssignmentsTableProcessedTableManager get catalogAssignmentsRefs {
+    final manager = $$CatalogAssignmentsTableTableManager(
+            $_db, $_db.catalogAssignments)
+        .filter(
+            (f) => f.catalogUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_catalogAssignmentsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$CatalogsTableFilterComposer
+    extends Composer<_$AppDatabase, $CatalogsTable> {
+  $$CatalogsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get validUntil => $composableBuilder(
+      column: $table.validUntil, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDefault => $composableBuilder(
+      column: $table.isDefault, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get defaultPricingApproach => $composableBuilder(
+      column: $table.defaultPricingApproach,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get defaultMarkupOrMarginPercent => $composableBuilder(
+      column: $table.defaultMarkupOrMarginPercent,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get defaultFixedAmount => $composableBuilder(
+      column: $table.defaultFixedAmount,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  Expression<bool> catalogItemsRefs(
+      Expression<bool> Function($$CatalogItemsTableFilterComposer f) f) {
+    final $$CatalogItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.catalogUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> catalogAssignmentsRefs(
+      Expression<bool> Function($$CatalogAssignmentsTableFilterComposer f) f) {
+    final $$CatalogAssignmentsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.catalogAssignments,
+        getReferencedColumn: (t) => t.catalogUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogAssignmentsTableFilterComposer(
+              $db: $db,
+              $table: $db.catalogAssignments,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$CatalogsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CatalogsTable> {
+  $$CatalogsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get validUntil => $composableBuilder(
+      column: $table.validUntil, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDefault => $composableBuilder(
+      column: $table.isDefault, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get defaultPricingApproach => $composableBuilder(
+      column: $table.defaultPricingApproach,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get defaultMarkupOrMarginPercent =>
+      $composableBuilder(
+          column: $table.defaultMarkupOrMarginPercent,
+          builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get defaultFixedAmount => $composableBuilder(
+      column: $table.defaultFixedAmount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+}
+
+class $$CatalogsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CatalogsTable> {
+  $$CatalogsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+      column: $table.description, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get validUntil => $composableBuilder(
+      column: $table.validUntil, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDefault =>
+      $composableBuilder(column: $table.isDefault, builder: (column) => column);
+
+  GeneratedColumn<String> get defaultPricingApproach => $composableBuilder(
+      column: $table.defaultPricingApproach, builder: (column) => column);
+
+  GeneratedColumn<double> get defaultMarkupOrMarginPercent =>
+      $composableBuilder(
+          column: $table.defaultMarkupOrMarginPercent,
+          builder: (column) => column);
+
+  GeneratedColumn<double> get defaultFixedAmount => $composableBuilder(
+      column: $table.defaultFixedAmount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  Expression<T> catalogItemsRefs<T extends Object>(
+      Expression<T> Function($$CatalogItemsTableAnnotationComposer a) f) {
+    final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.catalogUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<T> catalogAssignmentsRefs<T extends Object>(
+      Expression<T> Function($$CatalogAssignmentsTableAnnotationComposer a) f) {
+    final $$CatalogAssignmentsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.catalogAssignments,
+            getReferencedColumn: (t) => t.catalogUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CatalogAssignmentsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.catalogAssignments,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+}
+
+class $$CatalogsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CatalogsTable,
+    Catalog,
+    $$CatalogsTableFilterComposer,
+    $$CatalogsTableOrderingComposer,
+    $$CatalogsTableAnnotationComposer,
+    $$CatalogsTableCreateCompanionBuilder,
+    $$CatalogsTableUpdateCompanionBuilder,
+    (Catalog, $$CatalogsTableReferences),
+    Catalog,
+    PrefetchHooks Function(
+        {bool catalogItemsRefs, bool catalogAssignmentsRefs})> {
+  $$CatalogsTableTableManager(_$AppDatabase db, $CatalogsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CatalogsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CatalogsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CatalogsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<String?> description = const Value.absent(),
+            Value<DateTime?> validUntil = const Value.absent(),
+            Value<bool> isDefault = const Value.absent(),
+            Value<String> defaultPricingApproach = const Value.absent(),
+            Value<double> defaultMarkupOrMarginPercent = const Value.absent(),
+            Value<double> defaultFixedAmount = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CatalogsCompanion(
+            uuid: uuid,
+            name: name,
+            description: description,
+            validUntil: validUntil,
+            isDefault: isDefault,
+            defaultPricingApproach: defaultPricingApproach,
+            defaultMarkupOrMarginPercent: defaultMarkupOrMarginPercent,
+            defaultFixedAmount: defaultFixedAmount,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String name,
+            Value<String?> description = const Value.absent(),
+            Value<DateTime?> validUntil = const Value.absent(),
+            Value<bool> isDefault = const Value.absent(),
+            Value<String> defaultPricingApproach = const Value.absent(),
+            Value<double> defaultMarkupOrMarginPercent = const Value.absent(),
+            Value<double> defaultFixedAmount = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CatalogsCompanion.insert(
+            uuid: uuid,
+            name: name,
+            description: description,
+            validUntil: validUntil,
+            isDefault: isDefault,
+            defaultPricingApproach: defaultPricingApproach,
+            defaultMarkupOrMarginPercent: defaultMarkupOrMarginPercent,
+            defaultFixedAmount: defaultFixedAmount,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$CatalogsTable, Catalog>(table),
+                    $$CatalogsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {catalogItemsRefs = false, catalogAssignmentsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (catalogItemsRefs) db.catalogItems,
+                if (catalogAssignmentsRefs) db.catalogAssignments
+              ],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (catalogItemsRefs)
+                    await $_getPrefetchedDataByColumns<Catalog, $CatalogsTable,
+                            CatalogItem, $CatalogItemsTable>(
+                        currentTable: table,
+                        referencedTable: $$CatalogsTableReferences
+                            ._catalogItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CatalogsTableReferences(db, table, p0)
+                                .catalogItemsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'catalog_uuid',
+                        typedResults: items),
+                  if (catalogAssignmentsRefs)
+                    await $_getPrefetchedDataByColumns<Catalog, $CatalogsTable,
+                            CatalogAssignment, $CatalogAssignmentsTable>(
+                        currentTable: table,
+                        referencedTable: $$CatalogsTableReferences
+                            ._catalogAssignmentsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CatalogsTableReferences(db, table, p0)
+                                .catalogAssignmentsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'catalog_uuid',
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CatalogsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CatalogsTable,
+    Catalog,
+    $$CatalogsTableFilterComposer,
+    $$CatalogsTableOrderingComposer,
+    $$CatalogsTableAnnotationComposer,
+    $$CatalogsTableCreateCompanionBuilder,
+    $$CatalogsTableUpdateCompanionBuilder,
+    (Catalog, $$CatalogsTableReferences),
+    Catalog,
+    PrefetchHooks Function(
+        {bool catalogItemsRefs, bool catalogAssignmentsRefs})>;
+typedef $$CatalogItemsTableCreateCompanionBuilder = CatalogItemsCompanion
+    Function({
+  required String uuid,
+  required String catalogUuid,
+  Value<String?> productUuid,
+  Value<String?> sellingProductUuid,
+  Value<double?> customPrice,
+  Value<String?> batchUuid,
+  Value<DateTime?> validUntil,
+  Value<String> batchSelectionStrategy,
+  Value<String> pricingApproach,
+  Value<double> markupOrMarginPercent,
+  Value<double> fixedAmount,
+  Value<double> sellPrice,
+  Value<double?> unitCostSnapshot,
+  Value<DateTime?> priceComputedAt,
+  Value<bool> priceOverride,
+  Value<String?> defaultDiscountType,
+  Value<double> defaultDiscountValue,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$CatalogItemsTableUpdateCompanionBuilder = CatalogItemsCompanion
+    Function({
+  Value<String> uuid,
+  Value<String> catalogUuid,
+  Value<String?> productUuid,
+  Value<String?> sellingProductUuid,
+  Value<double?> customPrice,
+  Value<String?> batchUuid,
+  Value<DateTime?> validUntil,
+  Value<String> batchSelectionStrategy,
+  Value<String> pricingApproach,
+  Value<double> markupOrMarginPercent,
+  Value<double> fixedAmount,
+  Value<double> sellPrice,
+  Value<double?> unitCostSnapshot,
+  Value<DateTime?> priceComputedAt,
+  Value<bool> priceOverride,
+  Value<String?> defaultDiscountType,
+  Value<double> defaultDiscountValue,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$CatalogItemsTableReferences
+    extends BaseReferences<_$AppDatabase, $CatalogItemsTable, CatalogItem> {
+  $$CatalogItemsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $CatalogsTable _catalogUuidTable(_$AppDatabase db) =>
+      db.catalogs.createAlias('catalog_items__catalog_uuid__catalogs__uuid');
+
+  $$CatalogsTableProcessedTableManager get catalogUuid {
+    final $_column = $_itemColumn<String>('catalog_uuid')!;
+
+    final manager = $$CatalogsTableTableManager($_db, $_db.catalogs)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_catalogUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ProductsTable _productUuidTable(_$AppDatabase db) =>
+      db.products.createAlias('catalog_items__product_uuid__products__uuid');
+
+  $$ProductsTableProcessedTableManager? get productUuid {
+    final $_column = $_itemColumn<String>('product_uuid');
+    if ($_column == null) return null;
+    final manager = $$ProductsTableTableManager($_db, $_db.products)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_productUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $SellingProductsTable _sellingProductUuidTable(_$AppDatabase db) =>
+      db.sellingProducts.createAlias(
+          'catalog_items__selling_product_uuid__selling_products__uuid');
+
+  $$SellingProductsTableProcessedTableManager? get sellingProductUuid {
+    final $_column = $_itemColumn<String>('selling_product_uuid');
+    if ($_column == null) return null;
+    final manager =
+        $$SellingProductsTableTableManager($_db, $_db.sellingProducts)
+            .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sellingProductUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ProductBatchesTable _batchUuidTable(_$AppDatabase db) =>
+      db.productBatches
+          .createAlias('catalog_items__batch_uuid__product_batches__uuid');
+
+  $$ProductBatchesTableProcessedTableManager? get batchUuid {
+    final $_column = $_itemColumn<String>('batch_uuid');
+    if ($_column == null) return null;
+    final manager = $$ProductBatchesTableTableManager($_db, $_db.productBatches)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_batchUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$CatalogTieredDiscountsTable,
+      List<CatalogTieredDiscount>> _catalogTieredDiscountsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.catalogTieredDiscounts,
+          aliasName:
+              'catalog_items__uuid__catalog_tiered_discounts__catalog_item_uuid');
+
+  $$CatalogTieredDiscountsTableProcessedTableManager
+      get catalogTieredDiscountsRefs {
+    final manager = $$CatalogTieredDiscountsTableTableManager(
+            $_db, $_db.catalogTieredDiscounts)
+        .filter((f) =>
+            f.catalogItemUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_catalogTieredDiscountsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
+  static MultiTypedResultKey<$OrderItemsTable, List<OrderItem>>
+      _orderItemsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.orderItems,
+              aliasName: 'catalog_items__uuid__order_items__catalog_item_uuid');
+
+  $$OrderItemsTableProcessedTableManager get orderItemsRefs {
+    final manager = $$OrderItemsTableTableManager($_db, $_db.orderItems).filter(
+        (f) => f.catalogItemUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache = $_typedResult.readTableOrNull(_orderItemsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$CatalogItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $CatalogItemsTable> {
+  $$CatalogItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get customPrice => $composableBuilder(
+      column: $table.customPrice, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get validUntil => $composableBuilder(
+      column: $table.validUntil, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get batchSelectionStrategy => $composableBuilder(
+      column: $table.batchSelectionStrategy,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get pricingApproach => $composableBuilder(
+      column: $table.pricingApproach,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get markupOrMarginPercent => $composableBuilder(
+      column: $table.markupOrMarginPercent,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get fixedAmount => $composableBuilder(
+      column: $table.fixedAmount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get sellPrice => $composableBuilder(
+      column: $table.sellPrice, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get unitCostSnapshot => $composableBuilder(
+      column: $table.unitCostSnapshot,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get priceComputedAt => $composableBuilder(
+      column: $table.priceComputedAt,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get priceOverride => $composableBuilder(
+      column: $table.priceOverride, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get defaultDiscountType => $composableBuilder(
+      column: $table.defaultDiscountType,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get defaultDiscountValue => $composableBuilder(
+      column: $table.defaultDiscountValue,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$CatalogsTableFilterComposer get catalogUuid {
+    final $$CatalogsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogUuid,
+        referencedTable: $db.catalogs,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogsTableFilterComposer(
+              $db: $db,
+              $table: $db.catalogs,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableFilterComposer get productUuid {
+    final $$ProductsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableFilterComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SellingProductsTableFilterComposer get sellingProductUuid {
+    final $$SellingProductsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableFilterComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductBatchesTableFilterComposer get batchUuid {
+    final $$ProductBatchesTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.batchUuid,
+        referencedTable: $db.productBatches,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductBatchesTableFilterComposer(
+              $db: $db,
+              $table: $db.productBatches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> catalogTieredDiscountsRefs(
+      Expression<bool> Function($$CatalogTieredDiscountsTableFilterComposer f)
+          f) {
+    final $$CatalogTieredDiscountsTableFilterComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.catalogTieredDiscounts,
+            getReferencedColumn: (t) => t.catalogItemUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CatalogTieredDiscountsTableFilterComposer(
+                  $db: $db,
+                  $table: $db.catalogTieredDiscounts,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<bool> orderItemsRefs(
+      Expression<bool> Function($$OrderItemsTableFilterComposer f) f) {
+    final $$OrderItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.orderItems,
+        getReferencedColumn: (t) => t.catalogItemUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.orderItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$CatalogItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CatalogItemsTable> {
+  $$CatalogItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get customPrice => $composableBuilder(
+      column: $table.customPrice, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get validUntil => $composableBuilder(
+      column: $table.validUntil, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get batchSelectionStrategy => $composableBuilder(
+      column: $table.batchSelectionStrategy,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get pricingApproach => $composableBuilder(
+      column: $table.pricingApproach,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get markupOrMarginPercent => $composableBuilder(
+      column: $table.markupOrMarginPercent,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get fixedAmount => $composableBuilder(
+      column: $table.fixedAmount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get sellPrice => $composableBuilder(
+      column: $table.sellPrice, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get unitCostSnapshot => $composableBuilder(
+      column: $table.unitCostSnapshot,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get priceComputedAt => $composableBuilder(
+      column: $table.priceComputedAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get priceOverride => $composableBuilder(
+      column: $table.priceOverride,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get defaultDiscountType => $composableBuilder(
+      column: $table.defaultDiscountType,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get defaultDiscountValue => $composableBuilder(
+      column: $table.defaultDiscountValue,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$CatalogsTableOrderingComposer get catalogUuid {
+    final $$CatalogsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogUuid,
+        referencedTable: $db.catalogs,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogsTableOrderingComposer(
+              $db: $db,
+              $table: $db.catalogs,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableOrderingComposer get productUuid {
+    final $$ProductsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableOrderingComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SellingProductsTableOrderingComposer get sellingProductUuid {
+    final $$SellingProductsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableOrderingComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductBatchesTableOrderingComposer get batchUuid {
+    final $$ProductBatchesTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.batchUuid,
+        referencedTable: $db.productBatches,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductBatchesTableOrderingComposer(
+              $db: $db,
+              $table: $db.productBatches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CatalogItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CatalogItemsTable> {
+  $$CatalogItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<double> get customPrice => $composableBuilder(
+      column: $table.customPrice, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get validUntil => $composableBuilder(
+      column: $table.validUntil, builder: (column) => column);
+
+  GeneratedColumn<String> get batchSelectionStrategy => $composableBuilder(
+      column: $table.batchSelectionStrategy, builder: (column) => column);
+
+  GeneratedColumn<String> get pricingApproach => $composableBuilder(
+      column: $table.pricingApproach, builder: (column) => column);
+
+  GeneratedColumn<double> get markupOrMarginPercent => $composableBuilder(
+      column: $table.markupOrMarginPercent, builder: (column) => column);
+
+  GeneratedColumn<double> get fixedAmount => $composableBuilder(
+      column: $table.fixedAmount, builder: (column) => column);
+
+  GeneratedColumn<double> get sellPrice =>
+      $composableBuilder(column: $table.sellPrice, builder: (column) => column);
+
+  GeneratedColumn<double> get unitCostSnapshot => $composableBuilder(
+      column: $table.unitCostSnapshot, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get priceComputedAt => $composableBuilder(
+      column: $table.priceComputedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get priceOverride => $composableBuilder(
+      column: $table.priceOverride, builder: (column) => column);
+
+  GeneratedColumn<String> get defaultDiscountType => $composableBuilder(
+      column: $table.defaultDiscountType, builder: (column) => column);
+
+  GeneratedColumn<double> get defaultDiscountValue => $composableBuilder(
+      column: $table.defaultDiscountValue, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$CatalogsTableAnnotationComposer get catalogUuid {
+    final $$CatalogsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogUuid,
+        referencedTable: $db.catalogs,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.catalogs,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductsTableAnnotationComposer get productUuid {
+    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.productUuid,
+        referencedTable: $db.products,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SellingProductsTableAnnotationComposer get sellingProductUuid {
+    final $$SellingProductsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ProductBatchesTableAnnotationComposer get batchUuid {
+    final $$ProductBatchesTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.batchUuid,
+        referencedTable: $db.productBatches,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ProductBatchesTableAnnotationComposer(
+              $db: $db,
+              $table: $db.productBatches,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<T> catalogTieredDiscountsRefs<T extends Object>(
+      Expression<T> Function($$CatalogTieredDiscountsTableAnnotationComposer a)
+          f) {
+    final $$CatalogTieredDiscountsTableAnnotationComposer composer =
+        $composerBuilder(
+            composer: this,
+            getCurrentColumn: (t) => t.uuid,
+            referencedTable: $db.catalogTieredDiscounts,
+            getReferencedColumn: (t) => t.catalogItemUuid,
+            builder: (joinBuilder,
+                    {$addJoinBuilderToRootComposer,
+                    $removeJoinBuilderFromRootComposer}) =>
+                $$CatalogTieredDiscountsTableAnnotationComposer(
+                  $db: $db,
+                  $table: $db.catalogTieredDiscounts,
+                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                  joinBuilder: joinBuilder,
+                  $removeJoinBuilderFromRootComposer:
+                      $removeJoinBuilderFromRootComposer,
+                ));
+    return f(composer);
+  }
+
+  Expression<T> orderItemsRefs<T extends Object>(
+      Expression<T> Function($$OrderItemsTableAnnotationComposer a) f) {
+    final $$OrderItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.orderItems,
+        getReferencedColumn: (t) => t.catalogItemUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.orderItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$CatalogItemsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CatalogItemsTable,
+    CatalogItem,
+    $$CatalogItemsTableFilterComposer,
+    $$CatalogItemsTableOrderingComposer,
+    $$CatalogItemsTableAnnotationComposer,
+    $$CatalogItemsTableCreateCompanionBuilder,
+    $$CatalogItemsTableUpdateCompanionBuilder,
+    (CatalogItem, $$CatalogItemsTableReferences),
+    CatalogItem,
+    PrefetchHooks Function(
+        {bool catalogUuid,
+        bool productUuid,
+        bool sellingProductUuid,
+        bool batchUuid,
+        bool catalogTieredDiscountsRefs,
+        bool orderItemsRefs})> {
+  $$CatalogItemsTableTableManager(_$AppDatabase db, $CatalogItemsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CatalogItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CatalogItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CatalogItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> catalogUuid = const Value.absent(),
+            Value<String?> productUuid = const Value.absent(),
+            Value<String?> sellingProductUuid = const Value.absent(),
+            Value<double?> customPrice = const Value.absent(),
+            Value<String?> batchUuid = const Value.absent(),
+            Value<DateTime?> validUntil = const Value.absent(),
+            Value<String> batchSelectionStrategy = const Value.absent(),
+            Value<String> pricingApproach = const Value.absent(),
+            Value<double> markupOrMarginPercent = const Value.absent(),
+            Value<double> fixedAmount = const Value.absent(),
+            Value<double> sellPrice = const Value.absent(),
+            Value<double?> unitCostSnapshot = const Value.absent(),
+            Value<DateTime?> priceComputedAt = const Value.absent(),
+            Value<bool> priceOverride = const Value.absent(),
+            Value<String?> defaultDiscountType = const Value.absent(),
+            Value<double> defaultDiscountValue = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CatalogItemsCompanion(
+            uuid: uuid,
+            catalogUuid: catalogUuid,
+            productUuid: productUuid,
+            sellingProductUuid: sellingProductUuid,
+            customPrice: customPrice,
+            batchUuid: batchUuid,
+            validUntil: validUntil,
+            batchSelectionStrategy: batchSelectionStrategy,
+            pricingApproach: pricingApproach,
+            markupOrMarginPercent: markupOrMarginPercent,
+            fixedAmount: fixedAmount,
+            sellPrice: sellPrice,
+            unitCostSnapshot: unitCostSnapshot,
+            priceComputedAt: priceComputedAt,
+            priceOverride: priceOverride,
+            defaultDiscountType: defaultDiscountType,
+            defaultDiscountValue: defaultDiscountValue,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String catalogUuid,
+            Value<String?> productUuid = const Value.absent(),
+            Value<String?> sellingProductUuid = const Value.absent(),
+            Value<double?> customPrice = const Value.absent(),
+            Value<String?> batchUuid = const Value.absent(),
+            Value<DateTime?> validUntil = const Value.absent(),
+            Value<String> batchSelectionStrategy = const Value.absent(),
+            Value<String> pricingApproach = const Value.absent(),
+            Value<double> markupOrMarginPercent = const Value.absent(),
+            Value<double> fixedAmount = const Value.absent(),
+            Value<double> sellPrice = const Value.absent(),
+            Value<double?> unitCostSnapshot = const Value.absent(),
+            Value<DateTime?> priceComputedAt = const Value.absent(),
+            Value<bool> priceOverride = const Value.absent(),
+            Value<String?> defaultDiscountType = const Value.absent(),
+            Value<double> defaultDiscountValue = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CatalogItemsCompanion.insert(
+            uuid: uuid,
+            catalogUuid: catalogUuid,
+            productUuid: productUuid,
+            sellingProductUuid: sellingProductUuid,
+            customPrice: customPrice,
+            batchUuid: batchUuid,
+            validUntil: validUntil,
+            batchSelectionStrategy: batchSelectionStrategy,
+            pricingApproach: pricingApproach,
+            markupOrMarginPercent: markupOrMarginPercent,
+            fixedAmount: fixedAmount,
+            sellPrice: sellPrice,
+            unitCostSnapshot: unitCostSnapshot,
+            priceComputedAt: priceComputedAt,
+            priceOverride: priceOverride,
+            defaultDiscountType: defaultDiscountType,
+            defaultDiscountValue: defaultDiscountValue,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$CatalogItemsTable, CatalogItem>(table),
+                    $$CatalogItemsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {catalogUuid = false,
+              productUuid = false,
+              sellingProductUuid = false,
+              batchUuid = false,
+              catalogTieredDiscountsRefs = false,
+              orderItemsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [
+                if (catalogTieredDiscountsRefs) db.catalogTieredDiscounts,
+                if (orderItemsRefs) db.orderItems
+              ],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (catalogUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.catalogUuid,
+                    referencedTable:
+                        $$CatalogItemsTableReferences._catalogUuidTable(db),
+                    referencedColumn: $$CatalogItemsTableReferences
+                        ._catalogUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (productUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.productUuid,
+                    referencedTable:
+                        $$CatalogItemsTableReferences._productUuidTable(db),
+                    referencedColumn: $$CatalogItemsTableReferences
+                        ._productUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (sellingProductUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.sellingProductUuid,
+                    referencedTable: $$CatalogItemsTableReferences
+                        ._sellingProductUuidTable(db),
+                    referencedColumn: $$CatalogItemsTableReferences
+                        ._sellingProductUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (batchUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.batchUuid,
+                    referencedTable:
+                        $$CatalogItemsTableReferences._batchUuidTable(db),
+                    referencedColumn:
+                        $$CatalogItemsTableReferences._batchUuidTable(db).uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (catalogTieredDiscountsRefs)
+                    await $_getPrefetchedDataByColumns<
+                            CatalogItem,
+                            $CatalogItemsTable,
+                            CatalogTieredDiscount,
+                            $CatalogTieredDiscountsTable>(
+                        currentTable: table,
+                        referencedTable: $$CatalogItemsTableReferences
+                            ._catalogTieredDiscountsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CatalogItemsTableReferences(db, table, p0)
+                                .catalogTieredDiscountsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'catalog_item_uuid',
+                        typedResults: items),
+                  if (orderItemsRefs)
+                    await $_getPrefetchedDataByColumns<CatalogItem,
+                            $CatalogItemsTable, OrderItem, $OrderItemsTable>(
+                        currentTable: table,
+                        referencedTable: $$CatalogItemsTableReferences
+                            ._orderItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CatalogItemsTableReferences(db, table, p0)
+                                .orderItemsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'catalog_item_uuid',
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CatalogItemsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CatalogItemsTable,
+    CatalogItem,
+    $$CatalogItemsTableFilterComposer,
+    $$CatalogItemsTableOrderingComposer,
+    $$CatalogItemsTableAnnotationComposer,
+    $$CatalogItemsTableCreateCompanionBuilder,
+    $$CatalogItemsTableUpdateCompanionBuilder,
+    (CatalogItem, $$CatalogItemsTableReferences),
+    CatalogItem,
+    PrefetchHooks Function(
+        {bool catalogUuid,
+        bool productUuid,
+        bool sellingProductUuid,
+        bool batchUuid,
+        bool catalogTieredDiscountsRefs,
+        bool orderItemsRefs})>;
+typedef $$CatalogAssignmentsTableCreateCompanionBuilder
+    = CatalogAssignmentsCompanion Function({
+  required String uuid,
+  required String catalogUuid,
+  required String contactUuid,
+  Value<DateTime> createdAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$CatalogAssignmentsTableUpdateCompanionBuilder
+    = CatalogAssignmentsCompanion Function({
+  Value<String> uuid,
+  Value<String> catalogUuid,
+  Value<String> contactUuid,
+  Value<DateTime> createdAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$CatalogAssignmentsTableReferences extends BaseReferences<
+    _$AppDatabase, $CatalogAssignmentsTable, CatalogAssignment> {
+  $$CatalogAssignmentsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $CatalogsTable _catalogUuidTable(_$AppDatabase db) => db.catalogs
+      .createAlias('catalog_assignments__catalog_uuid__catalogs__uuid');
+
+  $$CatalogsTableProcessedTableManager get catalogUuid {
+    final $_column = $_itemColumn<String>('catalog_uuid')!;
+
+    final manager = $$CatalogsTableTableManager($_db, $_db.catalogs)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_catalogUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $ContactsTable _contactUuidTable(_$AppDatabase db) => db.contacts
+      .createAlias('catalog_assignments__contact_uuid__contacts__uuid');
+
+  $$ContactsTableProcessedTableManager get contactUuid {
+    final $_column = $_itemColumn<String>('contact_uuid')!;
+
+    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_contactUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$CatalogAssignmentsTableFilterComposer
+    extends Composer<_$AppDatabase, $CatalogAssignmentsTable> {
+  $$CatalogAssignmentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$CatalogsTableFilterComposer get catalogUuid {
+    final $$CatalogsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogUuid,
+        referencedTable: $db.catalogs,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogsTableFilterComposer(
+              $db: $db,
+              $table: $db.catalogs,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ContactsTableFilterComposer get contactUuid {
+    final $$ContactsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactUuid,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableFilterComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CatalogAssignmentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CatalogAssignmentsTable> {
+  $$CatalogAssignmentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$CatalogsTableOrderingComposer get catalogUuid {
+    final $$CatalogsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogUuid,
+        referencedTable: $db.catalogs,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogsTableOrderingComposer(
+              $db: $db,
+              $table: $db.catalogs,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ContactsTableOrderingComposer get contactUuid {
+    final $$ContactsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactUuid,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableOrderingComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CatalogAssignmentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CatalogAssignmentsTable> {
+  $$CatalogAssignmentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$CatalogsTableAnnotationComposer get catalogUuid {
+    final $$CatalogsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogUuid,
+        referencedTable: $db.catalogs,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.catalogs,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$ContactsTableAnnotationComposer get contactUuid {
+    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.contactUuid,
+        referencedTable: $db.contacts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$ContactsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.contacts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CatalogAssignmentsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CatalogAssignmentsTable,
+    CatalogAssignment,
+    $$CatalogAssignmentsTableFilterComposer,
+    $$CatalogAssignmentsTableOrderingComposer,
+    $$CatalogAssignmentsTableAnnotationComposer,
+    $$CatalogAssignmentsTableCreateCompanionBuilder,
+    $$CatalogAssignmentsTableUpdateCompanionBuilder,
+    (CatalogAssignment, $$CatalogAssignmentsTableReferences),
+    CatalogAssignment,
+    PrefetchHooks Function({bool catalogUuid, bool contactUuid})> {
+  $$CatalogAssignmentsTableTableManager(
+      _$AppDatabase db, $CatalogAssignmentsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CatalogAssignmentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CatalogAssignmentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CatalogAssignmentsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> catalogUuid = const Value.absent(),
+            Value<String> contactUuid = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CatalogAssignmentsCompanion(
+            uuid: uuid,
+            catalogUuid: catalogUuid,
+            contactUuid: contactUuid,
+            createdAt: createdAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String catalogUuid,
+            required String contactUuid,
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CatalogAssignmentsCompanion.insert(
+            uuid: uuid,
+            catalogUuid: catalogUuid,
+            contactUuid: contactUuid,
+            createdAt: createdAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$CatalogAssignmentsTable, CatalogAssignment>(
+                        table),
+                    $$CatalogAssignmentsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({catalogUuid = false, contactUuid = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (catalogUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.catalogUuid,
+                    referencedTable: $$CatalogAssignmentsTableReferences
+                        ._catalogUuidTable(db),
+                    referencedColumn: $$CatalogAssignmentsTableReferences
+                        ._catalogUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (contactUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.contactUuid,
+                    referencedTable: $$CatalogAssignmentsTableReferences
+                        ._contactUuidTable(db),
+                    referencedColumn: $$CatalogAssignmentsTableReferences
+                        ._contactUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CatalogAssignmentsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $CatalogAssignmentsTable,
+    CatalogAssignment,
+    $$CatalogAssignmentsTableFilterComposer,
+    $$CatalogAssignmentsTableOrderingComposer,
+    $$CatalogAssignmentsTableAnnotationComposer,
+    $$CatalogAssignmentsTableCreateCompanionBuilder,
+    $$CatalogAssignmentsTableUpdateCompanionBuilder,
+    (CatalogAssignment, $$CatalogAssignmentsTableReferences),
+    CatalogAssignment,
+    PrefetchHooks Function({bool catalogUuid, bool contactUuid})>;
+typedef $$CatalogTieredDiscountsTableCreateCompanionBuilder
+    = CatalogTieredDiscountsCompanion Function({
+  required String uuid,
+  required String catalogItemUuid,
+  required double minQuantity,
+  required double discountPercentage,
+  Value<String> discountType,
+  Value<double> discountAmount,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$CatalogTieredDiscountsTableUpdateCompanionBuilder
+    = CatalogTieredDiscountsCompanion Function({
+  Value<String> uuid,
+  Value<String> catalogItemUuid,
+  Value<double> minQuantity,
+  Value<double> discountPercentage,
+  Value<String> discountType,
+  Value<double> discountAmount,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$CatalogTieredDiscountsTableReferences extends BaseReferences<
+    _$AppDatabase, $CatalogTieredDiscountsTable, CatalogTieredDiscount> {
+  $$CatalogTieredDiscountsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $CatalogItemsTable _catalogItemUuidTable(_$AppDatabase db) =>
+      db.catalogItems.createAlias(
+          'catalog_tiered_discounts__catalog_item_uuid__catalog_items__uuid');
+
+  $$CatalogItemsTableProcessedTableManager get catalogItemUuid {
+    final $_column = $_itemColumn<String>('catalog_item_uuid')!;
+
+    final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_catalogItemUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+}
+
+class $$CatalogTieredDiscountsTableFilterComposer
+    extends Composer<_$AppDatabase, $CatalogTieredDiscountsTable> {
+  $$CatalogTieredDiscountsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get minQuantity => $composableBuilder(
+      column: $table.minQuantity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get discountPercentage => $composableBuilder(
+      column: $table.discountPercentage,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get discountType => $composableBuilder(
+      column: $table.discountType, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get discountAmount => $composableBuilder(
+      column: $table.discountAmount,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$CatalogItemsTableFilterComposer get catalogItemUuid {
+    final $$CatalogItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogItemUuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CatalogTieredDiscountsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CatalogTieredDiscountsTable> {
+  $$CatalogTieredDiscountsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get minQuantity => $composableBuilder(
+      column: $table.minQuantity, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get discountPercentage => $composableBuilder(
+      column: $table.discountPercentage,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get discountType => $composableBuilder(
+      column: $table.discountType,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get discountAmount => $composableBuilder(
+      column: $table.discountAmount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$CatalogItemsTableOrderingComposer get catalogItemUuid {
+    final $$CatalogItemsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogItemUuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableOrderingComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CatalogTieredDiscountsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CatalogTieredDiscountsTable> {
+  $$CatalogTieredDiscountsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<double> get minQuantity => $composableBuilder(
+      column: $table.minQuantity, builder: (column) => column);
+
+  GeneratedColumn<double> get discountPercentage => $composableBuilder(
+      column: $table.discountPercentage, builder: (column) => column);
+
+  GeneratedColumn<String> get discountType => $composableBuilder(
+      column: $table.discountType, builder: (column) => column);
+
+  GeneratedColumn<double> get discountAmount => $composableBuilder(
+      column: $table.discountAmount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$CatalogItemsTableAnnotationComposer get catalogItemUuid {
+    final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogItemUuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$CatalogTieredDiscountsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $CatalogTieredDiscountsTable,
+    CatalogTieredDiscount,
+    $$CatalogTieredDiscountsTableFilterComposer,
+    $$CatalogTieredDiscountsTableOrderingComposer,
+    $$CatalogTieredDiscountsTableAnnotationComposer,
+    $$CatalogTieredDiscountsTableCreateCompanionBuilder,
+    $$CatalogTieredDiscountsTableUpdateCompanionBuilder,
+    (CatalogTieredDiscount, $$CatalogTieredDiscountsTableReferences),
+    CatalogTieredDiscount,
+    PrefetchHooks Function({bool catalogItemUuid})> {
+  $$CatalogTieredDiscountsTableTableManager(
+      _$AppDatabase db, $CatalogTieredDiscountsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CatalogTieredDiscountsTableFilterComposer(
+                  $db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CatalogTieredDiscountsTableOrderingComposer(
+                  $db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CatalogTieredDiscountsTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> catalogItemUuid = const Value.absent(),
+            Value<double> minQuantity = const Value.absent(),
+            Value<double> discountPercentage = const Value.absent(),
+            Value<String> discountType = const Value.absent(),
+            Value<double> discountAmount = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CatalogTieredDiscountsCompanion(
+            uuid: uuid,
+            catalogItemUuid: catalogItemUuid,
+            minQuantity: minQuantity,
+            discountPercentage: discountPercentage,
+            discountType: discountType,
+            discountAmount: discountAmount,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String catalogItemUuid,
+            required double minQuantity,
+            required double discountPercentage,
+            Value<String> discountType = const Value.absent(),
+            Value<double> discountAmount = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              CatalogTieredDiscountsCompanion.insert(
+            uuid: uuid,
+            catalogItemUuid: catalogItemUuid,
+            minQuantity: minQuantity,
+            discountPercentage: discountPercentage,
+            discountType: discountType,
+            discountAmount: discountAmount,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$CatalogTieredDiscountsTable,
+                        CatalogTieredDiscount>(table),
+                    $$CatalogTieredDiscountsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: ({catalogItemUuid = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (catalogItemUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.catalogItemUuid,
+                    referencedTable: $$CatalogTieredDiscountsTableReferences
+                        ._catalogItemUuidTable(db),
+                    referencedColumn: $$CatalogTieredDiscountsTableReferences
+                        ._catalogItemUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$CatalogTieredDiscountsTableProcessedTableManager
+    = ProcessedTableManager<
+        _$AppDatabase,
+        $CatalogTieredDiscountsTable,
+        CatalogTieredDiscount,
+        $$CatalogTieredDiscountsTableFilterComposer,
+        $$CatalogTieredDiscountsTableOrderingComposer,
+        $$CatalogTieredDiscountsTableAnnotationComposer,
+        $$CatalogTieredDiscountsTableCreateCompanionBuilder,
+        $$CatalogTieredDiscountsTableUpdateCompanionBuilder,
+        (CatalogTieredDiscount, $$CatalogTieredDiscountsTableReferences),
+        CatalogTieredDiscount,
+        PrefetchHooks Function({bool catalogItemUuid})>;
 typedef $$OrderItemsTableCreateCompanionBuilder = OrderItemsCompanion Function({
   required String uuid,
   required String orderUuid,
-  required String productUuid,
+  Value<String?> productUuid,
+  Value<String?> catalogItemUuid,
+  Value<String?> sellingProductUuid,
   required String productNameSnapshot,
   required double quantity,
   required double unitPrice,
+  Value<double?> discountedUnitPrice,
   Value<double> discountAmount,
   Value<double> taxRate,
+  Value<String?> catalogNameSnapshot,
   Value<double> receivedQuantity,
   Value<String?> batchUuid,
   Value<double> purchasePriceSnapshot,
@@ -26367,12 +29884,16 @@ typedef $$OrderItemsTableCreateCompanionBuilder = OrderItemsCompanion Function({
 typedef $$OrderItemsTableUpdateCompanionBuilder = OrderItemsCompanion Function({
   Value<String> uuid,
   Value<String> orderUuid,
-  Value<String> productUuid,
+  Value<String?> productUuid,
+  Value<String?> catalogItemUuid,
+  Value<String?> sellingProductUuid,
   Value<String> productNameSnapshot,
   Value<double> quantity,
   Value<double> unitPrice,
+  Value<double?> discountedUnitPrice,
   Value<double> discountAmount,
   Value<double> taxRate,
+  Value<String?> catalogNameSnapshot,
   Value<double> receivedQuantity,
   Value<String?> batchUuid,
   Value<double> purchasePriceSnapshot,
@@ -26405,12 +29926,43 @@ final class $$OrderItemsTableReferences
   static $ProductsTable _productUuidTable(_$AppDatabase db) =>
       db.products.createAlias('order_items__product_uuid__products__uuid');
 
-  $$ProductsTableProcessedTableManager get productUuid {
-    final $_column = $_itemColumn<String>('product_uuid')!;
-
+  $$ProductsTableProcessedTableManager? get productUuid {
+    final $_column = $_itemColumn<String>('product_uuid');
+    if ($_column == null) return null;
     final manager = $$ProductsTableTableManager($_db, $_db.products)
         .filter((f) => f.uuid.sqlEquals($_column));
     final item = $_typedResult.readTableOrNull(_productUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $CatalogItemsTable _catalogItemUuidTable(_$AppDatabase db) =>
+      db.catalogItems
+          .createAlias('order_items__catalog_item_uuid__catalog_items__uuid');
+
+  $$CatalogItemsTableProcessedTableManager? get catalogItemUuid {
+    final $_column = $_itemColumn<String>('catalog_item_uuid');
+    if ($_column == null) return null;
+    final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_catalogItemUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $SellingProductsTable _sellingProductUuidTable(_$AppDatabase db) => db
+      .sellingProducts
+      .createAlias('order_items__selling_product_uuid__selling_products__uuid');
+
+  $$SellingProductsTableProcessedTableManager? get sellingProductUuid {
+    final $_column = $_itemColumn<String>('selling_product_uuid');
+    if ($_column == null) return null;
+    final manager =
+        $$SellingProductsTableTableManager($_db, $_db.sellingProducts)
+            .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sellingProductUuidTable($_db));
     if (item == null) return manager;
     return ProcessedTableManager(
         manager.$state.copyWith(prefetchedData: [item]));
@@ -26472,12 +30024,20 @@ class $$OrderItemsTableFilterComposer
   ColumnFilters<double> get unitPrice => $composableBuilder(
       column: $table.unitPrice, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<double> get discountedUnitPrice => $composableBuilder(
+      column: $table.discountedUnitPrice,
+      builder: (column) => ColumnFilters(column));
+
   ColumnFilters<double> get discountAmount => $composableBuilder(
       column: $table.discountAmount,
       builder: (column) => ColumnFilters(column));
 
   ColumnFilters<double> get taxRate => $composableBuilder(
       column: $table.taxRate, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get catalogNameSnapshot => $composableBuilder(
+      column: $table.catalogNameSnapshot,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<double> get receivedQuantity => $composableBuilder(
       column: $table.receivedQuantity,
@@ -26534,6 +30094,46 @@ class $$OrderItemsTableFilterComposer
             $$ProductsTableFilterComposer(
               $db: $db,
               $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CatalogItemsTableFilterComposer get catalogItemUuid {
+    final $$CatalogItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogItemUuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SellingProductsTableFilterComposer get sellingProductUuid {
+    final $$SellingProductsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableFilterComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -26606,12 +30206,20 @@ class $$OrderItemsTableOrderingComposer
   ColumnOrderings<double> get unitPrice => $composableBuilder(
       column: $table.unitPrice, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<double> get discountedUnitPrice => $composableBuilder(
+      column: $table.discountedUnitPrice,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<double> get discountAmount => $composableBuilder(
       column: $table.discountAmount,
       builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<double> get taxRate => $composableBuilder(
       column: $table.taxRate, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get catalogNameSnapshot => $composableBuilder(
+      column: $table.catalogNameSnapshot,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<double> get receivedQuantity => $composableBuilder(
       column: $table.receivedQuantity,
@@ -26676,6 +30284,46 @@ class $$OrderItemsTableOrderingComposer
     return composer;
   }
 
+  $$CatalogItemsTableOrderingComposer get catalogItemUuid {
+    final $$CatalogItemsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogItemUuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableOrderingComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SellingProductsTableOrderingComposer get sellingProductUuid {
+    final $$SellingProductsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableOrderingComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
   $$ProductBatchesTableOrderingComposer get batchUuid {
     final $$ProductBatchesTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -26718,11 +30366,17 @@ class $$OrderItemsTableAnnotationComposer
   GeneratedColumn<double> get unitPrice =>
       $composableBuilder(column: $table.unitPrice, builder: (column) => column);
 
+  GeneratedColumn<double> get discountedUnitPrice => $composableBuilder(
+      column: $table.discountedUnitPrice, builder: (column) => column);
+
   GeneratedColumn<double> get discountAmount => $composableBuilder(
       column: $table.discountAmount, builder: (column) => column);
 
   GeneratedColumn<double> get taxRate =>
       $composableBuilder(column: $table.taxRate, builder: (column) => column);
+
+  GeneratedColumn<String> get catalogNameSnapshot => $composableBuilder(
+      column: $table.catalogNameSnapshot, builder: (column) => column);
 
   GeneratedColumn<double> get receivedQuantity => $composableBuilder(
       column: $table.receivedQuantity, builder: (column) => column);
@@ -26777,6 +30431,46 @@ class $$OrderItemsTableAnnotationComposer
             $$ProductsTableAnnotationComposer(
               $db: $db,
               $table: $db.products,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CatalogItemsTableAnnotationComposer get catalogItemUuid {
+    final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogItemUuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SellingProductsTableAnnotationComposer get sellingProductUuid {
+    final $$SellingProductsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -26842,6 +30536,8 @@ class $$OrderItemsTableTableManager extends RootTableManager<
     PrefetchHooks Function(
         {bool orderUuid,
         bool productUuid,
+        bool catalogItemUuid,
+        bool sellingProductUuid,
         bool batchUuid,
         bool goodsReceiptLinesRefs})> {
   $$OrderItemsTableTableManager(_$AppDatabase db, $OrderItemsTable table)
@@ -26857,12 +30553,16 @@ class $$OrderItemsTableTableManager extends RootTableManager<
           updateCompanionCallback: ({
             Value<String> uuid = const Value.absent(),
             Value<String> orderUuid = const Value.absent(),
-            Value<String> productUuid = const Value.absent(),
+            Value<String?> productUuid = const Value.absent(),
+            Value<String?> catalogItemUuid = const Value.absent(),
+            Value<String?> sellingProductUuid = const Value.absent(),
             Value<String> productNameSnapshot = const Value.absent(),
             Value<double> quantity = const Value.absent(),
             Value<double> unitPrice = const Value.absent(),
+            Value<double?> discountedUnitPrice = const Value.absent(),
             Value<double> discountAmount = const Value.absent(),
             Value<double> taxRate = const Value.absent(),
+            Value<String?> catalogNameSnapshot = const Value.absent(),
             Value<double> receivedQuantity = const Value.absent(),
             Value<String?> batchUuid = const Value.absent(),
             Value<double> purchasePriceSnapshot = const Value.absent(),
@@ -26877,11 +30577,15 @@ class $$OrderItemsTableTableManager extends RootTableManager<
             uuid: uuid,
             orderUuid: orderUuid,
             productUuid: productUuid,
+            catalogItemUuid: catalogItemUuid,
+            sellingProductUuid: sellingProductUuid,
             productNameSnapshot: productNameSnapshot,
             quantity: quantity,
             unitPrice: unitPrice,
+            discountedUnitPrice: discountedUnitPrice,
             discountAmount: discountAmount,
             taxRate: taxRate,
+            catalogNameSnapshot: catalogNameSnapshot,
             receivedQuantity: receivedQuantity,
             batchUuid: batchUuid,
             purchasePriceSnapshot: purchasePriceSnapshot,
@@ -26895,12 +30599,16 @@ class $$OrderItemsTableTableManager extends RootTableManager<
           createCompanionCallback: ({
             required String uuid,
             required String orderUuid,
-            required String productUuid,
+            Value<String?> productUuid = const Value.absent(),
+            Value<String?> catalogItemUuid = const Value.absent(),
+            Value<String?> sellingProductUuid = const Value.absent(),
             required String productNameSnapshot,
             required double quantity,
             required double unitPrice,
+            Value<double?> discountedUnitPrice = const Value.absent(),
             Value<double> discountAmount = const Value.absent(),
             Value<double> taxRate = const Value.absent(),
+            Value<String?> catalogNameSnapshot = const Value.absent(),
             Value<double> receivedQuantity = const Value.absent(),
             Value<String?> batchUuid = const Value.absent(),
             Value<double> purchasePriceSnapshot = const Value.absent(),
@@ -26915,11 +30623,15 @@ class $$OrderItemsTableTableManager extends RootTableManager<
             uuid: uuid,
             orderUuid: orderUuid,
             productUuid: productUuid,
+            catalogItemUuid: catalogItemUuid,
+            sellingProductUuid: sellingProductUuid,
             productNameSnapshot: productNameSnapshot,
             quantity: quantity,
             unitPrice: unitPrice,
+            discountedUnitPrice: discountedUnitPrice,
             discountAmount: discountAmount,
             taxRate: taxRate,
+            catalogNameSnapshot: catalogNameSnapshot,
             receivedQuantity: receivedQuantity,
             batchUuid: batchUuid,
             purchasePriceSnapshot: purchasePriceSnapshot,
@@ -26939,6 +30651,8 @@ class $$OrderItemsTableTableManager extends RootTableManager<
           prefetchHooksCallback: (
               {orderUuid = false,
               productUuid = false,
+              catalogItemUuid = false,
+              sellingProductUuid = false,
               batchUuid = false,
               goodsReceiptLinesRefs = false}) {
             return PrefetchHooks(
@@ -26977,6 +30691,28 @@ class $$OrderItemsTableTableManager extends RootTableManager<
                         $$OrderItemsTableReferences._productUuidTable(db),
                     referencedColumn:
                         $$OrderItemsTableReferences._productUuidTable(db).uuid,
+                  ) as T;
+                }
+                if (catalogItemUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.catalogItemUuid,
+                    referencedTable:
+                        $$OrderItemsTableReferences._catalogItemUuidTable(db),
+                    referencedColumn: $$OrderItemsTableReferences
+                        ._catalogItemUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (sellingProductUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.sellingProductUuid,
+                    referencedTable: $$OrderItemsTableReferences
+                        ._sellingProductUuidTable(db),
+                    referencedColumn: $$OrderItemsTableReferences
+                        ._sellingProductUuidTable(db)
+                        .uuid,
                   ) as T;
                 }
                 if (batchUuid) {
@@ -27030,6 +30766,8 @@ typedef $$OrderItemsTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function(
         {bool orderUuid,
         bool productUuid,
+        bool catalogItemUuid,
+        bool sellingProductUuid,
         bool batchUuid,
         bool goodsReceiptLinesRefs})>;
 typedef $$GoodsReceiptsTableCreateCompanionBuilder = GoodsReceiptsCompanion
@@ -33519,2947 +37257,6 @@ typedef $$OrderReturnItemsTableProcessedTableManager = ProcessedTableManager<
     OrderReturnItem,
     PrefetchHooks Function(
         {bool returnUuid, bool productUuid, bool batchUuid})>;
-typedef $$SellingProductsTableCreateCompanionBuilder = SellingProductsCompanion
-    Function({
-  required String uuid,
-  required String name,
-  Value<String?> sku,
-  Value<String?> description,
-  Value<String?> categoryUuid,
-  Value<String?> unit,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-  Value<bool> isDeleted,
-  Value<bool> isNotSynced,
-  Value<int> rowid,
-});
-typedef $$SellingProductsTableUpdateCompanionBuilder = SellingProductsCompanion
-    Function({
-  Value<String> uuid,
-  Value<String> name,
-  Value<String?> sku,
-  Value<String?> description,
-  Value<String?> categoryUuid,
-  Value<String?> unit,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-  Value<bool> isDeleted,
-  Value<bool> isNotSynced,
-  Value<int> rowid,
-});
-
-final class $$SellingProductsTableReferences extends BaseReferences<
-    _$AppDatabase, $SellingProductsTable, SellingProduct> {
-  $$SellingProductsTableReferences(
-      super.$_db, super.$_table, super.$_typedResult);
-
-  static $ProductCategoriesTable _categoryUuidTable(_$AppDatabase db) => db
-      .productCategories
-      .createAlias('selling_products__category_uuid__product_categories__uuid');
-
-  $$ProductCategoriesTableProcessedTableManager? get categoryUuid {
-    final $_column = $_itemColumn<String>('category_uuid');
-    if ($_column == null) return null;
-    final manager =
-        $$ProductCategoriesTableTableManager($_db, $_db.productCategories)
-            .filter((f) => f.uuid.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_categoryUuidTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-
-  static MultiTypedResultKey<$SellingProductComponentsTable,
-      List<SellingProductComponent>> _sellingProductComponentsRefsTable(
-          _$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(db.sellingProductComponents,
-          aliasName:
-              'selling_products__uuid__selling_product_components__selling_product_uuid');
-
-  $$SellingProductComponentsTableProcessedTableManager
-      get sellingProductComponentsRefs {
-    final manager = $$SellingProductComponentsTableTableManager(
-            $_db, $_db.sellingProductComponents)
-        .filter((f) =>
-            f.sellingProductUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
-
-    final cache =
-        $_typedResult.readTableOrNull(_sellingProductComponentsRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
-
-  static MultiTypedResultKey<$CatalogItemsTable, List<CatalogItem>>
-      _catalogItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-          db.catalogItems,
-          aliasName:
-              'selling_products__uuid__catalog_items__selling_product_uuid');
-
-  $$CatalogItemsTableProcessedTableManager get catalogItemsRefs {
-    final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
-        .filter((f) =>
-            f.sellingProductUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
-
-    final cache = $_typedResult.readTableOrNull(_catalogItemsRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
-}
-
-class $$SellingProductsTableFilterComposer
-    extends Composer<_$AppDatabase, $SellingProductsTable> {
-  $$SellingProductsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get uuid => $composableBuilder(
-      column: $table.uuid, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get sku => $composableBuilder(
-      column: $table.sku, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get unit => $composableBuilder(
-      column: $table.unit, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isDeleted => $composableBuilder(
-      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
-
-  $$ProductCategoriesTableFilterComposer get categoryUuid {
-    final $$ProductCategoriesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.categoryUuid,
-        referencedTable: $db.productCategories,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ProductCategoriesTableFilterComposer(
-              $db: $db,
-              $table: $db.productCategories,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  Expression<bool> sellingProductComponentsRefs(
-      Expression<bool> Function($$SellingProductComponentsTableFilterComposer f)
-          f) {
-    final $$SellingProductComponentsTableFilterComposer composer =
-        $composerBuilder(
-            composer: this,
-            getCurrentColumn: (t) => t.uuid,
-            referencedTable: $db.sellingProductComponents,
-            getReferencedColumn: (t) => t.sellingProductUuid,
-            builder: (joinBuilder,
-                    {$addJoinBuilderToRootComposer,
-                    $removeJoinBuilderFromRootComposer}) =>
-                $$SellingProductComponentsTableFilterComposer(
-                  $db: $db,
-                  $table: $db.sellingProductComponents,
-                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                  joinBuilder: joinBuilder,
-                  $removeJoinBuilderFromRootComposer:
-                      $removeJoinBuilderFromRootComposer,
-                ));
-    return f(composer);
-  }
-
-  Expression<bool> catalogItemsRefs(
-      Expression<bool> Function($$CatalogItemsTableFilterComposer f) f) {
-    final $$CatalogItemsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.uuid,
-        referencedTable: $db.catalogItems,
-        getReferencedColumn: (t) => t.sellingProductUuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogItemsTableFilterComposer(
-              $db: $db,
-              $table: $db.catalogItems,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-}
-
-class $$SellingProductsTableOrderingComposer
-    extends Composer<_$AppDatabase, $SellingProductsTable> {
-  $$SellingProductsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get uuid => $composableBuilder(
-      column: $table.uuid, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get sku => $composableBuilder(
-      column: $table.sku, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get unit => $composableBuilder(
-      column: $table.unit, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isDeleted => $composableBuilder(
-      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
-
-  $$ProductCategoriesTableOrderingComposer get categoryUuid {
-    final $$ProductCategoriesTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.categoryUuid,
-        referencedTable: $db.productCategories,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ProductCategoriesTableOrderingComposer(
-              $db: $db,
-              $table: $db.productCategories,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$SellingProductsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SellingProductsTable> {
-  $$SellingProductsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get uuid =>
-      $composableBuilder(column: $table.uuid, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<String> get sku =>
-      $composableBuilder(column: $table.sku, builder: (column) => column);
-
-  GeneratedColumn<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => column);
-
-  GeneratedColumn<String> get unit =>
-      $composableBuilder(column: $table.unit, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get isDeleted =>
-      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
-
-  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => column);
-
-  $$ProductCategoriesTableAnnotationComposer get categoryUuid {
-    final $$ProductCategoriesTableAnnotationComposer composer =
-        $composerBuilder(
-            composer: this,
-            getCurrentColumn: (t) => t.categoryUuid,
-            referencedTable: $db.productCategories,
-            getReferencedColumn: (t) => t.uuid,
-            builder: (joinBuilder,
-                    {$addJoinBuilderToRootComposer,
-                    $removeJoinBuilderFromRootComposer}) =>
-                $$ProductCategoriesTableAnnotationComposer(
-                  $db: $db,
-                  $table: $db.productCategories,
-                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                  joinBuilder: joinBuilder,
-                  $removeJoinBuilderFromRootComposer:
-                      $removeJoinBuilderFromRootComposer,
-                ));
-    return composer;
-  }
-
-  Expression<T> sellingProductComponentsRefs<T extends Object>(
-      Expression<T> Function(
-              $$SellingProductComponentsTableAnnotationComposer a)
-          f) {
-    final $$SellingProductComponentsTableAnnotationComposer composer =
-        $composerBuilder(
-            composer: this,
-            getCurrentColumn: (t) => t.uuid,
-            referencedTable: $db.sellingProductComponents,
-            getReferencedColumn: (t) => t.sellingProductUuid,
-            builder: (joinBuilder,
-                    {$addJoinBuilderToRootComposer,
-                    $removeJoinBuilderFromRootComposer}) =>
-                $$SellingProductComponentsTableAnnotationComposer(
-                  $db: $db,
-                  $table: $db.sellingProductComponents,
-                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                  joinBuilder: joinBuilder,
-                  $removeJoinBuilderFromRootComposer:
-                      $removeJoinBuilderFromRootComposer,
-                ));
-    return f(composer);
-  }
-
-  Expression<T> catalogItemsRefs<T extends Object>(
-      Expression<T> Function($$CatalogItemsTableAnnotationComposer a) f) {
-    final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.uuid,
-        referencedTable: $db.catalogItems,
-        getReferencedColumn: (t) => t.sellingProductUuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogItemsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.catalogItems,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-}
-
-class $$SellingProductsTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $SellingProductsTable,
-    SellingProduct,
-    $$SellingProductsTableFilterComposer,
-    $$SellingProductsTableOrderingComposer,
-    $$SellingProductsTableAnnotationComposer,
-    $$SellingProductsTableCreateCompanionBuilder,
-    $$SellingProductsTableUpdateCompanionBuilder,
-    (SellingProduct, $$SellingProductsTableReferences),
-    SellingProduct,
-    PrefetchHooks Function(
-        {bool categoryUuid,
-        bool sellingProductComponentsRefs,
-        bool catalogItemsRefs})> {
-  $$SellingProductsTableTableManager(
-      _$AppDatabase db, $SellingProductsTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$SellingProductsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SellingProductsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$SellingProductsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> uuid = const Value.absent(),
-            Value<String> name = const Value.absent(),
-            Value<String?> sku = const Value.absent(),
-            Value<String?> description = const Value.absent(),
-            Value<String?> categoryUuid = const Value.absent(),
-            Value<String?> unit = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-            Value<bool> isDeleted = const Value.absent(),
-            Value<bool> isNotSynced = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              SellingProductsCompanion(
-            uuid: uuid,
-            name: name,
-            sku: sku,
-            description: description,
-            categoryUuid: categoryUuid,
-            unit: unit,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            isDeleted: isDeleted,
-            isNotSynced: isNotSynced,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String uuid,
-            required String name,
-            Value<String?> sku = const Value.absent(),
-            Value<String?> description = const Value.absent(),
-            Value<String?> categoryUuid = const Value.absent(),
-            Value<String?> unit = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-            Value<bool> isDeleted = const Value.absent(),
-            Value<bool> isNotSynced = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              SellingProductsCompanion.insert(
-            uuid: uuid,
-            name: name,
-            sku: sku,
-            description: description,
-            categoryUuid: categoryUuid,
-            unit: unit,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            isDeleted: isDeleted,
-            isNotSynced: isNotSynced,
-            rowid: rowid,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable<$SellingProductsTable, SellingProduct>(table),
-                    $$SellingProductsTableReferences(db, table, e)
-                  ))
-              .toList(),
-          prefetchHooksCallback: (
-              {categoryUuid = false,
-              sellingProductComponentsRefs = false,
-              catalogItemsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (sellingProductComponentsRefs) db.sellingProductComponents,
-                if (catalogItemsRefs) db.catalogItems
-              ],
-              addJoins: <
-                  T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic>>(state) {
-                if (categoryUuid) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.categoryUuid,
-                    referencedTable:
-                        $$SellingProductsTableReferences._categoryUuidTable(db),
-                    referencedColumn: $$SellingProductsTableReferences
-                        ._categoryUuidTable(db)
-                        .uuid,
-                  ) as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (sellingProductComponentsRefs)
-                    await $_getPrefetchedDataByColumns<
-                            SellingProduct,
-                            $SellingProductsTable,
-                            SellingProductComponent,
-                            $SellingProductComponentsTable>(
-                        currentTable: table,
-                        referencedTable: $$SellingProductsTableReferences
-                            ._sellingProductComponentsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$SellingProductsTableReferences(db, table, p0)
-                                .sellingProductComponentsRefs,
-                        currentColumn: 'uuid',
-                        referencedColumn: 'selling_product_uuid',
-                        typedResults: items),
-                  if (catalogItemsRefs)
-                    await $_getPrefetchedDataByColumns<
-                            SellingProduct,
-                            $SellingProductsTable,
-                            CatalogItem,
-                            $CatalogItemsTable>(
-                        currentTable: table,
-                        referencedTable: $$SellingProductsTableReferences
-                            ._catalogItemsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$SellingProductsTableReferences(db, table, p0)
-                                .catalogItemsRefs,
-                        currentColumn: 'uuid',
-                        referencedColumn: 'selling_product_uuid',
-                        typedResults: items)
-                ];
-              },
-            );
-          },
-        ));
-}
-
-typedef $$SellingProductsTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $SellingProductsTable,
-    SellingProduct,
-    $$SellingProductsTableFilterComposer,
-    $$SellingProductsTableOrderingComposer,
-    $$SellingProductsTableAnnotationComposer,
-    $$SellingProductsTableCreateCompanionBuilder,
-    $$SellingProductsTableUpdateCompanionBuilder,
-    (SellingProduct, $$SellingProductsTableReferences),
-    SellingProduct,
-    PrefetchHooks Function(
-        {bool categoryUuid,
-        bool sellingProductComponentsRefs,
-        bool catalogItemsRefs})>;
-typedef $$SellingProductComponentsTableCreateCompanionBuilder
-    = SellingProductComponentsCompanion Function({
-  required String uuid,
-  required String sellingProductUuid,
-  required String productUuid,
-  required double quantity,
-  Value<String> consumeMode,
-  Value<String?> batchNumber,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-  Value<bool> isDeleted,
-  Value<bool> isNotSynced,
-  Value<int> rowid,
-});
-typedef $$SellingProductComponentsTableUpdateCompanionBuilder
-    = SellingProductComponentsCompanion Function({
-  Value<String> uuid,
-  Value<String> sellingProductUuid,
-  Value<String> productUuid,
-  Value<double> quantity,
-  Value<String> consumeMode,
-  Value<String?> batchNumber,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-  Value<bool> isDeleted,
-  Value<bool> isNotSynced,
-  Value<int> rowid,
-});
-
-final class $$SellingProductComponentsTableReferences extends BaseReferences<
-    _$AppDatabase, $SellingProductComponentsTable, SellingProductComponent> {
-  $$SellingProductComponentsTableReferences(
-      super.$_db, super.$_table, super.$_typedResult);
-
-  static $SellingProductsTable _sellingProductUuidTable(_$AppDatabase db) =>
-      db.sellingProducts.createAlias(
-          'selling_product_components__selling_product_uuid__selling_products__uuid');
-
-  $$SellingProductsTableProcessedTableManager get sellingProductUuid {
-    final $_column = $_itemColumn<String>('selling_product_uuid')!;
-
-    final manager =
-        $$SellingProductsTableTableManager($_db, $_db.sellingProducts)
-            .filter((f) => f.uuid.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_sellingProductUuidTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-
-  static $ProductsTable _productUuidTable(_$AppDatabase db) => db.products
-      .createAlias('selling_product_components__product_uuid__products__uuid');
-
-  $$ProductsTableProcessedTableManager get productUuid {
-    final $_column = $_itemColumn<String>('product_uuid')!;
-
-    final manager = $$ProductsTableTableManager($_db, $_db.products)
-        .filter((f) => f.uuid.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_productUuidTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-}
-
-class $$SellingProductComponentsTableFilterComposer
-    extends Composer<_$AppDatabase, $SellingProductComponentsTable> {
-  $$SellingProductComponentsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get uuid => $composableBuilder(
-      column: $table.uuid, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get quantity => $composableBuilder(
-      column: $table.quantity, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get consumeMode => $composableBuilder(
-      column: $table.consumeMode, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get batchNumber => $composableBuilder(
-      column: $table.batchNumber, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isDeleted => $composableBuilder(
-      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
-
-  $$SellingProductsTableFilterComposer get sellingProductUuid {
-    final $$SellingProductsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.sellingProductUuid,
-        referencedTable: $db.sellingProducts,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$SellingProductsTableFilterComposer(
-              $db: $db,
-              $table: $db.sellingProducts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$ProductsTableFilterComposer get productUuid {
-    final $$ProductsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.productUuid,
-        referencedTable: $db.products,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ProductsTableFilterComposer(
-              $db: $db,
-              $table: $db.products,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$SellingProductComponentsTableOrderingComposer
-    extends Composer<_$AppDatabase, $SellingProductComponentsTable> {
-  $$SellingProductComponentsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get uuid => $composableBuilder(
-      column: $table.uuid, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get quantity => $composableBuilder(
-      column: $table.quantity, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get consumeMode => $composableBuilder(
-      column: $table.consumeMode, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get batchNumber => $composableBuilder(
-      column: $table.batchNumber, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isDeleted => $composableBuilder(
-      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
-
-  $$SellingProductsTableOrderingComposer get sellingProductUuid {
-    final $$SellingProductsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.sellingProductUuid,
-        referencedTable: $db.sellingProducts,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$SellingProductsTableOrderingComposer(
-              $db: $db,
-              $table: $db.sellingProducts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$ProductsTableOrderingComposer get productUuid {
-    final $$ProductsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.productUuid,
-        referencedTable: $db.products,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ProductsTableOrderingComposer(
-              $db: $db,
-              $table: $db.products,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$SellingProductComponentsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SellingProductComponentsTable> {
-  $$SellingProductComponentsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get uuid =>
-      $composableBuilder(column: $table.uuid, builder: (column) => column);
-
-  GeneratedColumn<double> get quantity =>
-      $composableBuilder(column: $table.quantity, builder: (column) => column);
-
-  GeneratedColumn<String> get consumeMode => $composableBuilder(
-      column: $table.consumeMode, builder: (column) => column);
-
-  GeneratedColumn<String> get batchNumber => $composableBuilder(
-      column: $table.batchNumber, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get isDeleted =>
-      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
-
-  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => column);
-
-  $$SellingProductsTableAnnotationComposer get sellingProductUuid {
-    final $$SellingProductsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.sellingProductUuid,
-        referencedTable: $db.sellingProducts,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$SellingProductsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.sellingProducts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$ProductsTableAnnotationComposer get productUuid {
-    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.productUuid,
-        referencedTable: $db.products,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ProductsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.products,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$SellingProductComponentsTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $SellingProductComponentsTable,
-    SellingProductComponent,
-    $$SellingProductComponentsTableFilterComposer,
-    $$SellingProductComponentsTableOrderingComposer,
-    $$SellingProductComponentsTableAnnotationComposer,
-    $$SellingProductComponentsTableCreateCompanionBuilder,
-    $$SellingProductComponentsTableUpdateCompanionBuilder,
-    (SellingProductComponent, $$SellingProductComponentsTableReferences),
-    SellingProductComponent,
-    PrefetchHooks Function({bool sellingProductUuid, bool productUuid})> {
-  $$SellingProductComponentsTableTableManager(
-      _$AppDatabase db, $SellingProductComponentsTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$SellingProductComponentsTableFilterComposer(
-                  $db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SellingProductComponentsTableOrderingComposer(
-                  $db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$SellingProductComponentsTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> uuid = const Value.absent(),
-            Value<String> sellingProductUuid = const Value.absent(),
-            Value<String> productUuid = const Value.absent(),
-            Value<double> quantity = const Value.absent(),
-            Value<String> consumeMode = const Value.absent(),
-            Value<String?> batchNumber = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-            Value<bool> isDeleted = const Value.absent(),
-            Value<bool> isNotSynced = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              SellingProductComponentsCompanion(
-            uuid: uuid,
-            sellingProductUuid: sellingProductUuid,
-            productUuid: productUuid,
-            quantity: quantity,
-            consumeMode: consumeMode,
-            batchNumber: batchNumber,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            isDeleted: isDeleted,
-            isNotSynced: isNotSynced,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String uuid,
-            required String sellingProductUuid,
-            required String productUuid,
-            required double quantity,
-            Value<String> consumeMode = const Value.absent(),
-            Value<String?> batchNumber = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-            Value<bool> isDeleted = const Value.absent(),
-            Value<bool> isNotSynced = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              SellingProductComponentsCompanion.insert(
-            uuid: uuid,
-            sellingProductUuid: sellingProductUuid,
-            productUuid: productUuid,
-            quantity: quantity,
-            consumeMode: consumeMode,
-            batchNumber: batchNumber,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            isDeleted: isDeleted,
-            isNotSynced: isNotSynced,
-            rowid: rowid,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable<$SellingProductComponentsTable,
-                        SellingProductComponent>(table),
-                    $$SellingProductComponentsTableReferences(db, table, e)
-                  ))
-              .toList(),
-          prefetchHooksCallback: (
-              {sellingProductUuid = false, productUuid = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                  T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic>>(state) {
-                if (sellingProductUuid) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.sellingProductUuid,
-                    referencedTable: $$SellingProductComponentsTableReferences
-                        ._sellingProductUuidTable(db),
-                    referencedColumn: $$SellingProductComponentsTableReferences
-                        ._sellingProductUuidTable(db)
-                        .uuid,
-                  ) as T;
-                }
-                if (productUuid) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.productUuid,
-                    referencedTable: $$SellingProductComponentsTableReferences
-                        ._productUuidTable(db),
-                    referencedColumn: $$SellingProductComponentsTableReferences
-                        ._productUuidTable(db)
-                        .uuid,
-                  ) as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
-        ));
-}
-
-typedef $$SellingProductComponentsTableProcessedTableManager
-    = ProcessedTableManager<
-        _$AppDatabase,
-        $SellingProductComponentsTable,
-        SellingProductComponent,
-        $$SellingProductComponentsTableFilterComposer,
-        $$SellingProductComponentsTableOrderingComposer,
-        $$SellingProductComponentsTableAnnotationComposer,
-        $$SellingProductComponentsTableCreateCompanionBuilder,
-        $$SellingProductComponentsTableUpdateCompanionBuilder,
-        (SellingProductComponent, $$SellingProductComponentsTableReferences),
-        SellingProductComponent,
-        PrefetchHooks Function({bool sellingProductUuid, bool productUuid})>;
-typedef $$CatalogsTableCreateCompanionBuilder = CatalogsCompanion Function({
-  required String uuid,
-  required String name,
-  Value<String?> description,
-  Value<DateTime?> validUntil,
-  Value<bool> isDefault,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-  Value<bool> isDeleted,
-  Value<bool> isNotSynced,
-  Value<int> rowid,
-});
-typedef $$CatalogsTableUpdateCompanionBuilder = CatalogsCompanion Function({
-  Value<String> uuid,
-  Value<String> name,
-  Value<String?> description,
-  Value<DateTime?> validUntil,
-  Value<bool> isDefault,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-  Value<bool> isDeleted,
-  Value<bool> isNotSynced,
-  Value<int> rowid,
-});
-
-final class $$CatalogsTableReferences
-    extends BaseReferences<_$AppDatabase, $CatalogsTable, Catalog> {
-  $$CatalogsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static MultiTypedResultKey<$CatalogItemsTable, List<CatalogItem>>
-      _catalogItemsRefsTable(_$AppDatabase db) =>
-          MultiTypedResultKey.fromTable(db.catalogItems,
-              aliasName: 'catalogs__uuid__catalog_items__catalog_uuid');
-
-  $$CatalogItemsTableProcessedTableManager get catalogItemsRefs {
-    final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
-        .filter(
-            (f) => f.catalogUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
-
-    final cache = $_typedResult.readTableOrNull(_catalogItemsRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
-
-  static MultiTypedResultKey<$CatalogAssignmentsTable, List<CatalogAssignment>>
-      _catalogAssignmentsRefsTable(_$AppDatabase db) =>
-          MultiTypedResultKey.fromTable(db.catalogAssignments,
-              aliasName: 'catalogs__uuid__catalog_assignments__catalog_uuid');
-
-  $$CatalogAssignmentsTableProcessedTableManager get catalogAssignmentsRefs {
-    final manager = $$CatalogAssignmentsTableTableManager(
-            $_db, $_db.catalogAssignments)
-        .filter(
-            (f) => f.catalogUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
-
-    final cache =
-        $_typedResult.readTableOrNull(_catalogAssignmentsRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
-}
-
-class $$CatalogsTableFilterComposer
-    extends Composer<_$AppDatabase, $CatalogsTable> {
-  $$CatalogsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get uuid => $composableBuilder(
-      column: $table.uuid, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get validUntil => $composableBuilder(
-      column: $table.validUntil, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isDefault => $composableBuilder(
-      column: $table.isDefault, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isDeleted => $composableBuilder(
-      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
-
-  Expression<bool> catalogItemsRefs(
-      Expression<bool> Function($$CatalogItemsTableFilterComposer f) f) {
-    final $$CatalogItemsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.uuid,
-        referencedTable: $db.catalogItems,
-        getReferencedColumn: (t) => t.catalogUuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogItemsTableFilterComposer(
-              $db: $db,
-              $table: $db.catalogItems,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-
-  Expression<bool> catalogAssignmentsRefs(
-      Expression<bool> Function($$CatalogAssignmentsTableFilterComposer f) f) {
-    final $$CatalogAssignmentsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.uuid,
-        referencedTable: $db.catalogAssignments,
-        getReferencedColumn: (t) => t.catalogUuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogAssignmentsTableFilterComposer(
-              $db: $db,
-              $table: $db.catalogAssignments,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-}
-
-class $$CatalogsTableOrderingComposer
-    extends Composer<_$AppDatabase, $CatalogsTable> {
-  $$CatalogsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get uuid => $composableBuilder(
-      column: $table.uuid, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get validUntil => $composableBuilder(
-      column: $table.validUntil, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isDefault => $composableBuilder(
-      column: $table.isDefault, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isDeleted => $composableBuilder(
-      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
-}
-
-class $$CatalogsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $CatalogsTable> {
-  $$CatalogsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get uuid =>
-      $composableBuilder(column: $table.uuid, builder: (column) => column);
-
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
-
-  GeneratedColumn<String> get description => $composableBuilder(
-      column: $table.description, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get validUntil => $composableBuilder(
-      column: $table.validUntil, builder: (column) => column);
-
-  GeneratedColumn<bool> get isDefault =>
-      $composableBuilder(column: $table.isDefault, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get isDeleted =>
-      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
-
-  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => column);
-
-  Expression<T> catalogItemsRefs<T extends Object>(
-      Expression<T> Function($$CatalogItemsTableAnnotationComposer a) f) {
-    final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.uuid,
-        referencedTable: $db.catalogItems,
-        getReferencedColumn: (t) => t.catalogUuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogItemsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.catalogItems,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return f(composer);
-  }
-
-  Expression<T> catalogAssignmentsRefs<T extends Object>(
-      Expression<T> Function($$CatalogAssignmentsTableAnnotationComposer a) f) {
-    final $$CatalogAssignmentsTableAnnotationComposer composer =
-        $composerBuilder(
-            composer: this,
-            getCurrentColumn: (t) => t.uuid,
-            referencedTable: $db.catalogAssignments,
-            getReferencedColumn: (t) => t.catalogUuid,
-            builder: (joinBuilder,
-                    {$addJoinBuilderToRootComposer,
-                    $removeJoinBuilderFromRootComposer}) =>
-                $$CatalogAssignmentsTableAnnotationComposer(
-                  $db: $db,
-                  $table: $db.catalogAssignments,
-                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                  joinBuilder: joinBuilder,
-                  $removeJoinBuilderFromRootComposer:
-                      $removeJoinBuilderFromRootComposer,
-                ));
-    return f(composer);
-  }
-}
-
-class $$CatalogsTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $CatalogsTable,
-    Catalog,
-    $$CatalogsTableFilterComposer,
-    $$CatalogsTableOrderingComposer,
-    $$CatalogsTableAnnotationComposer,
-    $$CatalogsTableCreateCompanionBuilder,
-    $$CatalogsTableUpdateCompanionBuilder,
-    (Catalog, $$CatalogsTableReferences),
-    Catalog,
-    PrefetchHooks Function(
-        {bool catalogItemsRefs, bool catalogAssignmentsRefs})> {
-  $$CatalogsTableTableManager(_$AppDatabase db, $CatalogsTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$CatalogsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$CatalogsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$CatalogsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> uuid = const Value.absent(),
-            Value<String> name = const Value.absent(),
-            Value<String?> description = const Value.absent(),
-            Value<DateTime?> validUntil = const Value.absent(),
-            Value<bool> isDefault = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-            Value<bool> isDeleted = const Value.absent(),
-            Value<bool> isNotSynced = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              CatalogsCompanion(
-            uuid: uuid,
-            name: name,
-            description: description,
-            validUntil: validUntil,
-            isDefault: isDefault,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            isDeleted: isDeleted,
-            isNotSynced: isNotSynced,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String uuid,
-            required String name,
-            Value<String?> description = const Value.absent(),
-            Value<DateTime?> validUntil = const Value.absent(),
-            Value<bool> isDefault = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-            Value<bool> isDeleted = const Value.absent(),
-            Value<bool> isNotSynced = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              CatalogsCompanion.insert(
-            uuid: uuid,
-            name: name,
-            description: description,
-            validUntil: validUntil,
-            isDefault: isDefault,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            isDeleted: isDeleted,
-            isNotSynced: isNotSynced,
-            rowid: rowid,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable<$CatalogsTable, Catalog>(table),
-                    $$CatalogsTableReferences(db, table, e)
-                  ))
-              .toList(),
-          prefetchHooksCallback: (
-              {catalogItemsRefs = false, catalogAssignmentsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (catalogItemsRefs) db.catalogItems,
-                if (catalogAssignmentsRefs) db.catalogAssignments
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (catalogItemsRefs)
-                    await $_getPrefetchedDataByColumns<Catalog, $CatalogsTable,
-                            CatalogItem, $CatalogItemsTable>(
-                        currentTable: table,
-                        referencedTable: $$CatalogsTableReferences
-                            ._catalogItemsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$CatalogsTableReferences(db, table, p0)
-                                .catalogItemsRefs,
-                        currentColumn: 'uuid',
-                        referencedColumn: 'catalog_uuid',
-                        typedResults: items),
-                  if (catalogAssignmentsRefs)
-                    await $_getPrefetchedDataByColumns<Catalog, $CatalogsTable,
-                            CatalogAssignment, $CatalogAssignmentsTable>(
-                        currentTable: table,
-                        referencedTable: $$CatalogsTableReferences
-                            ._catalogAssignmentsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$CatalogsTableReferences(db, table, p0)
-                                .catalogAssignmentsRefs,
-                        currentColumn: 'uuid',
-                        referencedColumn: 'catalog_uuid',
-                        typedResults: items)
-                ];
-              },
-            );
-          },
-        ));
-}
-
-typedef $$CatalogsTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $CatalogsTable,
-    Catalog,
-    $$CatalogsTableFilterComposer,
-    $$CatalogsTableOrderingComposer,
-    $$CatalogsTableAnnotationComposer,
-    $$CatalogsTableCreateCompanionBuilder,
-    $$CatalogsTableUpdateCompanionBuilder,
-    (Catalog, $$CatalogsTableReferences),
-    Catalog,
-    PrefetchHooks Function(
-        {bool catalogItemsRefs, bool catalogAssignmentsRefs})>;
-typedef $$CatalogItemsTableCreateCompanionBuilder = CatalogItemsCompanion
-    Function({
-  required String uuid,
-  required String catalogUuid,
-  Value<String?> productUuid,
-  Value<String?> sellingProductUuid,
-  Value<double?> customPrice,
-  Value<String?> batchUuid,
-  Value<DateTime?> validUntil,
-  Value<String> batchSelectionStrategy,
-  Value<String> pricingApproach,
-  Value<double> markupOrMarginPercent,
-  Value<double> fixedAmount,
-  Value<double> sellPrice,
-  Value<double?> unitCostSnapshot,
-  Value<DateTime?> priceComputedAt,
-  Value<bool> priceOverride,
-  Value<String?> defaultDiscountType,
-  Value<double> defaultDiscountValue,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-  Value<bool> isDeleted,
-  Value<bool> isNotSynced,
-  Value<int> rowid,
-});
-typedef $$CatalogItemsTableUpdateCompanionBuilder = CatalogItemsCompanion
-    Function({
-  Value<String> uuid,
-  Value<String> catalogUuid,
-  Value<String?> productUuid,
-  Value<String?> sellingProductUuid,
-  Value<double?> customPrice,
-  Value<String?> batchUuid,
-  Value<DateTime?> validUntil,
-  Value<String> batchSelectionStrategy,
-  Value<String> pricingApproach,
-  Value<double> markupOrMarginPercent,
-  Value<double> fixedAmount,
-  Value<double> sellPrice,
-  Value<double?> unitCostSnapshot,
-  Value<DateTime?> priceComputedAt,
-  Value<bool> priceOverride,
-  Value<String?> defaultDiscountType,
-  Value<double> defaultDiscountValue,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-  Value<bool> isDeleted,
-  Value<bool> isNotSynced,
-  Value<int> rowid,
-});
-
-final class $$CatalogItemsTableReferences
-    extends BaseReferences<_$AppDatabase, $CatalogItemsTable, CatalogItem> {
-  $$CatalogItemsTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $CatalogsTable _catalogUuidTable(_$AppDatabase db) =>
-      db.catalogs.createAlias('catalog_items__catalog_uuid__catalogs__uuid');
-
-  $$CatalogsTableProcessedTableManager get catalogUuid {
-    final $_column = $_itemColumn<String>('catalog_uuid')!;
-
-    final manager = $$CatalogsTableTableManager($_db, $_db.catalogs)
-        .filter((f) => f.uuid.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_catalogUuidTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-
-  static $ProductsTable _productUuidTable(_$AppDatabase db) =>
-      db.products.createAlias('catalog_items__product_uuid__products__uuid');
-
-  $$ProductsTableProcessedTableManager? get productUuid {
-    final $_column = $_itemColumn<String>('product_uuid');
-    if ($_column == null) return null;
-    final manager = $$ProductsTableTableManager($_db, $_db.products)
-        .filter((f) => f.uuid.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_productUuidTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-
-  static $SellingProductsTable _sellingProductUuidTable(_$AppDatabase db) =>
-      db.sellingProducts.createAlias(
-          'catalog_items__selling_product_uuid__selling_products__uuid');
-
-  $$SellingProductsTableProcessedTableManager? get sellingProductUuid {
-    final $_column = $_itemColumn<String>('selling_product_uuid');
-    if ($_column == null) return null;
-    final manager =
-        $$SellingProductsTableTableManager($_db, $_db.sellingProducts)
-            .filter((f) => f.uuid.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_sellingProductUuidTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-
-  static $ProductBatchesTable _batchUuidTable(_$AppDatabase db) =>
-      db.productBatches
-          .createAlias('catalog_items__batch_uuid__product_batches__uuid');
-
-  $$ProductBatchesTableProcessedTableManager? get batchUuid {
-    final $_column = $_itemColumn<String>('batch_uuid');
-    if ($_column == null) return null;
-    final manager = $$ProductBatchesTableTableManager($_db, $_db.productBatches)
-        .filter((f) => f.uuid.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_batchUuidTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-
-  static MultiTypedResultKey<$CatalogTieredDiscountsTable,
-      List<CatalogTieredDiscount>> _catalogTieredDiscountsRefsTable(
-          _$AppDatabase db) =>
-      MultiTypedResultKey.fromTable(db.catalogTieredDiscounts,
-          aliasName:
-              'catalog_items__uuid__catalog_tiered_discounts__catalog_item_uuid');
-
-  $$CatalogTieredDiscountsTableProcessedTableManager
-      get catalogTieredDiscountsRefs {
-    final manager = $$CatalogTieredDiscountsTableTableManager(
-            $_db, $_db.catalogTieredDiscounts)
-        .filter((f) =>
-            f.catalogItemUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
-
-    final cache =
-        $_typedResult.readTableOrNull(_catalogTieredDiscountsRefsTable($_db));
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: cache));
-  }
-}
-
-class $$CatalogItemsTableFilterComposer
-    extends Composer<_$AppDatabase, $CatalogItemsTable> {
-  $$CatalogItemsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get uuid => $composableBuilder(
-      column: $table.uuid, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get customPrice => $composableBuilder(
-      column: $table.customPrice, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get validUntil => $composableBuilder(
-      column: $table.validUntil, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get batchSelectionStrategy => $composableBuilder(
-      column: $table.batchSelectionStrategy,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get pricingApproach => $composableBuilder(
-      column: $table.pricingApproach,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get markupOrMarginPercent => $composableBuilder(
-      column: $table.markupOrMarginPercent,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get fixedAmount => $composableBuilder(
-      column: $table.fixedAmount, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get sellPrice => $composableBuilder(
-      column: $table.sellPrice, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get unitCostSnapshot => $composableBuilder(
-      column: $table.unitCostSnapshot,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get priceComputedAt => $composableBuilder(
-      column: $table.priceComputedAt,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get priceOverride => $composableBuilder(
-      column: $table.priceOverride, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get defaultDiscountType => $composableBuilder(
-      column: $table.defaultDiscountType,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get defaultDiscountValue => $composableBuilder(
-      column: $table.defaultDiscountValue,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isDeleted => $composableBuilder(
-      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
-
-  $$CatalogsTableFilterComposer get catalogUuid {
-    final $$CatalogsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.catalogUuid,
-        referencedTable: $db.catalogs,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogsTableFilterComposer(
-              $db: $db,
-              $table: $db.catalogs,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$ProductsTableFilterComposer get productUuid {
-    final $$ProductsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.productUuid,
-        referencedTable: $db.products,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ProductsTableFilterComposer(
-              $db: $db,
-              $table: $db.products,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$SellingProductsTableFilterComposer get sellingProductUuid {
-    final $$SellingProductsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.sellingProductUuid,
-        referencedTable: $db.sellingProducts,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$SellingProductsTableFilterComposer(
-              $db: $db,
-              $table: $db.sellingProducts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$ProductBatchesTableFilterComposer get batchUuid {
-    final $$ProductBatchesTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.batchUuid,
-        referencedTable: $db.productBatches,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ProductBatchesTableFilterComposer(
-              $db: $db,
-              $table: $db.productBatches,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  Expression<bool> catalogTieredDiscountsRefs(
-      Expression<bool> Function($$CatalogTieredDiscountsTableFilterComposer f)
-          f) {
-    final $$CatalogTieredDiscountsTableFilterComposer composer =
-        $composerBuilder(
-            composer: this,
-            getCurrentColumn: (t) => t.uuid,
-            referencedTable: $db.catalogTieredDiscounts,
-            getReferencedColumn: (t) => t.catalogItemUuid,
-            builder: (joinBuilder,
-                    {$addJoinBuilderToRootComposer,
-                    $removeJoinBuilderFromRootComposer}) =>
-                $$CatalogTieredDiscountsTableFilterComposer(
-                  $db: $db,
-                  $table: $db.catalogTieredDiscounts,
-                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                  joinBuilder: joinBuilder,
-                  $removeJoinBuilderFromRootComposer:
-                      $removeJoinBuilderFromRootComposer,
-                ));
-    return f(composer);
-  }
-}
-
-class $$CatalogItemsTableOrderingComposer
-    extends Composer<_$AppDatabase, $CatalogItemsTable> {
-  $$CatalogItemsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get uuid => $composableBuilder(
-      column: $table.uuid, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get customPrice => $composableBuilder(
-      column: $table.customPrice, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get validUntil => $composableBuilder(
-      column: $table.validUntil, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get batchSelectionStrategy => $composableBuilder(
-      column: $table.batchSelectionStrategy,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get pricingApproach => $composableBuilder(
-      column: $table.pricingApproach,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get markupOrMarginPercent => $composableBuilder(
-      column: $table.markupOrMarginPercent,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get fixedAmount => $composableBuilder(
-      column: $table.fixedAmount, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get sellPrice => $composableBuilder(
-      column: $table.sellPrice, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get unitCostSnapshot => $composableBuilder(
-      column: $table.unitCostSnapshot,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get priceComputedAt => $composableBuilder(
-      column: $table.priceComputedAt,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get priceOverride => $composableBuilder(
-      column: $table.priceOverride,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get defaultDiscountType => $composableBuilder(
-      column: $table.defaultDiscountType,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get defaultDiscountValue => $composableBuilder(
-      column: $table.defaultDiscountValue,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isDeleted => $composableBuilder(
-      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
-
-  $$CatalogsTableOrderingComposer get catalogUuid {
-    final $$CatalogsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.catalogUuid,
-        referencedTable: $db.catalogs,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogsTableOrderingComposer(
-              $db: $db,
-              $table: $db.catalogs,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$ProductsTableOrderingComposer get productUuid {
-    final $$ProductsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.productUuid,
-        referencedTable: $db.products,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ProductsTableOrderingComposer(
-              $db: $db,
-              $table: $db.products,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$SellingProductsTableOrderingComposer get sellingProductUuid {
-    final $$SellingProductsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.sellingProductUuid,
-        referencedTable: $db.sellingProducts,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$SellingProductsTableOrderingComposer(
-              $db: $db,
-              $table: $db.sellingProducts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$ProductBatchesTableOrderingComposer get batchUuid {
-    final $$ProductBatchesTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.batchUuid,
-        referencedTable: $db.productBatches,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ProductBatchesTableOrderingComposer(
-              $db: $db,
-              $table: $db.productBatches,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$CatalogItemsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $CatalogItemsTable> {
-  $$CatalogItemsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get uuid =>
-      $composableBuilder(column: $table.uuid, builder: (column) => column);
-
-  GeneratedColumn<double> get customPrice => $composableBuilder(
-      column: $table.customPrice, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get validUntil => $composableBuilder(
-      column: $table.validUntil, builder: (column) => column);
-
-  GeneratedColumn<String> get batchSelectionStrategy => $composableBuilder(
-      column: $table.batchSelectionStrategy, builder: (column) => column);
-
-  GeneratedColumn<String> get pricingApproach => $composableBuilder(
-      column: $table.pricingApproach, builder: (column) => column);
-
-  GeneratedColumn<double> get markupOrMarginPercent => $composableBuilder(
-      column: $table.markupOrMarginPercent, builder: (column) => column);
-
-  GeneratedColumn<double> get fixedAmount => $composableBuilder(
-      column: $table.fixedAmount, builder: (column) => column);
-
-  GeneratedColumn<double> get sellPrice =>
-      $composableBuilder(column: $table.sellPrice, builder: (column) => column);
-
-  GeneratedColumn<double> get unitCostSnapshot => $composableBuilder(
-      column: $table.unitCostSnapshot, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get priceComputedAt => $composableBuilder(
-      column: $table.priceComputedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get priceOverride => $composableBuilder(
-      column: $table.priceOverride, builder: (column) => column);
-
-  GeneratedColumn<String> get defaultDiscountType => $composableBuilder(
-      column: $table.defaultDiscountType, builder: (column) => column);
-
-  GeneratedColumn<double> get defaultDiscountValue => $composableBuilder(
-      column: $table.defaultDiscountValue, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get isDeleted =>
-      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
-
-  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => column);
-
-  $$CatalogsTableAnnotationComposer get catalogUuid {
-    final $$CatalogsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.catalogUuid,
-        referencedTable: $db.catalogs,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.catalogs,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$ProductsTableAnnotationComposer get productUuid {
-    final $$ProductsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.productUuid,
-        referencedTable: $db.products,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ProductsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.products,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$SellingProductsTableAnnotationComposer get sellingProductUuid {
-    final $$SellingProductsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.sellingProductUuid,
-        referencedTable: $db.sellingProducts,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$SellingProductsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.sellingProducts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$ProductBatchesTableAnnotationComposer get batchUuid {
-    final $$ProductBatchesTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.batchUuid,
-        referencedTable: $db.productBatches,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ProductBatchesTableAnnotationComposer(
-              $db: $db,
-              $table: $db.productBatches,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  Expression<T> catalogTieredDiscountsRefs<T extends Object>(
-      Expression<T> Function($$CatalogTieredDiscountsTableAnnotationComposer a)
-          f) {
-    final $$CatalogTieredDiscountsTableAnnotationComposer composer =
-        $composerBuilder(
-            composer: this,
-            getCurrentColumn: (t) => t.uuid,
-            referencedTable: $db.catalogTieredDiscounts,
-            getReferencedColumn: (t) => t.catalogItemUuid,
-            builder: (joinBuilder,
-                    {$addJoinBuilderToRootComposer,
-                    $removeJoinBuilderFromRootComposer}) =>
-                $$CatalogTieredDiscountsTableAnnotationComposer(
-                  $db: $db,
-                  $table: $db.catalogTieredDiscounts,
-                  $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                  joinBuilder: joinBuilder,
-                  $removeJoinBuilderFromRootComposer:
-                      $removeJoinBuilderFromRootComposer,
-                ));
-    return f(composer);
-  }
-}
-
-class $$CatalogItemsTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $CatalogItemsTable,
-    CatalogItem,
-    $$CatalogItemsTableFilterComposer,
-    $$CatalogItemsTableOrderingComposer,
-    $$CatalogItemsTableAnnotationComposer,
-    $$CatalogItemsTableCreateCompanionBuilder,
-    $$CatalogItemsTableUpdateCompanionBuilder,
-    (CatalogItem, $$CatalogItemsTableReferences),
-    CatalogItem,
-    PrefetchHooks Function(
-        {bool catalogUuid,
-        bool productUuid,
-        bool sellingProductUuid,
-        bool batchUuid,
-        bool catalogTieredDiscountsRefs})> {
-  $$CatalogItemsTableTableManager(_$AppDatabase db, $CatalogItemsTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$CatalogItemsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$CatalogItemsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$CatalogItemsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> uuid = const Value.absent(),
-            Value<String> catalogUuid = const Value.absent(),
-            Value<String?> productUuid = const Value.absent(),
-            Value<String?> sellingProductUuid = const Value.absent(),
-            Value<double?> customPrice = const Value.absent(),
-            Value<String?> batchUuid = const Value.absent(),
-            Value<DateTime?> validUntil = const Value.absent(),
-            Value<String> batchSelectionStrategy = const Value.absent(),
-            Value<String> pricingApproach = const Value.absent(),
-            Value<double> markupOrMarginPercent = const Value.absent(),
-            Value<double> fixedAmount = const Value.absent(),
-            Value<double> sellPrice = const Value.absent(),
-            Value<double?> unitCostSnapshot = const Value.absent(),
-            Value<DateTime?> priceComputedAt = const Value.absent(),
-            Value<bool> priceOverride = const Value.absent(),
-            Value<String?> defaultDiscountType = const Value.absent(),
-            Value<double> defaultDiscountValue = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-            Value<bool> isDeleted = const Value.absent(),
-            Value<bool> isNotSynced = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              CatalogItemsCompanion(
-            uuid: uuid,
-            catalogUuid: catalogUuid,
-            productUuid: productUuid,
-            sellingProductUuid: sellingProductUuid,
-            customPrice: customPrice,
-            batchUuid: batchUuid,
-            validUntil: validUntil,
-            batchSelectionStrategy: batchSelectionStrategy,
-            pricingApproach: pricingApproach,
-            markupOrMarginPercent: markupOrMarginPercent,
-            fixedAmount: fixedAmount,
-            sellPrice: sellPrice,
-            unitCostSnapshot: unitCostSnapshot,
-            priceComputedAt: priceComputedAt,
-            priceOverride: priceOverride,
-            defaultDiscountType: defaultDiscountType,
-            defaultDiscountValue: defaultDiscountValue,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            isDeleted: isDeleted,
-            isNotSynced: isNotSynced,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String uuid,
-            required String catalogUuid,
-            Value<String?> productUuid = const Value.absent(),
-            Value<String?> sellingProductUuid = const Value.absent(),
-            Value<double?> customPrice = const Value.absent(),
-            Value<String?> batchUuid = const Value.absent(),
-            Value<DateTime?> validUntil = const Value.absent(),
-            Value<String> batchSelectionStrategy = const Value.absent(),
-            Value<String> pricingApproach = const Value.absent(),
-            Value<double> markupOrMarginPercent = const Value.absent(),
-            Value<double> fixedAmount = const Value.absent(),
-            Value<double> sellPrice = const Value.absent(),
-            Value<double?> unitCostSnapshot = const Value.absent(),
-            Value<DateTime?> priceComputedAt = const Value.absent(),
-            Value<bool> priceOverride = const Value.absent(),
-            Value<String?> defaultDiscountType = const Value.absent(),
-            Value<double> defaultDiscountValue = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-            Value<bool> isDeleted = const Value.absent(),
-            Value<bool> isNotSynced = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              CatalogItemsCompanion.insert(
-            uuid: uuid,
-            catalogUuid: catalogUuid,
-            productUuid: productUuid,
-            sellingProductUuid: sellingProductUuid,
-            customPrice: customPrice,
-            batchUuid: batchUuid,
-            validUntil: validUntil,
-            batchSelectionStrategy: batchSelectionStrategy,
-            pricingApproach: pricingApproach,
-            markupOrMarginPercent: markupOrMarginPercent,
-            fixedAmount: fixedAmount,
-            sellPrice: sellPrice,
-            unitCostSnapshot: unitCostSnapshot,
-            priceComputedAt: priceComputedAt,
-            priceOverride: priceOverride,
-            defaultDiscountType: defaultDiscountType,
-            defaultDiscountValue: defaultDiscountValue,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            isDeleted: isDeleted,
-            isNotSynced: isNotSynced,
-            rowid: rowid,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable<$CatalogItemsTable, CatalogItem>(table),
-                    $$CatalogItemsTableReferences(db, table, e)
-                  ))
-              .toList(),
-          prefetchHooksCallback: (
-              {catalogUuid = false,
-              productUuid = false,
-              sellingProductUuid = false,
-              batchUuid = false,
-              catalogTieredDiscountsRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (catalogTieredDiscountsRefs) db.catalogTieredDiscounts
-              ],
-              addJoins: <
-                  T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic>>(state) {
-                if (catalogUuid) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.catalogUuid,
-                    referencedTable:
-                        $$CatalogItemsTableReferences._catalogUuidTable(db),
-                    referencedColumn: $$CatalogItemsTableReferences
-                        ._catalogUuidTable(db)
-                        .uuid,
-                  ) as T;
-                }
-                if (productUuid) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.productUuid,
-                    referencedTable:
-                        $$CatalogItemsTableReferences._productUuidTable(db),
-                    referencedColumn: $$CatalogItemsTableReferences
-                        ._productUuidTable(db)
-                        .uuid,
-                  ) as T;
-                }
-                if (sellingProductUuid) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.sellingProductUuid,
-                    referencedTable: $$CatalogItemsTableReferences
-                        ._sellingProductUuidTable(db),
-                    referencedColumn: $$CatalogItemsTableReferences
-                        ._sellingProductUuidTable(db)
-                        .uuid,
-                  ) as T;
-                }
-                if (batchUuid) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.batchUuid,
-                    referencedTable:
-                        $$CatalogItemsTableReferences._batchUuidTable(db),
-                    referencedColumn:
-                        $$CatalogItemsTableReferences._batchUuidTable(db).uuid,
-                  ) as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (catalogTieredDiscountsRefs)
-                    await $_getPrefetchedDataByColumns<
-                            CatalogItem,
-                            $CatalogItemsTable,
-                            CatalogTieredDiscount,
-                            $CatalogTieredDiscountsTable>(
-                        currentTable: table,
-                        referencedTable: $$CatalogItemsTableReferences
-                            ._catalogTieredDiscountsRefsTable(db),
-                        managerFromTypedResult: (p0) =>
-                            $$CatalogItemsTableReferences(db, table, p0)
-                                .catalogTieredDiscountsRefs,
-                        currentColumn: 'uuid',
-                        referencedColumn: 'catalog_item_uuid',
-                        typedResults: items)
-                ];
-              },
-            );
-          },
-        ));
-}
-
-typedef $$CatalogItemsTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $CatalogItemsTable,
-    CatalogItem,
-    $$CatalogItemsTableFilterComposer,
-    $$CatalogItemsTableOrderingComposer,
-    $$CatalogItemsTableAnnotationComposer,
-    $$CatalogItemsTableCreateCompanionBuilder,
-    $$CatalogItemsTableUpdateCompanionBuilder,
-    (CatalogItem, $$CatalogItemsTableReferences),
-    CatalogItem,
-    PrefetchHooks Function(
-        {bool catalogUuid,
-        bool productUuid,
-        bool sellingProductUuid,
-        bool batchUuid,
-        bool catalogTieredDiscountsRefs})>;
-typedef $$CatalogAssignmentsTableCreateCompanionBuilder
-    = CatalogAssignmentsCompanion Function({
-  required String uuid,
-  required String catalogUuid,
-  required String contactUuid,
-  Value<DateTime> createdAt,
-  Value<bool> isDeleted,
-  Value<bool> isNotSynced,
-  Value<int> rowid,
-});
-typedef $$CatalogAssignmentsTableUpdateCompanionBuilder
-    = CatalogAssignmentsCompanion Function({
-  Value<String> uuid,
-  Value<String> catalogUuid,
-  Value<String> contactUuid,
-  Value<DateTime> createdAt,
-  Value<bool> isDeleted,
-  Value<bool> isNotSynced,
-  Value<int> rowid,
-});
-
-final class $$CatalogAssignmentsTableReferences extends BaseReferences<
-    _$AppDatabase, $CatalogAssignmentsTable, CatalogAssignment> {
-  $$CatalogAssignmentsTableReferences(
-      super.$_db, super.$_table, super.$_typedResult);
-
-  static $CatalogsTable _catalogUuidTable(_$AppDatabase db) => db.catalogs
-      .createAlias('catalog_assignments__catalog_uuid__catalogs__uuid');
-
-  $$CatalogsTableProcessedTableManager get catalogUuid {
-    final $_column = $_itemColumn<String>('catalog_uuid')!;
-
-    final manager = $$CatalogsTableTableManager($_db, $_db.catalogs)
-        .filter((f) => f.uuid.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_catalogUuidTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-
-  static $ContactsTable _contactUuidTable(_$AppDatabase db) => db.contacts
-      .createAlias('catalog_assignments__contact_uuid__contacts__uuid');
-
-  $$ContactsTableProcessedTableManager get contactUuid {
-    final $_column = $_itemColumn<String>('contact_uuid')!;
-
-    final manager = $$ContactsTableTableManager($_db, $_db.contacts)
-        .filter((f) => f.uuid.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_contactUuidTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-}
-
-class $$CatalogAssignmentsTableFilterComposer
-    extends Composer<_$AppDatabase, $CatalogAssignmentsTable> {
-  $$CatalogAssignmentsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get uuid => $composableBuilder(
-      column: $table.uuid, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isDeleted => $composableBuilder(
-      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
-
-  $$CatalogsTableFilterComposer get catalogUuid {
-    final $$CatalogsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.catalogUuid,
-        referencedTable: $db.catalogs,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogsTableFilterComposer(
-              $db: $db,
-              $table: $db.catalogs,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$ContactsTableFilterComposer get contactUuid {
-    final $$ContactsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactUuid,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableFilterComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$CatalogAssignmentsTableOrderingComposer
-    extends Composer<_$AppDatabase, $CatalogAssignmentsTable> {
-  $$CatalogAssignmentsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get uuid => $composableBuilder(
-      column: $table.uuid, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isDeleted => $composableBuilder(
-      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
-
-  $$CatalogsTableOrderingComposer get catalogUuid {
-    final $$CatalogsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.catalogUuid,
-        referencedTable: $db.catalogs,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogsTableOrderingComposer(
-              $db: $db,
-              $table: $db.catalogs,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$ContactsTableOrderingComposer get contactUuid {
-    final $$ContactsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactUuid,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableOrderingComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$CatalogAssignmentsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $CatalogAssignmentsTable> {
-  $$CatalogAssignmentsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get uuid =>
-      $composableBuilder(column: $table.uuid, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get isDeleted =>
-      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
-
-  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => column);
-
-  $$CatalogsTableAnnotationComposer get catalogUuid {
-    final $$CatalogsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.catalogUuid,
-        referencedTable: $db.catalogs,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.catalogs,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-
-  $$ContactsTableAnnotationComposer get contactUuid {
-    final $$ContactsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.contactUuid,
-        referencedTable: $db.contacts,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$ContactsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.contacts,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$CatalogAssignmentsTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $CatalogAssignmentsTable,
-    CatalogAssignment,
-    $$CatalogAssignmentsTableFilterComposer,
-    $$CatalogAssignmentsTableOrderingComposer,
-    $$CatalogAssignmentsTableAnnotationComposer,
-    $$CatalogAssignmentsTableCreateCompanionBuilder,
-    $$CatalogAssignmentsTableUpdateCompanionBuilder,
-    (CatalogAssignment, $$CatalogAssignmentsTableReferences),
-    CatalogAssignment,
-    PrefetchHooks Function({bool catalogUuid, bool contactUuid})> {
-  $$CatalogAssignmentsTableTableManager(
-      _$AppDatabase db, $CatalogAssignmentsTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$CatalogAssignmentsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$CatalogAssignmentsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$CatalogAssignmentsTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> uuid = const Value.absent(),
-            Value<String> catalogUuid = const Value.absent(),
-            Value<String> contactUuid = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<bool> isDeleted = const Value.absent(),
-            Value<bool> isNotSynced = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              CatalogAssignmentsCompanion(
-            uuid: uuid,
-            catalogUuid: catalogUuid,
-            contactUuid: contactUuid,
-            createdAt: createdAt,
-            isDeleted: isDeleted,
-            isNotSynced: isNotSynced,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String uuid,
-            required String catalogUuid,
-            required String contactUuid,
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<bool> isDeleted = const Value.absent(),
-            Value<bool> isNotSynced = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              CatalogAssignmentsCompanion.insert(
-            uuid: uuid,
-            catalogUuid: catalogUuid,
-            contactUuid: contactUuid,
-            createdAt: createdAt,
-            isDeleted: isDeleted,
-            isNotSynced: isNotSynced,
-            rowid: rowid,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable<$CatalogAssignmentsTable, CatalogAssignment>(
-                        table),
-                    $$CatalogAssignmentsTableReferences(db, table, e)
-                  ))
-              .toList(),
-          prefetchHooksCallback: ({catalogUuid = false, contactUuid = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                  T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic>>(state) {
-                if (catalogUuid) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.catalogUuid,
-                    referencedTable: $$CatalogAssignmentsTableReferences
-                        ._catalogUuidTable(db),
-                    referencedColumn: $$CatalogAssignmentsTableReferences
-                        ._catalogUuidTable(db)
-                        .uuid,
-                  ) as T;
-                }
-                if (contactUuid) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.contactUuid,
-                    referencedTable: $$CatalogAssignmentsTableReferences
-                        ._contactUuidTable(db),
-                    referencedColumn: $$CatalogAssignmentsTableReferences
-                        ._contactUuidTable(db)
-                        .uuid,
-                  ) as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
-        ));
-}
-
-typedef $$CatalogAssignmentsTableProcessedTableManager = ProcessedTableManager<
-    _$AppDatabase,
-    $CatalogAssignmentsTable,
-    CatalogAssignment,
-    $$CatalogAssignmentsTableFilterComposer,
-    $$CatalogAssignmentsTableOrderingComposer,
-    $$CatalogAssignmentsTableAnnotationComposer,
-    $$CatalogAssignmentsTableCreateCompanionBuilder,
-    $$CatalogAssignmentsTableUpdateCompanionBuilder,
-    (CatalogAssignment, $$CatalogAssignmentsTableReferences),
-    CatalogAssignment,
-    PrefetchHooks Function({bool catalogUuid, bool contactUuid})>;
-typedef $$CatalogTieredDiscountsTableCreateCompanionBuilder
-    = CatalogTieredDiscountsCompanion Function({
-  required String uuid,
-  required String catalogItemUuid,
-  required double minQuantity,
-  required double discountPercentage,
-  Value<String> discountType,
-  Value<double> discountAmount,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-  Value<bool> isDeleted,
-  Value<bool> isNotSynced,
-  Value<int> rowid,
-});
-typedef $$CatalogTieredDiscountsTableUpdateCompanionBuilder
-    = CatalogTieredDiscountsCompanion Function({
-  Value<String> uuid,
-  Value<String> catalogItemUuid,
-  Value<double> minQuantity,
-  Value<double> discountPercentage,
-  Value<String> discountType,
-  Value<double> discountAmount,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-  Value<bool> isDeleted,
-  Value<bool> isNotSynced,
-  Value<int> rowid,
-});
-
-final class $$CatalogTieredDiscountsTableReferences extends BaseReferences<
-    _$AppDatabase, $CatalogTieredDiscountsTable, CatalogTieredDiscount> {
-  $$CatalogTieredDiscountsTableReferences(
-      super.$_db, super.$_table, super.$_typedResult);
-
-  static $CatalogItemsTable _catalogItemUuidTable(_$AppDatabase db) =>
-      db.catalogItems.createAlias(
-          'catalog_tiered_discounts__catalog_item_uuid__catalog_items__uuid');
-
-  $$CatalogItemsTableProcessedTableManager get catalogItemUuid {
-    final $_column = $_itemColumn<String>('catalog_item_uuid')!;
-
-    final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
-        .filter((f) => f.uuid.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_catalogItemUuidTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-        manager.$state.copyWith(prefetchedData: [item]));
-  }
-}
-
-class $$CatalogTieredDiscountsTableFilterComposer
-    extends Composer<_$AppDatabase, $CatalogTieredDiscountsTable> {
-  $$CatalogTieredDiscountsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get uuid => $composableBuilder(
-      column: $table.uuid, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get minQuantity => $composableBuilder(
-      column: $table.minQuantity, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get discountPercentage => $composableBuilder(
-      column: $table.discountPercentage,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<String> get discountType => $composableBuilder(
-      column: $table.discountType, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<double> get discountAmount => $composableBuilder(
-      column: $table.discountAmount,
-      builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isDeleted => $composableBuilder(
-      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
-
-  ColumnFilters<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
-
-  $$CatalogItemsTableFilterComposer get catalogItemUuid {
-    final $$CatalogItemsTableFilterComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.catalogItemUuid,
-        referencedTable: $db.catalogItems,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogItemsTableFilterComposer(
-              $db: $db,
-              $table: $db.catalogItems,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$CatalogTieredDiscountsTableOrderingComposer
-    extends Composer<_$AppDatabase, $CatalogTieredDiscountsTable> {
-  $$CatalogTieredDiscountsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get uuid => $composableBuilder(
-      column: $table.uuid, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get minQuantity => $composableBuilder(
-      column: $table.minQuantity, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get discountPercentage => $composableBuilder(
-      column: $table.discountPercentage,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<String> get discountType => $composableBuilder(
-      column: $table.discountType,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<double> get discountAmount => $composableBuilder(
-      column: $table.discountAmount,
-      builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isDeleted => $composableBuilder(
-      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
-
-  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
-
-  $$CatalogItemsTableOrderingComposer get catalogItemUuid {
-    final $$CatalogItemsTableOrderingComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.catalogItemUuid,
-        referencedTable: $db.catalogItems,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogItemsTableOrderingComposer(
-              $db: $db,
-              $table: $db.catalogItems,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$CatalogTieredDiscountsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $CatalogTieredDiscountsTable> {
-  $$CatalogTieredDiscountsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get uuid =>
-      $composableBuilder(column: $table.uuid, builder: (column) => column);
-
-  GeneratedColumn<double> get minQuantity => $composableBuilder(
-      column: $table.minQuantity, builder: (column) => column);
-
-  GeneratedColumn<double> get discountPercentage => $composableBuilder(
-      column: $table.discountPercentage, builder: (column) => column);
-
-  GeneratedColumn<String> get discountType => $composableBuilder(
-      column: $table.discountType, builder: (column) => column);
-
-  GeneratedColumn<double> get discountAmount => $composableBuilder(
-      column: $table.discountAmount, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get isDeleted =>
-      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
-
-  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
-      column: $table.isNotSynced, builder: (column) => column);
-
-  $$CatalogItemsTableAnnotationComposer get catalogItemUuid {
-    final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
-        composer: this,
-        getCurrentColumn: (t) => t.catalogItemUuid,
-        referencedTable: $db.catalogItems,
-        getReferencedColumn: (t) => t.uuid,
-        builder: (joinBuilder,
-                {$addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer}) =>
-            $$CatalogItemsTableAnnotationComposer(
-              $db: $db,
-              $table: $db.catalogItems,
-              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-              joinBuilder: joinBuilder,
-              $removeJoinBuilderFromRootComposer:
-                  $removeJoinBuilderFromRootComposer,
-            ));
-    return composer;
-  }
-}
-
-class $$CatalogTieredDiscountsTableTableManager extends RootTableManager<
-    _$AppDatabase,
-    $CatalogTieredDiscountsTable,
-    CatalogTieredDiscount,
-    $$CatalogTieredDiscountsTableFilterComposer,
-    $$CatalogTieredDiscountsTableOrderingComposer,
-    $$CatalogTieredDiscountsTableAnnotationComposer,
-    $$CatalogTieredDiscountsTableCreateCompanionBuilder,
-    $$CatalogTieredDiscountsTableUpdateCompanionBuilder,
-    (CatalogTieredDiscount, $$CatalogTieredDiscountsTableReferences),
-    CatalogTieredDiscount,
-    PrefetchHooks Function({bool catalogItemUuid})> {
-  $$CatalogTieredDiscountsTableTableManager(
-      _$AppDatabase db, $CatalogTieredDiscountsTable table)
-      : super(TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$CatalogTieredDiscountsTableFilterComposer(
-                  $db: db, $table: table),
-          createOrderingComposer: () =>
-              $$CatalogTieredDiscountsTableOrderingComposer(
-                  $db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$CatalogTieredDiscountsTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> uuid = const Value.absent(),
-            Value<String> catalogItemUuid = const Value.absent(),
-            Value<double> minQuantity = const Value.absent(),
-            Value<double> discountPercentage = const Value.absent(),
-            Value<String> discountType = const Value.absent(),
-            Value<double> discountAmount = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-            Value<bool> isDeleted = const Value.absent(),
-            Value<bool> isNotSynced = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              CatalogTieredDiscountsCompanion(
-            uuid: uuid,
-            catalogItemUuid: catalogItemUuid,
-            minQuantity: minQuantity,
-            discountPercentage: discountPercentage,
-            discountType: discountType,
-            discountAmount: discountAmount,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            isDeleted: isDeleted,
-            isNotSynced: isNotSynced,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String uuid,
-            required String catalogItemUuid,
-            required double minQuantity,
-            required double discountPercentage,
-            Value<String> discountType = const Value.absent(),
-            Value<double> discountAmount = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-            Value<bool> isDeleted = const Value.absent(),
-            Value<bool> isNotSynced = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              CatalogTieredDiscountsCompanion.insert(
-            uuid: uuid,
-            catalogItemUuid: catalogItemUuid,
-            minQuantity: minQuantity,
-            discountPercentage: discountPercentage,
-            discountType: discountType,
-            discountAmount: discountAmount,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            isDeleted: isDeleted,
-            isNotSynced: isNotSynced,
-            rowid: rowid,
-          ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (
-                    e.readTable<$CatalogTieredDiscountsTable,
-                        CatalogTieredDiscount>(table),
-                    $$CatalogTieredDiscountsTableReferences(db, table, e)
-                  ))
-              .toList(),
-          prefetchHooksCallback: ({catalogItemUuid = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins: <
-                  T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic>>(state) {
-                if (catalogItemUuid) {
-                  state = state.withJoin(
-                    currentTable: table,
-                    currentColumn: table.catalogItemUuid,
-                    referencedTable: $$CatalogTieredDiscountsTableReferences
-                        ._catalogItemUuidTable(db),
-                    referencedColumn: $$CatalogTieredDiscountsTableReferences
-                        ._catalogItemUuidTable(db)
-                        .uuid,
-                  ) as T;
-                }
-
-                return state;
-              },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
-        ));
-}
-
-typedef $$CatalogTieredDiscountsTableProcessedTableManager
-    = ProcessedTableManager<
-        _$AppDatabase,
-        $CatalogTieredDiscountsTable,
-        CatalogTieredDiscount,
-        $$CatalogTieredDiscountsTableFilterComposer,
-        $$CatalogTieredDiscountsTableOrderingComposer,
-        $$CatalogTieredDiscountsTableAnnotationComposer,
-        $$CatalogTieredDiscountsTableCreateCompanionBuilder,
-        $$CatalogTieredDiscountsTableUpdateCompanionBuilder,
-        (CatalogTieredDiscount, $$CatalogTieredDiscountsTableReferences),
-        CatalogTieredDiscount,
-        PrefetchHooks Function({bool catalogItemUuid})>;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -36488,6 +37285,20 @@ class $AppDatabaseManager {
       $$ProductsTableTableManager(_db, _db.products);
   $$ProductBatchesTableTableManager get productBatches =>
       $$ProductBatchesTableTableManager(_db, _db.productBatches);
+  $$SellingProductsTableTableManager get sellingProducts =>
+      $$SellingProductsTableTableManager(_db, _db.sellingProducts);
+  $$SellingProductComponentsTableTableManager get sellingProductComponents =>
+      $$SellingProductComponentsTableTableManager(
+          _db, _db.sellingProductComponents);
+  $$CatalogsTableTableManager get catalogs =>
+      $$CatalogsTableTableManager(_db, _db.catalogs);
+  $$CatalogItemsTableTableManager get catalogItems =>
+      $$CatalogItemsTableTableManager(_db, _db.catalogItems);
+  $$CatalogAssignmentsTableTableManager get catalogAssignments =>
+      $$CatalogAssignmentsTableTableManager(_db, _db.catalogAssignments);
+  $$CatalogTieredDiscountsTableTableManager get catalogTieredDiscounts =>
+      $$CatalogTieredDiscountsTableTableManager(
+          _db, _db.catalogTieredDiscounts);
   $$OrderItemsTableTableManager get orderItems =>
       $$OrderItemsTableTableManager(_db, _db.orderItems);
   $$GoodsReceiptsTableTableManager get goodsReceipts =>
@@ -36519,18 +37330,4 @@ class $AppDatabaseManager {
       $$OrderReturnsTableTableManager(_db, _db.orderReturns);
   $$OrderReturnItemsTableTableManager get orderReturnItems =>
       $$OrderReturnItemsTableTableManager(_db, _db.orderReturnItems);
-  $$SellingProductsTableTableManager get sellingProducts =>
-      $$SellingProductsTableTableManager(_db, _db.sellingProducts);
-  $$SellingProductComponentsTableTableManager get sellingProductComponents =>
-      $$SellingProductComponentsTableTableManager(
-          _db, _db.sellingProductComponents);
-  $$CatalogsTableTableManager get catalogs =>
-      $$CatalogsTableTableManager(_db, _db.catalogs);
-  $$CatalogItemsTableTableManager get catalogItems =>
-      $$CatalogItemsTableTableManager(_db, _db.catalogItems);
-  $$CatalogAssignmentsTableTableManager get catalogAssignments =>
-      $$CatalogAssignmentsTableTableManager(_db, _db.catalogAssignments);
-  $$CatalogTieredDiscountsTableTableManager get catalogTieredDiscounts =>
-      $$CatalogTieredDiscountsTableTableManager(
-          _db, _db.catalogTieredDiscounts);
 }

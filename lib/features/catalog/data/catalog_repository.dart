@@ -1,7 +1,9 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_availability.dart';
 import 'package:flowpaisa/features/catalog/domain/catalog_discounts.dart';
 import 'package:flowpaisa/features/catalog/domain/catalog_pricing.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_sale_pick.dart';
 import 'package:flowpaisa/features/inventory/data/inventory_repository.dart';
 import 'package:uuid/uuid.dart';
 
@@ -89,9 +91,15 @@ class CatalogRepository {
     String? description,
     DateTime? validUntil,
     bool isDefault = false,
+    String defaultPricingApproach = CatalogPricingApproach.markup,
+    double defaultMarkupOrMarginPercent = 0,
+    double defaultFixedAmount = 0,
   }) async {
     final trimmed = name.trim();
     if (trimmed.isEmpty) throw ArgumentError('Catalog name is required');
+    final approach = CatalogPricingApproach.all.contains(defaultPricingApproach)
+        ? defaultPricingApproach
+        : CatalogPricingApproach.markup;
 
     return _db.transaction(() async {
       if (isDefault) await _clearDefaultFlags();
@@ -103,6 +111,15 @@ class CatalogRepository {
               description: Value(_nullIfEmpty(description)),
               validUntil: Value(validUntil),
               isDefault: Value(isDefault),
+              defaultPricingApproach: Value(approach),
+              defaultMarkupOrMarginPercent: Value(
+                defaultMarkupOrMarginPercent.isFinite
+                    ? defaultMarkupOrMarginPercent
+                    : 0,
+              ),
+              defaultFixedAmount: Value(
+                defaultFixedAmount.isFinite ? defaultFixedAmount : 0,
+              ),
             ),
           );
       return uuid;
@@ -115,11 +132,19 @@ class CatalogRepository {
     String? description,
     DateTime? validUntil,
     bool? isDefault,
+    String? defaultPricingApproach,
+    double? defaultMarkupOrMarginPercent,
+    double? defaultFixedAmount,
   }) async {
     final existing = await getCatalog(uuid);
     if (existing == null) throw StateError('Catalog not found');
     final trimmed = name.trim();
     if (trimmed.isEmpty) throw ArgumentError('Catalog name is required');
+    final approach = defaultPricingApproach == null
+        ? null
+        : (CatalogPricingApproach.all.contains(defaultPricingApproach)
+            ? defaultPricingApproach
+            : CatalogPricingApproach.markup);
 
     await _db.transaction(() async {
       if (isDefault == true) await _clearDefaultFlags();
@@ -129,6 +154,18 @@ class CatalogRepository {
           description: Value(_nullIfEmpty(description)),
           validUntil: Value(validUntil),
           isDefault: isDefault == null ? const Value.absent() : Value(isDefault),
+          defaultPricingApproach:
+              approach == null ? const Value.absent() : Value(approach),
+          defaultMarkupOrMarginPercent: defaultMarkupOrMarginPercent == null
+              ? const Value.absent()
+              : Value(
+                  defaultMarkupOrMarginPercent.isFinite
+                      ? defaultMarkupOrMarginPercent
+                      : 0,
+                ),
+          defaultFixedAmount: defaultFixedAmount == null
+              ? const Value.absent()
+              : Value(defaultFixedAmount.isFinite ? defaultFixedAmount : 0),
           isNotSynced: const Value(true),
           updatedAt: Value(DateTime.now()),
         ),
@@ -198,6 +235,66 @@ class CatalogRepository {
     return (_db.select(_db.catalogItems)
           ..where((i) => i.uuid.equals(uuid) & i.isDeleted.equals(false)))
         .getSingleOrNull();
+  }
+
+  /// Resolve a catalog item into a sale pick (display + discount snapshot).
+  Future<CatalogSalePick?> resolveSalePick(String catalogItemUuid) async {
+    final item = await getItem(catalogItemUuid);
+    if (item == null) return null;
+    return buildSalePick(item);
+  }
+
+  Future<CatalogSalePick?> buildSalePick(CatalogItem item) async {
+    final catalog = await getCatalog(item.catalogUuid);
+    final tiers = await getItemTiers(item.uuid);
+    final tierInputs = [
+      for (final t in tiers)
+        (
+          minQuantity: t.minQuantity,
+          type: CatalogDiscountType.isValid(t.discountType)
+              ? t.discountType
+              : CatalogDiscountType.percent,
+          value: t.discountType == CatalogDiscountType.fixed
+              ? t.discountAmount
+              : t.discountPercentage,
+        ),
+    ];
+    final catalogName = catalog?.name;
+
+    if (item.productUuid != null && item.productUuid!.trim().isNotEmpty) {
+      final product = await _inventory.getProduct(item.productUuid!);
+      if (product == null) return null;
+      final unitCost = await unitCostForProduct(product.uuid);
+      return CatalogSalePick(
+        item: item,
+        displayName: product.name,
+        unit: product.unit,
+        categoryUuid: product.categoryUuid,
+        isService: product.isService,
+        product: product,
+        unitCost: unitCost,
+        catalogName: catalogName,
+        discountTiers: tierInputs,
+      );
+    }
+
+    final spUuid = item.sellingProductUuid?.trim();
+    if (spUuid == null || spUuid.isEmpty) return null;
+    final sp = await (_db.select(_db.sellingProducts)
+          ..where((s) => s.uuid.equals(spUuid) & s.isDeleted.equals(false)))
+        .getSingleOrNull();
+    if (sp == null) return null;
+    final unitCost = await unitCostForSellingProduct(sp.uuid);
+    return CatalogSalePick(
+      item: item,
+      displayName: sp.name,
+      unit: (sp.unit?.trim().isNotEmpty == true) ? sp.unit!.trim() : 'Pcs',
+      categoryUuid: sp.categoryUuid,
+      sellingProduct: sp,
+      unitCost: unitCost,
+      catalogName: catalogName,
+      discountTiers: tierInputs,
+    );
   }
 
   /// Unit cost for a direct product link (service or stock).
@@ -758,6 +855,150 @@ class CatalogRepository {
       if (s != null && item.sellingProductUuid == s) return item;
     }
     return null;
+  }
+
+  // --- Resolve for sales ---
+
+  /// Active (non-expired) catalog marked as the business default, if any.
+  Future<Catalog?> getDefaultCatalog() async {
+    final catalog = await (_db.select(_db.catalogs)
+          ..where((c) => c.isDefault.equals(true) & c.isDeleted.equals(false))
+          ..limit(1))
+        .getSingleOrNull();
+    if (catalog == null || !CatalogAvailability.isActive(catalog)) return null;
+    return catalog;
+  }
+
+  /// Stable sale/list order: default first, then name A–Z (case-insensitive).
+  static int compareCatalogsForSale(Catalog a, Catalog b) {
+    if (a.isDefault != b.isDefault) return a.isDefault ? -1 : 1;
+    return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+  }
+
+  /// All non-deleted catalogs that are still within [Catalog.validUntil].
+  Future<List<Catalog>> listActiveCatalogs() async {
+    final rows = await (_db.select(_db.catalogs)
+          ..where((c) => c.isDeleted.equals(false)))
+        .get();
+    final active = [
+      for (final c in rows)
+        if (CatalogAvailability.isActive(c)) c,
+    ];
+    active.sort(compareCatalogsForSale);
+    return active;
+  }
+
+  /// Catalog uuids that have at least one active contact assignment.
+  /// Those are restricted; catalogs with none are open to all / walk-in.
+  Future<Set<String>> catalogUuidsWithAssignments() async {
+    final rows = await (_db.select(_db.catalogAssignments)
+          ..where((a) => a.isDeleted.equals(false)))
+        .get();
+    return {for (final a in rows) a.catalogUuid};
+  }
+
+  /// Active catalogs visible for a sale contact.
+  ///
+  /// - Catalog with **no** assignments → everyone (incl. walk-in)
+  /// - Catalog with assignments → only those contacts
+  ///
+  /// Order is always [compareCatalogsForSale] (default first, then A–Z).
+  Future<List<Catalog>> listActiveCatalogsForContact(String? contactUuid) async {
+    final all = await listActiveCatalogs();
+    if (all.isEmpty) return const [];
+
+    final restrictedIds = await catalogUuidsWithAssignments();
+    final contact = contactUuid?.trim();
+
+    // Walk-in: only open (unassigned) catalogs.
+    if (contact == null || contact.isEmpty) {
+      return [
+        for (final c in all)
+          if (!restrictedIds.contains(c.uuid)) c,
+      ];
+    }
+
+    final assignedToContact = await (_db.select(_db.catalogAssignments)
+          ..where((a) =>
+              a.contactUuid.equals(contact) & a.isDeleted.equals(false)))
+        .get();
+    final assignedIds = {for (final a in assignedToContact) a.catalogUuid};
+
+    return [
+      for (final c in all)
+        if (!restrictedIds.contains(c.uuid) || assignedIds.contains(c.uuid)) c,
+    ];
+  }
+
+  /// Best catalog for a sale among [listActiveCatalogsForContact].
+  ///
+  /// Prefer a catalog assigned to the contact (default first, then A–Z),
+  /// else first eligible (already default-first / A–Z).
+  Future<Catalog?> resolveCatalogForContact(String? contactUuid) async {
+    final eligible = await listActiveCatalogsForContact(contactUuid);
+    if (eligible.isEmpty) return null;
+
+    final contact = contactUuid?.trim();
+    if (contact != null && contact.isNotEmpty) {
+      final restrictedIds = await catalogUuidsWithAssignments();
+      final assigned = [
+        for (final c in eligible)
+          if (restrictedIds.contains(c.uuid)) c,
+      ];
+      if (assigned.isNotEmpty) return assigned.first;
+    }
+
+    return eligible.first;
+  }
+
+  /// Row by uuid including soft-deleted (for historical sale line checks).
+  Future<CatalogItem?> getItemAny(String uuid) {
+    return (_db.select(_db.catalogItems)..where((i) => i.uuid.equals(uuid)))
+        .getSingleOrNull();
+  }
+
+  /// Catalog by uuid including soft-deleted.
+  Future<Catalog?> getCatalogAny(String uuid) {
+    return (_db.select(_db.catalogs)..where((c) => c.uuid.equals(uuid)))
+        .getSingleOrNull();
+  }
+
+  /// Validate a sale order line against its catalog snapshot refs.
+  Future<SaleCatalogLineIssue> saleLineCatalogIssue(OrderItem line) async {
+    final itemUuid = line.catalogItemUuid?.trim();
+    if (itemUuid == null || itemUuid.isEmpty) {
+      // Legacy / non-catalog lines: no catalog integrity issue to flag.
+      return SaleCatalogLineIssue.none;
+    }
+
+    final item = await getItemAny(itemUuid);
+    if (item == null || item.isDeleted) {
+      return SaleCatalogLineIssue.catalogItemUnavailable;
+    }
+
+    final catalog = await getCatalogAny(item.catalogUuid);
+    if (catalog == null || catalog.isDeleted) {
+      return SaleCatalogLineIssue.catalogDeleted;
+    }
+    if (CatalogAvailability.isExpired(catalog)) {
+      return SaleCatalogLineIssue.catalogExpired;
+    }
+    return SaleCatalogLineIssue.none;
+  }
+
+  /// Map order-item uuid → issue for all lines on an order.
+  Future<Map<String, SaleCatalogLineIssue>> saleLineCatalogIssuesForOrder(
+    String orderUuid,
+  ) async {
+    final items = await (_db.select(_db.orderItems)
+          ..where((oi) =>
+              oi.orderUuid.equals(orderUuid) & oi.isDeleted.equals(false)))
+        .get();
+    final out = <String, SaleCatalogLineIssue>{};
+    for (final item in items) {
+      out[item.uuid] = await saleLineCatalogIssue(item);
+    }
+    return out;
   }
 
   // --- Assignments ---

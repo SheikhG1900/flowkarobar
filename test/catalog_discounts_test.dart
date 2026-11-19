@@ -2,6 +2,41 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flowpaisa/features/catalog/domain/catalog_discounts.dart';
 
 void main() {
+  group('SaleLinePricing', () {
+    test('unit and line discount from list vs discounted', () {
+      expect(
+        SaleLinePricing.unitDiscountFixed(
+          listUnitPrice: 100,
+          discountedUnitPrice: 85,
+        ),
+        15,
+      );
+      expect(
+        SaleLinePricing.unitDiscountPercent(
+          listUnitPrice: 100,
+          discountedUnitPrice: 85,
+        ),
+        15,
+      );
+      expect(
+        SaleLinePricing.lineDiscountFixed(
+          listUnitPrice: 100,
+          discountedUnitPrice: 85,
+          quantity: 3,
+        ),
+        45,
+      );
+      expect(
+        SaleLinePricing.lineTotal(discountedUnitPrice: 85, quantity: 3),
+        255,
+      );
+      expect(
+        SaleLinePricing.lineGross(listUnitPrice: 100, quantity: 3),
+        300,
+      );
+    });
+  });
+
   group('CatalogDiscounts.applyDiscount', () {
     test('percent off', () {
       expect(
@@ -75,6 +110,36 @@ void main() {
         ],
       );
       expect(price, 75);
+    });
+  });
+
+  group('CatalogDiscounts.lineDiscountAmount', () {
+    test('default percent on qty 1', () {
+      expect(
+        CatalogDiscounts.lineDiscountAmount(
+          sellPrice: 100,
+          defaultType: CatalogDiscountType.percent,
+          defaultValue: 10,
+          quantity: 1,
+          tiers: const [],
+        ),
+        10,
+      );
+    });
+
+    test('tier replaces default across qty', () {
+      expect(
+        CatalogDiscounts.lineDiscountAmount(
+          sellPrice: 100,
+          defaultType: CatalogDiscountType.percent,
+          defaultValue: 5,
+          quantity: 10,
+          tiers: [
+            (minQuantity: 10, type: CatalogDiscountType.percent, value: 20),
+          ],
+        ),
+        200,
+      );
     });
   });
 }

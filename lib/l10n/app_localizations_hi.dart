@@ -136,6 +136,23 @@ class AppLocalizationsHi extends AppLocalizations {
   String get supplier => 'विक्रेता';
 
   @override
+  String get contactRoles => 'भूमिकाएँ';
+
+  @override
+  String get contactRolesHint =>
+      'निर्धारित करता है कि संपर्क बिक्री और खरीद में कहाँ दिखेगा।';
+
+  @override
+  String get contactRoleCustomerHint => 'नई बिक्री संपर्क सूची में दिखाएँ';
+
+  @override
+  String get contactRoleSupplierHint => 'नई खरीद संपर्क सूची में दिखाएँ';
+
+  @override
+  String get contactRoleRequired =>
+      'कम से कम एक भूमिका चुनें: ग्राहक या विक्रेता';
+
+  @override
   String get taxInvoice => 'टैक्स इनवॉइस';
 
   @override
@@ -179,6 +196,81 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get setAsDefaultCatalog => 'डिफ़ॉल्ट कैटलॉग बनाएँ';
+
+  @override
+  String get catalogDefaultPricing => 'नए आइटम के लिए डिफ़ॉल्ट मूल्य निर्धारण';
+
+  @override
+  String get catalogDefaultPricingHint =>
+      'आइटम जोड़ते समय दृष्टिकोण, प्रतिशत और निश्चित राशि पहले से भरता है। प्रत्येक पंक्ति अपनी कॉपी रखती है।';
+
+  @override
+  String saleUsingCatalog(String catalogName) {
+    return 'कैटलॉग से मूल्य: $catalogName';
+  }
+
+  @override
+  String get saleUsingRetailPrices =>
+      'कोई कैटलॉग नहीं — उत्पाद खुदरा मूल्य उपयोग होंगे';
+
+  @override
+  String get saleNoActiveCatalog =>
+      'इस ग्राहक के लिए कोई सक्रिय कैटलॉग नहीं है। ग्राहक को कैटलॉग असाइन करें, या बिना असाइनमेंट वाला कैटलॉग उपयोग करें (सभी / वॉक-इन)।';
+
+  @override
+  String get selectCatalog => 'कैटलॉग चुनें';
+
+  @override
+  String get catalogAvailableToAll => 'सभी ग्राहक / वॉक-इन';
+
+  @override
+  String get saleCatalogLinesInvalidTitle => 'कैटलॉग आइटम की समीक्षा करें';
+
+  @override
+  String saleCatalogLinesInvalidBody(int count) {
+    return '$count पंक्ति(याँ) हटाए गए आइटम या समाप्त/हटाए गए कैटलॉग को संदर्भित करती हैं। आप सहेजे गए मूल्यों के साथ आगे बढ़ सकते हैं।';
+  }
+
+  @override
+  String get saleLineCatalogItemUnavailable => 'कैटलॉग आइटम हटा दिया गया';
+
+  @override
+  String get saleLineCatalogDeleted => 'कैटलॉग हटा दिया गया';
+
+  @override
+  String get saleLineCatalogExpired => 'कैटलॉग समाप्त';
+
+  @override
+  String get discountedUnitPrice => 'छूट के बाद इकाई मूल्य';
+
+  @override
+  String get editDiscountedUnitPrice => 'छूट के बाद इकाई मूल्य संपादित करें';
+
+  @override
+  String get hideDiscountedUnitPrice => 'छूट के बाद इकाई मूल्य संपादक छिपाएँ';
+
+  @override
+  String get discountedUnitPriceManualHint =>
+      'मैन्युअल मूल्य — मात्रा बदलने पर यह इकाई मूल्य तब तक रहेगा जब तक कैटलॉग से ताज़ा न करें';
+
+  @override
+  String get unitDiscountDetail => 'इकाई छूट';
+
+  @override
+  String get lineDiscountDetail => 'पंक्ति छूट';
+
+  @override
+  String get lineTotal => 'पंक्ति कुल';
+
+  @override
+  String get refreshSaleLinePrices => 'कैटलॉग से मूल्य ताज़ा करें';
+
+  @override
+  String get saleLinePricesRefreshed => 'कैटलॉग से मूल्य ताज़ा किए गए';
+
+  @override
+  String get saleLineCatalogRefreshFailed =>
+      'ताज़ा नहीं हो सका — कैटलॉग आइटम अनुपलब्ध या हटाया गया';
 
   @override
   String get catalogValidUntil => 'मान्य तक';
@@ -490,6 +582,17 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get selectProduct => 'उत्पाद चुनें';
+
+  @override
+  String get selectCatalogItem => 'कैटलॉग आइटम चुनें';
+
+  @override
+  String selectFromCatalog(String catalogName) {
+    return '$catalogName से चुनें';
+  }
+
+  @override
+  String get sellingProductOffer => 'ऑफ़र';
 
   @override
   String get noProductsAvailable =>

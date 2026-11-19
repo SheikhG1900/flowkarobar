@@ -293,11 +293,10 @@ For every active item in that catalog:
 
 1. Resolve customer → assigned catalog (or default catalog).
 2. Picker lists **catalog items** (show name from product or selling product + `sellPrice`).
-3. Order line stores: catalog item ref (optional), product and/or selling product ref, **price snapshot**, qty.
-4. On deliver: consume per rules above; COGS from consumed lots (bundle = sum of component consumptions).
-5. Returns: restock components / product per lineage (depends on sale multi-lot lineage backlog).
-
-Until catalogs ship end-to-end, sales may keep using `product.retailPrice` as today.
+3. Order line stores: catalog item ref, product and/or selling product ref, **list `unitPrice`**, **`discountedUnitPrice`**, derived line `discountAmount`, qty, **`catalogNameSnapshot`**.
+4. New Sale UI: qty editable by default; catalog chip per line; read-only unit / discounted / unit-discount / line-discount / line-total. Optional unlock to edit discounted unit price (then qty keeps that price until refresh). Refresh re-fetches catalog item tiers + sell price.
+5. On deliver: consume per rules above; COGS from consumed lots (bundle = sum of component consumptions).
+6. Returns: restock components / product per lineage (depends on sale multi-lot lineage backlog).
 
 ---
 
@@ -315,7 +314,7 @@ Until catalogs ship end-to-end, sales may keep using `product.retailPrice` as to
 
 Follow **in order**. Mark each step `[x]` when done. Do not start a later phase until the previous phase’s required steps are complete (Phase 5 is optional / later).
 
-**Progress:** Phase 1 ☑ · Phase 2 ☑ · Phase 3 ☑ · Phase 4 ☐ · Phase 5 (partial: 5.1/5.3 ☑)
+**Progress:** Phase 1 ☑ · Phase 2 ☑ · Phase 3 ☑ · Phase 4 ☑ · Phase 5 (partial: 5.1/5.2/5.3 ☑)
 
 ---
 
@@ -376,24 +375,27 @@ Follow **in order**. Mark each step `[x]` when done. Do not start a later phase 
 
 **Goal:** Orders sell from catalogs; consume stock for products and selling-product bundles.
 
-- [ ] **4.1** Resolve customer → assigned catalog (or default); document fallback if none (retail / block / default).
-- [ ] **4.2** Sale line picker from catalog items (show name + stored sell price).
-- [ ] **4.3** Persist on order line: catalog item ref (optional), product and/or selling product ref, **price snapshot**, qty.
-- [ ] **4.4** Deliver: direct product consume (AUTO FEFO) or selling-product component explosion (AUTO/BATCH).
-- [ ] **4.5** COGS from consumed lots (bundle = sum of component allocations).
-- [ ] **4.6** Align with sale multi-lot lineage backlog where needed (returns accuracy).
-- [ ] **4.7** Policy: catalog price vs `product.retailPrice` for assigned customers.
-- [ ] **4.8** Mark Phase 4 progress ☐ → ☑ when 4.1–4.7 done.
+- [x] **4.1** Resolve customer → assigned **active** catalog (or active default); if none → **block** adding sale items.
+- [x] **4.2** Sale line picker from catalog items (show name + stored sell price).
+- [x] **4.3** Persist on order line: `catalogItemUuid`, nullable `productUuid` / `sellingProductUuid`, **list `unitPrice` + `discountedUnitPrice`**, qty, line `discountAmount`, `catalogNameSnapshot`.
+- [x] **4.4** Deliver: direct product consume (AUTO FEFO) or selling-product component explosion (AUTO/BATCH).
+- [x] **4.5** COGS from consumed lots (bundle = sum of component allocations / qty).
+- [ ] **4.6** Align with sale multi-lot lineage backlog where needed (returns accuracy) — bundles leave `batchUuid` null for now.
+- [x] **4.7** Policy: sale items **catalog-only** from active catalog; no retail product picker on sale.
+- [x] **4.8** Mark Phase 4 progress ☐ → ☑ when 4.1–4.7 done.
+- [x] **4.9** Historical sale detail: highlight lines whose catalog item/catalog is deleted or catalog expired; warn before deliver.
 
 ---
 
 ### Phase 5 — Later (optional)
 
 - [x] **5.1** Default + tiered discounts on catalog items (`PERCENT` / `FIXED`; copy on bulk add; edit on item; apply at order later).
-- [ ] **5.2** Catalog-level default approach / % / fixed for new lines.
+- [x] **5.2** Catalog-level default approach / % / fixed for new lines (edit catalog; prefill Add items).
 - [x] **5.3** Manual sell-price override flag (skip on catalog recalculate; confirm on single refresh; `*` marker).
 - [ ] **5.4** Reports: margin vs cost at catalog / sale.
-- [ ] **5.5** Mark Phase 5 progress when adopted items are done.
+- [ ] **5.5** **Product images (next iteration):** store gallery on **products** (master identity); optional cover/gallery on **selling products** only when the offer needs its own pack shot. Catalog list/detail/sale pickers resolve image via linked `productUuid` / `sellingProductUuid` — **do not** put images on `catalog_items` for v1. Optional later: rare catalog-only image override on an item.
+- [ ] **5.6** **Hierarchical catalog browse (next iteration):** for large catalogs, add a drill-down structure (e.g. departments → groups → items, or nested categories) so users can browse/pick by hierarchy instead of one flat list. Prefer reusing/extending **product categories** where possible; if catalog-specific grouping is needed, keep structure separate from price rows (don’t flatten hierarchy into `catalog_items`). Sale picker and catalog detail should support the same drill-down.
+- [ ] **5.7** Mark Phase 5 progress when adopted items are done.
 
 ---
 
@@ -407,7 +409,7 @@ Follow **in order**. Mark each step `[x]` when done. Do not start a later phase 
 | Catalog link | `productUuid` XOR `sellingProductUuid` |
 | Services | Direct product link; cost from product field |
 | Stock unit cost | Open-lot weighted average (batch-scoped when component says BATCH) |
-| Price at order | Stored catalog `sellPrice` snapshot — no formula on order |
+| Price at order | Snapshot list `unitPrice` + `discountedUnitPrice` (discount from their difference); optional refresh from catalog |
 | % + fixed meaning | Stored per catalog item for individual/bulk refresh |
 | Bulk add | Common formula for selection → copied onto each new line |
 | Import catalog → catalog | New item rows; Copy prices or Recalculate; conflicts: Skip / Replace / Skip all / Replace all |
@@ -415,12 +417,20 @@ Follow **in order**. Mark each step `[x]` when done. Do not start a later phase 
 | Markup vs margin | Four approaches (markup/margin × fixed before/after) via `pricingApproach` |
 | Fixed vs % order | Chosen per item via the four scenario options |
 | Lot multi-batch | No — one operational batch per lot; move to reclassify |
+| Product images | On **product** (and optional selling-product pack shot); not on catalog items for v1; catalog/sale UI inherits via link |
+| Large-catalog grouping | Hierarchical drill-down (next iteration); prefer product categories; keep hierarchy off price rows |
+| Sale catalog visibility | Catalog with **no** contact assignments → all customers + walk-in; with assignments → those contacts only |
+| Sale catalog order | Always **default first**, then **name A–Z** (same in list + drawer) |
+| Sale catalog resolve | Among eligible: assigned (same order) else first eligible; bottom drawer picker; **block add** when none |
+| Active catalog | Not deleted; `validUntil` null or today-or-later |
+| Assigned/default catalog pricing | Use catalog `sellPrice` (+ default/tier discounts at order); not `product.retailPrice` |
+| Historical sale lines | Keep price snapshot; highlight if catalog item/catalog deleted or catalog expired; warn on deliver |
 
 ---
 
 ## Open points (resolve during implementation if needed)
 
-1. Sale picker when contact has **no** catalog: fall back to product retail, force default catalog, or block?
-2. Can selling-product components include **services** (e.g. product + installation)?
+1. ~~Sale picker when contact has **no** catalog~~ → **Locked:** assignment → default (**active only**); if none → **block** adding sale items (no retail fallback).
+2. Can selling-product components include **services** (e.g. product + installation)? (Deliver stamps service component cost from `purchasePrice`; no stock consume.)
 3. Display name on catalog line when linking a product: always product name, or allow catalog-only alias?
 4. Exact fallback when open stock is 0 but `purchasePrice` is also 0 (allow sellPrice = fixed only — recommended yes).

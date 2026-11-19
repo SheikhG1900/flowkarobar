@@ -11,6 +11,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
+import 'package:flowpaisa/shared/widgets/form_section_card.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/shared/widgets/limit_countdown_badge.dart';
@@ -31,19 +32,21 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
   late TextEditingController _notesController;
+  late bool _isCustomer;
+  late bool _isSupplier;
   bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _nameController =
-        TextEditingController(text: widget.contactToEdit?.name ?? '');
-    _phoneController =
-        TextEditingController(text: widget.contactToEdit?.phone ?? '');
-    _emailController =
-        TextEditingController(text: widget.contactToEdit?.email ?? '');
-    _notesController =
-        TextEditingController(text: widget.contactToEdit?.notes ?? '');
+    final existing = widget.contactToEdit;
+    _nameController = TextEditingController(text: existing?.name ?? '');
+    _phoneController = TextEditingController(text: existing?.phone ?? '');
+    _emailController = TextEditingController(text: existing?.email ?? '');
+    _notesController = TextEditingController(text: existing?.notes ?? '');
+    // Defaults match DB: customer on, supplier off for new contacts.
+    _isCustomer = existing?.isCustomer ?? true;
+    _isSupplier = existing?.isSupplier ?? false;
   }
 
   @override
@@ -227,6 +230,11 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
     setState(() => _isLoading = true);
 
     try {
+      if (!_isCustomer && !_isSupplier) {
+        ToastUtils.showErrorToast(context, ref, l10n.contactRoleRequired);
+        return;
+      }
+
       final repository = ref.read(contactsRepositoryProvider);
       final name = _nameController.text.trim();
       final phone = _phoneController.text.trim().isEmpty
@@ -248,6 +256,8 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
           phone: drift.Value(phone),
           email: drift.Value(email),
           notes: drift.Value(notes),
+          isCustomer: _isCustomer,
+          isSupplier: _isSupplier,
         );
         await repository.updateContact(updatedContact);
         createdOrUpdatedContact = updatedContact;
@@ -261,6 +271,8 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
             phone: drift.Value(phone),
             email: drift.Value(email),
             notes: drift.Value(notes),
+            isCustomer: drift.Value(_isCustomer),
+            isSupplier: drift.Value(_isSupplier),
           ),
         );
         // Get the created contact to return it
@@ -362,57 +374,88 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
 
-              // Name Field
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: l10n.name,
-                  prefixIcon: const Icon(Icons.person_outline),
-                ),
-                textCapitalization: TextCapitalization.words,
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return l10n.pleaseEnterName;
-                  }
-                  return null;
-                },
+              FormSectionCard(
+                title: l10n.sectionDetails,
+                icon: Icons.badge_outlined,
+                accentColor: Theme.of(context).colorScheme.primary,
+                children: [
+                  TextFormField(
+                    controller: _nameController,
+                    decoration: InputDecoration(
+                      labelText: l10n.name,
+                      prefixIcon: const Icon(Icons.person_outline),
+                      filled: true,
+                    ),
+                    textCapitalization: TextCapitalization.words,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return l10n.pleaseEnterName;
+                      }
+                      return null;
+                    },
+                  ),
+                  TextFormField(
+                    controller: _phoneController,
+                    decoration: InputDecoration(
+                      labelText: l10n.phoneNumberOptional,
+                      prefixIcon: const Icon(Icons.phone_outlined),
+                      filled: true,
+                    ),
+                    keyboardType: TextInputType.phone,
+                  ),
+                  TextFormField(
+                    controller: _emailController,
+                    decoration: InputDecoration(
+                      labelText: l10n.emailOptional,
+                      prefixIcon: const Icon(Icons.email_outlined),
+                      filled: true,
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  TextFormField(
+                    controller: _notesController,
+                    decoration: InputDecoration(
+                      labelText: l10n.addressNotesOptional,
+                      prefixIcon: const Icon(Icons.note_alt_outlined),
+                      filled: true,
+                    ),
+                    maxLines: 2,
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
 
-              // Phone Field
-              TextFormField(
-                controller: _phoneController,
-                decoration: InputDecoration(
-                  labelText: l10n.phoneNumberOptional,
-                  prefixIcon: const Icon(Icons.phone_outlined),
-                ),
-                keyboardType: TextInputType.phone,
+              FormSectionCard(
+                title: l10n.contactRoles,
+                icon: Icons.manage_accounts_outlined,
+                accentColor: AppColors.receivableColor,
+                children: [
+                  Text(
+                    l10n.contactRolesHint,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color:
+                              Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                  ),
+                  _ContactRoleTile(
+                    title: l10n.customer,
+                    subtitle: l10n.contactRoleCustomerHint,
+                    icon: Icons.person_outline,
+                    accent: AppColors.receivableColor,
+                    value: _isCustomer,
+                    onChanged: (v) => setState(() => _isCustomer = v),
+                  ),
+                  _ContactRoleTile(
+                    title: l10n.supplier,
+                    subtitle: l10n.contactRoleSupplierHint,
+                    icon: Icons.storefront_outlined,
+                    accent: AppColors.payableColor,
+                    value: _isSupplier,
+                    onChanged: (v) => setState(() => _isSupplier = v),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-
-              // Email Field
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: l10n.emailOptional,
-                  prefixIcon: const Icon(Icons.email_outlined),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-
-              // Address/Notes Field
-              TextFormField(
-                controller: _notesController,
-                decoration: InputDecoration(
-                  labelText: l10n.addressNotesOptional,
-                  prefixIcon: const Icon(Icons.note_alt_outlined),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 32),
 
               // Countdown Badge (Only for new contacts, show until limit reached)
               if (widget.contactToEdit == null &&
@@ -452,6 +495,62 @@ class _AddContactScreenState extends ConsumerState<AddContactScreen> {
                 ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ContactRoleTile extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color accent;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _ContactRoleTile({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.accent,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: accent.withValues(alpha: value ? 0.08 : 0.03),
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => onChanged(!value),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: accent.withValues(alpha: value ? 0.40 : 0.22),
+              width: 0.8,
+            ),
+          ),
+          child: SwitchListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 6),
+            dense: true,
+            visualDensity: VisualDensity.compact,
+            secondary: Icon(icon, color: accent),
+            title: Text(
+              title,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            subtitle: Text(subtitle),
+            value: value,
+            activeThumbColor: accent,
+            onChanged: onChanged,
           ),
         ),
       ),
