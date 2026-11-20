@@ -121,7 +121,10 @@ class AmountFormatter {
   }
 
   /// Readonly currency chrome for amount text fields.
-  /// LTR → [prefixText]; RTL → [suffixText] (matches transaction amount fields).
+  ///
+  /// LTR → [prefixText] (left); RTL → [suffixText] (right when the field is
+  /// wrapped in LTR via [LtrNumberField] / [Directionality.ltr]).
+  /// Pass the **app** locale direction, not the field's forced LTR direction.
   static ({String? prefixText, String? suffixText}) currencyAffix(
     String symbol, {
     required bool isRtl,
@@ -131,6 +134,13 @@ class AmountFormatter {
     return isRtl
         ? (prefixText: null, suffixText: ' $s')
         : (prefixText: '$s ', suffixText: null);
+  }
+
+  /// Discount % for sale lines: 1 decimal max; drop trailing `.0` (`3%`, `3.5%`).
+  static String formatDiscountPercent(double value) {
+    if (!value.isFinite) return '0';
+    final rounded = (value * 10).roundToDouble() / 10.0;
+    return formatQuantity(rounded, maxDecimals: 1);
   }
 
   /// Units / quantity: no decimals when the value is a whole number; otherwise

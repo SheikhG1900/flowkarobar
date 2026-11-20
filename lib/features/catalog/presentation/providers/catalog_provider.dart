@@ -39,6 +39,11 @@ final catalogsStreamProvider = StreamProvider<List<Catalog>>((ref) {
   return ref.watch(catalogRepositoryProvider).watchAllCatalogs();
 });
 
+final catalogAssignmentsAllStreamProvider =
+    StreamProvider<List<CatalogAssignment>>((ref) {
+  return ref.watch(catalogRepositoryProvider).watchAllAssignments();
+});
+
 final catalogStreamProvider =
     StreamProvider.family<Catalog?, String>((ref, uuid) {
   return ref.watch(catalogRepositoryProvider).watchCatalog(uuid);
@@ -60,18 +65,24 @@ final catalogItemTiersStreamProvider = StreamProvider.family<
 });
 
 /// Active catalog for a sale contact (assignment → default → any active).
+/// Re-runs when catalogs or assignments change (e.g. new default).
 final resolvedCatalogForContactProvider =
-    FutureProvider.family<Catalog?, String?>((ref, contactUuid) {
+    FutureProvider.family<Catalog?, String?>((ref, contactUuid) async {
+  await ref.watch(catalogsStreamProvider.future);
+  await ref.watch(catalogAssignmentsAllStreamProvider.future);
   return ref
-      .watch(catalogRepositoryProvider)
+      .read(catalogRepositoryProvider)
       .resolveCatalogForContact(contactUuid);
 });
 
-/// Active catalogs for the sale picker (assigned first when contact set).
+/// Active catalogs for the sale picker (default first, then A–Z).
+/// Re-runs when catalogs or assignments change (e.g. new default).
 final activeCatalogsForContactProvider =
-    FutureProvider.family<List<Catalog>, String?>((ref, contactUuid) {
+    FutureProvider.family<List<Catalog>, String?>((ref, contactUuid) async {
+  await ref.watch(catalogsStreamProvider.future);
+  await ref.watch(catalogAssignmentsAllStreamProvider.future);
   return ref
-      .watch(catalogRepositoryProvider)
+      .read(catalogRepositoryProvider)
       .listActiveCatalogsForContact(contactUuid);
 });
 

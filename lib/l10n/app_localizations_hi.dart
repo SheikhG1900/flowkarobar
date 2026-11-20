@@ -572,6 +572,12 @@ class AppLocalizationsHi extends AppLocalizations {
   String get deliveryStatus => 'डिलीवरी स्थिति';
 
   @override
+  String get paymentStatus => 'भुगतान स्थिति';
+
+  @override
+  String get orderNumber => 'ऑर्डर संख्या';
+
+  @override
   String get orderDetails => 'ऑर्डर विवरण';
 
   @override
@@ -5119,6 +5125,33 @@ class AppLocalizationsHi extends AppLocalizations {
   @override
   String paymentOverdueNotification(String amount, int days) {
     return 'क्रेडिट कार्ड भुगतान $amount $days दिन से अधिक है';
+  }
+
+  @override
+  String get orderPayments => 'भुगतान';
+
+  @override
+  String get noOrderPayments => 'अभी तक कोई भुगतान दर्ज नहीं हुआ';
+
+  @override
+  String get correctPayment => 'भुगतान सुधारें';
+
+  @override
+  String get paymentCorrected => 'भुगतान सुधार दिया गया';
+
+  @override
+  String get deletePayment => 'भुगतान हटाएँ';
+
+  @override
+  String get paymentDeleted => 'भुगतान हटा दिया गया';
+
+  @override
+  String get confirmDeletePayment =>
+      'यह भुगतान हटाएँ? ऑर्डर का बकाया अपडेट हो जाएगा।';
+
+  @override
+  String paymentExceedsBalance(String max) {
+    return 'राशि शेष बकाया ($max) से अधिक नहीं हो सकती';
   }
 
   @override

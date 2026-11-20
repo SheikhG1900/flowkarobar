@@ -1,6 +1,5 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flowpaisa/core/database/database.dart';
@@ -25,6 +24,7 @@ import 'package:flowpaisa/shared/providers/currency_provider.dart';
 import 'package:flowpaisa/shared/widgets/entity_picker_sheet.dart';
 import 'package:flowpaisa/shared/widgets/form_section_card.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/shared/widgets/ltr_number_field.dart';
 
 class _OrderLine {
   final Product? product;
@@ -237,13 +237,6 @@ class _OrderLine {
 double _parse(TextEditingController controller) =>
     double.tryParse(controller.text.trim()) ?? 0;
 
-/// Round to 1 decimal; drop trailing `.0` (3.0 → "3", 3.5 → "3.5").
-String _formatDiscountPercent(double value) {
-  if (!value.isFinite) return '0';
-  final rounded = (value * 10).roundToDouble() / 10.0;
-  return AmountFormatter.formatQuantity(rounded, maxDecimals: 1);
-}
-
 class AddOrderScreen extends ConsumerStatefulWidget {
   final String orderType;
 
@@ -444,12 +437,9 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              LtrNumberField(
                 controller: controller,
                 autofocus: true,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: _decimalFormatters,
                 decoration: InputDecoration(
                   labelText: l10n.discountedUnitPrice,
                   helperText: l10n.discountedUnitPriceManualHint,
@@ -827,11 +817,8 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
                       ref.watch(currencySymbolProvider),
                       isRtl: isRtl,
                     );
-                    return TextFormField(
+                    return LtrNumberField(
                       controller: _paymentController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
-                      inputFormatters: _decimalFormatters,
                       decoration: InputDecoration(
                         labelText: l10n.paymentNow,
                         prefixIcon: const Icon(Icons.payments_outlined),
@@ -896,9 +883,6 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
   }
 }
 
-final _decimalFormatters = [
-  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-];
 
 class _EmptyItemsHint extends StatelessWidget {
   final VoidCallback onAdd;
@@ -1155,13 +1139,8 @@ class _OrderLineCard extends ConsumerWidget {
                           const SizedBox(height: 12),
                           SizedBox(
                             width: 120,
-                            child: TextFormField(
+                            child: LtrNumberField(
                               controller: line.quantity,
-                              keyboardType:
-                                  const TextInputType.numberWithOptions(
-                                decimal: true,
-                              ),
-                              inputFormatters: _decimalFormatters,
                               decoration: InputDecoration(
                                 labelText: l10n.quantity,
                                 suffixText: line.unit,
@@ -1181,10 +1160,12 @@ class _OrderLineCard extends ConsumerWidget {
                     ),
                     const SizedBox(width: 10),
                     // Right: prices
-                    _SaleLinePriceBlock(
-                      line: line,
-                      ref: ref,
+                    OrderLinePriceStack(
+                      listUnitPrice: line.listUnitPrice,
+                      discountedUnitPrice: line.discountedUnitPriceValue,
+                      quantity: line.quantityValue,
                       accent: color,
+                      ref: ref,
                     ),
                   ],
                 ),
@@ -1225,11 +1206,8 @@ class _OrderLineCard extends ConsumerWidget {
               children: [
                 Expanded(
                   flex: 3,
-                  child: TextFormField(
+                  child: LtrNumberField(
                     controller: line.quantity,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: _decimalFormatters,
                     decoration: InputDecoration(
                       labelText: l10n.quantity,
                       suffixText: line.unit,
@@ -1243,11 +1221,8 @@ class _OrderLineCard extends ConsumerWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   flex: 4,
-                  child: TextFormField(
+                  child: LtrNumberField(
                     controller: line.unitPrice,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: _decimalFormatters,
                     decoration: InputDecoration(
                       labelText: l10n.unitPrice,
                       prefixText: currencyAffix.prefixText,
@@ -1262,11 +1237,8 @@ class _OrderLineCard extends ConsumerWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   flex: 3,
-                  child: TextFormField(
+                  child: LtrNumberField(
                     controller: line.discount,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: _decimalFormatters,
                     decoration: InputDecoration(
                       labelText: l10n.discount,
                       prefixText: currencyAffix.prefixText,
@@ -1289,11 +1261,8 @@ class _OrderLineCard extends ConsumerWidget {
           ],
               if (showUnitCost) ...[
                 const SizedBox(height: 8),
-                TextFormField(
+                LtrNumberField(
                   controller: line.unitCost,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: _decimalFormatters,
                   decoration: InputDecoration(
                     labelText: l10n.lineUnitCost,
                     helperText: l10n.serviceUnitCostHint,
@@ -1373,135 +1342,6 @@ class _LineCornerButton extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Compact sale price hierarchy: list → discounted unit → line total.
-class _SaleLinePriceBlock extends StatelessWidget {
-  final _OrderLine line;
-  final WidgetRef ref;
-  final Color accent;
-
-  const _SaleLinePriceBlock({
-    required this.line,
-    required this.ref,
-    required this.accent,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final muted = theme.colorScheme.onSurfaceVariant;
-    final qty = line.quantityValue;
-    final multiQty = qty > 1.0000001;
-    final hasDiscount = line.unitDiscountFixed > 1e-9;
-    final pct = _formatDiscountPercent(line.unitDiscountPercent);
-    final listText = formatOrderAmount(ref, line.listUnitPrice);
-    final discountedUnitText =
-        formatOrderAmount(ref, line.discountedUnitPriceValue);
-    final unitDiscText = formatOrderAmount(ref, line.unitDiscountFixed);
-    final lineTotalText = formatOrderAmount(ref, line.lineTotal);
-    final lineDiscText = formatOrderAmount(ref, line.discountValue);
-    final qtyText = AmountFormatter.formatQuantity(qty);
-
-    // Keep minus + amount in LTR so the sign stays on the correct side in RTL UIs.
-    Widget discountAmountText({
-      required String amountText,
-      required Color color,
-      TextStyle? baseStyle,
-    }) {
-      return Text(
-        '−$amountText ($pct%)',
-        style: (baseStyle ?? theme.textTheme.labelSmall)?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w600,
-        ),
-        textDirection: TextDirection.ltr,
-        textAlign: TextAlign.end,
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        if (hasDiscount)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                listText,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: muted,
-                  decoration: TextDecoration.lineThrough,
-                  decorationColor: muted.withValues(alpha: 0.7),
-                  fontWeight: FontWeight.w500,
-                ),
-                textDirection: TextDirection.ltr,
-              ),
-              const SizedBox(width: 4),
-              discountAmountText(
-                amountText: unitDiscText,
-                color: AppColors.expenseColor,
-              ),
-            ],
-          ),
-        if (hasDiscount) const SizedBox(height: 2),
-        if (multiQty)
-          Text.rich(
-            TextSpan(
-              children: [
-                TextSpan(
-                  text: discountedUnitText,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: accent,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                TextSpan(
-                  text: ' × $qtyText',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: muted,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            textDirection: TextDirection.ltr,
-            textAlign: TextAlign.end,
-          )
-        else
-          Text(
-            discountedUnitText,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: accent,
-              fontWeight: FontWeight.w800,
-              height: 1.15,
-            ),
-            textDirection: TextDirection.ltr,
-            textAlign: TextAlign.end,
-          ),
-        if (multiQty) ...[
-          const SizedBox(height: 2),
-          Text(
-            lineTotalText,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: accent,
-              fontWeight: FontWeight.w800,
-              height: 1.15,
-            ),
-            textDirection: TextDirection.ltr,
-            textAlign: TextAlign.end,
-          ),
-        ],
-        if (hasDiscount && multiQty) ...[
-          const SizedBox(height: 1),
-          discountAmountText(
-            amountText: lineDiscText,
-            color: AppColors.incomeColor,
-          ),
-        ],
-      ],
     );
   }
 }

@@ -1168,6 +1168,18 @@ abstract class AppLocalizations {
   /// **'Delivery Status'**
   String get deliveryStatus;
 
+  /// No description provided for @paymentStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Status'**
+  String get paymentStatus;
+
+  /// No description provided for @orderNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Order Number'**
+  String get orderNumber;
+
   /// No description provided for @orderDetails.
   ///
   /// In en, this message translates to:
@@ -9407,6 +9419,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Credit card payment of {amount} is overdue by {days} days'**
   String paymentOverdueNotification(String amount, int days);
+
+  /// No description provided for @orderPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments'**
+  String get orderPayments;
+
+  /// No description provided for @noOrderPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'No payments recorded yet'**
+  String get noOrderPayments;
+
+  /// No description provided for @correctPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Correct Payment'**
+  String get correctPayment;
+
+  /// No description provided for @paymentCorrected.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment corrected'**
+  String get paymentCorrected;
+
+  /// No description provided for @deletePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Payment'**
+  String get deletePayment;
+
+  /// No description provided for @paymentDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment deleted'**
+  String get paymentDeleted;
+
+  /// No description provided for @confirmDeletePayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this payment? The order balance will be updated.'**
+  String get confirmDeletePayment;
+
+  /// No description provided for @paymentExceedsBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount cannot exceed remaining balance ({max})'**
+  String paymentExceedsBalance(String max);
 
   /// No description provided for @recordPayment.
   ///

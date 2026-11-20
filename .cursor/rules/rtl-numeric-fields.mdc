@@ -1,0 +1,72 @@
+---
+description: RTL-safe numeric/amount TextFields (LtrNumberField + currency affix)
+alwaysApply: true
+---
+
+# RTL numeric text fields
+
+Urdu/RTL locales break digit caret/bidi if amount/qty fields inherit RTL.
+
+## Required pattern
+
+1. Use **`LtrNumberField`** (`lib/shared/widgets/ltr_number_field.dart`) for quantity, price, discount, payment, percent, and any other decimal/integer entry — not a raw `TextFormField` with `keyboardType: number`.
+2. Read **app** direction **before** the field (outside the LTR wrap):
+   `final isRtl = Directionality.of(context) == TextDirection.rtl;`
+3. Currency chrome: **`AmountFormatter.currencyAffix(symbol, isRtl: isRtl)`** — see symbol alignment below.
+4. Prefer **`ltrDecimalInputFormatters`** (or the defaults on `LtrNumberField`). Do **not** use anchored allow-regexes like `^\d*\.?\d*` — they break editing.
+
+```dart
+final isRtl = Directionality.of(context) == TextDirection.rtl;
+final affix = AmountFormatter.currencyAffix(symbol, isRtl: isRtl);
+
+LtrNumberField(
+  controller: controller,
+  decoration: InputDecoration(
+    labelText: l10n.amount,
+    prefixText: affix.prefixText,
+    suffixText: affix.suffixText,
+    filled: true,
+  ),
+);
+```
+
+## Currency symbol alignment (LTR vs RTL)
+
+`LtrNumberField` wraps the control in **`Directionality.ltr`**, so the decorator is always LTR:
+
+- `prefixText` → **left**
+- `suffixText` → **right**
+
+Therefore `currencyAffix` must flip which slot is used from the **app** locale:
+
+| App locale | Affix | Visual side |
+|------------|--------|-------------|
+| LTR | `prefixText` | left |
+| RTL | `suffixText` | right (opposite side) |
+
+That is why RTL uses suffix, not prefix. Always-prefix (or `textDirection: ltr` on `TextFormField` without the wrap + affix pair) keeps the symbol on the **same** side in both locales.
+
+## Display rows (price + discount, qty × price, minus signs)
+
+When several numeric fragments must stay in a **fixed visual order** (e.g. `~~list~~ −discount (10%)`, `85 × 3`, or a leading `−`):
+
+- Wrap the **`Row` / rich text** in `Directionality(textDirection: TextDirection.ltr)` (or set `textDirection: TextDirection.ltr` on `Text` / `Text.rich`).
+- Otherwise RTL reverses `Row` children and can put the minus on the wrong side of the amount.
+
+```dart
+Directionality(
+  textDirection: TextDirection.ltr,
+  child: Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [strikethroughListPrice, discountText],
+  ),
+);
+```
+
+## Anti-patterns
+
+- ❌ `TextFormField(textDirection: TextDirection.ltr)` alone — decorator/symbol side does not flip correctly
+- ❌ Always-`prefixText` for currency on LTR-wrapped fields — symbol stays on the same side in LTR and RTL
+- ❌ `currencyAffix` with `isRtl` taken from inside a `Directionality.ltr` child (always false)
+- ❌ Price/discount `Row` without LTR wrap — order flips in RTL
+- ❌ Display-only amounts: still format with `AmountFormatter`; force LTR on the **Text** if bidi/minus sign looks wrong

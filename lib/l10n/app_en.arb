@@ -209,6 +209,8 @@
   "shipped": "Shipped",
   "deliveryPending": "Delivery Pending",
   "deliveryStatus": "Delivery Status",
+  "paymentStatus": "Payment Status",
+  "orderNumber": "Order Number",
   "orderDetails": "Order Details",
   "orderNotFound": "Order not found",
   "addItem": "Add Item",
@@ -2543,6 +2545,19 @@
     "placeholders": {
       "amount": { "type": "String" },
       "days": { "type": "int" }
+    }
+  },
+  "orderPayments": "Payments",
+  "noOrderPayments": "No payments recorded yet",
+  "correctPayment": "Correct Payment",
+  "paymentCorrected": "Payment corrected",
+  "deletePayment": "Delete Payment",
+  "paymentDeleted": "Payment deleted",
+  "confirmDeletePayment": "Delete this payment? The order balance will be updated.",
+  "paymentExceedsBalance": "Amount cannot exceed remaining balance ({max})",
+  "@paymentExceedsBalance": {
+    "placeholders": {
+      "max": { "type": "String" }
     }
   },
   "recordPayment": "Record Payment",

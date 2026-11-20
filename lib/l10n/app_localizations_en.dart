@@ -571,6 +571,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deliveryStatus => 'Delivery Status';
 
   @override
+  String get paymentStatus => 'Payment Status';
+
+  @override
+  String get orderNumber => 'Order Number';
+
+  @override
   String get orderDetails => 'Order Details';
 
   @override
@@ -5110,6 +5116,33 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String paymentOverdueNotification(String amount, int days) {
     return 'Credit card payment of $amount is overdue by $days days';
+  }
+
+  @override
+  String get orderPayments => 'Payments';
+
+  @override
+  String get noOrderPayments => 'No payments recorded yet';
+
+  @override
+  String get correctPayment => 'Correct Payment';
+
+  @override
+  String get paymentCorrected => 'Payment corrected';
+
+  @override
+  String get deletePayment => 'Delete Payment';
+
+  @override
+  String get paymentDeleted => 'Payment deleted';
+
+  @override
+  String get confirmDeletePayment =>
+      'Delete this payment? The order balance will be updated.';
+
+  @override
+  String paymentExceedsBalance(String max) {
+    return 'Amount cannot exceed remaining balance ($max)';
   }
 
   @override

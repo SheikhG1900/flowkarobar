@@ -572,6 +572,12 @@ class AppLocalizationsUr extends AppLocalizations {
   String get deliveryStatus => 'ڈیلیوری کی حالت';
 
   @override
+  String get paymentStatus => 'ادائیگی کی حالت';
+
+  @override
+  String get orderNumber => 'آرڈر نمبر';
+
+  @override
   String get orderDetails => 'آرڈر کی تفصیلات';
 
   @override
@@ -5126,6 +5132,33 @@ class AppLocalizationsUr extends AppLocalizations {
   @override
   String paymentOverdueNotification(String amount, int days) {
     return 'کریڈٹ کارڈ ادائیگی $amount $days دن سے زیادہ ہے';
+  }
+
+  @override
+  String get orderPayments => 'ادائیگیاں';
+
+  @override
+  String get noOrderPayments => 'ابھی تک کوئی ادائیگی درج نہیں ہوئی';
+
+  @override
+  String get correctPayment => 'ادائیگی درست کریں';
+
+  @override
+  String get paymentCorrected => 'ادائیگی درست کر دی گئی';
+
+  @override
+  String get deletePayment => 'ادائیگی حذف کریں';
+
+  @override
+  String get paymentDeleted => 'ادائیگی حذف کر دی گئی';
+
+  @override
+  String get confirmDeletePayment =>
+      'یہ ادائیگی حذف کریں؟ آرڈر کا بقایا اپ ڈیٹ ہو جائے گا۔';
+
+  @override
+  String paymentExceedsBalance(String max) {
+    return 'رقم باقی بقایا ($max) سے زیادہ نہیں ہو سکتی';
   }
 
   @override

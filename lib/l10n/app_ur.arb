@@ -191,6 +191,8 @@
   "shipped": "روانہ کر دیا گیا",
   "deliveryPending": "ڈیلیوری زیر التوا",
   "deliveryStatus": "ڈیلیوری کی حالت",
+  "paymentStatus": "ادائیگی کی حالت",
+  "orderNumber": "آرڈر نمبر",
   "orderDetails": "آرڈر کی تفصیلات",
   "orderNotFound": "آرڈر نہیں ملا",
   "addItem": "آئٹم شامل کریں",
@@ -1980,6 +1982,19 @@
     "placeholders": {
       "amount": { "type": "String" },
       "days": { "type": "int" }
+    }
+  },
+  "orderPayments": "ادائیگیاں",
+  "noOrderPayments": "ابھی تک کوئی ادائیگی درج نہیں ہوئی",
+  "correctPayment": "ادائیگی درست کریں",
+  "paymentCorrected": "ادائیگی درست کر دی گئی",
+  "deletePayment": "ادائیگی حذف کریں",
+  "paymentDeleted": "ادائیگی حذف کر دی گئی",
+  "confirmDeletePayment": "یہ ادائیگی حذف کریں؟ آرڈر کا بقایا اپ ڈیٹ ہو جائے گا۔",
+  "paymentExceedsBalance": "رقم باقی بقایا ({max}) سے زیادہ نہیں ہو سکتی",
+  "@paymentExceedsBalance": {
+    "placeholders": {
+      "max": { "type": "String" }
     }
   },
   "recordPayment": "ادائیگی درج کریں",

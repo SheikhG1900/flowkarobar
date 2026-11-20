@@ -22,7 +22,8 @@ import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/transactions/presentation/widgets/tabular_editor_sheet.dart';
 import 'package:flowpaisa/core/utils/tabular_parser.dart';
-import 'package:flowpaisa/core/database/database.dart' show Account, Category, Contact;
+import 'package:flowpaisa/core/database/database.dart'
+    show Account, AppCurrency, Category, Contact, Transaction;
 import 'package:flowpaisa/features/transactions/domain/models.dart';
 import 'package:flowpaisa/features/transactions/presentation/providers/transaction_service_provider.dart';
 import 'package:flowpaisa/core/utils/share_helper.dart';
@@ -161,13 +162,13 @@ class TransactionDetailsDialog extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref, {
     required TransactionWithDetails item,
-    required dynamic transaction,
-    required dynamic category,
-    required dynamic contact,
-    required dynamic linkedPayable,
-    required dynamic linkedReceivable,
+    required Transaction transaction,
+    required Category? category,
+    required Contact? contact,
+    required Payable? linkedPayable,
+    required Receivable? linkedReceivable,
     required bool isExpense,
-    required dynamic currency,
+    required AppCurrency currency,
     required List<TransactionWithDetails> group,
     required bool isSplitGroup,
     required AsyncValue<List<TransactionWithDetails>> relatedAsync,
@@ -176,12 +177,14 @@ class TransactionDetailsDialog extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final isRtl = Directionality.of(context) == TextDirection.rtl;
-    final pr = transaction.paidRelationship as String?;
+    final pr = transaction.paidRelationship;
     String displayDesc = '';
-    if (transaction.description != null && (transaction.description as String).isNotEmpty) {
-      final descStr = transaction.description as String;
+    if (transaction.description != null &&
+        transaction.description!.isNotEmpty) {
+      final descStr = transaction.description!;
       final index = descStr.indexOf('\n[');
-      displayDesc = index != -1 ? descStr.substring(0, index).trim() : descStr.trim();
+      displayDesc =
+          index != -1 ? descStr.substring(0, index).trim() : descStr.trim();
     }
 
     return Scaffold(

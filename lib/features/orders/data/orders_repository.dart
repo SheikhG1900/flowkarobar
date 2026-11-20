@@ -58,16 +58,90 @@ class OrdersRepository {
     return sum;
   }
 
+  /// Cash movements linked to this order (upfront + later collections/payments).
+  Stream<List<Transaction>> watchPaymentsForOrder(String orderUuid) {
+    return (_db.select(_db.transactions)
+          ..where((t) =>
+              t.orderUuid.equals(orderUuid) & t.isDeleted.equals(false))
+          ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+        .watch();
+  }
+
+  Future<void> _refreshOrderPaymentStatus(String orderUuid) async {
+    final order = await getOrder(orderUuid);
+    if (order == null) return;
+
+    final paid = await getPaidAmountForOrder(orderUuid);
+    final status = paid <= 0
+        ? 'UNPAID'
+        : paid + 0.001 >= order.totalAmount
+            ? 'PAID'
+            : 'PARTIALLY_PAID';
+
+    await (_db.update(_db.orders)..where((o) => o.uuid.equals(orderUuid)))
+        .write(
+      OrdersCompanion(
+        paymentStatus: Value(status),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  /// Remaining amount that can still be allocated to this order.
+  /// When [excludingPaymentUuid] is set (correction), that payment's amount
+  /// is treated as available again.
+  Future<double> maxPayableAmountForOrder(
+    String orderUuid, {
+    String? excludingPaymentUuid,
+  }) async {
+    final order = await getOrder(orderUuid);
+    if (order == null) return 0;
+    final paid = await getPaidAmountForOrder(orderUuid);
+    var excluded = 0.0;
+    if (excludingPaymentUuid != null) {
+      final tx = await (_db.select(_db.transactions)
+            ..where((t) =>
+                t.uuid.equals(excludingPaymentUuid) &
+                t.orderUuid.equals(orderUuid) &
+                t.isDeleted.equals(false)))
+          .getSingleOrNull();
+      excluded = tx?.amount ?? 0;
+    }
+    return (order.totalAmount - (paid - excluded))
+        .clamp(0, double.infinity)
+        .toDouble();
+  }
+
   Future<void> recordOrderPayment({
     required String orderUuid,
     required double amount,
     required String accountUuid,
+    DateTime? date,
+    String? description,
   }) async {
+    if (amount <= 0) {
+      throw ArgumentError('Payment amount must be greater than zero');
+    }
     await _db.transaction(() async {
       final order = await getOrder(orderUuid);
       if (order == null) return;
 
+      final maxAllowed = await maxPayableAmountForOrder(orderUuid);
+      if (amount > maxAllowed + 0.001) {
+        throw StateError(
+          'Payment exceeds remaining balance ($maxAllowed)',
+        );
+      }
+
       final isSale = order.orderType == 'SALE';
+      final when = date ?? DateTime.now();
+      final trimmed = description?.trim();
+      final desc = (trimmed != null && trimmed.isNotEmpty)
+          ? trimmed
+          : (isSale
+              ? 'Collection for ${order.orderNumber}'
+              : 'Payment for ${order.orderNumber}');
       await _db.into(_db.transactions).insert(
             TransactionsCompanion.insert(
               uuid: const Uuid().v4(),
@@ -75,33 +149,105 @@ class OrdersRepository {
               type: isSale ? 'CASH_IN' : 'CASH_OUT',
               contactUuid: Value(order.contactUuid),
               orderUuid: Value(orderUuid),
-              description: Value(
-                isSale
-                    ? 'Collection for ${order.orderNumber}'
-                    : 'Payment for ${order.orderNumber}',
-              ),
-              date: DateTime.now(),
+              description: Value(desc),
+              date: when,
               accountUuid: Value(accountUuid),
-              processedDate: Value(DateTime.now()),
+              processedDate: Value(when),
               isNotSynced: const Value(true),
             ),
           );
 
-      final paid = await getPaidAmountForOrder(orderUuid);
-      final status = paid <= 0
-          ? 'UNPAID'
-          : paid + 0.001 >= order.totalAmount
-              ? 'PAID'
-              : 'PARTIALLY_PAID';
+      await _refreshOrderPaymentStatus(orderUuid);
+    });
+  }
 
-      await (_db.update(_db.orders)..where((o) => o.uuid.equals(orderUuid)))
+  /// Correct an existing order-linked payment, then recompute order status.
+  Future<void> updateOrderPayment({
+    required String orderUuid,
+    required String paymentUuid,
+    required double amount,
+    required String accountUuid,
+    DateTime? date,
+    String? description,
+  }) async {
+    if (amount <= 0) {
+      throw ArgumentError('Payment amount must be greater than zero');
+    }
+    await _db.transaction(() async {
+      final order = await getOrder(orderUuid);
+      if (order == null) {
+        throw StateError('Order not found');
+      }
+
+      final payment = await (_db.select(_db.transactions)
+            ..where((t) =>
+                t.uuid.equals(paymentUuid) &
+                t.orderUuid.equals(orderUuid) &
+                t.isDeleted.equals(false)))
+          .getSingleOrNull();
+      if (payment == null) {
+        throw StateError('Payment not found for this order');
+      }
+
+      final maxAllowed = await maxPayableAmountForOrder(
+        orderUuid,
+        excludingPaymentUuid: paymentUuid,
+      );
+      if (amount > maxAllowed + 0.001) {
+        throw StateError(
+          'Payment exceeds remaining balance ($maxAllowed)',
+        );
+      }
+
+      final when = date ?? payment.date;
+      final trimmed = description?.trim();
+      await (_db.update(_db.transactions)
+            ..where((t) => t.uuid.equals(paymentUuid)))
           .write(
-        OrdersCompanion(
-          paymentStatus: Value(status),
+        TransactionsCompanion(
+          amount: Value(amount),
+          accountUuid: Value(accountUuid),
+          date: Value(when),
+          processedDate: Value(when),
+          description: Value(
+            (trimmed != null && trimmed.isNotEmpty) ? trimmed : null,
+          ),
           isNotSynced: const Value(true),
           updatedAt: Value(DateTime.now()),
         ),
       );
+
+      await _refreshOrderPaymentStatus(orderUuid);
+    });
+  }
+
+  /// Soft-delete an order-linked payment, then recompute order status.
+  Future<void> deleteOrderPayment({
+    required String orderUuid,
+    required String paymentUuid,
+  }) async {
+    await _db.transaction(() async {
+      final payment = await (_db.select(_db.transactions)
+            ..where((t) =>
+                t.uuid.equals(paymentUuid) &
+                t.orderUuid.equals(orderUuid) &
+                t.isDeleted.equals(false)))
+          .getSingleOrNull();
+      if (payment == null) {
+        throw StateError('Payment not found for this order');
+      }
+
+      await (_db.update(_db.transactions)
+            ..where((t) => t.uuid.equals(paymentUuid)))
+          .write(
+        TransactionsCompanion(
+          isDeleted: const Value(true),
+          isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
+      await _refreshOrderPaymentStatus(orderUuid);
     });
   }
 
@@ -246,11 +392,15 @@ class OrdersRepository {
         final saleCogs = item.purchasePriceSnapshot.present
             ? item.purchasePriceSnapshot.value
             : 0.0;
+        final now = DateTime.now();
         final companion = item.copyWith(
           orderUuid: Value(uuid),
           purchasePriceSnapshot: Value(isSale ? saleCogs : plannedCost),
           receivedQuantity: const Value(0.0),
           isNotSynced: const Value(true),
+          // Explicit timestamps: some migrated DBs lack SQL DEFAULT on these cols.
+          createdAt: item.createdAt.present ? item.createdAt : Value(now),
+          updatedAt: item.updatedAt.present ? item.updatedAt : Value(now),
         );
         await _db.into(_db.orderItems).insert(companion);
         inserted.add(

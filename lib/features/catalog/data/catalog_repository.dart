@@ -73,6 +73,13 @@ class CatalogRepository {
         .watch();
   }
 
+  /// All active assignments (for refreshing sale catalog eligibility).
+  Stream<List<CatalogAssignment>> watchAllAssignments() {
+    return (_db.select(_db.catalogAssignments)
+          ..where((a) => a.isDeleted.equals(false)))
+        .watch();
+  }
+
   Stream<Catalog?> watchCatalog(String uuid) {
     return (_db.select(_db.catalogs)
           ..where((c) => c.uuid.equals(uuid) & c.isDeleted.equals(false)))
@@ -204,7 +211,9 @@ class CatalogRepository {
   }
 
   Future<void> _clearDefaultFlags() async {
-    await (_db.update(_db.catalogs)..where((c) => c.isDefault.equals(true)))
+    // Clear on all active catalogs (not only WHERE isDefault) so a stuck
+    // dual-default state cannot leave the old star in the list.
+    await (_db.update(_db.catalogs)..where((c) => c.isDeleted.equals(false)))
         .write(
       CatalogsCompanion(
         isDefault: const Value(false),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
+import 'package:flowpaisa/core/utils/amount_formatter.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/orders/presentation/providers/orders_provider.dart';
@@ -9,8 +10,10 @@ import 'package:flowpaisa/features/orders/presentation/screens/add_order_screen.
 import 'package:flowpaisa/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/contact_solid_pill.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/widgets/app_floating_action_button.dart';
+import 'package:flowpaisa/shared/widgets/hover_border_card.dart';
 import 'package:flowpaisa/shared/widgets/pending_sync_badge.dart';
 
 class OrdersListScreen extends ConsumerStatefulWidget {
@@ -152,106 +155,142 @@ class _OrderCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
     final dateFormat = ref.watch(userProfileProvider).dateFormat;
+    final isSale = order.orderType == orderTypeSale;
     final typeColor = orderTypeColor(order.orderType);
+    final payColor = paymentStatusColor(order.orderType, order.paymentStatus);
+    final displayName = contactName ?? l10n.walkInCustomer;
+    final dateText = AppDateFormatter.formatDate(
+      order.orderDate,
+      pattern: dateFormat,
+    );
+    final amountFontSize =
+        AmountFormatter.getFontSize(order.totalAmount).clamp(15.0, 22.0);
+    final amountPrefix = isSale ? '\u200E+' : '\u200E-';
+    final leadingIcon =
+        isSale ? Icons.point_of_sale_rounded : Icons.shopping_cart_outlined;
 
-    return Container(
-      decoration: AppColors.transactionListItemDecoration(theme, typeColor),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        HoverBorderCard(
+          accent: typeColor,
+          borderRadius: 20,
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
           onTap: () => Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => OrderDetailScreen(orderUuid: order.uuid),
             ),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        order.orderNumber,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: AppColors.getPrimaryGradient(typeColor),
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: typeColor.withValues(alpha: 0.28),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
-                    if (order.isNotSynced == true) ...[
-                      Tooltip(
-                        message: l10n.pendingSync,
-                        child: const PendingSyncCornerBadge(iconSize: 12),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
+                  ],
+                ),
+                child: Icon(leadingIcon, color: Colors.white, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                     Text(
-                      formatOrderAmount(ref, order.totalAmount),
+                      order.orderNumber,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleMedium?.copyWith(
-                        color: typeColor,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
+                        height: 1.2,
                       ),
+                    ),
+                    const SizedBox(height: 6),
+                    ContactSolidPill(
+                      contactName: displayName,
+                      isCompact: true,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        OrderStatusChip(
+                          label:
+                              paymentStatusLabel(l10n, order.paymentStatus),
+                          color: payColor,
+                          icon: Icons.payments_outlined,
+                        ),
+                        OrderStatusChip(
+                          label: deliveryStatusLabel(
+                            l10n,
+                            order.deliveryStatus,
+                          ),
+                          color: deliveryStatusColor(order.deliveryStatus),
+                          icon: Icons.local_shipping_outlined,
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.person_outline,
-                      size: 16,
-                      color: theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '$amountPrefix ${formatOrderAmount(ref, order.totalAmount)}',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: typeColor,
+                      fontWeight: FontWeight.w800,
+                      fontSize: amountFontSize,
                     ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        contactName ?? l10n.walkInCustomer,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.event_outlined, size: 14, color: muted),
+                      const SizedBox(width: 4),
+                      Text(
+                        dateText,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: muted,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ),
-                    Text(
-                      AppDateFormatter.formatDate(
-                        order.orderDate,
-                        pattern: dateFormat,
-                      ),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: [
-                    OrderStatusChip(
-                      label: paymentStatusLabel(l10n, order.paymentStatus),
-                      color: paymentStatusColor(
-                        order.orderType,
-                        order.paymentStatus,
-                      ),
-                    ),
-                    OrderStatusChip(
-                      label: deliveryStatusLabel(l10n, order.deliveryStatus),
-                      color: deliveryStatusColor(order.deliveryStatus),
-                      icon: Icons.local_shipping_outlined,
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-      ),
+        if (order.isNotSynced == true)
+          PositionedDirectional(
+            top: -4,
+            end: -4,
+            child: Tooltip(
+              message: l10n.pendingSync,
+              child: const PendingSyncCornerBadge(iconSize: 12),
+            ),
+          ),
+      ],
     );
   }
 }

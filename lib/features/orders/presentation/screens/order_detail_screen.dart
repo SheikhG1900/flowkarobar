@@ -8,17 +8,26 @@ import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/toast_utils.dart';
 import 'package:flowpaisa/features/accounts/presentation/providers/accounts_provider.dart';
 import 'package:flowpaisa/features/accounts/presentation/widgets/account_picker.dart';
+import 'package:flowpaisa/features/accounts/presentation/widgets/transfer_account_box.dart';
 import 'package:flowpaisa/features/catalog/domain/catalog_availability.dart';
 import 'package:flowpaisa/features/catalog/presentation/providers/catalog_provider.dart';
+import 'package:flowpaisa/features/catalog/presentation/screens/add_selling_product_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
+import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
+import 'package:flowpaisa/features/inventory/presentation/providers/inventory_provider.dart';
+import 'package:flowpaisa/features/inventory/presentation/screens/product_details_screen.dart';
 import 'package:flowpaisa/features/orders/presentation/providers/orders_provider.dart';
+import 'package:flowpaisa/features/orders/presentation/widgets/order_entity_pickers.dart';
 import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dart';
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/features/settings/presentation/providers/settings_provider.dart';
+import 'package:flowpaisa/features/transactions/presentation/widgets/corner_badge_container.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
+import 'package:flowpaisa/shared/widgets/entity_picker_sheet.dart';
 import 'package:flowpaisa/shared/widgets/form_section_card.dart';
 import 'package:flowpaisa/shared/widgets/gradient_button.dart';
+import 'package:flowpaisa/shared/widgets/ltr_number_field.dart';
 import 'package:flowpaisa/shared/widgets/pending_sync_badge.dart';
 
 class OrderDetailScreen extends ConsumerStatefulWidget {
@@ -43,7 +52,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     final l10n = AppLocalizations.of(context)!;
     final result = await showDialog<_PaymentResult>(
       context: context,
-      builder: (context) => _PaymentDialog(initialAmount: balance),
+      builder: (context) => _PaymentDialog(
+        title: l10n.recordPayment,
+        initialAmount: balance,
+        maxAmount: balance,
+      ),
     );
     if (result == null || !mounted) return;
 
@@ -53,10 +66,256 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
             orderUuid: order.uuid,
             amount: result.amount,
             accountUuid: result.accountUuid,
+            date: result.date,
+            description: result.description,
           );
       _refresh();
       if (!mounted) return;
       ToastUtils.showSuccessToast(context, ref, l10n.paymentRecorded);
+    } catch (e) {
+      if (!mounted) return;
+      ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _openPaymentActions({
+    required Order order,
+    required Transaction payment,
+    required Account? account,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final dateFormat = ref.read(userProfileProvider).dateFormat;
+    final isSale = order.orderType == orderTypeSale;
+    final accent =
+        isSale ? AppColors.incomeColor : AppColors.expenseColor;
+    final desc = payment.description?.trim();
+    final dateText = AppDateFormatter.formatDate(
+      payment.date,
+      pattern: dateFormat,
+    );
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surface,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.onSurfaceVariant
+                          .withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+                      decoration: BoxDecoration(
+                        gradient: AppColors.getPrimaryGradient(accent),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: accent.withValues(alpha: 0.28),
+                            blurRadius: 14,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isSale
+                                ? l10n.collectPayment
+                                : l10n.payToSupplier,
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: Colors.white70,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.4,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${isSale ? '\u200E+' : '\u200E-'} ${formatOrderAmount(ref, payment.amount)}',
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              height: 1.1,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              _SheetMetaChip(
+                                icon: Icons.event_outlined,
+                                label: dateText,
+                              ),
+                              if (account != null)
+                                _SheetMetaChip(
+                                  icon: TransferAccountBox.iconForAccount(
+                                    account,
+                                  ),
+                                  label: account.name,
+                                ),
+                            ],
+                          ),
+                          if (desc != null && desc.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              desc,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: Colors.white.withValues(alpha: 0.92),
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
+                    child: Column(
+                      children: [
+                        _SheetActionTile(
+                          icon: Icons.edit_outlined,
+                          color: accent,
+                          title: l10n.correctPayment,
+                          subtitle: l10n.description,
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            _correctPayment(order: order, payment: payment);
+                          },
+                        ),
+                        _SheetActionTile(
+                          icon: Icons.delete_outline,
+                          color: AppColors.error,
+                          title: l10n.deletePayment,
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            _deletePayment(order: order, payment: payment);
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _correctPayment({
+    required Order order,
+    required Transaction payment,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final repo = ref.read(ordersRepositoryProvider);
+    final maxAmount = await repo.maxPayableAmountForOrder(
+      order.uuid,
+      excludingPaymentUuid: payment.uuid,
+    );
+    if (!mounted) return;
+
+    final result = await showDialog<_PaymentResult>(
+      context: context,
+      builder: (context) => _PaymentDialog(
+        title: l10n.correctPayment,
+        initialAmount: payment.amount,
+        maxAmount: maxAmount,
+        initialAccountUuid: payment.accountUuid,
+        initialDate: payment.date,
+        initialDescription: payment.description,
+      ),
+    );
+    if (result == null || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      await repo.updateOrderPayment(
+        orderUuid: order.uuid,
+        paymentUuid: payment.uuid,
+        amount: result.amount,
+        accountUuid: result.accountUuid,
+        date: result.date,
+        description: result.description,
+      );
+      _refresh();
+      if (!mounted) return;
+      ToastUtils.showSuccessToast(context, ref, l10n.paymentCorrected);
+    } catch (e) {
+      if (!mounted) return;
+      ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _deletePayment({
+    required Order order,
+    required Transaction payment,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.deletePayment),
+        content: Text(l10n.confirmDeletePayment),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+            ),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      await ref.read(ordersRepositoryProvider).deleteOrderPayment(
+            orderUuid: order.uuid,
+            paymentUuid: payment.uuid,
+          );
+      _refresh();
+      if (!mounted) return;
+      ToastUtils.showSuccessToast(context, ref, l10n.paymentDeleted);
     } catch (e) {
       if (!mounted) return;
       ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
@@ -194,6 +453,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     final contact =
         contacts.where((c) => c.uuid == order.contactUuid).firstOrNull;
     final itemsAsync = ref.watch(orderItemsStreamProvider(order.uuid));
+    final paymentsAsync = ref.watch(orderPaymentsStreamProvider(order.uuid));
+    final accounts =
+        ref.watch(accountsStreamProvider).value ?? const <Account>[];
+    final accountsByUuid = {for (final a in accounts) a.uuid: a};
     final catalogIssues = isSale
         ? ref.watch(saleOrderCatalogLineIssuesProvider(order.uuid)).asData?.value
         : null;
@@ -239,58 +502,59 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
               ),
             ),
           ),
-        Stack(
-          clipBehavior: Clip.none,
+        _OrderHero(
+          typeLabel: isSale ? l10n.sale : l10n.purchase,
+          orderNumber: order.orderNumber,
+          accent: typeColor,
+          amountText: formatOrderAmount(ref, order.totalAmount),
+          paymentLabel: paymentStatusLabel(l10n, order.paymentStatus),
+          deliveryLabel: deliveryStatusLabel(l10n, order.deliveryStatus),
+          showPendingSync: order.isNotSynced == true,
+        ),
+        FormSectionCard(
+          title: l10n.information,
+          icon: Icons.info_outline,
+          accentColor: typeColor,
           children: [
-            FormSectionCard(
-              title: order.orderNumber,
-              icon: isSale
-                  ? Icons.point_of_sale_rounded
-                  : Icons.shopping_cart_outlined,
-              accentColor: typeColor,
-              trailing: OrderStatusChip(
-                label: isSale ? l10n.sale : l10n.purchase,
-                color: typeColor,
-              ),
-              children: [
-                _InfoRow(
-                  icon: Icons.person_outline,
-                  text: contact?.name ?? l10n.walkInCustomer,
-                ),
-                _InfoRow(
-                  icon: Icons.event_outlined,
-                  text: AppDateFormatter.formatDate(
-                    order.orderDate,
-                    pattern: dateFormat,
-                  ),
-                ),
-                if (order.notes != null && order.notes!.isNotEmpty)
-                  _InfoRow(icon: Icons.notes_outlined, text: order.notes!),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    OrderStatusChip(
-                      label: paymentStatusLabel(l10n, order.paymentStatus),
-                      color: paymentStatusColor(
-                        order.orderType,
-                        order.paymentStatus,
-                      ),
-                    ),
-                    OrderStatusChip(
-                      label: deliveryStatusLabel(l10n, order.deliveryStatus),
-                      color: deliveryStatusColor(order.deliveryStatus),
-                      icon: Icons.local_shipping_outlined,
-                    ),
-                  ],
-                ),
-              ],
+            _DetailRow(
+              icon: Icons.person_outline,
+              label: l10n.contact,
+              value: contact?.name ?? l10n.walkInCustomer,
+              onTap: contact == null
+                  ? null
+                  : () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ContactDetailsScreen(
+                            contactUuid: contact.uuid,
+                          ),
+                        ),
+                      );
+                    },
             ),
-            if (order.isNotSynced == true)
-              const PositionedDirectional(
-                top: -6,
-                end: -6,
-                child: PendingSyncDetailBadge(),
+            _DetailRow(
+              icon: Icons.calendar_today_outlined,
+              label: l10n.date,
+              value: AppDateFormatter.formatDate(
+                order.orderDate,
+                pattern: dateFormat,
+              ),
+            ),
+            if (order.dueDate != null)
+              _DetailRow(
+                icon: Icons.event_outlined,
+                label: l10n.dueDate,
+                value: AppDateFormatter.formatDate(
+                  order.dueDate!,
+                  pattern: dateFormat,
+                ),
+              ),
+            if (order.notes != null && order.notes!.trim().isNotEmpty)
+              _DetailRow(
+                icon: Icons.notes_outlined,
+                label: l10n.notesLabel,
+                value: order.notes!.trim(),
               ),
           ],
         ),
@@ -317,10 +581,12 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 return Column(
                   children: [
                     for (var i = 0; i < items.length; i++) ...[
-                      if (i > 0) const Divider(height: 16),
+                      if (i > 0) const SizedBox(height: 8),
                       _ItemTile(
                         item: items[i],
                         ref: ref,
+                        accent: typeColor,
+                        isSale: isSale,
                         catalogIssue:
                             catalogIssues?[items[i].uuid] ??
                                 SaleCatalogLineIssue.none,
@@ -370,6 +636,57 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           ],
         ),
         FormSectionCard(
+          title: l10n.orderPayments,
+          icon: Icons.payments_outlined,
+          accentColor: typeColor,
+          children: [
+            paymentsAsync.when(
+              loading: () => const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (e, _) => Text(l10n.errorOccurred(e.toString())),
+              data: (payments) {
+                if (payments.isEmpty) {
+                  return Text(
+                    l10n.noOrderPayments,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  );
+                }
+                return Column(
+                  children: [
+                    for (var i = 0; i < payments.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 8),
+                      _PaymentTile(
+                        payment: payments[i],
+                        account: payments[i].accountUuid == null
+                            ? null
+                            : accountsByUuid[payments[i].accountUuid!],
+                        accent: typeColor,
+                        isSale: isSale,
+                        dateFormat: dateFormat,
+                        ref: ref,
+                        onTap: _busy
+                            ? null
+                            : () => _openPaymentActions(
+                                  order: order,
+                                  payment: payments[i],
+                                  account: payments[i].accountUuid == null
+                                      ? null
+                                      : accountsByUuid[
+                                          payments[i].accountUuid!],
+                                ),
+                      ),
+                    ],
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+        FormSectionCard(
           title: l10n.sectionActions,
           icon: Icons.bolt_outlined,
           accentColor: typeColor,
@@ -412,27 +729,130 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
+class _OrderHero extends StatelessWidget {
+  final String typeLabel;
+  final String orderNumber;
+  final Color accent;
+  final String amountText;
+  final String paymentLabel;
+  final String deliveryLabel;
+  final bool showPendingSync;
 
-  const _InfoRow({required this.icon, required this.text});
+  const _OrderHero({
+    required this.typeLabel,
+    required this.orderNumber,
+    required this.accent,
+    required this.amountText,
+    required this.paymentLabel,
+    required this.deliveryLabel,
+    this.showPendingSync = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 14),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: AppColors.getPrimaryGradient(accent),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: accent.withValues(alpha: 0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
               ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Text(
+                typeLabel,
+                style: const TextStyle(
+                  color: Colors.white70,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                orderNumber,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                amountText,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  _HeroPill(
+                    icon: Icons.payments_outlined,
+                    label: paymentLabel,
+                  ),
+                  _HeroPill(
+                    icon: Icons.local_shipping_outlined,
+                    label: deliveryLabel,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        if (showPendingSync)
+          const PositionedDirectional(
+            top: -6,
+            end: -6,
+            child: PendingSyncDetailBadge(),
+          ),
+      ],
+    );
+  }
+}
+
+class _HeroPill extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _HeroPill({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Colors.white),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ],
@@ -441,14 +861,94 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
+class _DetailRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final VoidCallback? onTap;
+
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.valueColor,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final row = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 20, color: theme.colorScheme.primary),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: valueColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (onTap != null)
+          Icon(
+            Icons.chevron_right,
+            size: 20,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+      ],
+    );
+
+    if (onTap == null) return row;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: row,
+        ),
+      ),
+    );
+  }
+}
+
 class _ItemTile extends StatelessWidget {
   final OrderItem item;
   final WidgetRef ref;
+  final Color accent;
+  final bool isSale;
   final SaleCatalogLineIssue catalogIssue;
 
   const _ItemTile({
     required this.item,
     required this.ref,
+    required this.accent,
+    required this.isSale,
     this.catalogIssue = SaleCatalogLineIssue.none,
   });
 
@@ -469,80 +969,344 @@ class _ItemTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
-    final lineTotal = item.quantity * item.unitPrice - item.discountAmount;
+    final muted = theme.colorScheme.onSurfaceVariant;
     final issueLabel = _issueLabel(l10n);
     final warn = catalogIssue.isProblem;
+    final catalogLabel = item.catalogNameSnapshot?.trim();
+    final listUnit = item.unitPrice;
+    final discountedUnit = orderItemDiscountedUnitPrice(
+      listUnitPrice: listUnit,
+      quantity: item.quantity,
+      lineDiscountAmount: item.discountAmount,
+      discountedUnitPrice: item.discountedUnitPrice,
+    );
+    final borderColor = warn
+        ? AppColors.warning.withValues(alpha: 0.45)
+        : accent.withValues(alpha: 0.2);
+    final fillColor = warn
+        ? AppColors.warning.withValues(alpha: 0.1)
+        : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35);
 
-    final row = Row(
+    final products =
+        ref.watch(productsStreamProvider).value ?? const <Product>[];
+    final categories = ref.watch(productCategoriesStreamProvider).value ??
+        const <ProductCategory>[];
+    final sellingProducts =
+        ref.watch(sellingProductsStreamProvider).value ??
+            const <SellingProduct>[];
+    final byCategory = {for (final c in categories) c.uuid: c};
+    final productUuid = item.productUuid?.trim();
+    final product = (productUuid == null || productUuid.isEmpty)
+        ? null
+        : products.where((p) => p.uuid == productUuid).firstOrNull;
+    final spUuid = item.sellingProductUuid?.trim();
+    final sellingProduct = (spUuid == null || spUuid.isEmpty)
+        ? null
+        : sellingProducts.where((s) => s.uuid == spUuid).firstOrNull;
+    final categoryUuid = product?.categoryUuid ?? sellingProduct?.categoryUuid;
+    final category =
+        categoryUuid == null ? null : byCategory[categoryUuid];
+
+    final Widget leading;
+    if (warn) {
+      leading = categoryLeadingAvatar(
+        color: AppColors.warning,
+        icon: Icons.warning_amber_rounded,
+      );
+    } else if (product != null) {
+      leading = productLeadingAvatar(product: product, category: category);
+    } else {
+      leading = categoryLeadingAvatar(
+        color: parseCategoryColor(category?.color, accent),
+        icon: category == null
+            ? (isSale ? Icons.sell_outlined : Icons.inventory_2_outlined)
+            : categoryIconData(category),
+      );
+    }
+
+    VoidCallback? openLinkedEntity;
+    if (product != null) {
+      openLinkedEntity = () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                ProductDetailsScreen(productUuid: product.uuid),
+          ),
+        );
+      };
+    } else if (sellingProduct != null) {
+      openLinkedEntity = () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AddSellingProductScreen(
+              existingUuid: sellingProduct.uuid,
+            ),
+          ),
+        );
+      };
+    }
+
+    final identity = Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: warn
-                ? AppColors.warning.withValues(alpha: 0.25)
-                : theme.colorScheme.primaryContainer.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(
-            warn ? Icons.warning_amber_rounded : Icons.inventory_2_outlined,
-            size: 18,
-            color: warn
-                ? AppColors.warning
-                : theme.colorScheme.onPrimaryContainer,
-          ),
-        ),
-        const SizedBox(width: 12),
+        leading,
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                item.productNameSnapshot,
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      item.productNameSnapshot,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  if (openLinkedEntity != null)
+                    Icon(Icons.chevron_right, size: 18, color: muted),
+                ],
               ),
-              const SizedBox(height: 2),
-              Text(
-                '${AmountFormatter.formatQuantity(item.quantity)} ${item.unit} × '
-                '${formatOrderAmount(ref, item.unitPrice)}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              if (issueLabel != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  issueLabel,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: AppColors.warning,
-                    fontWeight: FontWeight.w700,
+              if ((isSale &&
+                      catalogLabel != null &&
+                      catalogLabel.isNotEmpty) ||
+                  issueLabel != null) ...[
+                const SizedBox(height: 1),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      if (isSale &&
+                          catalogLabel != null &&
+                          catalogLabel.isNotEmpty)
+                        TextSpan(
+                          text: catalogLabel,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: accent,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      if (isSale &&
+                          catalogLabel != null &&
+                          catalogLabel.isNotEmpty &&
+                          issueLabel != null)
+                        TextSpan(
+                          text: ' · ',
+                          style: theme.textTheme.labelSmall
+                              ?.copyWith(color: muted),
+                        ),
+                      if (issueLabel != null)
+                        TextSpan(
+                          text: issueLabel,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: AppColors.warning,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ],
             ],
           ),
         ),
-        Text(
-          formatOrderAmount(ref, lineTotal),
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
-        ),
       ],
     );
 
-    if (!warn) return row;
     return Container(
-      padding: const EdgeInsets.all(8),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       decoration: BoxDecoration(
-        color: AppColors.warning.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.warning.withValues(alpha: 0.45)),
+        color: fillColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: borderColor),
       ),
-      child: row,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: openLinkedEntity == null
+                ? identity
+                : Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: openLinkedEntity,
+                      borderRadius: BorderRadius.circular(10),
+                      child: identity,
+                    ),
+                  ),
+          ),
+          const SizedBox(width: 10),
+          OrderLinePriceStack(
+            listUnitPrice: listUnit,
+            discountedUnitPrice: discountedUnit,
+            quantity: item.quantity,
+            accent: accent,
+            ref: ref,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PaymentTile extends StatelessWidget {
+  final Transaction payment;
+  final Account? account;
+  final Color accent;
+  final bool isSale;
+  final String dateFormat;
+  final WidgetRef ref;
+  final VoidCallback? onTap;
+
+  const _PaymentTile({
+    required this.payment,
+    required this.account,
+    required this.accent,
+    required this.isSale,
+    required this.dateFormat,
+    required this.ref,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final isDark = theme.brightness == Brightness.dark;
+    final amountColor =
+        isSale ? AppColors.incomeColor : AppColors.expenseColor;
+    final desc = payment.description?.trim();
+    final title = (desc != null && desc.isNotEmpty)
+        ? desc
+        : (isSale ? l10n.collectPayment : l10n.payToSupplier);
+    final dateText = AppDateFormatter.formatDate(
+      payment.date,
+      pattern: dateFormat,
+    );
+    final amountText =
+        '${isSale ? '\u200E+' : '\u200E-'} ${formatOrderAmount(ref, payment.amount)}';
+    final amountFontSize =
+        AmountFormatter.getFontSize(payment.amount).clamp(14.0, 22.0);
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Material(
+          color: theme.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            hoverColor: Colors.transparent,
+            onTap: onTap,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: amountColor.withValues(alpha: isDark ? 0.2 : 0.12),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: amountColor.withValues(alpha: isDark ? 0.05 : 0.08),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+              child: Row(
+                children: [
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: amountColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: amountColor.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Icon(
+                          isSale
+                              ? Icons.call_received_rounded
+                              : Icons.call_made_rounded,
+                          color: amountColor,
+                          size: 22,
+                        ),
+                      ),
+                      if (payment.isNotSynced == true)
+                        const Positioned(
+                          right: -3,
+                          bottom: -3,
+                          child: PendingSyncCornerBadge(iconSize: 11),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          dateText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: muted,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    amountText,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: amountColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: amountFontSize,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (account != null)
+          PositionedDirectional(
+            end: -6,
+            bottom: -5,
+            child: Tooltip(
+              message: account!.name,
+              child: CornerBadgeContainer(
+                accentColor: TransferAccountBox.accentColorFor(account!, theme),
+                padding: const EdgeInsets.all(4),
+                child: Icon(
+                  TransferAccountBox.iconForAccount(account),
+                  size: 11,
+                  color: TransferAccountBox.accentColorFor(account!, theme),
+                ),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
@@ -581,17 +1345,152 @@ class _AmountRow extends StatelessWidget {
   }
 }
 
+class _SheetMetaChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _SheetMetaChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Colors.white),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SheetActionTile extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String? subtitle;
+  final VoidCallback onTap;
+
+  const _SheetActionTile({
+    required this.icon,
+    required this.color,
+    required this.title,
+    this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Material(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: color == AppColors.error
+                              ? AppColors.error
+                              : null,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _PaymentResult {
   final double amount;
   final String accountUuid;
+  final DateTime date;
+  final String? description;
 
-  const _PaymentResult(this.amount, this.accountUuid);
+  const _PaymentResult(
+    this.amount,
+    this.accountUuid,
+    this.date,
+    this.description,
+  );
 }
 
 class _PaymentDialog extends ConsumerStatefulWidget {
+  final String title;
   final double initialAmount;
+  final double maxAmount;
+  final String? initialAccountUuid;
+  final DateTime? initialDate;
+  final String? initialDescription;
 
-  const _PaymentDialog({required this.initialAmount});
+  const _PaymentDialog({
+    required this.title,
+    required this.initialAmount,
+    required this.maxAmount,
+    this.initialAccountUuid,
+    this.initialDate,
+    this.initialDescription,
+  });
 
   @override
   ConsumerState<_PaymentDialog> createState() => _PaymentDialogState();
@@ -600,7 +1499,9 @@ class _PaymentDialog extends ConsumerStatefulWidget {
 class _PaymentDialogState extends ConsumerState<_PaymentDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _amountController;
+  late final TextEditingController _descriptionController;
   String? _accountUuid;
+  late DateTime _date;
 
   @override
   void initState() {
@@ -608,22 +1509,42 @@ class _PaymentDialogState extends ConsumerState<_PaymentDialog> {
     _amountController = TextEditingController(
       text: AmountFormatter.formatQuantity(widget.initialAmount),
     );
+    _descriptionController = TextEditingController(
+      text: widget.initialDescription?.trim() ?? '',
+    );
+    _accountUuid = widget.initialAccountUuid;
+    _date = widget.initialDate ?? DateTime.now();
   }
 
   @override
   void dispose() {
     _amountController.dispose();
+    _descriptionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _date = picked);
   }
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
     if (_accountUuid == null) return;
+    final desc = _descriptionController.text.trim();
     Navigator.pop(
       context,
       _PaymentResult(
         double.parse(_amountController.text.trim()),
         _accountUuid!,
+        _date,
+        desc.isEmpty ? null : desc,
       ),
     );
   }
@@ -632,50 +1553,78 @@ class _PaymentDialogState extends ConsumerState<_PaymentDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final accounts = ref.watch(accountsStreamProvider).value ?? const <Account>[];
+    final dateFormat = ref.watch(userProfileProvider).dateFormat;
     final isRtl = Directionality.of(context) == TextDirection.rtl;
     final affix = AmountFormatter.currencyAffix(
       ref.watch(currencySymbolProvider),
       isRtl: isRtl,
     );
+    final maxLabel = formatOrderAmount(ref, widget.maxAmount);
 
     return AlertDialog(
-      title: Text(l10n.recordPayment),
+      title: Text(widget.title),
       content: Form(
         key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(
-              controller: _amountController,
-              autofocus: true,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-              ],
-              decoration: InputDecoration(
-                labelText: l10n.amount,
-                prefixText: affix.prefixText,
-                suffixText: affix.suffixText,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              LtrNumberField(
+                controller: _amountController,
+                autofocus: true,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: ltrDecimalInputFormatters,
+                decoration: InputDecoration(
+                  labelText: l10n.amount,
+                  prefixText: affix.prefixText,
+                  suffixText: affix.suffixText,
+                  helperText: l10n.paymentExceedsBalance(maxLabel),
+                ),
+                validator: (value) {
+                  final number = double.tryParse(value?.trim() ?? '');
+                  if (number == null || number <= 0) {
+                    return l10n.amountGreaterThanZero;
+                  }
+                  if (number > widget.maxAmount + 0.001) {
+                    return l10n.paymentExceedsBalance(maxLabel);
+                  }
+                  return null;
+                },
               ),
-              validator: (value) {
-                final number = double.tryParse(value?.trim() ?? '');
-                if (number == null || number <= 0) {
-                  return l10n.amountGreaterThanZero;
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            AccountPickerField(
-              selectedAccount: accounts
-                  .where((a) => a.uuid == _accountUuid)
-                  .firstOrNull,
-              label: l10n.selectAccount,
-              onChanged: (account) =>
-                  setState(() => _accountUuid = account?.uuid),
-            ),
-          ],
+              const SizedBox(height: 12),
+              AccountPickerField(
+                selectedAccount: accounts
+                    .where((a) => a.uuid == _accountUuid)
+                    .firstOrNull,
+                label: l10n.selectAccount,
+                onChanged: (account) =>
+                    setState(() => _accountUuid = account?.uuid),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.event_outlined),
+                title: Text(l10n.date),
+                subtitle: Text(
+                  AppDateFormatter.formatDate(_date, pattern: dateFormat),
+                ),
+                trailing: const Icon(Icons.edit_outlined, size: 18),
+                onTap: _pickDate,
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _descriptionController,
+                maxLines: 3,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(
+                  labelText: l10n.description,
+                  alignLabelWithHint: true,
+                  hintText: l10n.notesLabel,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       actions: [

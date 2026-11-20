@@ -53,6 +53,11 @@ final orderPaidAmountProvider =
   return ref.watch(ordersRepositoryProvider).getPaidAmountForOrder(orderUuid);
 });
 
+final orderPaymentsStreamProvider =
+    StreamProvider.family<List<Transaction>, String>((ref, orderUuid) {
+  return ref.watch(ordersRepositoryProvider).watchPaymentsForOrder(orderUuid);
+});
+
 /// Open sales = to collect; open purchases = to pay.
 final openSalesOrdersProvider = Provider<AsyncValue<List<Order>>>((ref) {
   return ref.watch(ordersByTypeStreamProvider('SALE')).whenData(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_discounts.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/shared/providers/currency_provider.dart';
 
@@ -137,6 +138,179 @@ class OrderEmptyState extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Effective discounted unit from snapshot or legacy line discount.
+double orderItemDiscountedUnitPrice({
+  required double listUnitPrice,
+  required double quantity,
+  required double lineDiscountAmount,
+  double? discountedUnitPrice,
+}) {
+  if (discountedUnitPrice != null && discountedUnitPrice.isFinite) {
+    return discountedUnitPrice < 0 ? 0 : discountedUnitPrice;
+  }
+  final qty = quantity.isFinite && quantity > 0 ? quantity : 0.0;
+  if (qty <= 0) return listUnitPrice.isFinite ? listUnitPrice : 0.0;
+  final list = listUnitPrice.isFinite ? listUnitPrice : 0.0;
+  final disc = lineDiscountAmount.isFinite ? lineDiscountAmount : 0.0;
+  final after = list - disc / qty;
+  return after < 0 ? 0 : after;
+}
+
+/// Compact price hierarchy shared by New Sale lines and order detail.
+class OrderLinePriceStack extends StatelessWidget {
+  final double listUnitPrice;
+  final double discountedUnitPrice;
+  final double quantity;
+  final Color accent;
+  final WidgetRef ref;
+
+  const OrderLinePriceStack({
+    super.key,
+    required this.listUnitPrice,
+    required this.discountedUnitPrice,
+    required this.quantity,
+    required this.accent,
+    required this.ref,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final qty = quantity;
+    final multiQty = qty > 1.0000001;
+    final unitDisc = SaleLinePricing.unitDiscountFixed(
+      listUnitPrice: listUnitPrice,
+      discountedUnitPrice: discountedUnitPrice,
+    );
+    final hasDiscount = unitDisc > 1e-9;
+    final pct = AmountFormatter.formatDiscountPercent(
+      SaleLinePricing.unitDiscountPercent(
+        listUnitPrice: listUnitPrice,
+        discountedUnitPrice: discountedUnitPrice,
+      ),
+    );
+    final listText = formatOrderAmount(ref, listUnitPrice);
+    final discountedUnitText = formatOrderAmount(ref, discountedUnitPrice);
+    final unitDiscText = formatOrderAmount(ref, unitDisc);
+    final lineTotalText = formatOrderAmount(
+      ref,
+      SaleLinePricing.lineTotal(
+        discountedUnitPrice: discountedUnitPrice,
+        quantity: qty,
+      ),
+    );
+    final lineDiscText = formatOrderAmount(
+      ref,
+      SaleLinePricing.lineDiscountFixed(
+        listUnitPrice: listUnitPrice,
+        discountedUnitPrice: discountedUnitPrice,
+        quantity: qty,
+      ),
+    );
+    final qtyText = AmountFormatter.formatQuantity(qty);
+
+    Widget discountAmountText({
+      required String amountText,
+      required Color color,
+    }) {
+      return Text(
+        '−$amountText ($pct%)',
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.end,
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (hasDiscount)
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  listText,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: muted,
+                    decoration: TextDecoration.lineThrough,
+                    decorationColor: muted.withValues(alpha: 0.7),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                discountAmountText(
+                  amountText: unitDiscText,
+                  color: AppColors.expenseColor,
+                ),
+              ],
+            ),
+          ),
+        if (hasDiscount) const SizedBox(height: 2),
+        if (multiQty)
+          Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: discountedUnitText,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: accent,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                TextSpan(
+                  text: ' × $qtyText',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: muted,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            textDirection: TextDirection.ltr,
+            textAlign: TextAlign.end,
+          )
+        else
+          Text(
+            discountedUnitText,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: accent,
+              fontWeight: FontWeight.w800,
+              height: 1.15,
+            ),
+            textDirection: TextDirection.ltr,
+            textAlign: TextAlign.end,
+          ),
+        if (multiQty) ...[
+          const SizedBox(height: 2),
+          Text(
+            lineTotalText,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: accent,
+              fontWeight: FontWeight.w800,
+              height: 1.15,
+            ),
+            textDirection: TextDirection.ltr,
+            textAlign: TextAlign.end,
+          ),
+        ],
+        if (hasDiscount && multiQty) ...[
+          const SizedBox(height: 1),
+          discountAmountText(
+            amountText: lineDiscText,
+            color: AppColors.incomeColor,
+          ),
+        ],
+      ],
     );
   }
 }

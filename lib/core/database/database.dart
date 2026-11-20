@@ -812,7 +812,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 18;
 
   // Compatibility getters and helpers for deprecated tables
   $ProductCategoriesTable get categories => productCategories;
@@ -902,8 +902,83 @@ class AppDatabase extends _$AppDatabase {
           if (from < 15) {
             await _migrateOrderItemsDiscountedPriceToV15();
           }
+          if (from < 16) {
+            // v13 rebuild dropped SQL DEFAULTs on created_at/updated_at; inserts fail.
+            await _migrateOrderItemsRestoreTimestampDefaultsToV16();
+          }
+          if (from < 17 || from < 18) {
+            // v17 only backfilled; some DBs never had the columns. v18 adds them.
+            await _migrateTransactionsEnsureColumnsToV18();
+          }
         },
       );
+
+  /// Ensure Drift-required transaction columns exist, then coalesce NULLs.
+  /// Older local DBs may predate payment_method / is_auto_generated / is_scheduled.
+  Future<void> _migrateTransactionsEnsureColumnsToV18() async {
+    Future<void> addColumn(String sql, String label) async {
+      try {
+        await customStatement(sql);
+      } catch (e) {
+        if (kDebugMode) {
+          print('Database migrate v18 transactions $label skipped: $e');
+        }
+      }
+    }
+
+    await addColumn(
+      "ALTER TABLE transactions ADD COLUMN payment_method TEXT NOT NULL DEFAULT 'CASH'",
+      'payment_method',
+    );
+    await addColumn(
+      'ALTER TABLE transactions ADD COLUMN is_auto_generated INTEGER NOT NULL DEFAULT 0 CHECK (is_auto_generated IN (0, 1))',
+      'is_auto_generated',
+    );
+    await addColumn(
+      'ALTER TABLE transactions ADD COLUMN is_scheduled INTEGER NOT NULL DEFAULT 0 CHECK (is_scheduled IN (0, 1))',
+      'is_scheduled',
+    );
+    await addColumn(
+      'ALTER TABLE transactions ADD COLUMN linked_receivable_uuid TEXT',
+      'linked_receivable_uuid',
+    );
+    await addColumn(
+      'ALTER TABLE transactions ADD COLUMN linked_payable_uuid TEXT',
+      'linked_payable_uuid',
+    );
+    await addColumn(
+      'ALTER TABLE transactions ADD COLUMN paid_relationship TEXT',
+      'paid_relationship',
+    );
+    await addColumn(
+      'ALTER TABLE transactions ADD COLUMN order_uuid TEXT REFERENCES orders (uuid)',
+      'order_uuid',
+    );
+
+    try {
+      await customStatement('''
+UPDATE transactions SET
+  payment_method = COALESCE(payment_method, 'CASH'),
+  is_auto_generated = COALESCE(is_auto_generated, 0),
+  is_scheduled = COALESCE(is_scheduled, 0),
+  is_deleted = COALESCE(is_deleted, 0),
+  is_not_synced = COALESCE(is_not_synced, 1),
+  created_at = COALESCE(created_at, CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)),
+  updated_at = COALESCE(updated_at, CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER))
+WHERE payment_method IS NULL
+   OR is_auto_generated IS NULL
+   OR is_scheduled IS NULL
+   OR is_deleted IS NULL
+   OR is_not_synced IS NULL
+   OR created_at IS NULL
+   OR updated_at IS NULL
+''');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v18 transactions null backfill skipped: $e');
+      }
+    }
+  }
 
   Future<void> _migrateOrderItemsDiscountedPriceToV15() async {
     try {
@@ -938,6 +1013,90 @@ WHERE discounted_unit_price IS NULL
       if (kDebugMode) {
         print('Database migrate v15 discounted_unit_price backfill skipped: $e');
       }
+    }
+  }
+
+  /// Rebuild [order_items] so [created_at]/[updated_at] have SQL DEFAULTs again
+  /// (lost in the v13 table rebuild) and include v15 pricing snapshot columns.
+  Future<void> _migrateOrderItemsRestoreTimestampDefaultsToV16() async {
+    try {
+      await customStatement('PRAGMA foreign_keys = OFF');
+      await customStatement('''
+CREATE TABLE IF NOT EXISTS order_items_new (
+  uuid TEXT NOT NULL PRIMARY KEY,
+  order_uuid TEXT NOT NULL REFERENCES orders (uuid),
+  product_uuid TEXT REFERENCES products (uuid),
+  catalog_item_uuid TEXT REFERENCES catalog_items (uuid),
+  selling_product_uuid TEXT REFERENCES selling_products (uuid),
+  product_name_snapshot TEXT NOT NULL,
+  quantity REAL NOT NULL,
+  unit_price REAL NOT NULL,
+  discounted_unit_price REAL,
+  discount_amount REAL NOT NULL DEFAULT 0.0,
+  tax_rate REAL NOT NULL DEFAULT 0.0,
+  catalog_name_snapshot TEXT,
+  received_quantity REAL NOT NULL DEFAULT 0.0,
+  batch_uuid TEXT REFERENCES product_batches (uuid),
+  purchase_price_snapshot REAL NOT NULL DEFAULT 0.0,
+  unit TEXT NOT NULL DEFAULT 'Pcs',
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)),
+  updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)),
+  is_deleted INTEGER NOT NULL DEFAULT 0 CHECK (is_deleted IN (0, 1)),
+  is_not_synced INTEGER NOT NULL DEFAULT 1 CHECK (is_not_synced IN (0, 1))
+)
+''');
+      // Prefer existing columns; COALESCE for DBs that never got v15 ALTERs.
+      await customStatement('''
+INSERT INTO order_items_new (
+  uuid, order_uuid, product_uuid, catalog_item_uuid, selling_product_uuid,
+  product_name_snapshot, quantity, unit_price, discounted_unit_price,
+  discount_amount, tax_rate, catalog_name_snapshot, received_quantity,
+  batch_uuid, purchase_price_snapshot, unit,
+  created_at, updated_at, is_deleted, is_not_synced
+)
+SELECT
+  uuid, order_uuid, product_uuid, catalog_item_uuid, selling_product_uuid,
+  product_name_snapshot, quantity, unit_price,
+  CASE
+    WHEN quantity IS NULL OR quantity = 0 THEN unit_price
+    ELSE MAX(0.0, unit_price - (COALESCE(discount_amount, 0.0) / quantity))
+  END,
+  discount_amount, tax_rate, NULL, received_quantity,
+  batch_uuid, purchase_price_snapshot, unit,
+  COALESCE(created_at, CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)),
+  COALESCE(updated_at, CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)),
+  is_deleted, is_not_synced
+FROM order_items
+''');
+      // If v15 columns already exist, copy them over (replace the computed insert).
+      try {
+        await customStatement('''
+UPDATE order_items_new
+SET
+  discounted_unit_price = (
+    SELECT oi.discounted_unit_price FROM order_items oi
+    WHERE oi.uuid = order_items_new.uuid
+  ),
+  catalog_name_snapshot = (
+    SELECT oi.catalog_name_snapshot FROM order_items oi
+    WHERE oi.uuid = order_items_new.uuid
+  )
+''');
+      } catch (_) {
+        // Source table may not have v15 columns yet; computed values kept.
+      }
+      await customStatement('DROP TABLE order_items');
+      await customStatement(
+        'ALTER TABLE order_items_new RENAME TO order_items',
+      );
+      await customStatement('PRAGMA foreign_keys = ON');
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v16 order_items timestamp defaults skipped: $e');
+      }
+      try {
+        await customStatement('PRAGMA foreign_keys = ON');
+      } catch (_) {}
     }
   }
 
@@ -996,8 +1155,8 @@ CREATE TABLE IF NOT EXISTS order_items_new (
   batch_uuid TEXT REFERENCES product_batches (uuid),
   purchase_price_snapshot REAL NOT NULL DEFAULT 0.0,
   unit TEXT NOT NULL DEFAULT 'Pcs',
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL,
+  created_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)),
+  updated_at INTEGER NOT NULL DEFAULT (CAST(strftime('%s', CURRENT_TIMESTAMP) AS INTEGER)),
   is_deleted INTEGER NOT NULL DEFAULT 0 CHECK (is_deleted IN (0, 1)),
   is_not_synced INTEGER NOT NULL DEFAULT 1 CHECK (is_not_synced IN (0, 1))
 )

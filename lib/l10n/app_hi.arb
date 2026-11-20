@@ -191,6 +191,8 @@
   "shipped": "भेजा गया",
   "deliveryPending": "डिलीवरी लंबित",
   "deliveryStatus": "डिलीवरी स्थिति",
+  "paymentStatus": "भुगतान स्थिति",
+  "orderNumber": "ऑर्डर संख्या",
   "orderDetails": "ऑर्डर विवरण",
   "orderNotFound": "ऑर्डर नहीं मिला",
   "addItem": "आइटम जोड़ें",
@@ -1980,6 +1982,19 @@
     "placeholders": {
       "amount": { "type": "String" },
       "days": { "type": "int" }
+    }
+  },
+  "orderPayments": "भुगतान",
+  "noOrderPayments": "अभी तक कोई भुगतान दर्ज नहीं हुआ",
+  "correctPayment": "भुगतान सुधारें",
+  "paymentCorrected": "भुगतान सुधार दिया गया",
+  "deletePayment": "भुगतान हटाएँ",
+  "paymentDeleted": "भुगतान हटा दिया गया",
+  "confirmDeletePayment": "यह भुगतान हटाएँ? ऑर्डर का बकाया अपडेट हो जाएगा।",
+  "paymentExceedsBalance": "राशि शेष बकाया ({max}) से अधिक नहीं हो सकती",
+  "@paymentExceedsBalance": {
+    "placeholders": {
+      "max": { "type": "String" }
     }
   },
   "recordPayment": "भुगतान दर्ज करें",
