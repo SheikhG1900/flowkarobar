@@ -6,8 +6,54 @@
   "batches": "بیچ",
   "batch": "بیچ",
   "orderItems": "آرڈر آئٹمز",
+  "orderCharges": "آرڈر چارجز",
+  "salesTax": "سیلز ٹیکس",
+  "salesTaxPercent": "سیلز ٹیکس %",
+  "salesTaxOnItemsHint": "رعایت کے بعد آئٹمز کے کل پر لاگو",
+  "editSalesTax": "سیلز ٹیکس ترمیم کریں",
+  "deliveryCharge": "ڈیلیوری",
+  "packingCharge": "پیکنگ",
+  "goodsDeliveries": "مال ڈیلیوری",
+  "goodsDeliveryLines": "ڈیلیوری لائنز",
   "goodsReceipts": "مال وصولی",
   "goodsReceiptLines": "مال وصولی لائنز",
+  "partiallyDelivered": "جزوی ڈیلیوری",
+  "deliverShipment": "آئٹمز ڈیلیور کریں",
+  "qtyToDeliver": "ڈیلیور مقدار",
+  "fillOpenQuantity": "تمام باقی",
+  "deliveredQtyProgress": "{delivered} / {ordered} ڈیلیور",
+  "@deliveredQtyProgress": {
+    "placeholders": {
+      "delivered": { "type": "String" },
+      "ordered": { "type": "String" }
+    }
+  },
+  "receivedQtyProgress": "{received} / {ordered} موصول",
+  "@receivedQtyProgress": {
+    "placeholders": {
+      "received": { "type": "String" },
+      "ordered": { "type": "String" }
+    }
+  },
+  "qtyToReceive": "وصول مقدار",
+  "relatedCosts": "متعلقہ اخراجات",
+  "addRelatedCost": "اخراج شامل کریں",
+  "noRelatedCosts": "ابھی کوئی متعلقہ اخراج نہیں",
+  "relatedCostHint": "اس آرڈر کا آپ کا خرچ (مثلاً کورئیر)۔ گاہک بیلنس نہیں بدلتا۔",
+  "costRecorded": "اخراج درج ہو گیا",
+  "deleteRelatedCost": "اخراج حذف کریں",
+  "deleteRelatedCostConfirm": "اس اخراج کو آرڈر سے ہٹائیں؟",
+  "orderLineStockShort": "اسٹاک میں صرف {available} دستیاب",
+  "@orderLineStockShort": {
+    "placeholders": {
+      "available": { "type": "String" }
+    }
+  },
+  "operatingDefaults": "آپریٹنگ ڈیفالٹس",
+  "operatingDefaultsHint": "نئی فروخت اور روزمرہ کاموں میں استعمال ہونے والے ڈیفالٹ۔",
+  "defaultSalesTaxPercent": "ڈیفالٹ سیلز ٹیکس %",
+  "defaultSalesTaxPercentHint": "نئی فروخت پر ٹیکس پہلے سے بھرتا ہے۔ رعایت کے بعد آئٹمز کل پر لاگو۔",
+  "operatingDefaultsSaved": "آپریٹنگ ڈیفالٹس محفوظ ہو گئے",
   "orderReturnItems": "واپسی آئٹمز",
   "recipeInputs": "ریسیپی ان پٹس",
   "recipeOutputs": "ریسیپی آؤٹ پٹس",
@@ -212,6 +258,7 @@
   "quantity": "مقدار",
   "discount": "رعایت",
   "subtotal": "ذیلی کل",
+  "taxableAmount": "قابل ٹیکس رقم",
   "paymentNow": "ابھی ادائیگی",
   "balanceDue": "واجب الادا رقم",
   "showAllContacts": "تمام رابطے دکھائیں",

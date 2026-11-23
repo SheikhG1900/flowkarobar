@@ -20,6 +20,8 @@ class UserPreferencesRepository {
   static const String keyUserAddress = 'user_address';
   static const String keyBusinessTaxId = 'business_tax_id';
   static const String keyDefaultInvoiceNotes = 'default_invoice_notes';
+  /// Default sales tax percent applied on new sale orders (items net only).
+  static const String keyDefaultSalesTaxRate = 'default_sales_tax_rate';
   static const String keyFontEn = 'font_en';
   static const String keyFontHi = 'font_hi';
   static const String keyFontUr = 'font_ur';
@@ -221,6 +223,18 @@ class UserPreferencesRepository {
 
   Future<void> setDefaultInvoiceNotes(String notes) async {
     await setPreference(keyDefaultInvoiceNotes, notes);
+  }
+
+  /// Default sales tax % for new sales (0 when unset).
+  Future<double> getDefaultSalesTaxRate() async {
+    final value = await getPreference(keyDefaultSalesTaxRate);
+    if (value == null || value.trim().isEmpty) return 0;
+    return double.tryParse(value.trim()) ?? 0;
+  }
+
+  Future<void> setDefaultSalesTaxRate(double rate) async {
+    final clamped = rate < 0 ? 0.0 : rate;
+    await setPreference(keyDefaultSalesTaxRate, clamped.toString());
   }
 
   // Font Preferences

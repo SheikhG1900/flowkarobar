@@ -46,6 +46,9 @@ class _OrderLine {
   /// When true, qty changes keep the edited discounted unit price.
   bool manualDiscountedPrice;
 
+  /// Stock units available when the line was added (sale goods only). Not refreshed on qty edits.
+  double? availableQuantity;
+
   final TextEditingController quantity;
   final TextEditingController unitPrice;
   final TextEditingController discountedUnitPrice;
@@ -129,6 +132,13 @@ class _OrderLine {
   double get unitPriceValue => _parse(unitPrice);
   double get discountedUnitPriceValue => _parse(discountedUnitPrice);
   double get unitCostValue => _parse(unitCost);
+
+  /// True when ordered qty exceeds [availableQuantity] captured at line create.
+  bool get isStockShort {
+    final available = availableQuantity;
+    if (available == null || isService) return false;
+    return quantityValue > available + 1e-9;
+  }
 
   double get effectiveListUnitPrice =>
       applyCatalogDiscounts ? listUnitPrice : unitPriceValue;
@@ -237,6 +247,26 @@ class _OrderLine {
 double _parse(TextEditingController controller) =>
     double.tryParse(controller.text.trim()) ?? 0;
 
+class _OrderChargeLine {
+  final TextEditingController description;
+  final TextEditingController amount;
+
+  _OrderChargeLine({String desc = '', double amountValue = 0})
+      : description = TextEditingController(text: desc),
+        amount = TextEditingController(
+          text: amountValue <= 0
+              ? ''
+              : AmountFormatter.formatQuantity(amountValue),
+        );
+
+  double get amountValue => _parse(amount);
+
+  void dispose() {
+    description.dispose();
+    amount.dispose();
+  }
+}
+
 class AddOrderScreen extends ConsumerStatefulWidget {
   final String orderType;
 
@@ -250,7 +280,9 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
   final _formKey = GlobalKey<FormState>();
   final _notesController = TextEditingController();
   final _paymentController = TextEditingController();
+  final _taxController = TextEditingController();
   final List<_OrderLine> _lines = [];
+  final List<_OrderChargeLine> _charges = [];
 
   String? _contactUuid;
   String? _accountUuid;
@@ -259,6 +291,7 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
   bool _showAllContacts = false;
   bool _delivered = false;
   bool _saving = false;
+  bool _appliedDefaultTax = false;
   DateTime _orderDate = DateTime.now();
 
   bool get _isSale => widget.orderType == orderTypeSale;
@@ -267,17 +300,38 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
   double get _subtotal => _lines.fold<double>(0, (sum, l) => sum + l.gross);
   double get _discountTotal =>
       _lines.fold<double>(0, (sum, l) => sum + l.discountValue);
-  double get _total =>
+  double get _itemsNet =>
       (_subtotal - _discountTotal).clamp(0, double.infinity).toDouble();
+  double get _taxRate => _parse(_taxController).clamp(0, double.infinity);
+  double get _taxAmount =>
+      (_itemsNet * _taxRate / 100).clamp(0, double.infinity).toDouble();
+  double get _chargesTotal => _charges.fold<double>(
+        0,
+        (sum, c) => sum + (c.amountValue > 0 ? c.amountValue : 0),
+      );
+  double get _total =>
+      (_itemsNet + _taxAmount + _chargesTotal)
+          .clamp(0, double.infinity)
+          .toDouble();
 
   @override
   void dispose() {
     _notesController.dispose();
     _paymentController.dispose();
+    _taxController.dispose();
     for (final line in _lines) {
       line.dispose();
     }
+    for (final charge in _charges) {
+      charge.dispose();
+    }
     super.dispose();
+  }
+
+  void _addCharge({String? preset}) {
+    setState(() {
+      _charges.add(_OrderChargeLine(desc: preset ?? ''));
+    });
   }
 
   Future<Catalog?> _resolveSelectedSaleCatalog() async {
@@ -328,36 +382,51 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
           l.sellingProductUuid == null &&
           l.product?.uuid == product.uuid;
     }).firstOrNull;
-    setState(() {
-      if (existing != null) {
+    if (existing != null) {
+      setState(() {
         existing.quantity.text =
             AmountFormatter.formatQuantity(existing.quantityValue + 1);
         existing.syncCatalogDiscountFromQty();
-      } else {
-        _lines.add(
-          _OrderLine.fromProduct(
-            product: product,
-            price: _isSale ? product.retailPrice : product.purchasePrice,
-            defaultUnitCost: product.purchasePrice,
-          ),
-        );
-      }
-    });
+      });
+      return;
+    }
+    final line = _OrderLine.fromProduct(
+      product: product,
+      price: _isSale ? product.retailPrice : product.purchasePrice,
+      defaultUnitCost: product.purchasePrice,
+    );
+    setState(() => _lines.add(line));
+    if (_isSale) _captureLineAvailableQty(line);
   }
 
   void _addOrBumpCatalogLine(CatalogSalePick pick) {
     final existing = _lines
         .where((l) => l.catalogItemUuid == pick.item.uuid)
         .firstOrNull;
-    setState(() {
-      if (existing != null) {
+    if (existing != null) {
+      setState(() {
         existing.quantity.text =
             AmountFormatter.formatQuantity(existing.quantityValue + 1);
         existing.syncCatalogDiscountFromQty();
-      } else {
-        _lines.add(_OrderLine.fromCatalogPick(pick));
-      }
-    });
+      });
+      return;
+    }
+    final line = _OrderLine.fromCatalogPick(pick);
+    setState(() => _lines.add(line));
+    if (_isSale) _captureLineAvailableQty(line);
+  }
+
+  /// Resolve stock once when the line is created (or catalog-refreshed).
+  Future<void> _captureLineAvailableQty(_OrderLine line) async {
+    if (!_isSale || line.isService) return;
+    final available =
+        await ref.read(inventoryRepositoryProvider).fulfillableSaleQuantity(
+              productUuid: line.product?.uuid,
+              sellingProductUuid: line.sellingProductUuid,
+              isService: line.isService,
+            );
+    if (!mounted) return;
+    setState(() => line.availableQuantity = available);
   }
 
   Future<void> _pickContact() async {
@@ -396,6 +465,8 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
       return;
     }
     setState(() => line.applyCatalogRefresh(pick));
+    if (_isSale) await _captureLineAvailableQty(line);
+    if (!mounted) return;
     ToastUtils.showSuccessToast(context, ref, l10n.saleLinePricesRefreshed);
   }
 
@@ -479,6 +550,83 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
     if (applied == true && mounted) setState(() {});
   }
 
+  Future<void> _editSalesTaxRate() async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final controller = TextEditingController(
+      text: _taxRate > 0 ? AmountFormatter.formatQuantity(_taxRate) : '',
+    );
+    final applied = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final bottomInset = MediaQuery.viewInsetsOf(sheetContext).bottom;
+        return Padding(
+          padding: EdgeInsets.fromLTRB(16, 0, 16, 16 + bottomInset),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                l10n.editSalesTax,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                l10n.salesTaxOnItemsHint,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              LtrNumberField(
+                controller: controller,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: l10n.salesTaxPercent,
+                  suffixText: '%',
+                  prefixIcon: const Icon(Icons.percent_outlined),
+                  filled: true,
+                ),
+              ),
+              const SizedBox(height: 16),
+              GradientButton(
+                label: l10n.save,
+                icon: Icons.check_rounded,
+                width: double.infinity,
+                gradient: AppColors.getPrimaryGradient(_color),
+                onPressed: () {
+                  final text = controller.text.trim();
+                  if (text.isEmpty) {
+                    _taxController.text = '';
+                    Navigator.pop(sheetContext, true);
+                    return;
+                  }
+                  final value = double.tryParse(text);
+                  if (value == null || value < 0) {
+                    ToastUtils.showErrorToast(
+                      sheetContext,
+                      ref,
+                      l10n.invalidNumber,
+                    );
+                    return;
+                  }
+                  _taxController.text = AmountFormatter.formatQuantity(value);
+                  Navigator.pop(sheetContext, true);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+    controller.dispose();
+    if (applied == true && mounted) setState(() {});
+  }
+
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -535,6 +683,8 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
         totalAmount: total,
         contactUuid: drift.Value(_contactUuid),
         discountAmount: drift.Value(_discountTotal),
+        taxRate: drift.Value(_taxRate),
+        taxAmount: drift.Value(_taxAmount),
         paymentStatus: drift.Value(paymentStatus),
         deliveryStatus: drift.Value(_delivered ? 'DELIVERED' : 'PENDING'),
         deliveredDate: drift.Value(_delivered ? DateTime.now() : null),
@@ -568,9 +718,23 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
         );
       }).toList();
 
+      final chargeRows = _charges
+          .where((c) =>
+              c.description.text.trim().isNotEmpty && c.amountValue > 0)
+          .map(
+            (c) => OrderChargesCompanion.insert(
+              uuid: const Uuid().v4(),
+              orderUuid: orderUuid,
+              description: c.description.text.trim(),
+              amount: drift.Value(c.amountValue),
+            ),
+          )
+          .toList();
+
       await repository.createOrder(
         order: order,
         items: items,
+        charges: chargeRows,
         paymentAmount: payment,
         accountUuid: payment > 0 ? _accountUuid : null,
       );
@@ -594,6 +758,22 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final operatingDefaults = ref.watch(operatingDefaultsProvider);
+    if (_isSale &&
+        !_appliedDefaultTax &&
+        operatingDefaults.defaultSalesTaxRate > 0) {
+      final rate = operatingDefaults.defaultSalesTaxRate;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _appliedDefaultTax) return;
+        _appliedDefaultTax = true;
+        if (_taxController.text.trim().isEmpty) {
+          setState(() {
+            _taxController.text = AmountFormatter.formatQuantity(rate);
+          });
+        }
+      });
+    }
+
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final dateFormat = ref.watch(userProfileProvider).dateFormat;
@@ -781,6 +961,89 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
               ],
             ),
             FormSectionCard(
+              title: l10n.sectionCharges,
+              icon: Icons.add_card_outlined,
+              accentColor: _color,
+              trailing: TextButton.icon(
+                onPressed: () => _addCharge(),
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(l10n.addCharge),
+              ),
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    ActionChip(
+                      label: Text(l10n.deliveryCharge),
+                      avatar: const Icon(Icons.local_shipping_outlined, size: 16),
+                      onPressed: () =>
+                          _addCharge(preset: l10n.deliveryCharge),
+                    ),
+                    ActionChip(
+                      label: Text(l10n.packingCharge),
+                      avatar: const Icon(Icons.inventory_2_outlined, size: 16),
+                      onPressed: () =>
+                          _addCharge(preset: l10n.packingCharge),
+                    ),
+                  ],
+                ),
+                for (var i = 0; i < _charges.length; i++) ...[
+                  if (i == 0) const SizedBox(height: 4),
+                  const SizedBox(height: 10),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: TextFormField(
+                          controller: _charges[i].description,
+                          textCapitalization: TextCapitalization.sentences,
+                          decoration: InputDecoration(
+                            labelText: l10n.chargeDescription,
+                            filled: true,
+                            isDense: true,
+                          ),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        flex: 2,
+                        child: Builder(
+                          builder: (context) {
+                            final isRtl = Directionality.of(context) ==
+                                TextDirection.rtl;
+                            final affix = AmountFormatter.currencyAffix(
+                              ref.watch(currencySymbolProvider),
+                              isRtl: isRtl,
+                            );
+                            return LtrNumberField(
+                              controller: _charges[i].amount,
+                              decoration: InputDecoration(
+                                labelText: l10n.amount,
+                                prefixText: affix.prefixText,
+                                suffixText: affix.suffixText,
+                                filled: true,
+                                isDense: true,
+                              ),
+                              onChanged: (_) => setState(() {}),
+                            );
+                          },
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => setState(
+                          () => _charges.removeAt(i).dispose(),
+                        ),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+            FormSectionCard(
               title: l10n.sectionSummary,
               icon: Icons.receipt_long_outlined,
               accentColor: _color,
@@ -792,6 +1055,27 @@ class _AddOrderScreenState extends ConsumerState<AddOrderScreen> {
                     value: -_discountTotal,
                     ref: ref,
                   ),
+                _SummaryRow(
+                  label: l10n.taxableAmount,
+                  value: _itemsNet,
+                  ref: ref,
+                  muted: true,
+                ),
+                _TaxSummaryRow(
+                  label: l10n.salesTax,
+                  amount: _taxAmount,
+                  ratePercent: _taxRate,
+                  ref: ref,
+                  onEdit: _editSalesTaxRate,
+                ),
+                for (final charge in _charges)
+                  if (charge.description.text.trim().isNotEmpty &&
+                      charge.amountValue > 0)
+                    _SummaryRow(
+                      label: charge.description.text.trim(),
+                      value: charge.amountValue,
+                      ref: ref,
+                    ),
                 const Divider(height: 8),
                 _SummaryRow(
                   label: l10n.totalAmount,
@@ -1007,12 +1291,45 @@ class _OrderLineCard extends ConsumerWidget {
     final muted = theme.colorScheme.onSurfaceVariant;
     final showRefresh =
         showSalePricing && onRefreshFromCatalog != null;
+    final stockShort = isSale && line.isStockShort;
+    final stockWarnColor = AppColors.warning;
+    final borderColor = stockShort
+        ? stockWarnColor.withValues(alpha: 0.45)
+        : color.withValues(alpha: 0.2);
+    final fillColor = stockShort
+        ? stockWarnColor.withValues(alpha: 0.1)
+        : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35);
 
     final metaParts = <String>[
       if (category != null) category!.name,
       if (line.sellingProductUuid != null) l10n.sellingProductOffer,
       if (!showSalePricing) amountLabel,
     ];
+
+    final available = line.availableQuantity;
+    final stockWarning = (stockShort && available != null)
+        ? Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              children: [
+                Icon(Icons.warning_amber_rounded,
+                    size: 16, color: stockWarnColor),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    l10n.orderLineStockShort(
+                      AmountFormatter.formatQuantity(available),
+                    ),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: stockWarnColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+        : null;
 
     return Stack(
       clipBehavior: Clip.none,
@@ -1026,10 +1343,9 @@ class _OrderLineCard extends ConsumerWidget {
             12,
           ),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.35),
+            color: fillColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withValues(alpha: 0.2)),
+            border: Border.all(color: borderColor),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1275,6 +1591,7 @@ class _OrderLineCard extends ConsumerWidget {
                   onChanged: (_) => onChanged(),
                 ),
               ],
+              if (stockWarning != null) stockWarning,
             ],
           ),
         ),
@@ -1352,6 +1669,7 @@ class _SummaryRow extends StatelessWidget {
   final WidgetRef ref;
   final Color? color;
   final bool bold;
+  final bool muted;
 
   const _SummaryRow({
     required this.label,
@@ -1359,19 +1677,95 @@ class _SummaryRow extends StatelessWidget {
     required this.ref,
     this.color,
     this.bold = false,
+    this.muted = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.bodyLarge?.copyWith(
-          color: color,
-          fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-        );
+    final theme = Theme.of(context);
+    final style = (muted
+            ? theme.textTheme.bodyMedium
+            : theme.textTheme.bodyLarge)
+        ?.copyWith(
+      color: color ??
+          (muted ? theme.colorScheme.onSurfaceVariant : null),
+      fontWeight: bold
+          ? FontWeight.w700
+          : (muted ? FontWeight.w500 : FontWeight.w500),
+    );
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: style),
         Text(formatOrderAmount(ref, value), style: style),
+      ],
+    );
+  }
+}
+
+class _TaxSummaryRow extends StatelessWidget {
+  final String label;
+  final double amount;
+  final double ratePercent;
+  final WidgetRef ref;
+  final VoidCallback onEdit;
+
+  const _TaxSummaryRow({
+    required this.label,
+    required this.amount,
+    required this.ratePercent,
+    required this.ref,
+    required this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final style = theme.textTheme.bodyLarge?.copyWith(
+      fontWeight: FontWeight.w500,
+    );
+    final rateLabel = ratePercent > 0
+        ? '${AmountFormatter.formatQuantity(ratePercent)}%'
+        : '0%';
+
+    return Row(
+      children: [
+        Expanded(
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  label,
+                  style: style,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              IconButton(
+                onPressed: onEdit,
+                tooltip: AppLocalizations.of(context)!.editSalesTax,
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                icon: Icon(Icons.edit_outlined, size: 18, color: muted),
+              ),
+            ],
+          ),
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              rateLabel,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: muted,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(formatOrderAmount(ref, amount), style: style),
+          ],
+        ),
       ],
     );
   }

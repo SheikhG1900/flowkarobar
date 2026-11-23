@@ -30,10 +30,106 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orderItems => 'Order Items';
 
   @override
+  String get orderCharges => 'Order Charges';
+
+  @override
+  String get salesTax => 'Sales tax';
+
+  @override
+  String get salesTaxPercent => 'Sales tax %';
+
+  @override
+  String get salesTaxOnItemsHint => 'Applied to items total after discount';
+
+  @override
+  String get editSalesTax => 'Edit sales tax';
+
+  @override
+  String get deliveryCharge => 'Delivery';
+
+  @override
+  String get packingCharge => 'Packing';
+
+  @override
+  String get goodsDeliveries => 'Goods Deliveries';
+
+  @override
+  String get goodsDeliveryLines => 'Delivery Lines';
+
+  @override
   String get goodsReceipts => 'Goods Receipts';
 
   @override
   String get goodsReceiptLines => 'Goods Receipt Lines';
+
+  @override
+  String get partiallyDelivered => 'Partially delivered';
+
+  @override
+  String get deliverShipment => 'Deliver items';
+
+  @override
+  String get qtyToDeliver => 'Deliver qty';
+
+  @override
+  String get fillOpenQuantity => 'All open';
+
+  @override
+  String deliveredQtyProgress(String delivered, String ordered) {
+    return '$delivered / $ordered delivered';
+  }
+
+  @override
+  String receivedQtyProgress(String received, String ordered) {
+    return '$received / $ordered received';
+  }
+
+  @override
+  String get qtyToReceive => 'Receive qty';
+
+  @override
+  String get relatedCosts => 'Related costs';
+
+  @override
+  String get addRelatedCost => 'Add cost';
+
+  @override
+  String get noRelatedCosts => 'No related costs yet';
+
+  @override
+  String get relatedCostHint =>
+      'Your expenses for this order (e.g. courier). Does not change customer balance.';
+
+  @override
+  String get costRecorded => 'Cost recorded';
+
+  @override
+  String get deleteRelatedCost => 'Delete cost';
+
+  @override
+  String get deleteRelatedCostConfirm => 'Remove this cost from the order?';
+
+  @override
+  String orderLineStockShort(String available) {
+    return 'Only $available available in stock';
+  }
+
+  @override
+  String get operatingDefaults => 'Operating defaults';
+
+  @override
+  String get operatingDefaultsHint =>
+      'Defaults used when creating new sales and other day-to-day operations.';
+
+  @override
+  String get defaultSalesTaxPercent => 'Default sales tax %';
+
+  @override
+  String get defaultSalesTaxPercentHint =>
+      'Pre-fills tax on new sales. Applied to items total after discount.';
+
+  @override
+  String get operatingDefaultsSaved => 'Operating defaults saved';
 
   @override
   String get orderReturnItems => 'Return Items';
@@ -614,6 +710,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subtotal => 'Subtotal';
+
+  @override
+  String get taxableAmount => 'Taxable amount';
 
   @override
   String get paymentNow => 'Payment Now';

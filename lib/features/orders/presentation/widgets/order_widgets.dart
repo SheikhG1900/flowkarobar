@@ -37,6 +37,7 @@ Color deliveryStatusColor(String status) {
       return AppColors.success;
     case 'CANCELLED':
       return AppColors.error;
+    case 'PARTIALLY_DELIVERED':
     case 'SHIPPED':
       return AppColors.info;
     default:
@@ -59,8 +60,10 @@ String deliveryStatusLabel(AppLocalizations l10n, String status) {
   switch (status) {
     case 'DELIVERED':
       return l10n.delivered;
+    case 'PARTIALLY_DELIVERED':
+      return l10n.partiallyDelivered;
     case 'SHIPPED':
-      return l10n.shipped;
+      return l10n.partiallyDelivered;
     case 'CANCELLED':
       return l10n.cancelled;
     default:

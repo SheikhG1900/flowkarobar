@@ -142,6 +142,60 @@ abstract class AppLocalizations {
   /// **'Order Items'**
   String get orderItems;
 
+  /// No description provided for @orderCharges.
+  ///
+  /// In en, this message translates to:
+  /// **'Order Charges'**
+  String get orderCharges;
+
+  /// No description provided for @salesTax.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales tax'**
+  String get salesTax;
+
+  /// No description provided for @salesTaxPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sales tax %'**
+  String get salesTaxPercent;
+
+  /// No description provided for @salesTaxOnItemsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Applied to items total after discount'**
+  String get salesTaxOnItemsHint;
+
+  /// No description provided for @editSalesTax.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit sales tax'**
+  String get editSalesTax;
+
+  /// No description provided for @deliveryCharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery'**
+  String get deliveryCharge;
+
+  /// No description provided for @packingCharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Packing'**
+  String get packingCharge;
+
+  /// No description provided for @goodsDeliveries.
+  ///
+  /// In en, this message translates to:
+  /// **'Goods Deliveries'**
+  String get goodsDeliveries;
+
+  /// No description provided for @goodsDeliveryLines.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery Lines'**
+  String get goodsDeliveryLines;
+
   /// No description provided for @goodsReceipts.
   ///
   /// In en, this message translates to:
@@ -153,6 +207,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Goods Receipt Lines'**
   String get goodsReceiptLines;
+
+  /// No description provided for @partiallyDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Partially delivered'**
+  String get partiallyDelivered;
+
+  /// No description provided for @deliverShipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver items'**
+  String get deliverShipment;
+
+  /// No description provided for @qtyToDeliver.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver qty'**
+  String get qtyToDeliver;
+
+  /// No description provided for @fillOpenQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'All open'**
+  String get fillOpenQuantity;
+
+  /// No description provided for @deliveredQtyProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{delivered} / {ordered} delivered'**
+  String deliveredQtyProgress(String delivered, String ordered);
+
+  /// No description provided for @receivedQtyProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{received} / {ordered} received'**
+  String receivedQtyProgress(String received, String ordered);
+
+  /// No description provided for @qtyToReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'Receive qty'**
+  String get qtyToReceive;
+
+  /// No description provided for @relatedCosts.
+  ///
+  /// In en, this message translates to:
+  /// **'Related costs'**
+  String get relatedCosts;
+
+  /// No description provided for @addRelatedCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Add cost'**
+  String get addRelatedCost;
+
+  /// No description provided for @noRelatedCosts.
+  ///
+  /// In en, this message translates to:
+  /// **'No related costs yet'**
+  String get noRelatedCosts;
+
+  /// No description provided for @relatedCostHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Your expenses for this order (e.g. courier). Does not change customer balance.'**
+  String get relatedCostHint;
+
+  /// No description provided for @costRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Cost recorded'**
+  String get costRecorded;
+
+  /// No description provided for @deleteRelatedCost.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete cost'**
+  String get deleteRelatedCost;
+
+  /// No description provided for @deleteRelatedCostConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this cost from the order?'**
+  String get deleteRelatedCostConfirm;
+
+  /// No description provided for @orderLineStockShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Only {available} available in stock'**
+  String orderLineStockShort(String available);
+
+  /// No description provided for @operatingDefaults.
+  ///
+  /// In en, this message translates to:
+  /// **'Operating defaults'**
+  String get operatingDefaults;
+
+  /// No description provided for @operatingDefaultsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Defaults used when creating new sales and other day-to-day operations.'**
+  String get operatingDefaultsHint;
+
+  /// No description provided for @defaultSalesTaxPercent.
+  ///
+  /// In en, this message translates to:
+  /// **'Default sales tax %'**
+  String get defaultSalesTaxPercent;
+
+  /// No description provided for @defaultSalesTaxPercentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pre-fills tax on new sales. Applied to items total after discount.'**
+  String get defaultSalesTaxPercentHint;
+
+  /// No description provided for @operatingDefaultsSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Operating defaults saved'**
+  String get operatingDefaultsSaved;
 
   /// No description provided for @orderReturnItems.
   ///
@@ -1251,6 +1425,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Subtotal'**
   String get subtotal;
+
+  /// No description provided for @taxableAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Taxable amount'**
+  String get taxableAmount;
 
   /// No description provided for @paymentNow.
   ///

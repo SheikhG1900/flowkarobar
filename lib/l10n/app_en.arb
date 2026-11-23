@@ -6,8 +6,54 @@
   "batches": "Batches",
   "batch": "Batch",
   "orderItems": "Order Items",
+  "orderCharges": "Order Charges",
+  "salesTax": "Sales tax",
+  "salesTaxPercent": "Sales tax %",
+  "salesTaxOnItemsHint": "Applied to items total after discount",
+  "editSalesTax": "Edit sales tax",
+  "deliveryCharge": "Delivery",
+  "packingCharge": "Packing",
+  "goodsDeliveries": "Goods Deliveries",
+  "goodsDeliveryLines": "Delivery Lines",
   "goodsReceipts": "Goods Receipts",
   "goodsReceiptLines": "Goods Receipt Lines",
+  "partiallyDelivered": "Partially delivered",
+  "deliverShipment": "Deliver items",
+  "qtyToDeliver": "Deliver qty",
+  "fillOpenQuantity": "All open",
+  "deliveredQtyProgress": "{delivered} / {ordered} delivered",
+  "@deliveredQtyProgress": {
+    "placeholders": {
+      "delivered": { "type": "String" },
+      "ordered": { "type": "String" }
+    }
+  },
+  "receivedQtyProgress": "{received} / {ordered} received",
+  "@receivedQtyProgress": {
+    "placeholders": {
+      "received": { "type": "String" },
+      "ordered": { "type": "String" }
+    }
+  },
+  "qtyToReceive": "Receive qty",
+  "relatedCosts": "Related costs",
+  "addRelatedCost": "Add cost",
+  "noRelatedCosts": "No related costs yet",
+  "relatedCostHint": "Your expenses for this order (e.g. courier). Does not change customer balance.",
+  "costRecorded": "Cost recorded",
+  "deleteRelatedCost": "Delete cost",
+  "deleteRelatedCostConfirm": "Remove this cost from the order?",
+  "orderLineStockShort": "Only {available} available in stock",
+  "@orderLineStockShort": {
+    "placeholders": {
+      "available": { "type": "String" }
+    }
+  },
+  "operatingDefaults": "Operating defaults",
+  "operatingDefaultsHint": "Defaults used when creating new sales and other day-to-day operations.",
+  "defaultSalesTaxPercent": "Default sales tax %",
+  "defaultSalesTaxPercentHint": "Pre-fills tax on new sales. Applied to items total after discount.",
+  "operatingDefaultsSaved": "Operating defaults saved",
   "orderReturnItems": "Return Items",
   "recipeInputs": "Recipe Inputs",
   "recipeOutputs": "Recipe Outputs",
@@ -230,6 +276,7 @@
   "quantity": "Quantity",
   "discount": "Discount",
   "subtotal": "Subtotal",
+  "taxableAmount": "Taxable amount",
   "paymentNow": "Payment Now",
   "balanceDue": "Balance Due",
   "showAllContacts": "Show all contacts",

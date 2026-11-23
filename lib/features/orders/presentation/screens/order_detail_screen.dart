@@ -14,6 +14,7 @@ import 'package:flowpaisa/features/catalog/presentation/providers/catalog_provid
 import 'package:flowpaisa/features/catalog/presentation/screens/add_selling_product_screen.dart';
 import 'package:flowpaisa/features/contacts/presentation/providers/contacts_provider.dart';
 import 'package:flowpaisa/features/contacts/presentation/screens/contact_details_screen.dart';
+import 'package:flowpaisa/features/inventory/data/inventory_repository.dart';
 import 'package:flowpaisa/features/inventory/presentation/providers/inventory_provider.dart';
 import 'package:flowpaisa/features/inventory/presentation/screens/product_details_screen.dart';
 import 'package:flowpaisa/features/orders/presentation/providers/orders_provider.dart';
@@ -45,6 +46,10 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
   void _refresh() {
     ref.invalidate(singleOrderProvider(widget.orderUuid));
     ref.invalidate(orderPaidAmountProvider(widget.orderUuid));
+    ref.invalidate(orderPaymentsStreamProvider(widget.orderUuid));
+    ref.invalidate(orderCostsStreamProvider(widget.orderUuid));
+    ref.invalidate(orderItemsStreamProvider(widget.orderUuid));
+    ref.invalidate(orderChargesStreamProvider(widget.orderUuid));
     ref.invalidate(saleOrderCatalogLineIssuesProvider(widget.orderUuid));
   }
 
@@ -326,17 +331,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
 
   Future<void> _markDelivered(Order order) async {
     final l10n = AppLocalizations.of(context)!;
-    var freight = 0.0;
-    var duty = 0.0;
-    if (order.orderType == orderTypePurchase) {
-      final landed = await showDialog<_LandedCostResult>(
-        context: context,
-        builder: (context) => const _LandedCostDialog(),
-      );
-      if (landed == null || !mounted) return;
-      freight = landed.freight;
-      duty = landed.duty;
-    } else if (order.orderType == orderTypeSale) {
+    final items =
+        await ref.read(orderItemsStreamProvider(order.uuid).future);
+    if (!mounted) return;
+
+    if (order.orderType == orderTypeSale) {
       final issues = await ref
           .read(catalogRepositoryProvider)
           .saleLineCatalogIssuesForOrder(order.uuid);
@@ -365,16 +364,111 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       }
     }
 
+    final fulfillable = order.orderType == orderTypeSale
+        ? await ref.read(orderItemFulfillableQtyProvider(order.uuid).future)
+        : const <String, double?>{};
+    if (!mounted) return;
+
+    final shipment = await showModalBottomSheet<_ShipmentQtyResult>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => _ShipmentQtySheet(
+        order: order,
+        items: items,
+        availableByItem: fulfillable,
+      ),
+    );
+    if (shipment == null || shipment.lines.isEmpty || !mounted) return;
+
     setState(() => _busy = true);
     try {
-      await ref.read(ordersRepositoryProvider).markDelivered(
-            order.uuid,
-            freightAmount: freight,
-            dutyAmount: duty,
-          );
+      final repo = ref.read(ordersRepositoryProvider);
+      if (order.orderType == orderTypePurchase) {
+        await repo.receivePurchaseShipment(
+          orderUuid: order.uuid,
+          lines: [
+            for (final line in shipment.lines)
+              ReceiveLineInput(
+                orderItemUuid: line.orderItemUuid,
+                quantity: line.quantity,
+              ),
+          ],
+          freightAmount: shipment.freight,
+          dutyAmount: shipment.duty,
+        );
+      } else {
+        await repo.deliverSaleShipment(
+          orderUuid: order.uuid,
+          lines: shipment.lines,
+        );
+      }
       _refresh();
       if (!mounted) return;
       ToastUtils.showSuccessToast(context, ref, l10n.orderMarkedDelivered);
+    } catch (e) {
+      if (!mounted) return;
+      ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _recordRelatedCost(Order order) async {
+    final l10n = AppLocalizations.of(context)!;
+    final result = await showDialog<_CostResult>(
+      context: context,
+      builder: (context) => const _CostDialog(),
+    );
+    if (result == null || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      await ref.read(ordersRepositoryProvider).recordOrderCost(
+            orderUuid: order.uuid,
+            amount: result.amount,
+            accountUuid: result.accountUuid,
+            description: result.description,
+            date: result.date,
+          );
+      _refresh();
+      if (!mounted) return;
+      ToastUtils.showSuccessToast(context, ref, l10n.costRecorded);
+    } catch (e) {
+      if (!mounted) return;
+      ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _deleteRelatedCost(Order order, Transaction cost) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.deleteRelatedCost),
+        content: Text(l10n.deleteRelatedCostConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.delete),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      await ref.read(ordersRepositoryProvider).deleteOrderCost(
+            orderUuid: order.uuid,
+            costUuid: cost.uuid,
+          );
+      _refresh();
     } catch (e) {
       if (!mounted) return;
       ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
@@ -453,7 +547,14 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     final contact =
         contacts.where((c) => c.uuid == order.contactUuid).firstOrNull;
     final itemsAsync = ref.watch(orderItemsStreamProvider(order.uuid));
+    final chargesAsync = ref.watch(orderChargesStreamProvider(order.uuid));
     final paymentsAsync = ref.watch(orderPaymentsStreamProvider(order.uuid));
+    final costsAsync = ref.watch(orderCostsStreamProvider(order.uuid));
+    final fulfillableAsync = isSale
+        ? ref.watch(orderItemFulfillableQtyProvider(order.uuid))
+        : null;
+    final fulfillableByItem =
+        fulfillableAsync?.asData?.value ?? const <String, double?>{};
     final accounts =
         ref.watch(accountsStreamProvider).value ?? const <Account>[];
     final accountsByUuid = {for (final a in accounts) a.uuid: a};
@@ -590,6 +691,8 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                         catalogIssue:
                             catalogIssues?[items[i].uuid] ??
                                 SaleCatalogLineIssue.none,
+                        availableQuantity:
+                            fulfillableByItem[items[i].uuid],
                       ),
                     ],
                   ],
@@ -610,6 +713,32 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 value: -order.discountAmount,
                 ref: ref,
               ),
+            _AmountRow(
+              label: l10n.taxableAmount,
+              value: (order.subtotal - order.discountAmount)
+                  .clamp(0, double.infinity)
+                  .toDouble(),
+              ref: ref,
+              muted: true,
+            ),
+            if (order.taxAmount > 0 || order.taxRate > 0)
+              _AmountRow(
+                label: l10n.salesTax,
+                value: order.taxAmount,
+                ref: ref,
+                valueSuffix: order.taxRate > 0
+                    ? '${AmountFormatter.formatQuantity(order.taxRate)}%'
+                    : null,
+              ),
+            ...?(chargesAsync.asData?.value
+                .where((c) => c.amount > 0)
+                .map(
+                  (c) => _AmountRow(
+                    label: c.description,
+                    value: c.amount,
+                    ref: ref,
+                  ),
+                )),
             const Divider(height: 8),
             _AmountRow(
               label: l10n.totalAmount,
@@ -687,6 +816,62 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           ],
         ),
         FormSectionCard(
+          title: l10n.relatedCosts,
+          icon: Icons.outbound_outlined,
+          accentColor: AppColors.expenseColor,
+          trailing: TextButton.icon(
+            onPressed: _busy ? null : () => _recordRelatedCost(order),
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(l10n.addRelatedCost),
+          ),
+          children: [
+            Text(
+              l10n.relatedCostHint,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 8),
+            costsAsync.when(
+              loading: () => const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (e, _) => Text(l10n.errorOccurred(e.toString())),
+              data: (costs) {
+                if (costs.isEmpty) {
+                  return Text(
+                    l10n.noRelatedCosts,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  );
+                }
+                return Column(
+                  children: [
+                    for (var i = 0; i < costs.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 8),
+                      _PaymentTile(
+                        payment: costs[i],
+                        account: costs[i].accountUuid == null
+                            ? null
+                            : accountsByUuid[costs[i].accountUuid!],
+                        accent: AppColors.expenseColor,
+                        isSale: false,
+                        dateFormat: dateFormat,
+                        ref: ref,
+                        onTap: _busy
+                            ? null
+                            : () => _deleteRelatedCost(order, costs[i]),
+                      ),
+                    ],
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+        FormSectionCard(
           title: l10n.sectionActions,
           icon: Icons.bolt_outlined,
           accentColor: typeColor,
@@ -712,7 +897,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                 ),
                 onPressed: _busy ? null : () => _markDelivered(order),
                 icon: const Icon(Icons.local_shipping_outlined),
-                label: Text(l10n.markDelivered),
+                label: Text(
+                  isSale ? l10n.deliverShipment : l10n.receiveShipment,
+                ),
               ),
             OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
@@ -943,6 +1130,8 @@ class _ItemTile extends StatelessWidget {
   final Color accent;
   final bool isSale;
   final SaleCatalogLineIssue catalogIssue;
+  /// Captured once when detail loads; compared to open qty (not recalculated).
+  final double? availableQuantity;
 
   const _ItemTile({
     required this.item,
@@ -950,6 +1139,7 @@ class _ItemTile extends StatelessWidget {
     required this.accent,
     required this.isSale,
     this.catalogIssue = SaleCatalogLineIssue.none,
+    this.availableQuantity,
   });
 
   String? _issueLabel(AppLocalizations l10n) {
@@ -971,7 +1161,16 @@ class _ItemTile extends StatelessWidget {
     final theme = Theme.of(context);
     final muted = theme.colorScheme.onSurfaceVariant;
     final issueLabel = _issueLabel(l10n);
-    final warn = catalogIssue.isProblem;
+    final catalogWarn = catalogIssue.isProblem;
+    final openQty = isSale
+        ? (item.quantity - item.deliveredQuantity)
+            .clamp(0, double.infinity)
+            .toDouble()
+        : 0.0;
+    final stockShort = isSale &&
+        availableQuantity != null &&
+        openQty > availableQuantity! + 1e-9;
+    final warn = catalogWarn || stockShort;
     final catalogLabel = item.catalogNameSnapshot?.trim();
     final listUnit = item.unitPrice;
     final discountedUnit = orderItemDiscountedUnitPrice(
@@ -1058,10 +1257,13 @@ class _ItemTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
+                  Flexible(
                     child: Text(
                       item.productNameSnapshot,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
@@ -1107,6 +1309,34 @@ class _ItemTile extends StatelessWidget {
                           ),
                         ),
                     ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 2),
+              Text(
+                isSale
+                    ? l10n.deliveredQtyProgress(
+                        AmountFormatter.formatQuantity(item.deliveredQuantity),
+                        AmountFormatter.formatQuantity(item.quantity),
+                      )
+                    : l10n.receivedQtyProgress(
+                        AmountFormatter.formatQuantity(item.receivedQuantity),
+                        AmountFormatter.formatQuantity(item.quantity),
+                      ),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: muted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (stockShort && availableQuantity != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  l10n.orderLineStockShort(
+                    AmountFormatter.formatQuantity(availableQuantity!),
+                  ),
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppColors.warning,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ],
@@ -1317,6 +1547,8 @@ class _AmountRow extends StatelessWidget {
   final WidgetRef ref;
   final Color? color;
   final bool bold;
+  final bool muted;
+  final String? valueSuffix;
 
   const _AmountRow({
     required this.label,
@@ -1324,21 +1556,44 @@ class _AmountRow extends StatelessWidget {
     required this.ref,
     this.color,
     this.bold = false,
+    this.muted = false,
+    this.valueSuffix,
   });
 
   @override
   Widget build(BuildContext context) {
-    final style = Theme.of(context).textTheme.bodyLarge?.copyWith(
-          color: color,
-          fontWeight: bold ? FontWeight.w700 : null,
-        );
+    final theme = Theme.of(context);
+    final style = (muted
+            ? theme.textTheme.bodyMedium
+            : theme.textTheme.bodyLarge)
+        ?.copyWith(
+      color: color ??
+          (muted ? theme.colorScheme.onSurfaceVariant : null),
+      fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+    );
+    final suffix = valueSuffix?.trim();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: style),
-          Text(formatOrderAmount(ref, value), style: style),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (suffix != null && suffix.isNotEmpty) ...[
+                Text(
+                  suffix,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(width: 6),
+              ],
+              Text(formatOrderAmount(ref, value), style: style),
+            ],
+          ),
         ],
       ),
     );
@@ -1638,37 +1893,106 @@ class _PaymentDialogState extends ConsumerState<_PaymentDialog> {
   }
 }
 
-class _LandedCostResult {
+class _ShipmentQtyResult {
+  final List<({String orderItemUuid, double quantity})> lines;
   final double freight;
   final double duty;
 
-  const _LandedCostResult(this.freight, this.duty);
+  const _ShipmentQtyResult({
+    required this.lines,
+    this.freight = 0,
+    this.duty = 0,
+  });
 }
 
-class _LandedCostDialog extends ConsumerStatefulWidget {
-  const _LandedCostDialog();
+class _ShipmentQtySheet extends ConsumerStatefulWidget {
+  final Order order;
+  final List<OrderItem> items;
+  /// Resolved once when the sheet opens; compared to deliver qty edits.
+  final Map<String, double?> availableByItem;
+
+  const _ShipmentQtySheet({
+    required this.order,
+    required this.items,
+    this.availableByItem = const {},
+  });
 
   @override
-  ConsumerState<_LandedCostDialog> createState() => _LandedCostDialogState();
+  ConsumerState<_ShipmentQtySheet> createState() => _ShipmentQtySheetState();
 }
 
-class _LandedCostDialogState extends ConsumerState<_LandedCostDialog> {
+class _ShipmentQtySheetState extends ConsumerState<_ShipmentQtySheet> {
+  late final Map<String, TextEditingController> _qtyByItem;
   final _freight = TextEditingController();
   final _duty = TextEditingController();
 
+  bool get _isSale => widget.order.orderType == orderTypeSale;
+
+  @override
+  void initState() {
+    super.initState();
+    _qtyByItem = {};
+    for (final item in widget.items) {
+      final done =
+          _isSale ? item.deliveredQuantity : item.receivedQuantity;
+      final open =
+          (item.quantity - done).clamp(0, double.infinity).toDouble();
+      if (open <= 1e-9) continue;
+      // Purchases skip non-product lines in receive; sales include all open.
+      if (!_isSale &&
+          (item.productUuid == null || item.productUuid!.trim().isEmpty)) {
+        continue;
+      }
+      _qtyByItem[item.uuid] = TextEditingController(
+        text: AmountFormatter.formatQuantity(open),
+      );
+    }
+  }
+
   @override
   void dispose() {
+    for (final c in _qtyByItem.values) {
+      c.dispose();
+    }
     _freight.dispose();
     _duty.dispose();
     super.dispose();
   }
 
+  double _openQty(OrderItem item) {
+    final done = _isSale ? item.deliveredQuantity : item.receivedQuantity;
+    return (item.quantity - done).clamp(0, double.infinity).toDouble();
+  }
+
+  void _setQty(String itemUuid, double qty, double open) {
+    final clamped = qty.clamp(0, open).toDouble();
+    _qtyByItem[itemUuid]?.text = clamped <= 0
+        ? ''
+        : AmountFormatter.formatQuantity(clamped);
+    setState(() {});
+  }
+
+  void _nudgeQty(String itemUuid, double delta, double open) {
+    final current =
+        double.tryParse(_qtyByItem[itemUuid]?.text.trim() ?? '') ?? 0;
+    _setQty(itemUuid, current + delta, open);
+  }
+
   void _submit() {
+    final lines = <({String orderItemUuid, double quantity})>[];
+    for (final entry in _qtyByItem.entries) {
+      final qty = double.tryParse(entry.value.text.trim()) ?? 0;
+      if (qty > 1e-9) {
+        lines.add((orderItemUuid: entry.key, quantity: qty));
+      }
+    }
+    if (lines.isEmpty) return;
     Navigator.pop(
       context,
-      _LandedCostResult(
-        double.tryParse(_freight.text.trim()) ?? 0,
-        double.tryParse(_duty.text.trim()) ?? 0,
+      _ShipmentQtyResult(
+        lines: lines,
+        freight: double.tryParse(_freight.text.trim()) ?? 0,
+        duty: double.tryParse(_duty.text.trim()) ?? 0,
       ),
     );
   }
@@ -1676,55 +2000,446 @@ class _LandedCostDialogState extends ConsumerState<_LandedCostDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
     final isRtl = Directionality.of(context) == TextDirection.rtl;
     final affix = AmountFormatter.currencyAffix(
       ref.watch(currencySymbolProvider),
       isRtl: isRtl,
     );
+    final bottom = MediaQuery.viewInsetsOf(context).bottom;
+    final byId = {for (final i in widget.items) i.uuid: i};
+
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottom),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _isSale ? l10n.deliverShipment : l10n.receiveShipment,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (_qtyByItem.isEmpty)
+                Text(
+                  l10n.deliveryPending,
+                  style: theme.textTheme.bodyMedium,
+                )
+              else
+                for (final entry in _qtyByItem.entries) ...[
+                  Builder(
+                    builder: (context) {
+                      final item = byId[entry.key]!;
+                      final done = _isSale
+                          ? item.deliveredQuantity
+                          : item.receivedQuantity;
+                      final open = _openQty(item);
+                      final qty =
+                          double.tryParse(entry.value.text.trim()) ?? 0;
+                      final available = widget.availableByItem[item.uuid];
+                      final stockShort = _isSale &&
+                          available != null &&
+                          qty > available + 1e-9;
+                      final accent = orderTypeColor(widget.order.orderType);
+                      final outlineColor = stockShort
+                          ? AppColors.warning.withValues(alpha: 0.45)
+                          : accent.withValues(alpha: 0.22);
+                      final fillColor = stockShort
+                          ? AppColors.warning.withValues(alpha: 0.1)
+                          : theme.colorScheme.surfaceContainerHighest
+                              .withValues(alpha: 0.4);
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+                          decoration: BoxDecoration(
+                            color: fillColor,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: outlineColor),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item.productNameSnapshot,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: theme.textTheme.titleSmall
+                                              ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          _isSale
+                                              ? l10n.deliveredQtyProgress(
+                                                  AmountFormatter
+                                                      .formatQuantity(done),
+                                                  AmountFormatter
+                                                      .formatQuantity(
+                                                          item.quantity),
+                                                )
+                                              : l10n.receivedQtyProgress(
+                                                  AmountFormatter
+                                                      .formatQuantity(done),
+                                                  AmountFormatter
+                                                      .formatQuantity(
+                                                          item.quantity),
+                                                ),
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                            color: muted,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.surface
+                                          .withValues(alpha: 0.85),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: theme.dividerColor
+                                            .withValues(alpha: 0.4),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          onPressed: qty <= 0
+                                              ? null
+                                              : () => _nudgeQty(
+                                                    item.uuid,
+                                                    -1,
+                                                    open,
+                                                  ),
+                                          visualDensity: VisualDensity.compact,
+                                          constraints: const BoxConstraints(
+                                            minWidth: 36,
+                                            minHeight: 40,
+                                          ),
+                                          icon: const Icon(Icons.remove,
+                                              size: 18),
+                                        ),
+                                        SizedBox(
+                                          width: 56,
+                                          child: LtrNumberField(
+                                            controller: entry.value,
+                                            textAlign: TextAlign.center,
+                                            decoration: InputDecoration(
+                                              isDense: true,
+                                              border: InputBorder.none,
+                                              enabledBorder: InputBorder.none,
+                                              focusedBorder: InputBorder.none,
+                                              filled: false,
+                                              contentPadding:
+                                                  const EdgeInsets.symmetric(
+                                                vertical: 8,
+                                              ),
+                                              hintText: '0',
+                                            ),
+                                            onChanged: (value) {
+                                              final parsed = double.tryParse(
+                                                  value.trim());
+                                              if (parsed == null) {
+                                                setState(() {});
+                                                return;
+                                              }
+                                              if (parsed > open + 1e-9) {
+                                                _setQty(item.uuid, open, open);
+                                              } else {
+                                                setState(() {});
+                                              }
+                                            },
+                                          ),
+                                        ),
+                                        IconButton(
+                                          onPressed: qty + 1e-9 >= open
+                                              ? null
+                                              : () => _nudgeQty(
+                                                    item.uuid,
+                                                    1,
+                                                    open,
+                                                  ),
+                                          visualDensity: VisualDensity.compact,
+                                          constraints: const BoxConstraints(
+                                            minWidth: 36,
+                                            minHeight: 40,
+                                          ),
+                                          icon:
+                                              const Icon(Icons.add, size: 18),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Text(
+                                    '${AmountFormatter.formatQuantity(open)} ${item.unit}',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: muted,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  TextButton(
+                                    onPressed: qty + 1e-9 >= open
+                                        ? null
+                                        : () =>
+                                            _setQty(item.uuid, open, open),
+                                    style: TextButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                      ),
+                                      minimumSize: Size.zero,
+                                      tapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                    child: Text(l10n.fillOpenQuantity),
+                                  ),
+                                ],
+                              ),
+                              if (stockShort)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Text(
+                                    l10n.orderLineStockShort(
+                                      AmountFormatter.formatQuantity(
+                                          available!),
+                                    ),
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: AppColors.warning,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              if (!_isSale && _qtyByItem.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  l10n.landedCostHint,
+                  style: theme.textTheme.bodySmall,
+                ),
+                const SizedBox(height: 8),
+                LtrNumberField(
+                  controller: _freight,
+                  decoration: InputDecoration(
+                    labelText: l10n.inboundFreight,
+                    prefixText: affix.prefixText,
+                    suffixText: affix.suffixText,
+                    filled: true,
+                    isDense: true,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                LtrNumberField(
+                  controller: _duty,
+                  decoration: InputDecoration(
+                    labelText: l10n.importDuty,
+                    prefixText: affix.prefixText,
+                    suffixText: affix.suffixText,
+                    filled: true,
+                    isDense: true,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(l10n.cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _qtyByItem.isEmpty ? null : _submit,
+                      child: Text(
+                        _isSale
+                            ? l10n.deliverShipment
+                            : l10n.receiveShipment,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CostResult {
+  final double amount;
+  final String accountUuid;
+  final DateTime date;
+  final String? description;
+
+  const _CostResult(
+    this.amount,
+    this.accountUuid,
+    this.date,
+    this.description,
+  );
+}
+
+class _CostDialog extends ConsumerStatefulWidget {
+  const _CostDialog();
+
+  @override
+  ConsumerState<_CostDialog> createState() => _CostDialogState();
+}
+
+class _CostDialogState extends ConsumerState<_CostDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _amountController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  String? _accountUuid;
+  DateTime _date = DateTime.now();
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _date = picked);
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    if (_accountUuid == null) return;
+    final desc = _descriptionController.text.trim();
+    Navigator.pop(
+      context,
+      _CostResult(
+        double.parse(_amountController.text.trim()),
+        _accountUuid!,
+        _date,
+        desc.isEmpty ? null : desc,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final accounts =
+        ref.watch(accountsStreamProvider).value ?? const <Account>[];
+    final dateFormat = ref.watch(userProfileProvider).dateFormat;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    final affix = AmountFormatter.currencyAffix(
+      ref.watch(currencySymbolProvider),
+      isRtl: isRtl,
+    );
+
     return AlertDialog(
-      title: Text(l10n.receiveShipment),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            l10n.landedCostHint,
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _freight,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+      title: Text(l10n.addRelatedCost),
+      content: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.relatedCostHint,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 12),
+              LtrNumberField(
+                controller: _amountController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: l10n.amount,
+                  prefixText: affix.prefixText,
+                  suffixText: affix.suffixText,
+                ),
+                validator: (value) {
+                  final number = double.tryParse(value?.trim() ?? '');
+                  if (number == null || number <= 0) {
+                    return l10n.amountGreaterThanZero;
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _descriptionController,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: InputDecoration(
+                  labelText: l10n.chargeDescription,
+                ),
+              ),
+              const SizedBox(height: 12),
+              AccountPickerField(
+                selectedAccount: accounts
+                    .where((a) => a.uuid == _accountUuid)
+                    .firstOrNull,
+                label: l10n.selectAccount,
+                onChanged: (account) =>
+                    setState(() => _accountUuid = account?.uuid),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.event_outlined),
+                title: Text(l10n.date),
+                subtitle: Text(
+                  AppDateFormatter.formatDate(_date, pattern: dateFormat),
+                ),
+                onTap: _pickDate,
+              ),
             ],
-            decoration: InputDecoration(
-              labelText: l10n.inboundFreight,
-              prefixText: affix.prefixText,
-              suffixText: affix.suffixText,
-            ),
           ),
-          const SizedBox(height: 8),
-          TextField(
-            controller: _duty,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-            ],
-            decoration: InputDecoration(
-              labelText: l10n.importDuty,
-              prefixText: affix.prefixText,
-              suffixText: affix.suffixText,
-            ),
-          ),
-        ],
+        ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: Text(l10n.cancel),
         ),
-        FilledButton(onPressed: _submit, child: Text(l10n.markDelivered)),
+        FilledButton(onPressed: _submit, child: Text(l10n.save)),
       ],
     );
   }

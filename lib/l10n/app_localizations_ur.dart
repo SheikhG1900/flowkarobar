@@ -30,10 +30,106 @@ class AppLocalizationsUr extends AppLocalizations {
   String get orderItems => 'آرڈر آئٹمز';
 
   @override
+  String get orderCharges => 'آرڈر چارجز';
+
+  @override
+  String get salesTax => 'سیلز ٹیکس';
+
+  @override
+  String get salesTaxPercent => 'سیلز ٹیکس %';
+
+  @override
+  String get salesTaxOnItemsHint => 'رعایت کے بعد آئٹمز کے کل پر لاگو';
+
+  @override
+  String get editSalesTax => 'سیلز ٹیکس ترمیم کریں';
+
+  @override
+  String get deliveryCharge => 'ڈیلیوری';
+
+  @override
+  String get packingCharge => 'پیکنگ';
+
+  @override
+  String get goodsDeliveries => 'مال ڈیلیوری';
+
+  @override
+  String get goodsDeliveryLines => 'ڈیلیوری لائنز';
+
+  @override
   String get goodsReceipts => 'مال وصولی';
 
   @override
   String get goodsReceiptLines => 'مال وصولی لائنز';
+
+  @override
+  String get partiallyDelivered => 'جزوی ڈیلیوری';
+
+  @override
+  String get deliverShipment => 'آئٹمز ڈیلیور کریں';
+
+  @override
+  String get qtyToDeliver => 'ڈیلیور مقدار';
+
+  @override
+  String get fillOpenQuantity => 'تمام باقی';
+
+  @override
+  String deliveredQtyProgress(String delivered, String ordered) {
+    return '$delivered / $ordered ڈیلیور';
+  }
+
+  @override
+  String receivedQtyProgress(String received, String ordered) {
+    return '$received / $ordered موصول';
+  }
+
+  @override
+  String get qtyToReceive => 'وصول مقدار';
+
+  @override
+  String get relatedCosts => 'متعلقہ اخراجات';
+
+  @override
+  String get addRelatedCost => 'اخراج شامل کریں';
+
+  @override
+  String get noRelatedCosts => 'ابھی کوئی متعلقہ اخراج نہیں';
+
+  @override
+  String get relatedCostHint =>
+      'اس آرڈر کا آپ کا خرچ (مثلاً کورئیر)۔ گاہک بیلنس نہیں بدلتا۔';
+
+  @override
+  String get costRecorded => 'اخراج درج ہو گیا';
+
+  @override
+  String get deleteRelatedCost => 'اخراج حذف کریں';
+
+  @override
+  String get deleteRelatedCostConfirm => 'اس اخراج کو آرڈر سے ہٹائیں؟';
+
+  @override
+  String orderLineStockShort(String available) {
+    return 'اسٹاک میں صرف $available دستیاب';
+  }
+
+  @override
+  String get operatingDefaults => 'آپریٹنگ ڈیفالٹس';
+
+  @override
+  String get operatingDefaultsHint =>
+      'نئی فروخت اور روزمرہ کاموں میں استعمال ہونے والے ڈیفالٹ۔';
+
+  @override
+  String get defaultSalesTaxPercent => 'ڈیفالٹ سیلز ٹیکس %';
+
+  @override
+  String get defaultSalesTaxPercentHint =>
+      'نئی فروخت پر ٹیکس پہلے سے بھرتا ہے۔ رعایت کے بعد آئٹمز کل پر لاگو۔';
+
+  @override
+  String get operatingDefaultsSaved => 'آپریٹنگ ڈیفالٹس محفوظ ہو گئے';
 
   @override
   String get orderReturnItems => 'واپسی آئٹمز';
@@ -615,6 +711,9 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get subtotal => 'ذیلی کل';
+
+  @override
+  String get taxableAmount => 'قابل ٹیکس رقم';
 
   @override
   String get paymentNow => 'ابھی ادائیگی';

@@ -49,22 +49,109 @@ class OrdersRepository {
   }
 
   Future<double> getPaidAmountForOrder(String orderUuid) async {
+    final order = await getOrder(orderUuid);
+    if (order == null) return 0;
+    final paymentType = order.orderType == 'SALE' ? 'CASH_IN' : 'CASH_OUT';
     final sum = await (_db.selectOnly(_db.transactions)
           ..addColumns([_db.transactions.amount.sum()])
           ..where(_db.transactions.orderUuid.equals(orderUuid) &
+              _db.transactions.type.equals(paymentType) &
+              _db.transactions.isOrderCost.equals(false) &
               _db.transactions.isDeleted.equals(false)))
         .getSingle()
         .then((row) => row.read(_db.transactions.amount.sum()) ?? 0.0);
     return sum;
   }
 
-  /// Cash movements linked to this order (upfront + later collections/payments).
+  /// Customer/supplier payments linked to this order (excludes related costs).
   Stream<List<Transaction>> watchPaymentsForOrder(String orderUuid) {
+    return (_db.select(_db.orders)
+          ..where((o) => o.uuid.equals(orderUuid)))
+        .watch()
+        .asyncExpand((orders) {
+      if (orders.isEmpty) return Stream.value(const <Transaction>[]);
+      final paymentType =
+          orders.first.orderType == 'SALE' ? 'CASH_IN' : 'CASH_OUT';
+      return (_db.select(_db.transactions)
+            ..where((t) =>
+                t.orderUuid.equals(orderUuid) &
+                t.type.equals(paymentType) &
+                t.isOrderCost.equals(false) &
+                t.isDeleted.equals(false))
+            ..orderBy([(t) => OrderingTerm.desc(t.date)]))
+          .watch();
+    });
+  }
+
+  /// Operating costs linked to this order (courier, etc.).
+  Stream<List<Transaction>> watchOrderCostsForOrder(String orderUuid) {
     return (_db.select(_db.transactions)
           ..where((t) =>
-              t.orderUuid.equals(orderUuid) & t.isDeleted.equals(false))
+              t.orderUuid.equals(orderUuid) &
+              t.isOrderCost.equals(true) &
+              t.isDeleted.equals(false))
           ..orderBy([(t) => OrderingTerm.desc(t.date)]))
         .watch();
+  }
+
+  Future<void> recordOrderCost({
+    required String orderUuid,
+    required double amount,
+    required String accountUuid,
+    DateTime? date,
+    String? description,
+  }) async {
+    if (amount <= 0) {
+      throw ArgumentError('Cost amount must be greater than zero');
+    }
+    await _db.transaction(() async {
+      final order = await getOrder(orderUuid);
+      if (order == null) return;
+      final when = date ?? DateTime.now();
+      final trimmed = description?.trim();
+      final desc = (trimmed != null && trimmed.isNotEmpty)
+          ? trimmed
+          : 'Cost for ${order.orderNumber}';
+      await _db.into(_db.transactions).insert(
+            TransactionsCompanion.insert(
+              uuid: const Uuid().v4(),
+              amount: amount,
+              type: 'CASH_OUT',
+              contactUuid: Value(order.contactUuid),
+              orderUuid: Value(orderUuid),
+              description: Value(desc),
+              date: when,
+              accountUuid: Value(accountUuid),
+              processedDate: Value(when),
+              isOrderCost: const Value(true),
+              isNotSynced: const Value(true),
+            ),
+          );
+    });
+  }
+
+  Future<void> deleteOrderCost({
+    required String orderUuid,
+    required String costUuid,
+  }) async {
+    await _db.transaction(() async {
+      final cost = await (_db.select(_db.transactions)
+            ..where((t) =>
+                t.uuid.equals(costUuid) &
+                t.orderUuid.equals(orderUuid) &
+                t.isOrderCost.equals(true) &
+                t.isDeleted.equals(false)))
+          .getSingleOrNull();
+      if (cost == null) return;
+      await (_db.update(_db.transactions)..where((t) => t.uuid.equals(costUuid)))
+          .write(
+        TransactionsCompanion(
+          isDeleted: const Value(true),
+          isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+    });
   }
 
   Future<void> _refreshOrderPaymentStatus(String orderUuid) async {
@@ -104,6 +191,7 @@ class OrdersRepository {
             ..where((t) =>
                 t.uuid.equals(excludingPaymentUuid) &
                 t.orderUuid.equals(orderUuid) &
+                t.isOrderCost.equals(false) &
                 t.isDeleted.equals(false)))
           .getSingleOrNull();
       excluded = tx?.amount ?? 0;
@@ -183,6 +271,7 @@ class OrdersRepository {
             ..where((t) =>
                 t.uuid.equals(paymentUuid) &
                 t.orderUuid.equals(orderUuid) &
+                t.isOrderCost.equals(false) &
                 t.isDeleted.equals(false)))
           .getSingleOrNull();
       if (payment == null) {
@@ -231,6 +320,7 @@ class OrdersRepository {
             ..where((t) =>
                 t.uuid.equals(paymentUuid) &
                 t.orderUuid.equals(orderUuid) &
+                t.isOrderCost.equals(false) &
                 t.isDeleted.equals(false)))
           .getSingleOrNull();
       if (payment == null) {
@@ -252,6 +342,7 @@ class OrdersRepository {
   }
 
   /// Marks sale delivered (FEFO consume) or receives remaining purchase qty.
+  /// Prefer [deliverSaleShipment] / qty-based receive for partial flows.
   Future<void> markDelivered(
     String orderUuid, {
     double freightAmount = 0,
@@ -269,26 +360,131 @@ class OrdersRepository {
       return;
     }
 
+    final items = await (_db.select(_db.orderItems)
+          ..where((oi) =>
+              oi.orderUuid.equals(orderUuid) & oi.isDeleted.equals(false)))
+        .get();
+    final lines = <({String orderItemUuid, double quantity})>[];
+    for (final item in items) {
+      final open = item.quantity - item.deliveredQuantity;
+      if (open > 1e-9) {
+        lines.add((orderItemUuid: item.uuid, quantity: open));
+      }
+    }
+    if (lines.isEmpty) return;
+    await deliverSaleShipment(orderUuid: orderUuid, lines: lines);
+  }
+
+  /// Partial or full sale delivery. Consumes stock only for the given qtys.
+  Future<void> deliverSaleShipment({
+    required String orderUuid,
+    required List<({String orderItemUuid, double quantity})> lines,
+    DateTime? deliveredAt,
+    String? notes,
+  }) async {
+    if (lines.isEmpty) {
+      throw ArgumentError('delivery lines required');
+    }
+
     await _db.transaction(() async {
-      final items = await (_db.select(_db.orderItems)
+      final order = await getOrder(orderUuid);
+      if (order == null) throw StateError('Order not found: $orderUuid');
+      if (order.orderType != 'SALE') {
+        throw StateError('Goods delivery only for sale orders');
+      }
+      if (order.deliveryStatus == 'CANCELLED') {
+        throw StateError('Cannot deliver a cancelled order');
+      }
+
+      final orderItems = await (_db.select(_db.orderItems)
             ..where((oi) =>
                 oi.orderUuid.equals(orderUuid) & oi.isDeleted.equals(false)))
           .get();
+      final byId = {for (final i in orderItems) i.uuid: i};
 
-      if (order.deliveryStatus != 'SHIPPED') {
-        await _applySaleStock(items);
+      final deliveryUuid = const Uuid().v4();
+      final when = deliveredAt ?? DateTime.now();
+      await _db.into(_db.goodsDeliveries).insert(
+            GoodsDeliveriesCompanion.insert(
+              uuid: deliveryUuid,
+              orderUuid: orderUuid,
+              deliveredAt: when,
+              notes: Value(notes),
+            ),
+          );
+
+      for (final line in lines) {
+        if (line.quantity <= 1e-9) continue;
+        final item = byId[line.orderItemUuid];
+        if (item == null) {
+          throw StateError('Order item not found: ${line.orderItemUuid}');
+        }
+        final open = item.quantity - item.deliveredQuantity;
+        if (line.quantity > open + 1e-9) {
+          throw StateError(
+            'Deliver ${line.quantity} exceeds open $open for ${item.productNameSnapshot}',
+          );
+        }
+
+        await _db.into(_db.goodsDeliveryLines).insert(
+              GoodsDeliveryLinesCompanion.insert(
+                uuid: const Uuid().v4(),
+                deliveryUuid: deliveryUuid,
+                orderItemUuid: item.uuid,
+                productUuid: Value(item.productUuid),
+                quantity: line.quantity,
+              ),
+            );
+
+        await _applySaleStockForQuantity(item, line.quantity);
+
+        final nextDelivered = item.deliveredQuantity + line.quantity;
+        await (_db.update(_db.orderItems)
+              ..where((oi) => oi.uuid.equals(item.uuid)))
+            .write(
+          OrderItemsCompanion(
+            deliveredQuantity: Value(nextDelivered),
+            isNotSynced: const Value(true),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+        // Keep in-memory map fresh for multi-line same item (shouldn't happen).
+        byId[item.uuid] = item.copyWith(deliveredQuantity: nextDelivered);
       }
 
-      await (_db.update(_db.orders)..where((o) => o.uuid.equals(orderUuid)))
-          .write(
-        OrdersCompanion(
-          deliveryStatus: const Value('DELIVERED'),
-          deliveredDate: Value(DateTime.now()),
-          isNotSynced: const Value(true),
-          updatedAt: Value(DateTime.now()),
-        ),
-      );
+      await _refreshSaleDeliveryStatus(orderUuid);
     });
+  }
+
+  Future<void> _refreshSaleDeliveryStatus(String orderUuid) async {
+    final items = await (_db.select(_db.orderItems)
+          ..where((oi) =>
+              oi.orderUuid.equals(orderUuid) & oi.isDeleted.equals(false)))
+        .get();
+    if (items.isEmpty) return;
+
+    var allDone = true;
+    var anyDelivered = false;
+    for (final i in items) {
+      if (i.deliveredQuantity > 1e-9) anyDelivered = true;
+      if (i.deliveredQuantity + 1e-9 < i.quantity) allDone = false;
+    }
+
+    final status = allDone
+        ? 'DELIVERED'
+        : anyDelivered
+            ? 'PARTIALLY_DELIVERED'
+            : 'PENDING';
+
+    await (_db.update(_db.orders)..where((o) => o.uuid.equals(orderUuid)))
+        .write(
+      OrdersCompanion(
+        deliveryStatus: Value(status),
+        deliveredDate: Value(allDone ? DateTime.now() : null),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   Stream<List<Order>> watchTodayOrders() {
@@ -324,6 +520,29 @@ class OrdersRepository {
         .watch();
   }
 
+  Future<List<OrderItem>> getItemsForOrder(String orderUuid) {
+    return (_db.select(_db.orderItems)
+          ..where((oi) =>
+              oi.orderUuid.equals(orderUuid) & oi.isDeleted.equals(false)))
+        .get();
+  }
+
+  Stream<List<OrderCharge>> watchChargesForOrder(String orderUuid) {
+    return (_db.select(_db.orderCharges)
+          ..where((c) =>
+              c.orderUuid.equals(orderUuid) & c.isDeleted.equals(false))
+          ..orderBy([(c) => OrderingTerm.asc(c.createdAt)]))
+        .watch();
+  }
+
+  Future<List<OrderCharge>> getChargesForOrder(String orderUuid) {
+    return (_db.select(_db.orderCharges)
+          ..where((c) =>
+              c.orderUuid.equals(orderUuid) & c.isDeleted.equals(false))
+          ..orderBy([(c) => OrderingTerm.asc(c.createdAt)]))
+        .get();
+  }
+
   // ==========================================
   // Sale & Purchase Order Operations
   // ==========================================
@@ -331,6 +550,7 @@ class OrdersRepository {
   Future<void> createOrder({
     required OrdersCompanion order,
     required List<OrderItemsCompanion> items,
+    List<OrderChargesCompanion> charges = const [],
     required double paymentAmount,
     required String? accountUuid,
     double freightAmount = 0,
@@ -383,6 +603,31 @@ class OrdersRepository {
             ),
           );
 
+      for (final charge in charges) {
+        final desc = charge.description.present
+            ? charge.description.value.trim()
+            : '';
+        final amount =
+            charge.amount.present ? charge.amount.value : 0.0;
+        if (desc.isEmpty || amount <= 0) continue;
+        final now = DateTime.now();
+        final chargeUuid =
+            charge.uuid.present ? charge.uuid.value : const Uuid().v4();
+        await _db.into(_db.orderCharges).insert(
+              charge.copyWith(
+                uuid: Value(chargeUuid),
+                orderUuid: Value(uuid),
+                description: Value(desc),
+                amount: Value(amount),
+                isNotSynced: const Value(true),
+                createdAt:
+                    charge.createdAt.present ? charge.createdAt : Value(now),
+                updatedAt:
+                    charge.updatedAt.present ? charge.updatedAt : Value(now),
+              ),
+            );
+      }
+
       final inserted = <OrderItem>[];
       for (final item in itemsWithIds) {
         // Purchase: planned landed unit cost from PO pricing.
@@ -412,7 +657,13 @@ class OrdersRepository {
 
       if (appliesStock) {
         if (isSale) {
-          await _applySaleStock(inserted);
+          await deliverSaleShipment(
+            orderUuid: uuid,
+            lines: [
+              for (final item in inserted)
+                (orderItemUuid: item.uuid, quantity: item.quantity),
+            ],
+          );
         } else {
           await _receiveRemainingPurchase(
             orderUuid: uuid,
@@ -473,7 +724,7 @@ class OrdersRepository {
     }
     if (lines.isEmpty) return;
 
-    await _inventory.receivePurchaseShipment(
+    await receivePurchaseShipment(
       orderUuid: orderUuid,
       lines: lines,
       freightAmount: freightAmount,
@@ -481,64 +732,90 @@ class OrdersRepository {
     );
   }
 
-  Future<void> _applySaleStock(List<OrderItem> items) async {
-    for (final item in items) {
-      final spUuid = item.sellingProductUuid?.trim();
-      if (spUuid != null && spUuid.isNotEmpty) {
-        await _applySellingProductSaleStock(item, spUuid);
-        continue;
-      }
-
-      final productUuid = item.productUuid;
-      if (productUuid == null || productUuid.isEmpty) continue;
-
-      final product = await _inventory.getProduct(productUuid);
-      if (product == null || product.isService) continue;
-
-      String? batchUuid = item.batchUuid;
-      double cogs = item.purchasePriceSnapshot;
-
-      if (batchUuid != null) {
-        final batch = await _inventory.getBatch(batchUuid);
-        if (batch == null) {
-          throw StateError('Batch not found: $batchUuid');
-        }
-        await _inventory.consumeFromBatch(
-          batchUuid: batchUuid,
-          quantity: item.quantity,
-        );
-        cogs = batch.effectiveCost;
-      } else {
-        final allocations = await _inventory.consumeFefo(
-          productUuid: productUuid,
-          quantity: item.quantity,
-        );
-        if (allocations.isEmpty) continue;
-        batchUuid = allocations.first.batchUuid;
-        final costSum = allocations.fold<double>(
-          0,
-          (s, a) => s + a.quantity * a.effectiveCost,
-        );
-        cogs = costSum / item.quantity;
-      }
-
-      await (_db.update(_db.orderItems)..where((oi) => oi.uuid.equals(item.uuid)))
-          .write(
-        OrderItemsCompanion(
-          batchUuid: Value(batchUuid),
-          purchasePriceSnapshot: Value(cogs),
-          isNotSynced: const Value(true),
-          updatedAt: Value(DateTime.now()),
-        ),
-      );
-    }
+  /// Partial or full purchase receive for selected line quantities.
+  Future<void> receivePurchaseShipment({
+    required String orderUuid,
+    required List<ReceiveLineInput> lines,
+    double freightAmount = 0,
+    double dutyAmount = 0,
+  }) {
+    return _inventory.receivePurchaseShipment(
+      orderUuid: orderUuid,
+      lines: lines,
+      freightAmount: freightAmount,
+      dutyAmount: dutyAmount,
+    );
   }
 
-  /// Explode selling-product components and FEFO/BATCH-consume each.
-  /// Bundle COGS = sum of component allocation costs / ordered qty.
+  /// Consume stock for [quantity] on this sale line and refresh weighted COGS.
+  Future<void> _applySaleStockForQuantity(
+    OrderItem item,
+    double quantity,
+  ) async {
+    if (quantity <= 1e-9) return;
+
+    final spUuid = item.sellingProductUuid?.trim();
+    if (spUuid != null && spUuid.isNotEmpty) {
+      await _applySellingProductSaleStock(item, spUuid, quantity);
+      return;
+    }
+
+    final productUuid = item.productUuid;
+    if (productUuid == null || productUuid.isEmpty) return;
+
+    final product = await _inventory.getProduct(productUuid);
+    if (product == null || product.isService) return;
+
+    String? batchUuid = item.batchUuid;
+    double shipmentUnitCogs = item.purchasePriceSnapshot;
+
+    if (batchUuid != null && item.deliveredQuantity <= 1e-9) {
+      final batch = await _inventory.getBatch(batchUuid);
+      if (batch == null) {
+        throw StateError('Batch not found: $batchUuid');
+      }
+      await _inventory.consumeFromBatch(
+        batchUuid: batchUuid,
+        quantity: quantity,
+      );
+      shipmentUnitCogs = batch.effectiveCost;
+    } else {
+      final allocations = await _inventory.consumeFefo(
+        productUuid: productUuid,
+        quantity: quantity,
+      );
+      if (allocations.isEmpty) return;
+      batchUuid = allocations.first.batchUuid;
+      final costSum = allocations.fold<double>(
+        0,
+        (s, a) => s + a.quantity * a.effectiveCost,
+      );
+      shipmentUnitCogs = costSum / quantity;
+    }
+
+    final prevQty = item.deliveredQuantity;
+    final prevCogs = item.purchasePriceSnapshot;
+    final nextQty = prevQty + quantity;
+    final weighted = nextQty > 1e-9
+        ? ((prevQty * prevCogs) + (quantity * shipmentUnitCogs)) / nextQty
+        : shipmentUnitCogs;
+
+    await (_db.update(_db.orderItems)..where((oi) => oi.uuid.equals(item.uuid)))
+        .write(
+      OrderItemsCompanion(
+        batchUuid: Value(batchUuid),
+        purchasePriceSnapshot: Value(weighted),
+        isNotSynced: const Value(true),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  /// Explode selling-product components and FEFO/BATCH-consume each for [quantity].
   Future<void> _applySellingProductSaleStock(
     OrderItem item,
     String sellingProductUuid,
+    double quantity,
   ) async {
     final components = await (_db.select(_db.sellingProductComponents)
           ..where((c) =>
@@ -549,7 +826,7 @@ class OrdersRepository {
 
     var costSum = 0.0;
     for (final component in components) {
-      final needQty = component.quantity * item.quantity;
+      final needQty = component.quantity * quantity;
       if (needQty <= 1e-9) continue;
 
       final product = await _inventory.getProduct(component.productUuid);
@@ -572,12 +849,19 @@ class OrdersRepository {
       }
     }
 
-    final unitCogs = item.quantity > 1e-9 ? costSum / item.quantity : costSum;
+    final shipmentUnitCogs = quantity > 1e-9 ? costSum / quantity : costSum;
+    final prevQty = item.deliveredQuantity;
+    final prevCogs = item.purchasePriceSnapshot;
+    final nextQty = prevQty + quantity;
+    final weighted = nextQty > 1e-9
+        ? ((prevQty * prevCogs) + (quantity * shipmentUnitCogs)) / nextQty
+        : shipmentUnitCogs;
+
     await (_db.update(_db.orderItems)..where((oi) => oi.uuid.equals(item.uuid)))
         .write(
       OrderItemsCompanion(
         // Multi-lot bundles: leave batchUuid null (lineage backlog 4.6).
-        purchasePriceSnapshot: Value(unitCogs),
+        purchasePriceSnapshot: Value(weighted),
         isNotSynced: const Value(true),
         updatedAt: Value(DateTime.now()),
       ),

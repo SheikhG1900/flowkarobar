@@ -13,6 +13,7 @@ import 'package:flowpaisa/features/currencies/presentation/screens/currencies_li
 import 'package:flowpaisa/features/settings/presentation/screens/about_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/font_selector_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/language_selector_screen.dart';
+import 'package:flowpaisa/features/settings/presentation/screens/operating_defaults_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/profile_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/theme_selector_screen.dart';
 import 'package:flowpaisa/features/settings/presentation/screens/user_guide_screen.dart';
@@ -68,6 +69,12 @@ class MoreScreen extends ConsumerWidget {
             color: AppColors.settingsSectionColor,
             title: l10n.profile,
             screen: const ProfileScreen(),
+          ),
+          _MoreTile(
+            icon: Icons.tune_outlined,
+            color: AppColors.settingsSectionColor,
+            title: l10n.operatingDefaults,
+            screen: const OperatingDefaultsScreen(),
           ),
           _MoreTile(
             icon: Icons.workspace_premium_outlined,

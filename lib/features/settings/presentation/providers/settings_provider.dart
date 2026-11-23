@@ -581,3 +581,44 @@ class HomeTabNotifier extends Notifier<int> {
 final homeTabProvider = NotifierProvider<HomeTabNotifier, int>(() {
   return HomeTabNotifier();
 });
+
+/// Operating defaults (sales tax %, etc.) stored in user preferences.
+class OperatingDefaultsState {
+  final double defaultSalesTaxRate;
+
+  const OperatingDefaultsState({
+    this.defaultSalesTaxRate = 0,
+  });
+
+  OperatingDefaultsState copyWith({double? defaultSalesTaxRate}) {
+    return OperatingDefaultsState(
+      defaultSalesTaxRate: defaultSalesTaxRate ?? this.defaultSalesTaxRate,
+    );
+  }
+}
+
+class OperatingDefaultsNotifier extends Notifier<OperatingDefaultsState> {
+  late UserPreferencesRepository _repository;
+
+  @override
+  OperatingDefaultsState build() {
+    _repository = ref.watch(userPreferencesRepositoryProvider);
+    _load();
+    return const OperatingDefaultsState();
+  }
+
+  Future<void> _load() async {
+    final rate = await _repository.getDefaultSalesTaxRate();
+    state = OperatingDefaultsState(defaultSalesTaxRate: rate);
+  }
+
+  Future<void> setDefaultSalesTaxRate(double rate) async {
+    await _repository.setDefaultSalesTaxRate(rate);
+    state = state.copyWith(defaultSalesTaxRate: rate < 0 ? 0 : rate);
+  }
+}
+
+final operatingDefaultsProvider =
+    NotifierProvider<OperatingDefaultsNotifier, OperatingDefaultsState>(() {
+  return OperatingDefaultsNotifier();
+});

@@ -6,8 +6,54 @@
   "batches": "बैच",
   "batch": "बैच",
   "orderItems": "ऑर्डर आइटम",
+  "orderCharges": "ऑर्डर शुल्क",
+  "salesTax": "बिक्री कर",
+  "salesTaxPercent": "बिक्री कर %",
+  "salesTaxOnItemsHint": "छूट के बाद आइटम योग पर लागू",
+  "editSalesTax": "बिक्री कर संपादित करें",
+  "deliveryCharge": "डिलीवरी",
+  "packingCharge": "पैकिंग",
+  "goodsDeliveries": "माल डिलीवरी",
+  "goodsDeliveryLines": "डिलीवरी पंक्तियाँ",
   "goodsReceipts": "माल प्राप्ति",
   "goodsReceiptLines": "माल प्राप्ति पंक्तियाँ",
+  "partiallyDelivered": "आंशिक डिलीवरी",
+  "deliverShipment": "आइटम डिलीवर करें",
+  "qtyToDeliver": "डिलीवर मात्रा",
+  "fillOpenQuantity": "सभी शेष",
+  "deliveredQtyProgress": "{delivered} / {ordered} डिलीवर",
+  "@deliveredQtyProgress": {
+    "placeholders": {
+      "delivered": { "type": "String" },
+      "ordered": { "type": "String" }
+    }
+  },
+  "receivedQtyProgress": "{received} / {ordered} प्राप्त",
+  "@receivedQtyProgress": {
+    "placeholders": {
+      "received": { "type": "String" },
+      "ordered": { "type": "String" }
+    }
+  },
+  "qtyToReceive": "प्राप्त मात्रा",
+  "relatedCosts": "संबंधित लागत",
+  "addRelatedCost": "लागत जोड़ें",
+  "noRelatedCosts": "अभी कोई संबंधित लागत नहीं",
+  "relatedCostHint": "इस ऑर्डर का आपका खर्च (जैसे कूरियर)। ग्राहक बैलेंस नहीं बदलता।",
+  "costRecorded": "लागत दर्ज हुई",
+  "deleteRelatedCost": "लागत हटाएँ",
+  "deleteRelatedCostConfirm": "इस लागत को ऑर्डर से हटाएँ?",
+  "orderLineStockShort": "स्टॉक में केवल {available} उपलब्ध",
+  "@orderLineStockShort": {
+    "placeholders": {
+      "available": { "type": "String" }
+    }
+  },
+  "operatingDefaults": "संचालन डिफ़ॉल्ट",
+  "operatingDefaultsHint": "नई बिक्री और रोज़मर्रा के कार्यों में उपयोग होने वाले डिफ़ॉल्ट।",
+  "defaultSalesTaxPercent": "डिफ़ॉल्ट बिक्री कर %",
+  "defaultSalesTaxPercentHint": "नई बिक्री पर कर पहले से भरेगा। छूट के बाद आइटम योग पर लागू।",
+  "operatingDefaultsSaved": "संचालन डिफ़ॉल्ट सहेजे गए",
   "orderReturnItems": "वापसी आइटम",
   "recipeInputs": "रेसिपी इनपुट",
   "recipeOutputs": "रेसिपी आउटपुट",
@@ -212,6 +258,7 @@
   "quantity": "मात्रा",
   "discount": "छूट",
   "subtotal": "उप-योग",
+  "taxableAmount": "कर योग्य राशि",
   "paymentNow": "अभी भुगतान",
   "balanceDue": "बकाया राशि",
   "showAllContacts": "सभी संपर्क दिखाएं",

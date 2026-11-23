@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flowpaisa/core/database/database.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_pricing.dart';
 import 'package:flowpaisa/features/inventory/domain/batch_models.dart';
 import 'package:flowpaisa/features/inventory/domain/order_costing.dart';
 import 'package:uuid/uuid.dart';
@@ -616,6 +617,56 @@ class InventoryRepository {
     return lots.fold<double>(0, (s, b) => s + b.remainingQuantity);
   }
 
+  /// Max sale units fulfillable from current stock (product or selling-product kit).
+  /// Returns null when stock does not apply (service / no trackable link).
+  Future<double?> fulfillableSaleQuantity({
+    String? productUuid,
+    String? sellingProductUuid,
+    bool isService = false,
+  }) async {
+    if (isService) return null;
+
+    final spUuid = sellingProductUuid?.trim();
+    if (spUuid != null && spUuid.isNotEmpty) {
+      final components = await (_db.select(_db.sellingProductComponents)
+            ..where((c) =>
+                c.sellingProductUuid.equals(spUuid) &
+                c.isDeleted.equals(false)))
+          .get();
+      if (components.isEmpty) return 0;
+
+      double? minKits;
+      var hasStockComponent = false;
+      for (final component in components) {
+        final product = await getProduct(component.productUuid);
+        if (product == null) return 0;
+        if (product.isService) continue;
+        hasStockComponent = true;
+        final perUnit = component.quantity;
+        if (perUnit <= 1e-9) continue;
+        final batchScope = component.consumeMode == SellingConsumeMode.batch
+            ? component.batchNumber
+            : null;
+        final avail = await availableQuantity(
+          productUuid: component.productUuid,
+          batchNumber: batchScope,
+        );
+        final kits = avail / perUnit;
+        final current = minKits;
+        minKits = current == null || kits < current ? kits : current;
+      }
+      if (!hasStockComponent) return null;
+      return minKits ?? 0;
+    }
+
+    final pUuid = productUuid?.trim();
+    if (pUuid == null || pUuid.isEmpty) return null;
+    final product = await getProduct(pUuid);
+    if (product == null) return 0;
+    if (product.isService) return null;
+    return availableQuantity(productUuid: pUuid);
+  }
+
   /// Remaining-qty weighted average unit cost of open lots (batch-scoped optional).
   Future<double> averageUnitCost({
     required String productUuid,
@@ -965,7 +1016,7 @@ class InventoryRepository {
     final status = allDone
         ? 'DELIVERED'
         : anyReceived
-            ? 'SHIPPED'
+            ? 'PARTIALLY_DELIVERED'
             : 'PENDING';
 
     await (_db.update(_db.orders)..where((o) => o.uuid.equals(orderUuid))).write(

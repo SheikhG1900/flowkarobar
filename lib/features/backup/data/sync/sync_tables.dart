@@ -35,6 +35,9 @@ class SyncTables {
     // Orders / receipts / returns
     'orders',
     'order_items',
+    'order_charges',
+    'goods_deliveries',
+    'goods_delivery_lines',
     'goods_receipts',
     'goods_receipt_lines',
     'order_returns',
@@ -75,6 +78,7 @@ class SyncTables {
     'end_date',
     'order_date',
     'delivered_date',
+    'delivered_at',
     'received_at',
     'manufacture_date',
     'expiry_date',
@@ -130,6 +134,12 @@ class SyncTables {
         return db.orders;
       case 'order_items':
         return db.orderItems;
+      case 'order_charges':
+        return db.orderCharges;
+      case 'goods_deliveries':
+        return db.goodsDeliveries;
+      case 'goods_delivery_lines':
+        return db.goodsDeliveryLines;
       case 'goods_receipts':
         return db.goodsReceipts;
       case 'goods_receipt_lines':
@@ -179,6 +189,9 @@ class SyncTables {
       db.recipeCharges,
       db.orders,
       db.orderItems,
+      db.orderCharges,
+      db.goodsDeliveries,
+      db.goodsDeliveryLines,
       db.goodsReceipts,
       db.goodsReceiptLines,
       db.orderReturns,

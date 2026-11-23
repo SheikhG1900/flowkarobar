@@ -30,10 +30,106 @@ class AppLocalizationsHi extends AppLocalizations {
   String get orderItems => 'ऑर्डर आइटम';
 
   @override
+  String get orderCharges => 'ऑर्डर शुल्क';
+
+  @override
+  String get salesTax => 'बिक्री कर';
+
+  @override
+  String get salesTaxPercent => 'बिक्री कर %';
+
+  @override
+  String get salesTaxOnItemsHint => 'छूट के बाद आइटम योग पर लागू';
+
+  @override
+  String get editSalesTax => 'बिक्री कर संपादित करें';
+
+  @override
+  String get deliveryCharge => 'डिलीवरी';
+
+  @override
+  String get packingCharge => 'पैकिंग';
+
+  @override
+  String get goodsDeliveries => 'माल डिलीवरी';
+
+  @override
+  String get goodsDeliveryLines => 'डिलीवरी पंक्तियाँ';
+
+  @override
   String get goodsReceipts => 'माल प्राप्ति';
 
   @override
   String get goodsReceiptLines => 'माल प्राप्ति पंक्तियाँ';
+
+  @override
+  String get partiallyDelivered => 'आंशिक डिलीवरी';
+
+  @override
+  String get deliverShipment => 'आइटम डिलीवर करें';
+
+  @override
+  String get qtyToDeliver => 'डिलीवर मात्रा';
+
+  @override
+  String get fillOpenQuantity => 'सभी शेष';
+
+  @override
+  String deliveredQtyProgress(String delivered, String ordered) {
+    return '$delivered / $ordered डिलीवर';
+  }
+
+  @override
+  String receivedQtyProgress(String received, String ordered) {
+    return '$received / $ordered प्राप्त';
+  }
+
+  @override
+  String get qtyToReceive => 'प्राप्त मात्रा';
+
+  @override
+  String get relatedCosts => 'संबंधित लागत';
+
+  @override
+  String get addRelatedCost => 'लागत जोड़ें';
+
+  @override
+  String get noRelatedCosts => 'अभी कोई संबंधित लागत नहीं';
+
+  @override
+  String get relatedCostHint =>
+      'इस ऑर्डर का आपका खर्च (जैसे कूरियर)। ग्राहक बैलेंस नहीं बदलता।';
+
+  @override
+  String get costRecorded => 'लागत दर्ज हुई';
+
+  @override
+  String get deleteRelatedCost => 'लागत हटाएँ';
+
+  @override
+  String get deleteRelatedCostConfirm => 'इस लागत को ऑर्डर से हटाएँ?';
+
+  @override
+  String orderLineStockShort(String available) {
+    return 'स्टॉक में केवल $available उपलब्ध';
+  }
+
+  @override
+  String get operatingDefaults => 'संचालन डिफ़ॉल्ट';
+
+  @override
+  String get operatingDefaultsHint =>
+      'नई बिक्री और रोज़मर्रा के कार्यों में उपयोग होने वाले डिफ़ॉल्ट।';
+
+  @override
+  String get defaultSalesTaxPercent => 'डिफ़ॉल्ट बिक्री कर %';
+
+  @override
+  String get defaultSalesTaxPercentHint =>
+      'नई बिक्री पर कर पहले से भरेगा। छूट के बाद आइटम योग पर लागू।';
+
+  @override
+  String get operatingDefaultsSaved => 'संचालन डिफ़ॉल्ट सहेजे गए';
 
   @override
   String get orderReturnItems => 'वापसी आइटम';
@@ -615,6 +711,9 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get subtotal => 'उप-योग';
+
+  @override
+  String get taxableAmount => 'कर योग्य राशि';
 
   @override
   String get paymentNow => 'अभी भुगतान';
