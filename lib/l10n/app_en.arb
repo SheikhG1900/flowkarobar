@@ -21,6 +21,19 @@
   "deliverShipment": "Deliver items",
   "qtyToDeliver": "Deliver qty",
   "fillOpenQuantity": "All open",
+  "deliveriesSection": "Deliveries",
+  "receiptsSection": "Receipts",
+  "deliveryDetails": "Delivery details",
+  "receiptDetails": "Receipt details",
+  "noDeliveriesYet": "No deliveries yet",
+  "noReceiptsYet": "No receipts yet",
+  "shipmentLineCount": "{lines} lines · {qty} qty",
+  "@shipmentLineCount": {
+    "placeholders": {
+      "lines": { "type": "String" },
+      "qty": { "type": "String" }
+    }
+  },
   "deliveredQtyProgress": "{delivered} / {ordered} delivered",
   "@deliveredQtyProgress": {
     "placeholders": {

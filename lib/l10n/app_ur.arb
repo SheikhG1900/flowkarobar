@@ -21,6 +21,19 @@
   "deliverShipment": "آئٹمز ڈیلیور کریں",
   "qtyToDeliver": "ڈیلیور مقدار",
   "fillOpenQuantity": "تمام باقی",
+  "deliveriesSection": "ڈیلیوریز",
+  "receiptsSection": "رسیدیں",
+  "deliveryDetails": "ڈیلیوری تفصیل",
+  "receiptDetails": "رسید تفصیل",
+  "noDeliveriesYet": "ابھی کوئی ڈیلیوری نہیں",
+  "noReceiptsYet": "ابھی کوئی رسید نہیں",
+  "shipmentLineCount": "{lines} لائنز · {qty} مقدار",
+  "@shipmentLineCount": {
+    "placeholders": {
+      "lines": { "type": "String" },
+      "qty": { "type": "String" }
+    }
+  },
   "deliveredQtyProgress": "{delivered} / {ordered} ڈیلیور",
   "@deliveredQtyProgress": {
     "placeholders": {

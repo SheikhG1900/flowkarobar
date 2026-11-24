@@ -232,6 +232,48 @@ abstract class AppLocalizations {
   /// **'All open'**
   String get fillOpenQuantity;
 
+  /// No description provided for @deliveriesSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliveries'**
+  String get deliveriesSection;
+
+  /// No description provided for @receiptsSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipts'**
+  String get receiptsSection;
+
+  /// No description provided for @deliveryDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery details'**
+  String get deliveryDetails;
+
+  /// No description provided for @receiptDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt details'**
+  String get receiptDetails;
+
+  /// No description provided for @noDeliveriesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No deliveries yet'**
+  String get noDeliveriesYet;
+
+  /// No description provided for @noReceiptsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No receipts yet'**
+  String get noReceiptsYet;
+
+  /// No description provided for @shipmentLineCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{lines} lines · {qty} qty'**
+  String shipmentLineCount(String lines, String qty);
+
   /// No description provided for @deliveredQtyProgress.
   ///
   /// In en, this message translates to:

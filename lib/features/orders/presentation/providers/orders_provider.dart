@@ -3,6 +3,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/features/inventory/presentation/providers/inventory_provider.dart';
 import 'package:flowpaisa/features/orders/data/orders_repository.dart';
 import 'package:flowpaisa/features/orders/data/invoice_pdf_service.dart';
+import 'package:flowpaisa/features/orders/domain/order_shipment.dart';
 import 'package:flowpaisa/shared/providers/database_provider.dart';
 
 final ordersRepositoryProvider = Provider<OrdersRepository>((ref) {
@@ -69,6 +70,16 @@ final orderItemFulfillableQtyProvider =
 final orderChargesStreamProvider =
     StreamProvider.family<List<OrderCharge>, String>((ref, orderUuid) {
   return ref.watch(ordersRepositoryProvider).watchChargesForOrder(orderUuid);
+});
+
+final orderDeliveriesStreamProvider =
+    StreamProvider.family<List<OrderShipmentView>, String>((ref, orderUuid) {
+  return ref.watch(ordersRepositoryProvider).watchDeliveriesForOrder(orderUuid);
+});
+
+final orderReceiptsStreamProvider =
+    StreamProvider.family<List<OrderShipmentView>, String>((ref, orderUuid) {
+  return ref.watch(ordersRepositoryProvider).watchReceiptsForOrder(orderUuid);
 });
 
 final singleOrderProvider =

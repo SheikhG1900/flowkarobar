@@ -21,6 +21,19 @@
   "deliverShipment": "आइटम डिलीवर करें",
   "qtyToDeliver": "डिलीवर मात्रा",
   "fillOpenQuantity": "सभी शेष",
+  "deliveriesSection": "डिलीवरी",
+  "receiptsSection": "प्राप्तियाँ",
+  "deliveryDetails": "डिलीवरी विवरण",
+  "receiptDetails": "प्राप्ति विवरण",
+  "noDeliveriesYet": "अभी कोई डिलीवरी नहीं",
+  "noReceiptsYet": "अभी कोई प्राप्ति नहीं",
+  "shipmentLineCount": "{lines} पंक्तियाँ · {qty} मात्रा",
+  "@shipmentLineCount": {
+    "placeholders": {
+      "lines": { "type": "String" },
+      "qty": { "type": "String" }
+    }
+  },
   "deliveredQtyProgress": "{delivered} / {ordered} डिलीवर",
   "@deliveredQtyProgress": {
     "placeholders": {

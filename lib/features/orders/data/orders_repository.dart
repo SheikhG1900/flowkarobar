@@ -4,6 +4,7 @@ import 'package:flowpaisa/features/catalog/domain/catalog_pricing.dart';
 import 'package:flowpaisa/features/inventory/data/inventory_repository.dart';
 import 'package:flowpaisa/features/inventory/domain/batch_models.dart';
 import 'package:flowpaisa/features/inventory/domain/order_costing.dart';
+import 'package:flowpaisa/features/orders/domain/order_shipment.dart';
 import 'package:uuid/uuid.dart';
 
 class OrdersRepository {
@@ -541,6 +542,92 @@ class OrdersRepository {
               c.orderUuid.equals(orderUuid) & c.isDeleted.equals(false))
           ..orderBy([(c) => OrderingTerm.asc(c.createdAt)]))
         .get();
+  }
+
+  /// Sale delivery history (newest first), with line names from order items.
+  Stream<List<OrderShipmentView>> watchDeliveriesForOrder(String orderUuid) {
+    return (_db.select(_db.goodsDeliveries)
+          ..where((d) =>
+              d.orderUuid.equals(orderUuid) & d.isDeleted.equals(false))
+          ..orderBy([(d) => OrderingTerm.desc(d.deliveredAt)]))
+        .watch()
+        .asyncMap((deliveries) async {
+      if (deliveries.isEmpty) return const <OrderShipmentView>[];
+      final items = await getItemsForOrder(orderUuid);
+      final nameByItem = {
+        for (final i in items) i.uuid: i.productNameSnapshot,
+      };
+      final unitByItem = {for (final i in items) i.uuid: i.unit};
+      final result = <OrderShipmentView>[];
+      for (final delivery in deliveries) {
+        final lines = await (_db.select(_db.goodsDeliveryLines)
+              ..where((l) =>
+                  l.deliveryUuid.equals(delivery.uuid) &
+                  l.isDeleted.equals(false)))
+            .get();
+        result.add(
+          OrderShipmentView(
+            uuid: delivery.uuid,
+            at: delivery.deliveredAt,
+            notes: delivery.notes,
+            lines: [
+              for (final line in lines)
+                OrderShipmentLineView(
+                  productName:
+                      nameByItem[line.orderItemUuid] ?? line.productUuid ?? '—',
+                  quantity: line.quantity,
+                  unit: unitByItem[line.orderItemUuid] ?? '',
+                ),
+            ],
+          ),
+        );
+      }
+      return result;
+    });
+  }
+
+  /// Purchase receipt history (newest first), with line names from order items.
+  Stream<List<OrderShipmentView>> watchReceiptsForOrder(String orderUuid) {
+    return (_db.select(_db.goodsReceipts)
+          ..where((r) =>
+              r.orderUuid.equals(orderUuid) & r.isDeleted.equals(false))
+          ..orderBy([(r) => OrderingTerm.desc(r.receivedAt)]))
+        .watch()
+        .asyncMap((receipts) async {
+      if (receipts.isEmpty) return const <OrderShipmentView>[];
+      final items = await getItemsForOrder(orderUuid);
+      final nameByItem = {
+        for (final i in items) i.uuid: i.productNameSnapshot,
+      };
+      final unitByItem = {for (final i in items) i.uuid: i.unit};
+      final result = <OrderShipmentView>[];
+      for (final receipt in receipts) {
+        final lines = await (_db.select(_db.goodsReceiptLines)
+              ..where((l) =>
+                  l.receiptUuid.equals(receipt.uuid) &
+                  l.isDeleted.equals(false)))
+            .get();
+        result.add(
+          OrderShipmentView(
+            uuid: receipt.uuid,
+            at: receipt.receivedAt,
+            notes: receipt.notes,
+            freightAmount: receipt.freightAmount,
+            dutyAmount: receipt.dutyAmount,
+            lines: [
+              for (final line in lines)
+                OrderShipmentLineView(
+                  productName:
+                      nameByItem[line.orderItemUuid] ?? line.productUuid,
+                  quantity: line.quantity,
+                  unit: unitByItem[line.orderItemUuid] ?? '',
+                ),
+            ],
+          ),
+        );
+      }
+      return result;
+    });
   }
 
   // ==========================================

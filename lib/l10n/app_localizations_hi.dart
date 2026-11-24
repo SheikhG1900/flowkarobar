@@ -75,6 +75,29 @@ class AppLocalizationsHi extends AppLocalizations {
   String get fillOpenQuantity => 'सभी शेष';
 
   @override
+  String get deliveriesSection => 'डिलीवरी';
+
+  @override
+  String get receiptsSection => 'प्राप्तियाँ';
+
+  @override
+  String get deliveryDetails => 'डिलीवरी विवरण';
+
+  @override
+  String get receiptDetails => 'प्राप्ति विवरण';
+
+  @override
+  String get noDeliveriesYet => 'अभी कोई डिलीवरी नहीं';
+
+  @override
+  String get noReceiptsYet => 'अभी कोई प्राप्ति नहीं';
+
+  @override
+  String shipmentLineCount(String lines, String qty) {
+    return '$lines पंक्तियाँ · $qty मात्रा';
+  }
+
+  @override
   String deliveredQtyProgress(String delivered, String ordered) {
     return '$delivered / $ordered डिलीवर';
   }

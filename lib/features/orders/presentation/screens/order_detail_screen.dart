@@ -17,6 +17,7 @@ import 'package:flowpaisa/features/contacts/presentation/screens/contact_details
 import 'package:flowpaisa/features/inventory/data/inventory_repository.dart';
 import 'package:flowpaisa/features/inventory/presentation/providers/inventory_provider.dart';
 import 'package:flowpaisa/features/inventory/presentation/screens/product_details_screen.dart';
+import 'package:flowpaisa/features/orders/domain/order_shipment.dart';
 import 'package:flowpaisa/features/orders/presentation/providers/orders_provider.dart';
 import 'package:flowpaisa/features/orders/presentation/widgets/order_entity_pickers.dart';
 import 'package:flowpaisa/features/orders/presentation/widgets/order_widgets.dart';
@@ -50,6 +51,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     ref.invalidate(orderCostsStreamProvider(widget.orderUuid));
     ref.invalidate(orderItemsStreamProvider(widget.orderUuid));
     ref.invalidate(orderChargesStreamProvider(widget.orderUuid));
+    ref.invalidate(orderDeliveriesStreamProvider(widget.orderUuid));
+    ref.invalidate(orderReceiptsStreamProvider(widget.orderUuid));
+    ref.invalidate(orderItemFulfillableQtyProvider(widget.orderUuid));
     ref.invalidate(saleOrderCatalogLineIssuesProvider(widget.orderUuid));
   }
 
@@ -555,6 +559,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
         : null;
     final fulfillableByItem =
         fulfillableAsync?.asData?.value ?? const <String, double?>{};
+    final shipmentsAsync = isSale
+        ? ref.watch(orderDeliveriesStreamProvider(order.uuid))
+        : ref.watch(orderReceiptsStreamProvider(order.uuid));
     final accounts =
         ref.watch(accountsStreamProvider).value ?? const <Account>[];
     final accountsByUuid = {for (final a in accounts) a.uuid: a};
@@ -693,6 +700,46 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                                 SaleCatalogLineIssue.none,
                         availableQuantity:
                             fulfillableByItem[items[i].uuid],
+                      ),
+                    ],
+                  ],
+                );
+              },
+            ),
+          ],
+        ),
+        FormSectionCard(
+          title: isSale ? l10n.deliveriesSection : l10n.receiptsSection,
+          icon: isSale
+              ? Icons.local_shipping_outlined
+              : Icons.move_to_inbox_outlined,
+          accentColor: typeColor,
+          children: [
+            shipmentsAsync.when(
+              loading: () => const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (e, _) => Text(l10n.errorOccurred(e.toString())),
+              data: (shipments) {
+                if (shipments.isEmpty) {
+                  return Text(
+                    isSale ? l10n.noDeliveriesYet : l10n.noReceiptsYet,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  );
+                }
+                return Column(
+                  children: [
+                    for (var i = 0; i < shipments.length; i++) ...[
+                      if (i > 0) const SizedBox(height: 8),
+                      _ShipmentTile(
+                        shipment: shipments[i],
+                        accent: typeColor,
+                        isSale: isSale,
+                        dateFormat: dateFormat,
+                        ref: ref,
                       ),
                     ],
                   ],
@@ -1378,6 +1425,211 @@ class _ItemTile extends StatelessWidget {
             ref: ref,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ShipmentTile extends StatelessWidget {
+  final OrderShipmentView shipment;
+  final Color accent;
+  final bool isSale;
+  final String dateFormat;
+  final WidgetRef ref;
+
+  const _ShipmentTile({
+    required this.shipment,
+    required this.accent,
+    required this.isSale,
+    required this.dateFormat,
+    required this.ref,
+  });
+
+  void _openDetails(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final dateText = AppDateFormatter.formatDate(
+      shipment.at,
+      pattern: dateFormat,
+    );
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  isSale ? l10n.deliveryDetails : l10n.receiptDetails,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  dateText,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: muted),
+                ),
+                if (shipment.notes != null &&
+                    shipment.notes!.trim().isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    shipment.notes!.trim(),
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ],
+                if (!isSale &&
+                    (shipment.freightAmount > 0 ||
+                        shipment.dutyAmount > 0)) ...[
+                  const SizedBox(height: 10),
+                  if (shipment.freightAmount > 0)
+                    _AmountRow(
+                      label: l10n.inboundFreight,
+                      value: shipment.freightAmount,
+                      ref: ref,
+                      muted: true,
+                    ),
+                  if (shipment.dutyAmount > 0)
+                    _AmountRow(
+                      label: l10n.importDuty,
+                      value: shipment.dutyAmount,
+                      ref: ref,
+                      muted: true,
+                    ),
+                ],
+                const SizedBox(height: 12),
+                Text(
+                  l10n.items,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (shipment.lines.isEmpty)
+                  Text(
+                    l10n.noProductsYet,
+                    style: theme.textTheme.bodyMedium?.copyWith(color: muted),
+                  )
+                else
+                  for (var i = 0; i < shipment.lines.length; i++) ...[
+                    if (i > 0) const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: accent.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              shipment.lines[i].productName,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            [
+                              AmountFormatter.formatQuantity(
+                                shipment.lines[i].quantity,
+                              ),
+                              if (shipment.lines[i].unit.trim().isNotEmpty)
+                                shipment.lines[i].unit,
+                            ].join(' '),
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              color: accent,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final dateText = AppDateFormatter.formatDate(
+      shipment.at,
+      pattern: dateFormat,
+    );
+    final qtyText = AmountFormatter.formatQuantity(shipment.totalQuantity);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _openDetails(context),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: accent.withValues(alpha: 0.22)),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                isSale
+                    ? Icons.local_shipping_outlined
+                    : Icons.move_to_inbox_outlined,
+                size: 18,
+                color: accent,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      dateText,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.shipmentLineCount(
+                        shipment.lines.length.toString(),
+                        qtyText,
+                      ),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: muted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, size: 20, color: muted),
+            ],
+          ),
+        ),
       ),
     );
   }

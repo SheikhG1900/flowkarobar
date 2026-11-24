@@ -75,6 +75,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fillOpenQuantity => 'All open';
 
   @override
+  String get deliveriesSection => 'Deliveries';
+
+  @override
+  String get receiptsSection => 'Receipts';
+
+  @override
+  String get deliveryDetails => 'Delivery details';
+
+  @override
+  String get receiptDetails => 'Receipt details';
+
+  @override
+  String get noDeliveriesYet => 'No deliveries yet';
+
+  @override
+  String get noReceiptsYet => 'No receipts yet';
+
+  @override
+  String shipmentLineCount(String lines, String qty) {
+    return '$lines lines · $qty qty';
+  }
+
+  @override
   String deliveredQtyProgress(String delivered, String ordered) {
     return '$delivered / $ordered delivered';
   }
