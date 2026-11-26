@@ -34,6 +34,7 @@ class SyncTables {
     'recipe_charges',
     // Orders / receipts / returns
     'orders',
+    'order_line_groups',
     'order_items',
     'order_charges',
     'goods_deliveries',
@@ -132,6 +133,8 @@ class SyncTables {
         return db.recipeCharges;
       case 'orders':
         return db.orders;
+      case 'order_line_groups':
+        return db.orderLineGroups;
       case 'order_items':
         return db.orderItems;
       case 'order_charges':
@@ -188,6 +191,7 @@ class SyncTables {
       db.recipeOutputs,
       db.recipeCharges,
       db.orders,
+      db.orderLineGroups,
       db.orderItems,
       db.orderCharges,
       db.goodsDeliveries,

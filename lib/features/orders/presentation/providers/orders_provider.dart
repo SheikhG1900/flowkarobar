@@ -45,6 +45,11 @@ final orderItemsStreamProvider =
   return ref.watch(ordersRepositoryProvider).watchItemsForOrder(orderUuid);
 });
 
+final orderLineGroupsStreamProvider =
+    StreamProvider.family<List<OrderLineGroup>, String>((ref, orderUuid) {
+  return ref.watch(ordersRepositoryProvider).watchGroupsForOrder(orderUuid);
+});
+
 /// Fulfillable stock per sale line, resolved once per order open (not on qty edits).
 final orderItemFulfillableQtyProvider =
     FutureProvider.family<Map<String, double?>, String>((ref, orderUuid) async {

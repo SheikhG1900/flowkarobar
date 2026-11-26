@@ -168,23 +168,32 @@ class OrderItems extends Table {
   TextColumn get uuid => text()();
   TextColumn get orderUuid => text().references(Orders, #uuid)();
 
-  /// Direct product line. Null when the line is a selling-product offer.
+  /// Physical stock/service product. Required for new sale lines (bundles explode).
+  /// Nullable only for legacy pre-v21 selling-product header rows.
   TextColumn get productUuid => text().nullable().references(Products, #uuid)();
 
-  /// Catalog line this sale was picked from (optional snapshot ref).
+  /// Catalog line this sale was picked from (optional soft ref / audit).
   TextColumn get catalogItemUuid =>
       text().nullable().references(CatalogItems, #uuid)();
 
-  /// Selling-product / bundle line. Null for direct product lines.
+  /// Legacy selling-product header ref. New bundles use [groupUuid] + physical lines.
   TextColumn get sellingProductUuid =>
       text().nullable().references(SellingProducts, #uuid)();
 
+  /// When set, this line belongs to a frozen commercial package on the order.
+  TextColumn get groupUuid =>
+      text().nullable().references(OrderLineGroups, #uuid)();
+
+  /// Qty of this product in **one** package (BOM). Null when not in a group.
+  /// [quantity] is always the expanded physical qty (component × packages).
+  RealColumn get bundleComponentQty => real().nullable()();
+
   TextColumn get productNameSnapshot => text()();
 
-  /// Ordered qty (PO/SO commitment).
+  /// Ordered qty (PO/SO commitment). For bundle components: expanded physical qty.
   RealColumn get quantity => real()();
 
-  /// List / catalog unit price (before line discount).
+  /// List / catalog unit price (before line discount). Bundle components: allocated.
   RealColumn get unitPrice => real()();
 
   /// Unit price after discount (what the customer pays per unit).
@@ -205,9 +214,55 @@ class OrderItems extends Table {
   RealColumn get deliveredQuantity => real().withDefault(const Constant(0.0))();
 
   TextColumn get batchUuid => text().nullable().references(ProductBatches, #uuid)();
-  /// Planned / stamped unit cost (net of discounts; sales COGS or PO planned cost).
+  /// Weight/estimate at save; sales goods COGS authoritative on delivery lines.
   RealColumn get purchasePriceSnapshot => real().withDefault(const Constant(0.0))();
   TextColumn get unit => text().withDefault(const Constant('Pcs'))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+  BoolColumn get isDeleted => boolean().withDefault(const Constant(false))();
+  BoolColumn get isNotSynced => boolean().withDefault(const Constant(true))();
+
+  @override
+  Set<Column> get primaryKey => {uuid};
+}
+
+/// Commercial package / bundle header on a sale. Physical stock is on [OrderItems].
+class OrderLineGroups extends Table {
+  TextColumn get uuid => text()();
+  TextColumn get orderUuid => text().references(Orders, #uuid)();
+
+  TextColumn get nameSnapshot => text()();
+  TextColumn get catalogNameSnapshot => text().nullable()();
+
+  /// Soft refs for audit only — not required after save.
+  TextColumn get catalogItemUuid =>
+      text().nullable().references(CatalogItems, #uuid)();
+  TextColumn get sellingProductUuid =>
+      text().nullable().references(SellingProducts, #uuid)();
+
+  /// How many packages ordered.
+  RealColumn get packageQty => real()();
+
+  /// How many packages already delivered (whole packages only).
+  RealColumn get deliveredPackageQty =>
+      real().withDefault(const Constant(0.0))();
+
+  TextColumn get unit => text().withDefault(const Constant('Pkg'))();
+
+  /// List price per package (before discount).
+  RealColumn get unitPrice => real()();
+
+  /// Price per package after discount.
+  RealColumn get discountedUnitPrice => real().nullable()();
+
+  /// Absolute discount for this group (all packages).
+  RealColumn get discountAmount => real().withDefault(const Constant(0.0))();
+
+  /// Sum of component weight costs for one package at save (allocation basis).
+  RealColumn get unitCostSnapshot => real().withDefault(const Constant(0.0))();
+
+  TextColumn get notes => text().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -257,6 +312,12 @@ class GoodsDeliveryLines extends Table {
   TextColumn get orderItemUuid => text().references(OrderItems, #uuid)();
   TextColumn get productUuid => text().nullable().references(Products, #uuid)();
   RealColumn get quantity => real()();
+
+  /// FEFO-weighted unit COGS for this shipment line (authoritative for P&L).
+  RealColumn get unitCogs => real().withDefault(const Constant(0.0))();
+
+  /// Optional: packages represented when this line is part of a whole-package dispatch.
+  RealColumn get packageQty => real().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
@@ -850,6 +911,7 @@ typedef CategoriesCompanion = ProductCategoriesCompanion;
   CatalogAssignments,
   CatalogTieredDiscounts,
   Orders,
+  OrderLineGroups,
   OrderItems,
   OrderCharges,
   GoodsDeliveries,
@@ -873,7 +935,7 @@ class AppDatabase extends _$AppDatabase {
       : super(executor ?? openConnection(fileName));
 
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   // Compatibility getters and helpers for deprecated tables
   $ProductCategoriesTable get categories => productCategories;
@@ -977,8 +1039,49 @@ class AppDatabase extends _$AppDatabase {
           if (from < 20) {
             await _migrateOrderTaxDeliveryToV20(m);
           }
+          if (from < 21) {
+            await _migrateOrderLineGroupsToV21(m);
+          }
         },
       );
+
+  Future<void> _migrateOrderLineGroupsToV21(Migrator m) async {
+    Future<void> addColumn(String sql, String label) async {
+      try {
+        await customStatement(sql);
+      } catch (e) {
+        if (kDebugMode) {
+          print('Database migrate v21 $label skipped: $e');
+        }
+      }
+    }
+
+    try {
+      await m.createTable(orderLineGroups);
+    } catch (e) {
+      if (kDebugMode) {
+        print('Database migrate v21 order_line_groups skipped: $e');
+      }
+    }
+
+    await addColumn(
+      'ALTER TABLE order_items ADD COLUMN group_uuid TEXT '
+      'REFERENCES order_line_groups (uuid)',
+      'order_items.group_uuid',
+    );
+    await addColumn(
+      'ALTER TABLE order_items ADD COLUMN bundle_component_qty REAL',
+      'order_items.bundle_component_qty',
+    );
+    await addColumn(
+      'ALTER TABLE goods_delivery_lines ADD COLUMN unit_cogs REAL NOT NULL DEFAULT 0.0',
+      'goods_delivery_lines.unit_cogs',
+    );
+    await addColumn(
+      'ALTER TABLE goods_delivery_lines ADD COLUMN package_qty REAL',
+      'goods_delivery_lines.package_qty',
+    );
+  }
 
   Future<void> _migrateOrderChargesToV19(Migrator m) async {
     try {

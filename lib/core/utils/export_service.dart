@@ -19,6 +19,7 @@ import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/theme/app_colors.dart';
 import 'package:flowpaisa/core/utils/date_formatter.dart';
 import 'package:flowpaisa/core/utils/amount_formatter.dart';
+import 'package:flowpaisa/features/catalog/domain/catalog_discounts.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:csv/csv.dart';
 import 'package:share_plus/share_plus.dart';
@@ -55,6 +56,134 @@ class ExportService {
         _customFonts = customFonts != null
             ? Map<String, String>.from(customFonts)
             : const {};
+
+  /// App mark used on every PDF report watermark / footer.
+  static const String appReportLogoAsset = 'assets/images/logo_square.svg';
+
+  /// Brand blue for watermark / footer logo tint (#006699).
+  static const PdfColor appReportBrandBlue =
+      PdfColor(0 / 255.0, 102 / 255.0, 153 / 255.0);
+
+  /// Loads the shared app SVG logo for report chrome. Prefer this over ad-hoc
+  /// `rootBundle` loads in new PDF exporters.
+  static Future<String?> loadAppReportLogoSvg() async {
+    try {
+      return await rootBundle.loadString(appReportLogoAsset);
+    } catch (e) {
+      if (kDebugMode) {
+        print('ExportService: Failed to load app report logo SVG: $e');
+      }
+      return null;
+    }
+  }
+
+  /// Centered low-opacity app logo watermark (full page).
+  static pw.Widget buildAppReportWatermark(String logoSvg) {
+    return pw.FullPage(
+      ignoreMargins: true,
+      child: pw.Center(
+        child: pw.Opacity(
+          opacity: 0.03,
+          child: pw.Container(
+            width: 250,
+            height: 250,
+            child: pw.SvgImage(
+              svg: logoSvg,
+              colorFilter: appReportBrandBlue,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Standard report footer: app logo + [l10n.appTitle] + page numbers.
+  /// Optional [center] sits between brand and page numbers (e.g. attachment meta).
+  static pw.Widget buildAppReportFooter(
+    pw.Context context, {
+    AppLocalizations? l10n,
+    String? logoSvg,
+    pw.Widget? center,
+  }) {
+    final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
+    final pageText = l10n != null
+        ? l10n.pageOf(
+            context.pageNumber.toString(),
+            context.pagesCount.toString(),
+          )
+        : 'Page ${context.pageNumber} / ${context.pagesCount}';
+    final appTitle = l10n?.appTitle ?? 'FlowKarobar';
+
+    final brand = pw.Row(
+      mainAxisSize: pw.MainAxisSize.min,
+      children: [
+        if (logoSvg != null) ...[
+          pw.Container(
+            width: 12,
+            height: 12,
+            child: pw.SvgImage(
+              svg: logoSvg,
+              colorFilter: appReportBrandBlue,
+            ),
+          ),
+          pw.SizedBox(width: 4),
+        ],
+        pw.Text(
+          appTitle,
+          style: pw.TextStyle(
+            color: PdfColors.grey600,
+            fontSize: 8,
+            fontWeight: pw.FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+
+    final pages = pw.Text(
+      pageText,
+      style: const pw.TextStyle(color: PdfColors.grey600, fontSize: 8),
+    );
+
+    final children = <pw.Widget>[
+      if (isRtl) pages else brand,
+      if (center != null) center,
+      if (isRtl) brand else pages,
+    ];
+
+    return pw.Container(
+      alignment: pw.Alignment.center,
+      margin: const pw.EdgeInsets.only(top: 10),
+      decoration: const pw.BoxDecoration(
+        border: pw.Border(
+          top: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
+        ),
+      ),
+      padding: const pw.EdgeInsets.only(top: 10),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: children,
+      ),
+    );
+  }
+
+  /// Page theme with required app watermark. Pass into [pw.MultiPage]/[pw.Page].
+  static pw.PageTheme buildAppReportPageTheme({
+    pw.ThemeData? theme,
+    String? logoSvg,
+    PdfPageFormat pageFormat = PdfPageFormat.a4,
+    pw.EdgeInsets margin = const pw.EdgeInsets.all(40),
+    pw.TextDirection? textDirection,
+  }) {
+    return pw.PageTheme(
+      pageFormat: pageFormat,
+      margin: margin,
+      theme: theme,
+      textDirection: textDirection,
+      buildBackground: logoSvg != null
+          ? (pw.Context context) => buildAppReportWatermark(logoSvg)
+          : null,
+    );
+  }
 
   // Helper to translate category names
   String _getLocalizedCategoryName(String? name, AppLocalizations? l10n) {
@@ -808,15 +937,7 @@ class ExportService {
     AppCurrency? currencyObj,
     bool includePayablesAndReceivables = true,
   }) async {
-    String? logoSvgString;
-    try {
-      logoSvgString =
-          await rootBundle.loadString('assets/images/logo_square.svg');
-    } catch (e) {
-      if (kDebugMode) {
-        print('ExportService: Failed to load logo SVG: $e');
-      }
-    }
+    final logoSvgString = await ExportService.loadAppReportLogoSvg();
 
     final payablesRepository = PayablesRepository(_database);
     final receivablesRepository = ReceivablesRepository(_database);
@@ -1271,127 +1392,20 @@ class ExportService {
       return name[0].toUpperCase();
     }
 
-    final pageTheme = pw.PageTheme(
-      pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.all(40),
+    final pageTheme = ExportService.buildAppReportPageTheme(
       theme: theme,
-      buildBackground: logoSvgString != null
-          ? (pw.Context context) {
-              return pw.FullPage(
-                ignoreMargins: true,
-                child: pw.Center(
-                  child: pw.Opacity(
-                    opacity: 0.03,
-                    child: pw.Container(
-                      width: 250,
-                      height: 250,
-                      child: pw.SvgImage(
-                        svg: logoSvgString!,
-                        colorFilter: const PdfColor(0 / 255.0, 102 / 255.0,
-                            153 / 255.0), // #006699 (Deep Brand Blue)
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }
-          : null,
+      logoSvg: logoSvgString,
     );
 
     // Add pages
     pdf.addPage(
       pw.MultiPage(
         pageTheme: pageTheme,
-        footer: (pw.Context context) {
-          final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
-          final pageText = 'Page ${context.pageNumber} / ${context.pagesCount}';
-          final appTitle = l10n?.appTitle ?? 'Flowpaisa';
-
-          return pw.Container(
-            alignment: pw.Alignment.center,
-            margin: const pw.EdgeInsets.only(top: 10),
-            decoration: const pw.BoxDecoration(
-              border: pw.Border(
-                top: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
-              ),
-            ),
-            padding: const pw.EdgeInsets.only(top: 10),
-            child: pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: isRtl
-                  ? [
-                      _buildText(
-                        pageText,
-                        style: const pw.TextStyle(
-                          color: PdfColors.grey600,
-                          fontSize: 8,
-                        ),
-                      ),
-                      pw.Row(
-                        children: [
-                          _buildText(
-                            appTitle,
-                            style: pw.TextStyle(
-                              color: PdfColors.grey600,
-                              fontSize: 8,
-                              fontWeight: pw.FontWeight.bold,
-                            ),
-                          ),
-                          if (logoSvgString != null) ...[
-                            pw.SizedBox(width: 4),
-                            pw.Container(
-                              width: 12,
-                              height: 12,
-                              child: pw.SvgImage(
-                                svg: logoSvgString,
-                                colorFilter: const PdfColor(
-                                    0 / 255.0,
-                                    102 / 255.0,
-                                    153 / 255.0), // #006699 (Deep Brand Blue)
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ]
-                  : [
-                      pw.Row(
-                        children: [
-                          if (logoSvgString != null) ...[
-                            pw.Container(
-                              width: 12,
-                              height: 12,
-                              child: pw.SvgImage(
-                                svg: logoSvgString,
-                                colorFilter: const PdfColor(
-                                    0 / 255.0,
-                                    102 / 255.0,
-                                    153 / 255.0), // #006699 (Deep Brand Blue)
-                              ),
-                            ),
-                            pw.SizedBox(width: 4),
-                          ],
-                          _buildText(
-                            appTitle,
-                            style: pw.TextStyle(
-                              color: PdfColors.grey600,
-                              fontSize: 8,
-                              fontWeight: pw.FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      _buildText(
-                        pageText,
-                        style: const pw.TextStyle(
-                          color: PdfColors.grey600,
-                          fontSize: 8,
-                        ),
-                      ),
-                    ],
-            ),
-          );
-        },
+        footer: (pw.Context context) => ExportService.buildAppReportFooter(
+          context,
+          l10n: l10n,
+          logoSvg: logoSvgString,
+        ),
         build: (pw.Context context) {
           // Capture this reference for use in closure
           final self = this;
@@ -1432,7 +1446,7 @@ class ExportService {
                     child: _buildText(
                       l10n?.appTitle != null
                           ? '${l10n!.appTitle} ${l10n.exportSummary}'
-                          : 'Flowpaisa Export Report',
+                          : 'FlowKarobar Export Report',
                       style: pw.TextStyle(
                         fontSize: 24,
                         fontWeight: pw.FontWeight.bold,
@@ -2416,15 +2430,7 @@ class ExportService {
       final englishFont = await loadEnglishFont();
       final materialIconsFont = await loadMaterialIconsFont();
 
-      String? logoSvgString;
-      try {
-        logoSvgString =
-            await rootBundle.loadString('assets/images/logo_square.svg');
-      } catch (e) {
-        if (kDebugMode) {
-          print('ExportService: Failed to load logo SVG: $e');
-        }
-      }
+      final logoSvgString = await ExportService.loadAppReportLogoSvg();
 
       // Query the matching transactions using the centralized repository query
       final List<TransactionWithDetails> filteredTransactions;
@@ -2597,31 +2603,10 @@ class ExportService {
         ),
       );
 
-      final pageTheme = pw.PageTheme(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(32),
+      final pageTheme = ExportService.buildAppReportPageTheme(
         theme: theme,
-        buildBackground: logoSvgString != null
-            ? (pw.Context context) {
-                return pw.FullPage(
-                  ignoreMargins: true,
-                  child: pw.Center(
-                    child: pw.Opacity(
-                      opacity: 0.03,
-                      child: pw.Container(
-                        width: 250,
-                        height: 250,
-                        child: pw.SvgImage(
-                          svg: logoSvgString!,
-                          colorFilter: const PdfColor(0 / 255.0, 102 / 255.0,
-                              153 / 255.0), // #006699 (Deep Brand Blue)
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }
-            : null,
+        logoSvg: logoSvgString,
+        margin: const pw.EdgeInsets.all(32),
       );
 
       final List<Uint8List> pdfParts = [];
@@ -2629,16 +2614,21 @@ class ExportService {
       if (preloadedData.isEmpty) {
         final pdf = pw.Document();
         pdf.addPage(
-          pw.Page(
+          pw.MultiPage(
             pageTheme: pageTheme,
-            build: (pw.Context context) {
-              return pw.Center(
+            footer: (pw.Context context) => ExportService.buildAppReportFooter(
+              context,
+              l10n: l10n,
+              logoSvg: logoSvgString,
+            ),
+            build: (pw.Context context) => [
+              pw.Center(
                 child: _buildText(
                   l10n?.noTransactionsWithAttachments ?? 'No transactions with attachments found.',
                   style: pw.TextStyle(fontSize: 14, color: PdfColors.grey600),
                 ),
-              );
-            },
+              ),
+            ],
           ),
         );
         final bytes = await pdf.save();
@@ -2664,7 +2654,7 @@ class ExportService {
             pw.MultiPage(
               pageTheme: pageTheme,
               header: (pw.Context context) {
-                final appTitle = l10n?.appTitle ?? 'Flowpaisa';
+                final appTitle = l10n?.appTitle ?? 'FlowKarobar';
                 final reportTitle = l10n?.exportPdfWithAttachments ?? 'Transactions with Attachments';
                 return pw.Container(
                   alignment: isRtl ? pw.Alignment.centerLeft : pw.Alignment.centerRight,
@@ -2675,110 +2665,19 @@ class ExportService {
                   ),
                 );
               },
-              footer: (pw.Context context) {
-                final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
-                final appTitle = l10n?.appTitle ?? 'Flowpaisa';
-                final pageText = 'Page ${context.pageNumber} / ${context.pagesCount}';
-
-                return pw.Container(
-                  alignment: pw.Alignment.center,
-                  margin: const pw.EdgeInsets.only(top: 20),
-                  decoration: const pw.BoxDecoration(
-                    border: pw.Border(
-                      top: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
-                    ),
+              footer: (pw.Context context) => ExportService.buildAppReportFooter(
+                context,
+                l10n: l10n,
+                logoSvg: logoSvgString,
+                center: _buildText(
+                  '$categoryName • $formattedAmount',
+                  style: pw.TextStyle(
+                    color: PdfColors.grey600,
+                    fontSize: 8,
+                    fontWeight: pw.FontWeight.bold,
                   ),
-                  padding: const pw.EdgeInsets.only(top: 10),
-                  child: pw.Row(
-                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                    children: isRtl
-                        ? [
-                            _buildText(
-                              pageText,
-                              style: const pw.TextStyle(
-                                color: PdfColors.grey600,
-                                fontSize: 8,
-                              ),
-                            ),
-                            _buildText(
-                              '$categoryName • $formattedAmount',
-                              style: pw.TextStyle(
-                                color: PdfColors.grey600,
-                                fontSize: 8,
-                                fontWeight: pw.FontWeight.bold,
-                              ),
-                            ),
-                            pw.Row(
-                              children: [
-                                _buildText(
-                                  appTitle,
-                                  style: pw.TextStyle(
-                                    color: PdfColors.grey600,
-                                    fontSize: 8,
-                                    fontWeight: pw.FontWeight.bold,
-                                  ),
-                                ),
-                                if (logoSvgString != null) ...[
-                                  pw.SizedBox(width: 4),
-                                  pw.Container(
-                                    width: 12,
-                                    height: 12,
-                                    child: pw.SvgImage(
-                                      svg: logoSvgString,
-                                      colorFilter: const PdfColor(
-                                          0 / 255.0,
-                                          102 / 255.0,
-                                          153 / 255.0), // #006699 (Deep Brand Blue)
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ]
-                        : [
-                            pw.Row(
-                              children: [
-                                if (logoSvgString != null) ...[
-                                  pw.Container(
-                                    width: 12,
-                                    height: 12,
-                                    child: pw.SvgImage(
-                                      svg: logoSvgString,
-                                      colorFilter: const PdfColor(
-                                          0 / 255.0,
-                                          102 / 255.0,
-                                          153 / 255.0), // #006699 (Deep Brand Blue)
-                                    ),
-                                  ),
-                                  pw.SizedBox(width: 4),
-                                ],
-                                _buildText(
-                                  appTitle,
-                                  style: pw.TextStyle(
-                                    color: PdfColors.grey600,
-                                    fontSize: 8,
-                                    fontWeight: pw.FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            _buildText(
-                              '$categoryName • $formattedAmount',
-                              style: pw.TextStyle(
-                                color: PdfColors.grey600,
-                                fontSize: 8,
-                                fontWeight: pw.FontWeight.bold,
-                              ),
-                            ),
-                            _buildText(
-                              pageText,
-                              style: const pw.TextStyle(
-                                  color: PdfColors.grey600, fontSize: 8),
-                            ),
-                          ],
-                  ),
-                );
-              },
+                ),
+              ),
               build: (pw.Context context) {
                 final List<pw.Widget> pageWidgets = [];
 
@@ -3697,15 +3596,7 @@ class ExportService {
     Set<String>? visibleSections,
     List<String>? tagUuids,
   }) async {
-    String? logoSvgString;
-    try {
-      logoSvgString =
-          await rootBundle.loadString('assets/images/logo_square.svg');
-    } catch (e) {
-      if (kDebugMode) {
-        print('ExportService: Failed to load logo SVG: $e');
-      }
-    }
+    final logoSvgString = await ExportService.loadAppReportLogoSvg();
 
     // Fetch all analytics data
     final financialSummary =
@@ -3852,126 +3743,19 @@ class ExportService {
     // Capture this for use in closure
     final self = this;
 
-    final pageTheme = pw.PageTheme(
-      pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.all(40),
+    final pageTheme = ExportService.buildAppReportPageTheme(
       theme: theme,
-      buildBackground: logoSvgString != null
-          ? (pw.Context context) {
-              return pw.FullPage(
-                ignoreMargins: true,
-                child: pw.Center(
-                  child: pw.Opacity(
-                    opacity: 0.03,
-                    child: pw.Container(
-                      width: 250,
-                      height: 250,
-                      child: pw.SvgImage(
-                        svg: logoSvgString!,
-                        colorFilter: const PdfColor(0 / 255.0, 102 / 255.0,
-                            153 / 255.0), // #006699 (Deep Brand Blue)
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }
-          : null,
+      logoSvg: logoSvgString,
     );
 
     pdf.addPage(
       pw.MultiPage(
         pageTheme: pageTheme,
-        footer: (pw.Context context) {
-          final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
-          final pageText = 'Page ${context.pageNumber} / ${context.pagesCount}';
-          final appTitle = l10n?.appTitle ?? 'Flowpaisa';
-
-          return pw.Container(
-            alignment: pw.Alignment.center,
-            margin: const pw.EdgeInsets.only(top: 10),
-            decoration: const pw.BoxDecoration(
-              border: pw.Border(
-                top: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
-              ),
-            ),
-            padding: const pw.EdgeInsets.only(top: 10),
-            child: pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: isRtl
-                  ? [
-                      _buildText(
-                        pageText,
-                        style: const pw.TextStyle(
-                          color: PdfColors.grey600,
-                          fontSize: 8,
-                        ),
-                      ),
-                      pw.Row(
-                        children: [
-                          _buildText(
-                            appTitle,
-                            style: pw.TextStyle(
-                              color: PdfColors.grey600,
-                              fontSize: 8,
-                              fontWeight: pw.FontWeight.bold,
-                            ),
-                          ),
-                          if (logoSvgString != null) ...[
-                            pw.SizedBox(width: 4),
-                            pw.Container(
-                              width: 12,
-                              height: 12,
-                              child: pw.SvgImage(
-                                svg: logoSvgString,
-                                colorFilter: const PdfColor(
-                                    0 / 255.0,
-                                    102 / 255.0,
-                                    153 / 255.0), // #006699 (Deep Brand Blue)
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ]
-                  : [
-                      pw.Row(
-                        children: [
-                          if (logoSvgString != null) ...[
-                            pw.Container(
-                              width: 12,
-                              height: 12,
-                              child: pw.SvgImage(
-                                svg: logoSvgString,
-                                colorFilter: const PdfColor(
-                                    0 / 255.0,
-                                    102 / 255.0,
-                                    153 / 255.0), // #006699 (Deep Brand Blue)
-                              ),
-                            ),
-                            pw.SizedBox(width: 4),
-                          ],
-                          _buildText(
-                            appTitle,
-                            style: pw.TextStyle(
-                              color: PdfColors.grey600,
-                              fontSize: 8,
-                              fontWeight: pw.FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      _buildText(
-                        pageText,
-                        style: const pw.TextStyle(
-                          color: PdfColors.grey600,
-                          fontSize: 8,
-                        ),
-                      ),
-                    ],
-            ),
-          );
-        },
+        footer: (pw.Context context) => ExportService.buildAppReportFooter(
+          context,
+          l10n: l10n,
+          logoSvg: logoSvgString,
+        ),
         build: (pw.Context context) {
           final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
 
@@ -4006,7 +3790,7 @@ class ExportService {
                         ? pw.Alignment.centerRight
                         : pw.Alignment.centerLeft,
                     child: _buildText(
-                      l10n?.exportAnalyticsPDF ?? 'Flowpaisa Analytics Report',
+                      l10n?.exportAnalyticsPDF ?? 'FlowKarobar Analytics Report',
                       style: pw.TextStyle(
                         fontSize: 24,
                         fontWeight: pw.FontWeight.bold,
@@ -5248,17 +5032,7 @@ class ExportService {
     required AppCurrency currency,
     AppLocalizations? l10n,
   }) async {
-    pw.SvgImage? logoSvg;
-    String? logoSvgString;
-    try {
-      logoSvgString =
-          await rootBundle.loadString('assets/images/logo_square.svg');
-      logoSvg = pw.SvgImage(svg: logoSvgString);
-    } catch (e) {
-      if (kDebugMode) {
-        print('ExportService: Failed to load logo SVG: $e');
-      }
-    }
+    final logoSvgString = await ExportService.loadAppReportLogoSvg();
 
     final unicodeFont = await loadUnicodeFont();
     final hindiFont = await loadHindiFont();
@@ -5291,31 +5065,9 @@ class ExportService {
       ),
     );
 
-    final pageTheme = pw.PageTheme(
-      pageFormat: PdfPageFormat.a4,
-      margin: const pw.EdgeInsets.all(40),
+    final pageTheme = ExportService.buildAppReportPageTheme(
       theme: theme,
-      buildBackground: logoSvgString != null
-          ? (pw.Context context) {
-              return pw.FullPage(
-                ignoreMargins: true,
-                child: pw.Center(
-                  child: pw.Opacity(
-                    opacity: 0.03,
-                    child: pw.Container(
-                      width: 250,
-                      height: 250,
-                      child: pw.SvgImage(
-                        svg: logoSvgString!,
-                        colorFilter: const PdfColor(0 / 255.0, 102 / 255.0,
-                            153 / 255.0), // #006699 (Deep Brand Blue)
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }
-          : null,
+      logoSvg: logoSvgString,
     );
 
     final pdf = pw.Document();
@@ -5354,96 +5106,11 @@ class ExportService {
     pdf.addPage(
       pw.MultiPage(
         pageTheme: pageTheme,
-        footer: (pw.Context context) {
-          final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
-          final pageText = 'Page ${context.pageNumber} / ${context.pagesCount}';
-          final appTitle = l10n?.appTitle ?? 'Flowpaisa';
-
-          return pw.Container(
-            alignment: pw.Alignment.center,
-            margin: const pw.EdgeInsets.only(top: 10),
-            decoration: const pw.BoxDecoration(
-              border: pw.Border(
-                top: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
-              ),
-            ),
-            padding: const pw.EdgeInsets.only(top: 10),
-            child: pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: isRtl
-                  ? [
-                      _buildText(
-                        pageText,
-                        style: const pw.TextStyle(
-                          color: PdfColors.grey600,
-                          fontSize: 8,
-                        ),
-                      ),
-                      pw.Row(
-                        children: [
-                          _buildText(
-                            appTitle,
-                            style: pw.TextStyle(
-                              color: PdfColors.grey600,
-                              fontSize: 8,
-                              fontWeight: pw.FontWeight.bold,
-                            ),
-                          ),
-                          if (logoSvgString != null) ...[
-                            pw.SizedBox(width: 4),
-                            pw.Container(
-                              width: 12,
-                              height: 12,
-                              child: pw.SvgImage(
-                                svg: logoSvgString,
-                                colorFilter: const PdfColor(
-                                    0 / 255.0,
-                                    102 / 255.0,
-                                    153 / 255.0), // #006699 (Deep Brand Blue)
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ]
-                  : [
-                      pw.Row(
-                        children: [
-                          if (logoSvgString != null) ...[
-                            pw.Container(
-                              width: 12,
-                              height: 12,
-                              child: pw.SvgImage(
-                                svg: logoSvgString,
-                                colorFilter: const PdfColor(
-                                    0 / 255.0,
-                                    102 / 255.0,
-                                    153 / 255.0), // #006699 (Deep Brand Blue)
-                              ),
-                            ),
-                            pw.SizedBox(width: 4),
-                          ],
-                          _buildText(
-                            appTitle,
-                            style: pw.TextStyle(
-                              color: PdfColors.grey600,
-                              fontSize: 8,
-                              fontWeight: pw.FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      _buildText(
-                        pageText,
-                        style: const pw.TextStyle(
-                          color: PdfColors.grey600,
-                          fontSize: 8,
-                        ),
-                      ),
-                    ],
-            ),
-          );
-        },
+        footer: (pw.Context context) => ExportService.buildAppReportFooter(
+          context,
+          l10n: l10n,
+          logoSvg: logoSvgString,
+        ),
         build: (pw.Context context) {
           final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
 
@@ -6397,250 +6064,773 @@ extension InvoicePdfExporter on ExportService {
   Future<Uint8List> generateInvoicePDF({
     required Order order,
     required List<OrderItem> items,
+    List<OrderLineGroup> groups = const [],
     required Contact? contact,
     required Map<String, String> businessPrefs,
     String? currencySymbol,
     int decimalPlaces = 2,
+    Uint8List? logoBytes,
     AppLocalizations? l10n,
   }) async {
     final pdf = pw.Document();
 
+    // Locale fonts — same pattern as transaction PDF export
     final englishFont = await loadEnglishFont();
-    final englishFontBold = await loadFontForLanguage('en', isBold: true);
     final unicodeFont = await loadUnicodeFont();
+    final hindiFont = await loadHindiFont();
+    final urduFont = await loadUrduFont();
+    final isHindiLocale = l10n?.localeName == 'hi';
+    final isUrduLocale = l10n?.localeName == 'ur' || l10n?.localeName == 'ar';
+    final isRtl = l10n != null && Bidi.isRtlLanguage(l10n.localeName);
+
+    final baseFont = isHindiLocale
+        ? (hindiFont ?? unicodeFont ?? englishFont)
+        : isUrduLocale
+            ? (urduFont ?? unicodeFont ?? englishFont)
+            : (englishFont ?? unicodeFont);
+    final boldFont = isHindiLocale
+        ? (_instHindiFontBold ?? ExportService._unicodeFontBold ?? baseFont)
+        : isUrduLocale
+            ? (_loadedBoldFonts['ur'] ?? ExportService._unicodeFontBold ?? baseFont)
+            : (_instEnglishFontBold ?? ExportService._unicodeFontBold ?? baseFont);
+
+    final theme = pw.ThemeData.withFont(
+      base: baseFont,
+      bold: boldFont,
+      fontFallback: _getSafeFontFallback(
+        baseFont: baseFont,
+        unicodeFont: unicodeFont,
+        hindiFont: hindiFont,
+        englishFont: englishFont,
+      ),
+    );
+
+    pw.ImageProvider? logoImage;
+    if (logoBytes != null && logoBytes.isNotEmpty) {
+      try {
+        logoImage = pw.MemoryImage(logoBytes);
+      } catch (_) {
+        logoImage = null;
+      }
+    }
+
+    final companyName = (businessPrefs['company_name'] ??
+            businessPrefs['user_name'] ??
+            '')
+        .trim();
+    final companyAddress = (businessPrefs['user_address'] ?? '').trim();
+    final invoiceNotes = (businessPrefs['default_invoice_notes'] ?? '').trim();
+    final appLogoSvg = await ExportService.loadAppReportLogoSvg();
+
+    final titleText = order.orderType == 'SALE'
+        ? (l10n?.taxInvoice ?? 'Tax Invoice')
+        : (l10n?.purchaseReceipt ?? 'Purchase Receipt');
+    final phoneLabel = l10n?.phoneNumber ?? 'Phone Number';
+    final emailLabel = l10n?.email ?? 'Email';
+    final addressLabel = l10n?.address ?? 'Address';
+    final taxIdLabel = l10n?.businessTaxId ?? 'Tax ID (GSTIN / VAT)';
+    final clientTaxLabel = l10n?.clientTaxId ?? 'Client Tax ID';
+    final billToLabel = l10n?.billTo ?? 'Bill To';
+    final orderNumberLabel = l10n?.orderNumber ?? 'Order Number';
+    final dateLabel = l10n?.date ?? 'Date';
+    final packageUnit = l10n?.packageUnitShort ?? 'Pkg';
+    final dateStr =
+        AppDateFormatter.formatDate(order.orderDate, pattern: _dateFormat);
+
+    final descAlign = isRtl ? pw.TextAlign.right : pw.TextAlign.left;
+    const numAlign = pw.TextAlign.right;
+    final headerCells = [
+      _buildInvoiceHeaderCell(
+          l10n?.productDescription ?? 'Product Description',
+          font: boldFont),
+      _buildInvoiceHeaderCell(l10n?.unit ?? 'Unit', font: boldFont),
+      _buildInvoiceHeaderCell(l10n?.qtyShort ?? 'Qty', font: boldFont),
+      _buildInvoiceHeaderCell(l10n?.unitPrice ?? 'Unit Price', font: boldFont),
+      _buildInvoiceHeaderCell(
+          l10n?.lineDiscountDetail ?? 'Line discount', font: boldFont),
+      _buildInvoiceHeaderCell(l10n?.lineTotal ?? 'Line total', font: boldFont),
+    ];
+
+    final companyBlock = pw.Column(
+      crossAxisAlignment:
+          isRtl ? pw.CrossAxisAlignment.end : pw.CrossAxisAlignment.start,
+      children: [
+        if (companyName.isNotEmpty)
+          _buildText(
+            companyName,
+            style: pw.TextStyle(
+              font: boldFont,
+              fontSize: 15,
+              fontWeight: pw.FontWeight.bold,
+            ),
+            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+          ),
+        if (companyAddress.isNotEmpty) ...[
+          pw.SizedBox(height: 4),
+          _buildText(
+            companyAddress,
+            style: pw.TextStyle(font: baseFont, fontSize: 8),
+            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+          ),
+        ],
+        if (businessPrefs['user_phone'] != null) ...[
+          pw.SizedBox(height: 2),
+          _buildText(
+            '$phoneLabel: ${businessPrefs['user_phone']}',
+            style: pw.TextStyle(font: baseFont, fontSize: 8),
+            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+          ),
+        ],
+        if (businessPrefs['user_email'] != null) ...[
+          pw.SizedBox(height: 2),
+          _buildText(
+            '$emailLabel: ${businessPrefs['user_email']}',
+            style: pw.TextStyle(font: baseFont, fontSize: 8),
+            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+          ),
+        ],
+        if (businessPrefs['business_tax_id'] != null) ...[
+          pw.SizedBox(height: 2),
+          _buildText(
+            '$taxIdLabel: ${businessPrefs['business_tax_id']}',
+            style: pw.TextStyle(font: baseFont, fontSize: 8),
+            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+          ),
+        ],
+      ],
+    );
+
+    final metaBlock = pw.Column(
+      crossAxisAlignment:
+          isRtl ? pw.CrossAxisAlignment.start : pw.CrossAxisAlignment.end,
+      children: [
+        _buildText(
+          titleText,
+          style: pw.TextStyle(
+            font: boldFont,
+            fontSize: 16,
+            color: PdfColors.blueGrey800,
+          ),
+          align: isRtl ? pw.TextAlign.left : pw.TextAlign.right,
+        ),
+        pw.SizedBox(height: 4),
+        _buildText(
+          '$orderNumberLabel: ${order.orderNumber}',
+          style: pw.TextStyle(font: baseFont, fontSize: 9),
+          align: isRtl ? pw.TextAlign.left : pw.TextAlign.right,
+        ),
+        _buildText(
+          '$dateLabel: $dateStr',
+          style: pw.TextStyle(font: baseFont, fontSize: 8),
+          align: isRtl ? pw.TextAlign.left : pw.TextAlign.right,
+        ),
+      ],
+    );
+
+    final logoWidget = logoImage != null
+        ? pw.Container(
+            width: 48,
+            height: 48,
+            decoration: pw.BoxDecoration(
+              borderRadius: pw.BorderRadius.circular(6),
+            ),
+            child: pw.ClipRRect(
+              horizontalRadius: 6,
+              verticalRadius: 6,
+              child: pw.Image(logoImage, fit: pw.BoxFit.contain),
+            ),
+          )
+        : null;
+
+    final brandingRowChildren = <pw.Widget>[
+      if (logoWidget != null) ...[
+        logoWidget,
+        pw.SizedBox(width: 10),
+      ],
+      companyBlock,
+    ];
+
+    final headerRowChildren = isRtl
+        ? [metaBlock, pw.Row(children: brandingRowChildren.reversed.toList())]
+        : [
+            pw.Row(children: brandingRowChildren),
+            metaBlock,
+          ];
+
+    final notesBlock = pw.Column(
+      crossAxisAlignment:
+          isRtl ? pw.CrossAxisAlignment.end : pw.CrossAxisAlignment.start,
+      children: [
+        _buildText(
+          l10n?.termsAndNotes ?? 'Terms & Notes',
+          style: pw.TextStyle(
+              font: boldFont, fontSize: 7, color: PdfColors.grey700),
+          align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+        ),
+        pw.SizedBox(height: 4),
+        pw.Container(
+          constraints: const pw.BoxConstraints(maxWidth: 240),
+          child: _buildText(
+            invoiceNotes.isNotEmpty
+                ? invoiceNotes
+                : (l10n?.thankYouForBusiness ??
+                    'Thank you for your business!'),
+            style: pw.TextStyle(
+                font: baseFont, fontSize: 7, color: PdfColors.grey600),
+            align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+          ),
+        ),
+      ],
+    );
+
+    final symbol = currencySymbol ?? '\$';
+    // Invoice amounts always keep the currency symbol on the left of the number.
+    String money(num amount) => AmountFormatter.formatWithCurrency(
+          amount.toDouble(),
+          symbol,
+          decimalPlaces,
+          false,
+        );
+
+    final taxSummaryValue = () {
+      final amountText = money(order.taxAmount);
+      if (order.taxRate > 0) {
+        return '$amountText (${AmountFormatter.formatQuantity(order.taxRate)}%)';
+      }
+      return amountText;
+    }();
+
+    final totalsBlock = pw.Container(
+      width: 200,
+      child: pw.Column(
+        children: [
+          _buildInvoiceSummaryRow(
+            l10n?.subtotal ?? 'Subtotal',
+            money(order.subtotal),
+            font: baseFont,
+            isRtl: isRtl,
+          ),
+          if (order.discountAmount > 0)
+            _buildInvoiceSummaryRow(
+              l10n?.discount ?? 'Discount',
+              '- ${money(order.discountAmount)}',
+              font: baseFont,
+              isRtl: isRtl,
+            ),
+          if (order.taxAmount > 0 || order.taxRate > 0)
+            _buildInvoiceSummaryRow(
+              l10n?.tax ?? 'Tax',
+              taxSummaryValue,
+              font: baseFont,
+              isRtl: isRtl,
+            ),
+          pw.Divider(height: 12, thickness: 0.5),
+          _buildInvoiceSummaryRow(
+            l10n?.grandTotal ?? 'Grand Total',
+            money(order.totalAmount),
+            font: boldFont,
+            isBold: true,
+            isRtl: isRtl,
+          ),
+        ],
+      ),
+    );
 
     pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(32),
-        build: (context) {
-          return pw.Column(
+      pw.MultiPage(
+        pageTheme: ExportService.buildAppReportPageTheme(
+          theme: theme,
+          logoSvg: appLogoSvg,
+          margin: const pw.EdgeInsets.all(32),
+          textDirection:
+              isRtl ? pw.TextDirection.rtl : pw.TextDirection.ltr,
+        ),
+        footer: (context) => ExportService.buildAppReportFooter(
+          context,
+          l10n: l10n,
+          logoSvg: appLogoSvg,
+        ),
+        build: (context) => [
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              // 1. INVOICE HEADER (Company details and metadata)
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text(
-                        businessPrefs['user_name'] ?? 'FLOWKAROBAR ENTERPRISES',
-                        style: pw.TextStyle(
-                          font: englishFontBold ?? englishFont,
-                          fontSize: 15,
-                          fontWeight: pw.FontWeight.bold,
-                        ),
-                      ),
-                      pw.SizedBox(height: 4),
-                      pw.Text(
-                        businessPrefs['user_address'] ?? 'Main Commercial Sector',
-                        style: pw.TextStyle(font: englishFont, fontSize: 8),
-                      ),
-                      if (businessPrefs['business_tax_id'] != null) ...[
-                        pw.SizedBox(height: 2),
-                        pw.Text(
-                          'GSTIN/VAT ID: ${businessPrefs['business_tax_id']}',
-                          style: pw.TextStyle(font: englishFont, fontSize: 8),
-                        ),
-                      ],
-                    ],
-                  ),
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    children: [
-                      pw.Text(
-                        order.orderType == 'SALE' ? 'TAX INVOICE' : 'PURCHASE RECEIPT',
-                        style: pw.TextStyle(
-                          font: englishFontBold ?? englishFont,
-                          fontSize: 16,
-                          color: PdfColors.blueGrey800,
-                        ),
-                      ),
-                      pw.SizedBox(height: 4),
-                      pw.Text(
-                        'Invoice #: ${order.orderNumber}',
-                        style: pw.TextStyle(font: englishFont, fontSize: 9),
-                      ),
-                      pw.Text(
-                        'Date: ${DateFormat(_dateFormat).format(order.orderDate)}',
-                        style: pw.TextStyle(font: englishFont, fontSize: 8),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              pw.Divider(height: 20, thickness: 0.5, color: PdfColors.grey400),
-
-              // 2. CLIENT PROFILE DETAILS (Bill To)
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  if (contact != null)
-                    pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        pw.Text(
-                          'BILL TO:',
-                          style: pw.TextStyle(font: englishFontBold ?? englishFont, fontSize: 8, color: PdfColors.grey700),
-                        ),
-                        pw.SizedBox(height: 4),
-                        pw.Text(
-                          contact.name,
-                          style: pw.TextStyle(font: englishFontBold ?? englishFont, fontSize: 9),
-                        ),
-                        if (contact.phone != null) ...[
-                          pw.SizedBox(height: 2),
-                          pw.Text('Phone: ${contact.phone}', style: pw.TextStyle(font: englishFont, fontSize: 8)),
-                        ],
-                        if (contact.address != null) ...[
-                          pw.SizedBox(height: 2),
-                          pw.Text('Address: ${contact.address}', style: pw.TextStyle(font: englishFont, fontSize: 8)),
-                        ],
-                        if (contact.taxNumber != null) ...[
-                          pw.SizedBox(height: 2),
-                          pw.Text('Client Tax ID: ${contact.taxNumber}', style: pw.TextStyle(font: englishFont, fontSize: 8)),
-                        ],
-                      ],
-                    ),
-                ],
-              ),
-              pw.SizedBox(height: 20),
-
-              // 3. TABULAR ORDER ITEMS (Description, Qty, Price, Discount, Total)
-              pw.Table(
-                border: const pw.TableBorder(
-                  bottom: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
-                  horizontalInside: pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+            children: headerRowChildren,
+          ),
+          pw.Divider(height: 20, thickness: 0.5, color: PdfColors.grey400),
+          if (contact != null) ...[
+            pw.Column(
+              crossAxisAlignment: isRtl
+                  ? pw.CrossAxisAlignment.end
+                  : pw.CrossAxisAlignment.start,
+              children: [
+                _buildText(
+                  '$billToLabel:',
+                  style: pw.TextStyle(
+                      font: boldFont, fontSize: 8, color: PdfColors.grey700),
+                  align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
                 ),
-                columnWidths: {
-                  0: const pw.FlexColumnWidth(3),
-                  1: const pw.FlexColumnWidth(1),
-                  2: const pw.FlexColumnWidth(1),
-                  3: const pw.FlexColumnWidth(1.2),
-                  4: const pw.FlexColumnWidth(1.2),
-                  5: const pw.FlexColumnWidth(1.5),
-                },
-                children: [
-                  // Table Header
-                  pw.TableRow(
-                    decoration: const pw.BoxDecoration(color: PdfColors.grey100),
-                    children: [
-                      _buildInvoiceHeaderCell('Product Description', englishFontBold ?? englishFont),
-                      _buildInvoiceHeaderCell('Unit', englishFontBold ?? englishFont),
-                      _buildInvoiceHeaderCell('Qty', englishFontBold ?? englishFont),
-                      _buildInvoiceHeaderCell('Rate', englishFontBold ?? englishFont),
-                      _buildInvoiceHeaderCell('Disc.', englishFontBold ?? englishFont),
-                      _buildInvoiceHeaderCell('Total', englishFontBold ?? englishFont),
-                    ],
+                pw.SizedBox(height: 4),
+                _buildText(
+                  contact.name,
+                  style: pw.TextStyle(font: boldFont, fontSize: 9),
+                  align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                ),
+                if (contact.phone != null) ...[
+                  pw.SizedBox(height: 2),
+                  _buildText(
+                    '$phoneLabel: ${contact.phone}',
+                    style: pw.TextStyle(font: baseFont, fontSize: 8),
+                    align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
                   ),
-                  // Table Rows
-                  ...items.map((item) {
-                    final itemTotal = (item.quantity * item.unitPrice) - item.discountAmount;
-                    return pw.TableRow(
-                      children: [
-                        _buildInvoiceDataCell(item.productNameSnapshot, englishFont ?? unicodeFont, alignLeft: true),
-                        _buildInvoiceDataCell(item.unit, englishFont ?? unicodeFont),
-                        _buildInvoiceDataCell(item.quantity.toStringAsFixed(1), englishFont),
-                        _buildInvoiceDataCell(AmountFormatter.formatAmount(item.unitPrice, decimalPlaces), englishFont),
-                        _buildInvoiceDataCell(AmountFormatter.formatAmount(item.discountAmount, decimalPlaces), englishFont),
-                        _buildInvoiceDataCell(AmountFormatter.formatAmount(itemTotal, decimalPlaces), englishFont),
-                      ],
-                    );
-                  }),
                 ],
+                if (contact.address != null) ...[
+                  pw.SizedBox(height: 2),
+                  _buildText(
+                    '$addressLabel: ${contact.address}',
+                    style: pw.TextStyle(font: baseFont, fontSize: 8),
+                    align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                  ),
+                ],
+                if (contact.taxNumber != null) ...[
+                  pw.SizedBox(height: 2),
+                  _buildText(
+                    '$clientTaxLabel: ${contact.taxNumber}',
+                    style: pw.TextStyle(font: baseFont, fontSize: 8),
+                    align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+                  ),
+                ],
+              ],
+            ),
+            pw.SizedBox(height: 20),
+          ],
+          pw.Table(
+            border: const pw.TableBorder(
+              left: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
+              right: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
+              top: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
+              bottom: pw.BorderSide(color: PdfColors.grey300, width: 0.5),
+              horizontalInside:
+                  pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+              verticalInside:
+                  pw.BorderSide(color: PdfColors.grey200, width: 0.5),
+            ),
+            columnWidths: isRtl
+                ? {
+                    0: const pw.FlexColumnWidth(1.5),
+                    1: const pw.FlexColumnWidth(1.2),
+                    2: const pw.FlexColumnWidth(1.2),
+                    3: const pw.FlexColumnWidth(1),
+                    4: const pw.FlexColumnWidth(1),
+                    5: const pw.FlexColumnWidth(3),
+                  }
+                : {
+                    0: const pw.FlexColumnWidth(3),
+                    1: const pw.FlexColumnWidth(1),
+                    2: const pw.FlexColumnWidth(1),
+                    3: const pw.FlexColumnWidth(1.2),
+                    4: const pw.FlexColumnWidth(1.2),
+                    5: const pw.FlexColumnWidth(1.5),
+                  },
+            children: [
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.grey100),
+                children: isRtl ? headerCells.reversed.toList() : headerCells,
               ),
-              pw.SizedBox(height: 20),
-
-              // 4. FINANCIAL BREAKDOWN SUMMARY
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.start,
-                    children: [
-                      pw.Text(
-                        'TERMS & NOTES:',
-                        style: pw.TextStyle(font: englishFontBold ?? englishFont, fontSize: 7, color: PdfColors.grey700),
-                      ),
-                      pw.SizedBox(height: 4),
-                      pw.Container(
-                        constraints: const pw.BoxConstraints(maxWidth: 240),
-                        child: pw.Text(
-                          businessPrefs['default_invoice_notes'] ?? 'Thank you for your business!',
-                          style: pw.TextStyle(font: englishFont, fontSize: 7, color: PdfColors.grey600),
-                        ),
-                      ),
-                    ],
-                  ),
-                  pw.Container(
-                    width: 200,
-                    child: pw.Column(
-                      children: [
-                        _buildInvoiceSummaryRow('Subtotal', AmountFormatter.formatAmount(order.subtotal, decimalPlaces), englishFont),
-                        if (order.discountAmount > 0)
-                          _buildInvoiceSummaryRow('Discount', '- ${AmountFormatter.formatAmount(order.discountAmount, decimalPlaces)}', englishFont),
-                        if (order.taxAmount > 0)
-                          _buildInvoiceSummaryRow('Tax', AmountFormatter.formatAmount(order.taxAmount, decimalPlaces), englishFont),
-                        pw.Divider(height: 12, thickness: 0.5),
-                        _buildInvoiceSummaryRow(
-                          'GRAND TOTAL',
-                          AmountFormatter.formatWithCurrency(order.totalAmount, currencySymbol ?? '\$', decimalPlaces),
-                          englishFontBold ?? englishFont,
-                          isBold: true,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+              ..._buildInvoiceItemRows(
+                items: items,
+                groups: groups,
+                decimalPlaces: decimalPlaces,
+                font: baseFont,
+                fontBold: boldFont,
+                unicodeFont: unicodeFont,
+                isRtl: isRtl,
+                packageUnitLabel: packageUnit,
+                descriptionAlign: descAlign,
+                numberAlign: numAlign,
+                currencySymbol: symbol,
               ),
             ],
-          );
-        },
+          ),
+          pw.SizedBox(height: 20),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: isRtl
+                ? [totalsBlock, notesBlock]
+                : [notesBlock, totalsBlock],
+          ),
+        ],
       ),
     );
 
     return pdf.save();
   }
 
-  static pw.Widget _buildInvoiceHeaderCell(String text, pw.Font? font) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.all(5),
-      child: pw.Text(
-        text,
-        style: pw.TextStyle(font: font, fontSize: 7.5, fontWeight: pw.FontWeight.bold, color: PdfColors.blueGrey800),
-        textAlign: pw.TextAlign.center,
-      ),
-    );
+  pw.Alignment _invoiceCellAlignment(pw.TextAlign align) {
+    switch (align) {
+      case pw.TextAlign.right:
+      case pw.TextAlign.end:
+        return pw.Alignment.centerRight;
+      case pw.TextAlign.left:
+      case pw.TextAlign.start:
+        return pw.Alignment.centerLeft;
+      case pw.TextAlign.center:
+      case pw.TextAlign.justify:
+      default:
+        return pw.Alignment.center;
+    }
   }
 
-  static pw.Widget _buildInvoiceDataCell(String text, pw.Font? font, {bool alignLeft = false}) {
+  /// Table cell with explicit [Align] so center/right work inside [pw.Table].
+  /// [forceLtr] keeps currency/amount glyph order (symbol left of number) under RTL pages.
+  pw.Widget _buildInvoiceCell(
+    String text, {
+    pw.Font? font,
+    pw.TextAlign align = pw.TextAlign.center,
+    bool bold = false,
+    PdfColor? color,
+    bool forceLtr = false,
+  }) {
+    pw.Widget child = _buildText(
+      text,
+      style: pw.TextStyle(
+        font: font,
+        fontSize: 7.5,
+        fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+        color: color,
+      ),
+      align: align,
+    );
+    if (forceLtr) {
+      child = pw.Directionality(
+        textDirection: pw.TextDirection.ltr,
+        child: child,
+      );
+    }
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 4),
-      child: pw.Text(
-        text,
-        style: pw.TextStyle(font: font, fontSize: 7.5),
-        textAlign: alignLeft ? pw.TextAlign.left : pw.TextAlign.center,
+      child: pw.Align(
+        alignment: _invoiceCellAlignment(align),
+        child: child,
       ),
     );
   }
 
-  static pw.Widget _buildInvoiceSummaryRow(String label, String value, pw.Font? font, {bool isBold = false}) {
+  pw.Widget _buildInvoiceHeaderCell(
+    String text, {
+    pw.Font? font,
+  }) {
+    // Headers are always visually centered in the column.
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 2),
-      child: pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-        children: [
-          pw.Text(
-            label,
-            style: pw.TextStyle(font: font, fontSize: isBold ? 8.5 : 7.5, color: isBold ? PdfColors.black : PdfColors.grey700),
+      padding: const pw.EdgeInsets.symmetric(vertical: 5, horizontal: 4),
+      child: pw.Center(
+        child: _buildText(
+          text,
+          style: pw.TextStyle(
+            font: font,
+            fontSize: 7.5,
+            fontWeight: pw.FontWeight.bold,
+            color: PdfColors.blueGrey800,
           ),
-          pw.Text(
-            value,
-            style: pw.TextStyle(font: font, fontSize: isBold ? 8.5 : 7.5, fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal),
-          ),
-        ],
+          align: pw.TextAlign.center,
+        ),
       ),
     );
+  }
+
+  pw.Widget _buildInvoiceDataCell(
+    String text, {
+    pw.Font? font,
+    pw.TextAlign align = pw.TextAlign.center,
+    bool forceLtr = false,
+  }) {
+    return _buildInvoiceCell(
+      text,
+      font: font,
+      align: align,
+      forceLtr: forceLtr,
+    );
+  }
+
+  /// Indented package component line: LTR `• name` / RTL `name •` with matching side inset.
+  pw.Widget _buildInvoicePackageDetailCell({
+    required String name,
+    required String meta,
+    required pw.Font? font,
+    required bool isRtl,
+  }) {
+    const bullet = '•';
+    final nameWidget = _buildText(
+      '$name$meta',
+      style: pw.TextStyle(font: font, fontSize: 7.5),
+      align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+    );
+    final bulletWidget = pw.Text(
+      bullet,
+      style: pw.TextStyle(font: font, fontSize: 7.5),
+    );
+    // Force LTR row geometry so page RTL cannot swap bullet/text.
+    // LTR visual: • name   |   RTL visual: name •
+    final row = pw.Directionality(
+      textDirection: pw.TextDirection.ltr,
+      child: pw.Row(
+        mainAxisSize: pw.MainAxisSize.min,
+        children: isRtl
+            ? [nameWidget, pw.SizedBox(width: 4), bulletWidget]
+            : [bulletWidget, pw.SizedBox(width: 4), nameWidget],
+      ),
+    );
+    return pw.Padding(
+      padding: isRtl
+          ? const pw.EdgeInsets.fromLTRB(4, 5, 12, 5)
+          : const pw.EdgeInsets.fromLTRB(12, 5, 4, 5),
+      child: pw.Align(
+        alignment:
+            isRtl ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
+        child: row,
+      ),
+    );
+  }
+
+  /// LTR: label left | amount right. RTL: amount left | label right.
+  /// Amount text is always right-aligned (currency symbol stays left of digits).
+  pw.Widget _buildInvoiceSummaryRow(
+    String label,
+    String value, {
+    pw.Font? font,
+    bool isBold = false,
+    bool isRtl = false,
+  }) {
+    final labelCell = pw.Align(
+      alignment: isRtl ? pw.Alignment.centerRight : pw.Alignment.centerLeft,
+      child: _buildText(
+        label,
+        style: pw.TextStyle(
+          font: font,
+          fontSize: isBold ? 8.5 : 7.5,
+          color: isBold ? PdfColors.black : PdfColors.grey700,
+        ),
+        align: isRtl ? pw.TextAlign.right : pw.TextAlign.left,
+      ),
+    );
+    final valueCell = pw.Directionality(
+      textDirection: pw.TextDirection.ltr,
+      child: pw.Align(
+        alignment: pw.Alignment.centerRight,
+        child: _buildText(
+          value,
+          style: pw.TextStyle(
+            font: font,
+            fontSize: isBold ? 8.5 : 7.5,
+            fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+          ),
+          align: pw.TextAlign.right,
+        ),
+      ),
+    );
+
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 2),
+      child: pw.Directionality(
+        textDirection: pw.TextDirection.ltr,
+        child: pw.Table(
+          columnWidths: isRtl
+              ? const {
+                  0: pw.FixedColumnWidth(110),
+                  1: pw.FlexColumnWidth(),
+                }
+              : const {
+                  0: pw.FlexColumnWidth(),
+                  1: pw.FixedColumnWidth(110),
+                },
+          children: [
+            pw.TableRow(
+              children: isRtl
+                  ? [valueCell, labelCell]
+                  : [labelCell, valueCell],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Package commercial rows + component details, then standalone product lines.
+  List<pw.TableRow> _buildInvoiceItemRows({
+    required List<OrderItem> items,
+    required List<OrderLineGroup> groups,
+    required int decimalPlaces,
+    required pw.Font? font,
+    required pw.Font? fontBold,
+    required pw.Font? unicodeFont,
+    required bool isRtl,
+    required String packageUnitLabel,
+    required pw.TextAlign descriptionAlign,
+    required pw.TextAlign numberAlign,
+    required String currencySymbol,
+  }) {
+    final rows = <pw.TableRow>[];
+    final groupedIds = <String>{};
+    final descFont = font ?? unicodeFont;
+
+    List<pw.Widget> cells(List<pw.Widget> ordered) =>
+        isRtl ? ordered.reversed.toList() : ordered;
+
+    // Symbol always on the left of the amount (not flipped for RTL locale).
+    String money(num amount) => AmountFormatter.formatWithCurrency(
+          amount.toDouble(),
+          currencySymbol,
+          decimalPlaces,
+          false,
+        );
+
+    String discountCell({
+      required double listUnit,
+      required double discUnit,
+      required double lineDisc,
+    }) {
+      final amountText = money(lineDisc);
+      final pct = SaleLinePricing.unitDiscountPercent(
+        listUnitPrice: listUnit,
+        discountedUnitPrice: discUnit,
+      );
+      if (pct > 1e-9) {
+        return '$amountText (${AmountFormatter.formatDiscountPercent(pct)}%)';
+      }
+      return amountText;
+    }
+
+    for (final group in groups) {
+      final members =
+          items.where((i) => i.groupUuid == group.uuid).toList();
+      for (final m in members) {
+        groupedIds.add(m.uuid);
+      }
+
+      final listUnit = group.unitPrice;
+      final discUnit = group.discountedUnitPrice ?? group.unitPrice;
+      final pkgQty = group.packageQty;
+      final lineDisc = group.discountAmount;
+      final lineTotal = (pkgQty * discUnit);
+      final unitLabel =
+          group.unit.trim().isEmpty ? packageUnitLabel : group.unit.trim();
+
+      rows.add(
+        pw.TableRow(
+          children: cells([
+            _buildInvoiceDataCell(group.nameSnapshot,
+                font: fontBold ?? descFont, align: descriptionAlign),
+            _buildInvoiceDataCell(unitLabel, font: descFont),
+            _buildInvoiceDataCell(
+              AmountFormatter.formatQuantity(pkgQty),
+              font: font,
+              align: numberAlign,
+              forceLtr: true,
+            ),
+            _buildInvoiceDataCell(
+              money(listUnit),
+              font: font,
+              align: numberAlign,
+              forceLtr: true,
+            ),
+            _buildInvoiceDataCell(
+              discountCell(
+                listUnit: listUnit,
+                discUnit: discUnit,
+                lineDisc: lineDisc,
+              ),
+              font: font,
+              align: numberAlign,
+              forceLtr: true,
+            ),
+            _buildInvoiceDataCell(
+              money(lineTotal),
+              font: font,
+              align: numberAlign,
+              forceLtr: true,
+            ),
+          ]),
+        ),
+      );
+
+      for (final c in members) {
+        final perPkg = c.bundleComponentQty;
+        final meta = perPkg != null && perPkg > 0
+            ? ' (${AmountFormatter.formatQuantity(perPkg)} ${c.unit}/$unitLabel)'
+            : '';
+        rows.add(
+          pw.TableRow(
+            children: cells([
+              _buildInvoicePackageDetailCell(
+                name: c.productNameSnapshot,
+                meta: meta,
+                font: descFont,
+                isRtl: isRtl,
+              ),
+              _buildInvoiceDataCell('', font: descFont),
+              _buildInvoiceDataCell(
+                AmountFormatter.formatQuantity(c.quantity),
+                font: font,
+                align: numberAlign,
+                forceLtr: true,
+              ),
+              _buildInvoiceDataCell('—',
+                  font: font, align: numberAlign, forceLtr: true),
+              _buildInvoiceDataCell('—',
+                  font: font, align: numberAlign, forceLtr: true),
+              _buildInvoiceDataCell('—',
+                  font: font, align: numberAlign, forceLtr: true),
+            ]),
+          ),
+        );
+      }
+    }
+
+    for (final item in items) {
+      if (groupedIds.contains(item.uuid)) continue;
+      final discUnit = item.discountedUnitPrice ??
+          (item.quantity > 0
+              ? item.unitPrice - (item.discountAmount / item.quantity)
+              : item.unitPrice);
+      final itemTotal = (item.quantity * discUnit);
+      rows.add(
+        pw.TableRow(
+          children: cells([
+            _buildInvoiceDataCell(item.productNameSnapshot,
+                font: descFont, align: descriptionAlign),
+            _buildInvoiceDataCell(item.unit, font: descFont),
+            _buildInvoiceDataCell(
+              AmountFormatter.formatQuantity(item.quantity),
+              font: font,
+              align: numberAlign,
+              forceLtr: true,
+            ),
+            _buildInvoiceDataCell(
+              money(item.unitPrice),
+              font: font,
+              align: numberAlign,
+              forceLtr: true,
+            ),
+            _buildInvoiceDataCell(
+              discountCell(
+                listUnit: item.unitPrice,
+                discUnit: discUnit,
+                lineDisc: item.discountAmount,
+              ),
+              font: font,
+              align: numberAlign,
+              forceLtr: true,
+            ),
+            _buildInvoiceDataCell(
+              money(itemTotal),
+              font: font,
+              align: numberAlign,
+              forceLtr: true,
+            ),
+          ]),
+        ),
+      );
+    }
+
+    return rows;
   }
 }

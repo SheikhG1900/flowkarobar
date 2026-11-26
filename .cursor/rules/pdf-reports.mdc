@@ -1,0 +1,103 @@
+---
+description: Required chrome + localization for every PDF report / export
+globs: "**/*pdf*.dart,**/*export*.dart,**/invoice*.dart"
+alwaysApply: false
+---
+
+# PDF report chrome + localization (required)
+
+Every PDF report or export **must**:
+
+1. Use the shared app watermark and app-name footer.
+2. Be **fully localized** (same pattern as transaction PDF export).
+
+Do not invent a one-off logo load, bare `pw.Page` / `pw.MultiPage` without chrome, or hard-coded English UI strings.
+
+## Canonical helpers (`ExportService`)
+
+Use these — do not copy-paste SVG opacity / footer rows:
+
+- `ExportService.loadAppReportLogoSvg()` — load `assets/images/logo_square.svg`
+- `ExportService.buildAppReportPageTheme(theme:, logoSvg:, textDirection:, …)` — page theme with watermark
+- `ExportService.buildAppReportWatermark(logoSvg)` — if you need a custom `PageTheme`
+- `ExportService.buildAppReportFooter(context, l10n:, logoSvg:, center:)` — logo + `l10n.appTitle` + localized page numbers (`pageOf`)
+
+## Localization (mirror transaction export)
+
+Reference: `generatePDFDocument` / `exportTransactionsToPDF` in `export_service.dart`.
+
+1. **Always accept and pass `AppLocalizations? l10n`** from the UI (`AppLocalizations.of(context)`). Callers must not omit it for user-facing reports.
+2. **Locale fonts + theme** before building pages:
+   - Detect `hi` / `ur` (and `ar`) from `l10n.localeName`
+   - Load `loadEnglishFont` / `loadHindiFont` / `loadUrduFont` / `loadUnicodeFont` as needed
+   - Build `pw.ThemeData.withFont` with base/bold + `_getSafeFontFallback`
+   - Pass that theme into `buildAppReportPageTheme`
+3. **RTL page theme**: when `Bidi.isRtlLanguage(l10n.localeName)`, set `textDirection: pw.TextDirection.rtl` on the page theme. Item **data tables** may reverse column order like transaction export (`_buildLocalizedTableRow`). **Do not** blindly reverse summary label/amount rows — see **Summary / totals rows** below.
+4. **All user-visible labels** via `l10n` (titles, column headers, Bill To, phone/email/address, subtotal/tax/total, notes, footer page text, empty states). English string literals only as `??` fallbacks.
+5. **Shaped text**: use `_buildText` (not raw `pw.Text`) for labels/values that may contain Hindi/Urdu so RTL reshaping works.
+6. **Dates/amounts**: `AppDateFormatter` + `AmountFormatter` only — never hard-code currency/date formatting.
+7. **Currency symbol position**: on invoices/reports, format amounts with symbol **left of digits** (`formatWithCurrency(..., false)` / LTR wrap). Do not flip symbol to the right for RTL.
+8. New strings: add EN + HI + UR in `app_*.arb`, then `flutter gen-l10n`.
+9. Business/company logo on invoices is **header branding** — it does **not** replace app watermark, app-name footer, or localization.
+
+## Summary / totals rows (label + amount)
+
+Canonical pattern: `_buildInvoiceSummaryRow` in `export_service.dart`. Use the same layout for any PDF **summary / totals / financial breakdown** (subtotal, discount, tax, grand total, similar key-value amount blocks).
+
+Lock column geometry with **`Directionality.ltr`** (so page RTL cannot auto-swap columns), then place cells explicitly:
+
+| Locale | Column 0 | Column 1 |
+|--------|----------|----------|
+| **LTR** | Label (expanded, start-aligned) | Amount (fixed width, **right-aligned**) |
+| **RTL** | Amount (fixed width, **right-aligned**) | Label (expanded, end-aligned) |
+
+Rules:
+
+1. Amounts are **always right-aligned** inside the amount column (LTR and RTL).
+2. Currency glyph order stays LTR (`$123` / symbol left of number) via `Directionality.ltr` around the amount text.
+3. Do **not** use a plain `Row` + page RTL and hope mirroring is correct — build an LTR `Table`/`Row` and swap children only when `isRtl`.
+4. Reference implementation: invoice `_buildInvoiceSummaryRow(label, value, isRtl: …)`.
+
+## Nested / indented bullet lines (package components, child rows)
+
+Canonical pattern: `_buildInvoicePackageDetailCell` in `export_service.dart`. Use for any PDF line that is a **child under a parent row** (bundle/package components, indented notes, sub-lines with a bullet).
+
+Page-level RTL **mirrors `Row` children**, so a leading `"  • text"` string or an unlocked `Row` puts the bullet on the wrong side. Do this instead:
+
+| Locale | Visual | Padding / align |
+|--------|--------|-----------------|
+| **LTR** | `• name …` | indent **left**; align start |
+| **RTL** | `name … •` | indent **right**; align end |
+
+Rules:
+
+1. Build bullet + text as separate widgets in a `Row` — do **not** rely on leading spaces + `"• "` in one string for RTL.
+2. Wrap that `Row` in **`Directionality.ltr`**, then set children explicitly:
+   - LTR: `[bullet, gap, name]`
+   - RTL: `[name, gap, bullet]`
+3. Apply side inset with `EdgeInsets` (`left` for LTR, `right` for RTL) and `Align` to the same side.
+4. Reference implementation: invoice `_buildInvoicePackageDetailCell(name:, meta:, isRtl: …)`.
+
+## Checklist for a new PDF
+
+1. `final logoSvg = await ExportService.loadAppReportLogoSvg();`
+2. Resolve locale fonts + `ThemeData` from `l10n` (transaction-export pattern).
+3. `pw.MultiPage` / `pw.Page` with `pageTheme: ExportService.buildAppReportPageTheme(theme:, logoSvg:, textDirection:)`.
+4. `footer: (ctx) => ExportService.buildAppReportFooter(ctx, l10n: l10n, logoSvg: logoSvg)`.
+5. Every label from `l10n`; `_buildText` for display text; RTL-aware layout.
+6. Optional middle footer content → `center:` on `buildAppReportFooter`.
+
+## Anti-patterns
+
+- ❌ PDF with no watermark / no footer
+- ❌ Hard-coded “Flowpaisa” / “FlowKarobar” in the footer instead of `l10n?.appTitle`
+- ❌ Hard-coded English report titles, table headers, or “Page X / Y” when `l10n` is available
+- ❌ English-only fonts when locale is Hindi/Urdu
+- ❌ Ad-hoc `rootBundle.loadString('assets/images/logo_square.svg')` + duplicated opacity-0.03 block
+- ❌ Invoice company logo only, missing app report chrome or localization
+- ❌ Skipping HI/UR arb entries for new report strings
+- ❌ Summary rows with label left / amount right in RTL (or amount left without right-aligned text)
+- ❌ Flipping currency symbol to the right of the amount for RTL reports
+- ❌ Relying on page `textDirection: rtl` alone to rearrange summary label/amount columns
+- ❌ Nested lines as `"  • text"` only — breaks bullet/indent side in RTL
+- ❌ Bullet `Row` without `Directionality.ltr` — page RTL swaps bullet and text

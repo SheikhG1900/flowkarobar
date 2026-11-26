@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flowpaisa/core/database/database.dart';
 import 'package:flowpaisa/core/utils/export_service.dart';
@@ -17,20 +18,30 @@ class InvoicePdfService {
     final prefsRepo = UserPreferencesRepository(_db);
     final allPrefs = await prefsRepo.getAllPreferences();
 
-    final userName = allPrefs[UserPreferencesRepository.keyUserName] ?? 'FLOWKAROBAR ENTERPRISES';
-    final userAddress = allPrefs[UserPreferencesRepository.keyUserAddress] ?? 'Main Commercial Sector';
+    final company = (allPrefs[UserPreferencesRepository.keyCompanyName] ?? '')
+        .trim();
+    final userName =
+        (allPrefs[UserPreferencesRepository.keyUserName] ?? '').trim();
+    final displayName = company.isNotEmpty
+        ? company
+        : (userName.isNotEmpty ? userName : '');
+    final userAddress =
+        (allPrefs[UserPreferencesRepository.keyUserAddress] ?? '').trim();
     final userPhone = allPrefs[UserPreferencesRepository.keyUserPhone];
     final userEmail = allPrefs[UserPreferencesRepository.keyUserEmail];
     final taxId = allPrefs[UserPreferencesRepository.keyBusinessTaxId];
-    final notes = allPrefs[UserPreferencesRepository.keyDefaultInvoiceNotes] ??
-        'Thank you for your business!';
+    final notes = allPrefs[UserPreferencesRepository.keyDefaultInvoiceNotes];
+    final logoPath = allPrefs[UserPreferencesRepository.keyBusinessLogoPath];
 
     final result = <String, String>{
-      'user_name': userName,
+      'user_name': displayName,
+      'company_name': displayName,
       'user_address': userAddress,
-      'default_invoice_notes': notes,
     };
 
+    if (notes != null && notes.trim().isNotEmpty) {
+      result['default_invoice_notes'] = notes.trim();
+    }
     if (userPhone != null && userPhone.isNotEmpty) {
       result['user_phone'] = userPhone;
     }
@@ -40,14 +51,29 @@ class InvoicePdfService {
     if (taxId != null && taxId.isNotEmpty) {
       result['business_tax_id'] = taxId;
     }
+    if (logoPath != null && logoPath.trim().isNotEmpty) {
+      result['business_logo_path'] = logoPath.trim();
+    }
 
     return result;
+  }
+
+  Future<Uint8List?> _loadLogoBytes(String? path) async {
+    if (path == null || path.trim().isEmpty) return null;
+    try {
+      final file = File(path);
+      if (!await file.exists()) return null;
+      return await file.readAsBytes();
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Generates the raw PDF bytes for an order invoice
   Future<Uint8List> generateInvoicePdfBytes({
     required Order order,
     required List<OrderItem> items,
+    List<OrderLineGroup> groups = const [],
     Contact? contact,
     AppLocalizations? l10n,
   }) async {
@@ -87,13 +113,17 @@ class InvoicePdfService {
 
     final txRepo = TransactionsRepository(_db);
     final exportService = ExportService(txRepo, _db, dateFormat: dateFormat);
+    final logoBytes =
+        await _loadLogoBytes(businessPrefs['business_logo_path']);
     return exportService.generateInvoicePDF(
       order: order,
       items: items,
+      groups: groups,
       contact: contact,
       businessPrefs: businessPrefs,
       currencySymbol: symbol,
       decimalPlaces: decimals,
+      logoBytes: logoBytes,
       l10n: l10n,
     );
   }
@@ -102,12 +132,14 @@ class InvoicePdfService {
   Future<void> shareInvoicePdf({
     required Order order,
     required List<OrderItem> items,
+    List<OrderLineGroup> groups = const [],
     Contact? contact,
     AppLocalizations? l10n,
   }) async {
     final bytes = await generateInvoicePdfBytes(
       order: order,
       items: items,
+      groups: groups,
       contact: contact,
       l10n: l10n,
     );

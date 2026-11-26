@@ -14,6 +14,9 @@ import 'package:flowpaisa/features/backup/presentation/providers/backup_provider
 import 'package:flowpaisa/features/premium/domain/premium_gate.dart';
 import 'package:flowpaisa/l10n/app_localizations.dart';
 import 'package:flowpaisa/features/onboarding/presentation/providers/onboarding_provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -28,6 +31,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   late TextEditingController _emailController;
   late TextEditingController _phoneController;
   late TextEditingController _addressController;
+  late TextEditingController _companyNameController;
+  late TextEditingController _taxIdController;
+  late TextEditingController _invoiceNotesController;
+  String? _logoPath;
 
   @override
   void initState() {
@@ -39,6 +46,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     _emailController = TextEditingController();
     _phoneController = TextEditingController();
     _addressController = TextEditingController();
+    _companyNameController = TextEditingController();
+    _taxIdController = TextEditingController();
+    _invoiceNotesController = TextEditingController();
 
     // Load existing profile data
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -47,6 +57,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       _emailController.text = profile.email ?? '';
       _phoneController.text = profile.phone ?? '';
       _addressController.text = profile.address ?? '';
+      _companyNameController.text = profile.companyName ?? '';
+      _taxIdController.text = profile.businessTaxId ?? '';
+      _invoiceNotesController.text = profile.invoiceNotes ?? '';
+      setState(() => _logoPath = profile.businessLogoPath);
     });
   }
 
@@ -56,7 +70,163 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
+    _companyNameController.dispose();
+    _taxIdController.dispose();
+    _invoiceNotesController.dispose();
     super.dispose();
+  }
+
+  bool get _supportsCamera =>
+      !Platform.isWindows && !Platform.isLinux && !Platform.isMacOS;
+
+  Future<void> _showCompanyLogoSheet() async {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final hasLogo = _logoPath != null && File(_logoPath!).existsSync();
+
+    await showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: theme.dividerColor,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+                Text(
+                  hasLogo ? l10n.changeCompanyLogo : l10n.companyLogo,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                if (_supportsCamera)
+                  ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor:
+                          theme.colorScheme.primary.withValues(alpha: 0.12),
+                      child: Icon(
+                        Icons.photo_camera_outlined,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    title: Text(l10n.camera),
+                    subtitle: Text(l10n.cameraSubtitle),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _pickCompanyLogo(ImageSource.camera);
+                    },
+                  ),
+                ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor:
+                        theme.colorScheme.primary.withValues(alpha: 0.12),
+                    child: Icon(
+                      Icons.photo_library_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  title: Text(l10n.gallery),
+                  subtitle: Text(l10n.gallerySubtitle),
+                  onTap: () {
+                    Navigator.pop(sheetContext);
+                    _pickCompanyLogo(ImageSource.gallery);
+                  },
+                ),
+                if (hasLogo)
+                  ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor:
+                          theme.colorScheme.error.withValues(alpha: 0.12),
+                      child: Icon(
+                        Icons.delete_outline,
+                        color: theme.colorScheme.error,
+                      ),
+                    ),
+                    title: Text(
+                      l10n.removeCompanyLogo,
+                      style: TextStyle(color: theme.colorScheme.error),
+                    ),
+                    onTap: () {
+                      Navigator.pop(sheetContext);
+                      _removeCompanyLogo();
+                    },
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _pickCompanyLogo(ImageSource source) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final picked = await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 88,
+      );
+      if (picked == null || !mounted) return;
+
+      final docs = await getApplicationDocumentsDirectory();
+      final dir = Directory(p.join(docs.path, 'invoice_branding'));
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
+      }
+      final ext = p.extension(picked.path).toLowerCase();
+      final safeExt =
+          (ext == '.png' || ext == '.jpg' || ext == '.jpeg' || ext == '.webp')
+              ? ext
+              : '.jpg';
+      final dest = File(p.join(dir.path, 'company_logo$safeExt'));
+      // Replace previous logo file(s) if extension changed.
+      final previous = _logoPath;
+      await File(picked.path).copy(dest.path);
+      if (previous != null &&
+          previous != dest.path &&
+          await File(previous).exists()) {
+        try {
+          await File(previous).delete();
+        } catch (_) {}
+      }
+
+      setState(() => _logoPath = dest.path);
+      await ref
+          .read(userProfileProvider.notifier)
+          .updateBusinessLogoPath(dest.path);
+      if (!mounted) return;
+      ToastUtils.showSuccessToast(context, ref, l10n.profileUpdated);
+    } catch (e) {
+      if (!mounted) return;
+      ToastUtils.showErrorToast(context, ref, l10n.errorOccurred(e.toString()));
+    }
+  }
+
+  Future<void> _removeCompanyLogo() async {
+    final path = _logoPath;
+    setState(() => _logoPath = null);
+    await ref.read(userProfileProvider.notifier).clearBusinessLogo();
+    if (path != null) {
+      try {
+        final file = File(path);
+        if (await file.exists()) await file.delete();
+      } catch (_) {}
+    }
   }
 
   Future<void> _saveProfile() async {
@@ -78,6 +248,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         await notifier.updateEmail(_emailController.text);
         await notifier.updatePhone(_phoneController.text);
         await notifier.updateAddress(_addressController.text);
+        await notifier.updateCompanyName(_companyNameController.text.trim());
+        await notifier.updateBusinessTaxId(_taxIdController.text.trim());
+        await notifier.updateInvoiceNotes(_invoiceNotesController.text.trim());
 
         if (mounted) {
           Navigator.pop(context); // Close loading
@@ -729,6 +902,200 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ),
                 keyboardType: TextInputType.streetAddress,
                 maxLines: 3,
+              ),
+              const SizedBox(height: 32),
+
+              Card(
+                margin: EdgeInsets.zero,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: theme.dividerColor),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.receipt_long_outlined,
+                              color: theme.colorScheme.primary,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.invoiceBrandingSection,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  l10n.invoiceBrandingHint,
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(height: 1),
+                      const SizedBox(height: 20),
+                      Center(
+                        child: Column(
+                          children: [
+                            Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: _showCompanyLogoSheet,
+                                customBorder: const CircleBorder(),
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    Container(
+                                      width: 96,
+                                      height: 96,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: theme.colorScheme.primary
+                                              .withValues(alpha: 0.35),
+                                          width: 2.5,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: theme.colorScheme.primary
+                                                .withValues(alpha: 0.18),
+                                            blurRadius: 14,
+                                            offset: const Offset(0, 6),
+                                          ),
+                                        ],
+                                      ),
+                                      child: CircleAvatar(
+                                        radius: 46,
+                                        backgroundColor: theme.colorScheme
+                                            .surfaceContainerHighest,
+                                        backgroundImage: _logoPath != null &&
+                                                File(_logoPath!).existsSync()
+                                            ? FileImage(File(_logoPath!))
+                                            : null,
+                                        child: _logoPath != null &&
+                                                File(_logoPath!).existsSync()
+                                            ? null
+                                            : Icon(
+                                                Icons.apartment_outlined,
+                                                size: 36,
+                                                color: theme.colorScheme
+                                                    .onSurfaceVariant,
+                                              ),
+                                      ),
+                                    ),
+                                    PositionedDirectional(
+                                      end: 0,
+                                      bottom: 0,
+                                      child: Material(
+                                        color: theme.colorScheme.primary,
+                                        shape: const CircleBorder(),
+                                        elevation: 2,
+                                        child: InkWell(
+                                          customBorder: const CircleBorder(),
+                                          onTap: _showCompanyLogoSheet,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8),
+                                            child: Icon(
+                                              Icons.photo_camera_rounded,
+                                              size: 18,
+                                              color:
+                                                  theme.colorScheme.onPrimary,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            TextButton(
+                              onPressed: _showCompanyLogoSheet,
+                              child: Text(
+                                _logoPath != null &&
+                                        File(_logoPath!).existsSync()
+                                    ? l10n.changeCompanyLogo
+                                    : l10n.companyLogo,
+                              ),
+                            ),
+                            Text(
+                              l10n.companyLogoHint,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: _companyNameController,
+                        decoration: InputDecoration(
+                          labelText: l10n.companyName,
+                          hintText: l10n.enterCompanyName,
+                          prefixIcon: const Icon(Icons.business_outlined),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        textCapitalization: TextCapitalization.words,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _taxIdController,
+                        decoration: InputDecoration(
+                          labelText: l10n.businessTaxId,
+                          hintText: l10n.enterBusinessTaxId,
+                          prefixIcon: const Icon(Icons.badge_outlined),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _invoiceNotesController,
+                        decoration: InputDecoration(
+                          labelText: l10n.defaultInvoiceNotes,
+                          hintText: l10n.enterDefaultInvoiceNotes,
+                          prefixIcon: const Icon(Icons.notes_outlined),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          alignLabelWithHint: true,
+                        ),
+                        maxLines: 3,
+                        textCapitalization: TextCapitalization.sentences,
+                      ),
+                    ],
+                  ),
+                ),
               ),
               const SizedBox(height: 32),
 

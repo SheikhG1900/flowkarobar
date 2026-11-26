@@ -30,7 +30,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orderItems => 'Order Items';
 
   @override
+  String get orderLineGroups => 'Order bundles';
+
+  @override
   String get orderCharges => 'Order Charges';
+
+  @override
+  String get bundlePackage => 'Package';
+
+  @override
+  String packagesProgress(String delivered, String ordered) {
+    return '$delivered / $ordered packages';
+  }
+
+  @override
+  String get qtyToDeliverPackages => 'Packages to deliver';
+
+  @override
+  String get bundleComponents => 'Includes';
+
+  @override
+  String get wholePackagesOnly => 'Deliver whole packages only';
 
   @override
   String get salesTax => 'Sales tax';
@@ -276,6 +296,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get purchaseReceipt => 'Purchase Receipt';
+
+  @override
+  String get billTo => 'Bill To';
+
+  @override
+  String get productDescription => 'Product Description';
+
+  @override
+  String get qtyShort => 'Qty';
+
+  @override
+  String get rate => 'Rate';
+
+  @override
+  String get discShort => 'Disc.';
+
+  @override
+  String get total => 'Total';
+
+  @override
+  String get tax => 'Tax';
+
+  @override
+  String get grandTotal => 'Grand Total';
+
+  @override
+  String get termsAndNotes => 'Terms & Notes';
+
+  @override
+  String get thankYouForBusiness => 'Thank you for your business!';
+
+  @override
+  String get clientTaxId => 'Client Tax ID';
+
+  @override
+  String get packageUnitShort => 'Pkg';
 
   @override
   String get reconcileInventory => 'Reconcile Inventory';
@@ -2089,6 +2145,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileUpdated => 'Profile updated successfully';
+
+  @override
+  String get invoiceBrandingSection => 'Invoice & business';
+
+  @override
+  String get invoiceBrandingHint => 'Shown on invoices and shared PDFs';
+
+  @override
+  String get companyName => 'Company name';
+
+  @override
+  String get enterCompanyName => 'Enter company or business name';
+
+  @override
+  String get companyLogo => 'Company logo';
+
+  @override
+  String get changeCompanyLogo => 'Change logo';
+
+  @override
+  String get removeCompanyLogo => 'Remove logo';
+
+  @override
+  String get companyLogoHint => 'PNG or JPG, used on invoices';
+
+  @override
+  String get businessTaxId => 'Tax ID (GSTIN / VAT)';
+
+  @override
+  String get enterBusinessTaxId => 'Optional tax registration number';
+
+  @override
+  String get defaultInvoiceNotes => 'Default invoice notes';
+
+  @override
+  String get enterDefaultInvoiceNotes => 'Thank you note or terms on invoices';
 
   @override
   String get selectDateFormat => 'Select Date Format';

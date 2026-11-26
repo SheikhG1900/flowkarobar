@@ -112,6 +112,8 @@ String _syncTableLabel(String table, AppLocalizations l10n) {
       return l10n.orders;
     case 'order_items':
       return l10n.orderItems;
+    case 'order_line_groups':
+      return l10n.orderLineGroups;
     case 'order_charges':
       return l10n.orderCharges;
     case 'goods_deliveries':
@@ -192,6 +194,7 @@ List<_SyncChangeGroup> _groupUnsyncedBreakdown(
       case 'catalog_tiered_discounts':
         return 'catalogs';
       case 'orders':
+      case 'order_line_groups':
       case 'order_items':
       case 'order_charges':
       case 'goods_deliveries':

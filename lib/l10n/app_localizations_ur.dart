@@ -30,7 +30,27 @@ class AppLocalizationsUr extends AppLocalizations {
   String get orderItems => 'آرڈر آئٹمز';
 
   @override
+  String get orderLineGroups => 'آرڈر بنڈلز';
+
+  @override
   String get orderCharges => 'آرڈر چارجز';
+
+  @override
+  String get bundlePackage => 'پیکج';
+
+  @override
+  String packagesProgress(String delivered, String ordered) {
+    return '$delivered / $ordered پیکجز';
+  }
+
+  @override
+  String get qtyToDeliverPackages => 'ڈیلیور کرنے کے پیکجز';
+
+  @override
+  String get bundleComponents => 'شامل';
+
+  @override
+  String get wholePackagesOnly => 'صرف مکمل پیکج ڈیلیور کریں';
 
   @override
   String get salesTax => 'سیلز ٹیکس';
@@ -277,6 +297,42 @@ class AppLocalizationsUr extends AppLocalizations {
 
   @override
   String get purchaseReceipt => 'خریداری کی رسید';
+
+  @override
+  String get billTo => 'بل وصول کنندہ';
+
+  @override
+  String get productDescription => 'مصنوعات کی تفصیل';
+
+  @override
+  String get qtyShort => 'مقدار';
+
+  @override
+  String get rate => 'شرح';
+
+  @override
+  String get discShort => 'رعایت';
+
+  @override
+  String get total => 'کل';
+
+  @override
+  String get tax => 'ٹیکس';
+
+  @override
+  String get grandTotal => 'کل رقم';
+
+  @override
+  String get termsAndNotes => 'شرائط اور نوٹس';
+
+  @override
+  String get thankYouForBusiness => 'آپ کے کاروبار کا شکریہ!';
+
+  @override
+  String get clientTaxId => 'کلائنٹ ٹیکس ID';
+
+  @override
+  String get packageUnitShort => 'پیکج';
 
   @override
   String get reconcileInventory => 'انوینٹری کی مطابقت';
@@ -1257,7 +1313,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get refresh => 'تازہ کریں';
 
   @override
-  String get appTitle => 'فلوپیسہ';
+  String get appTitle => 'فلوکاروبار';
 
   @override
   String get backgroundActivityStarted => 'سرگرمی پس منظر میں شروع ہوگئی';
@@ -2092,6 +2148,42 @@ class AppLocalizationsUr extends AppLocalizations {
   String get profileUpdated => 'پروفائل کامیابی سے اپ ڈیٹ ہو گیا';
 
   @override
+  String get invoiceBrandingSection => 'انوائس اور کاروبار';
+
+  @override
+  String get invoiceBrandingHint => 'انوائس اور شیئر شدہ PDF پر دکھے گا';
+
+  @override
+  String get companyName => 'کمپنی کا نام';
+
+  @override
+  String get enterCompanyName => 'کمپنی یا کاروبار کا نام درج کریں';
+
+  @override
+  String get companyLogo => 'کمپنی لوگو';
+
+  @override
+  String get changeCompanyLogo => 'لوگو تبدیل کریں';
+
+  @override
+  String get removeCompanyLogo => 'لوگو ہٹائیں';
+
+  @override
+  String get companyLogoHint => 'PNG یا JPG، انوائس پر استعمال';
+
+  @override
+  String get businessTaxId => 'ٹیکس ID (GSTIN / VAT)';
+
+  @override
+  String get enterBusinessTaxId => 'اختیاری ٹیکس رجسٹریشن نمبر';
+
+  @override
+  String get defaultInvoiceNotes => 'ڈیفالٹ انوائس نوٹس';
+
+  @override
+  String get enterDefaultInvoiceNotes => 'انوائس پر شکریہ یا شرائط';
+
+  @override
   String get selectDateFormat => 'تاریخ کا فارمیٹ منتخب کریں';
 
   @override
@@ -2309,7 +2401,7 @@ class AppLocalizationsUr extends AppLocalizations {
   String get debugToggleMode => 'ڈیبگ: موڈ ٹوگل کریں';
 
   @override
-  String get premiumTitle => 'فلوپیسہ پریمیم';
+  String get premiumTitle => 'FlowKarobar پریمیم';
 
   @override
   String get unlockAllFeatures => 'تمام فیچرز ان لاک کریں';

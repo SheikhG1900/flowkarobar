@@ -50,9 +50,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     ref.invalidate(orderPaymentsStreamProvider(widget.orderUuid));
     ref.invalidate(orderCostsStreamProvider(widget.orderUuid));
     ref.invalidate(orderItemsStreamProvider(widget.orderUuid));
+    ref.invalidate(orderLineGroupsStreamProvider(widget.orderUuid));
     ref.invalidate(orderChargesStreamProvider(widget.orderUuid));
     ref.invalidate(orderDeliveriesStreamProvider(widget.orderUuid));
     ref.invalidate(orderReceiptsStreamProvider(widget.orderUuid));
+    ref.invalidate(orderItemFulfillableQtyProvider(widget.orderUuid));
     ref.invalidate(orderItemFulfillableQtyProvider(widget.orderUuid));
     ref.invalidate(saleOrderCatalogLineIssuesProvider(widget.orderUuid));
   }
@@ -337,6 +339,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     final l10n = AppLocalizations.of(context)!;
     final items =
         await ref.read(orderItemsStreamProvider(order.uuid).future);
+    final groups = order.orderType == orderTypeSale
+        ? await ref.read(orderLineGroupsStreamProvider(order.uuid).future)
+        : const <OrderLineGroup>[];
     if (!mounted) return;
 
     if (order.orderType == orderTypeSale) {
@@ -379,10 +384,11 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
       builder: (context) => _ShipmentQtySheet(
         order: order,
         items: items,
+        groups: groups,
         availableByItem: fulfillable,
       ),
     );
-    if (shipment == null || shipment.lines.isEmpty || !mounted) return;
+    if (shipment == null || !shipment.hasWork || !mounted) return;
 
     setState(() => _busy = true);
     try {
@@ -401,10 +407,19 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           dutyAmount: shipment.duty,
         );
       } else {
-        await repo.deliverSaleShipment(
-          orderUuid: order.uuid,
-          lines: shipment.lines,
-        );
+        for (final pkg in shipment.packages) {
+          await repo.deliverSalePackages(
+            orderUuid: order.uuid,
+            groupUuid: pkg.groupUuid,
+            packageQty: pkg.packageQty,
+          );
+        }
+        if (shipment.lines.isNotEmpty) {
+          await repo.deliverSaleShipment(
+            orderUuid: order.uuid,
+            lines: shipment.lines,
+          );
+        }
       }
       _refresh();
       if (!mounted) return;
@@ -492,9 +507,13 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     try {
       final items =
           await ref.read(orderItemsStreamProvider(order.uuid).future);
+      final groups = order.orderType == orderTypeSale
+          ? await ref.read(orderLineGroupsStreamProvider(order.uuid).future)
+          : const <OrderLineGroup>[];
       await ref.read(invoicePdfServiceProvider).shareInvoicePdf(
             order: order,
             items: items,
+            groups: groups,
             contact: contact,
             l10n: l10n,
           );
@@ -551,6 +570,9 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
     final contact =
         contacts.where((c) => c.uuid == order.contactUuid).firstOrNull;
     final itemsAsync = ref.watch(orderItemsStreamProvider(order.uuid));
+    final groupsAsync = isSale
+        ? ref.watch(orderLineGroupsStreamProvider(order.uuid))
+        : null;
     final chargesAsync = ref.watch(orderChargesStreamProvider(order.uuid));
     final paymentsAsync = ref.watch(orderPaymentsStreamProvider(order.uuid));
     final costsAsync = ref.watch(orderCostsStreamProvider(order.uuid));
@@ -617,6 +639,7 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
           amountText: formatOrderAmount(ref, order.totalAmount),
           paymentLabel: paymentStatusLabel(l10n, order.paymentStatus),
           deliveryLabel: deliveryStatusLabel(l10n, order.deliveryStatus),
+          isSale: isSale,
           showPendingSync: order.isNotSynced == true,
         ),
         FormSectionCard(
@@ -686,24 +709,55 @@ class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
                     ),
                   );
                 }
-                return Column(
-                  children: [
-                    for (var i = 0; i < items.length; i++) ...[
-                      if (i > 0) const SizedBox(height: 8),
-                      _ItemTile(
-                        item: items[i],
-                        ref: ref,
-                        accent: typeColor,
-                        isSale: isSale,
-                        catalogIssue:
-                            catalogIssues?[items[i].uuid] ??
-                                SaleCatalogLineIssue.none,
-                        availableQuantity:
-                            fulfillableByItem[items[i].uuid],
-                      ),
-                    ],
-                  ],
-                );
+                final groups =
+                    groupsAsync?.asData?.value ?? const <OrderLineGroup>[];
+                final groupedIds = <String>{};
+                final children = <Widget>[];
+
+                for (final group in groups) {
+                  final members = items
+                      .where((i) => i.groupUuid == group.uuid)
+                      .toList();
+                  for (final m in members) {
+                    groupedIds.add(m.uuid);
+                  }
+                  if (children.isNotEmpty) {
+                    children.add(const SizedBox(height: 8));
+                  }
+                  children.add(
+                    _BundleGroupTile(
+                      group: group,
+                      components: members,
+                      ref: ref,
+                      accent: typeColor,
+                      catalogIssues: catalogIssues,
+                      fulfillableByItem: fulfillableByItem,
+                    ),
+                  );
+                }
+
+                final standalone = items
+                    .where((i) => !groupedIds.contains(i.uuid))
+                    .toList();
+                for (var i = 0; i < standalone.length; i++) {
+                  if (children.isNotEmpty || i > 0) {
+                    children.add(const SizedBox(height: 8));
+                  }
+                  children.add(
+                    _ItemTile(
+                      item: standalone[i],
+                      ref: ref,
+                      accent: typeColor,
+                      isSale: isSale,
+                      catalogIssue: catalogIssues?[standalone[i].uuid] ??
+                          SaleCatalogLineIssue.none,
+                      availableQuantity:
+                          fulfillableByItem[standalone[i].uuid],
+                    ),
+                  );
+                }
+
+                return Column(children: children);
               },
             ),
           ],
@@ -970,6 +1024,7 @@ class _OrderHero extends StatelessWidget {
   final String amountText;
   final String paymentLabel;
   final String deliveryLabel;
+  final bool isSale;
   final bool showPendingSync;
 
   const _OrderHero({
@@ -979,18 +1034,21 @@ class _OrderHero extends StatelessWidget {
     required this.amountText,
     required this.paymentLabel,
     required this.deliveryLabel,
+    required this.isSale,
     this.showPendingSync = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final bgIcon =
+        isSale ? Icons.point_of_sale_rounded : Icons.shopping_cart_outlined;
+
     return Stack(
       clipBehavior: Clip.none,
       children: [
         Container(
           width: double.infinity,
           margin: const EdgeInsets.only(bottom: 14),
-          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             gradient: AppColors.getPrimaryGradient(accent),
             borderRadius: BorderRadius.circular(20),
@@ -1002,53 +1060,77 @@ class _OrderHero extends StatelessWidget {
               ),
             ],
           ),
-          child: Column(
-            children: [
-              Text(
-                typeLabel,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                orderNumber,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                amountText,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: 8,
-                runSpacing: 6,
-                children: [
-                  _HeroPill(
-                    icon: Icons.payments_outlined,
-                    label: paymentLabel,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Stack(
+              children: [
+                PositionedDirectional(
+                  end: -18,
+                  bottom: -22,
+                  child: Icon(
+                    bgIcon,
+                    size: 128,
+                    color: Colors.white.withValues(alpha: 0.14),
                   ),
-                  _HeroPill(
-                    icon: Icons.local_shipping_outlined,
-                    label: deliveryLabel,
+                ),
+                SizedBox(
+                  width: double.infinity,
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          typeLabel,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          orderNumber,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          amountText,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          spacing: 8,
+                          runSpacing: 6,
+                          children: [
+                            _HeroPill(
+                              icon: Icons.payments_outlined,
+                              label: paymentLabel,
+                            ),
+                            _HeroPill(
+                              icon: Icons.local_shipping_outlined,
+                              label: deliveryLabel,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
         if (showPendingSync)
@@ -1136,22 +1218,29 @@ class _DetailRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                value,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: valueColor,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      value,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: valueColor,
+                      ),
+                    ),
+                  ),
+                  if (onTap != null)
+                    Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                ],
               ),
             ],
           ),
         ),
-        if (onTap != null)
-          Icon(
-            Icons.chevron_right,
-            size: 20,
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
       ],
     );
 
@@ -1171,6 +1260,147 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
+class _BundleGroupTile extends StatelessWidget {
+  final OrderLineGroup group;
+  final List<OrderItem> components;
+  final WidgetRef ref;
+  final Color accent;
+  final Map<String, SaleCatalogLineIssue>? catalogIssues;
+  final Map<String, double?> fulfillableByItem;
+
+  const _BundleGroupTile({
+    required this.group,
+    required this.components,
+    required this.ref,
+    required this.accent,
+    this.catalogIssues,
+    this.fulfillableByItem = const {},
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final muted = theme.colorScheme.onSurfaceVariant;
+    final listUnit = group.unitPrice;
+    final discUnit = group.discountedUnitPrice ?? group.unitPrice;
+    final pkgLabel = l10n.packagesProgress(
+      AmountFormatter.formatQuantity(group.deliveredPackageQty),
+      AmountFormatter.formatQuantity(group.packageQty),
+    );
+    final catalogLabel = group.catalogNameSnapshot?.trim();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accent.withValues(alpha: 0.35)),
+        color: accent.withValues(alpha: 0.06),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.inventory_2_outlined, color: accent, size: 22),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      group.nameSnapshot,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (catalogLabel != null && catalogLabel.isNotEmpty)
+                      Text(
+                        catalogLabel,
+                        style: theme.textTheme.bodySmall?.copyWith(color: muted),
+                      ),
+                    const SizedBox(height: 4),
+                    Text(
+                      pkgLabel,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: muted,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: formatOrderAmount(ref, discUnit),
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: accent,
+                          ),
+                        ),
+                        TextSpan(
+                          text: ' /${group.unit.trim().isEmpty ? l10n.bundlePackage : group.unit.trim()}',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: muted,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    textDirection: TextDirection.ltr,
+                    textAlign: TextAlign.end,
+                  ),
+                  if ((listUnit - discUnit).abs() > 1e-9)
+                    Text(
+                      formatOrderAmount(ref, listUnit),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: muted,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                      textDirection: TextDirection.ltr,
+                      textAlign: TextAlign.end,
+                    ),
+                ],
+              ),
+            ],
+          ),
+          if (components.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              l10n.bundleComponents,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: muted,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 6),
+            for (var i = 0; i < components.length; i++) ...[
+              if (i > 0) const SizedBox(height: 6),
+              _ItemTile(
+                item: components[i],
+                ref: ref,
+                accent: accent,
+                isSale: true,
+                catalogIssue: catalogIssues?[components[i].uuid] ??
+                    SaleCatalogLineIssue.none,
+                availableQuantity: fulfillableByItem[components[i].uuid],
+                compactInBundle: true,
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _ItemTile extends StatelessWidget {
   final OrderItem item;
   final WidgetRef ref;
@@ -1180,6 +1410,9 @@ class _ItemTile extends StatelessWidget {
   /// Captured once when detail loads; compared to open qty (not recalculated).
   final double? availableQuantity;
 
+  /// When true, hide sell price emphasis (shown on bundle header).
+  final bool compactInBundle;
+
   const _ItemTile({
     required this.item,
     required this.ref,
@@ -1187,6 +1420,7 @@ class _ItemTile extends StatelessWidget {
     required this.isSale,
     this.catalogIssue = SaleCatalogLineIssue.none,
     this.availableQuantity,
+    this.compactInBundle = false,
   });
 
   String? _issueLabel(AppLocalizations l10n) {
@@ -2147,25 +2381,31 @@ class _PaymentDialogState extends ConsumerState<_PaymentDialog> {
 
 class _ShipmentQtyResult {
   final List<({String orderItemUuid, double quantity})> lines;
+  final List<({String groupUuid, double packageQty})> packages;
   final double freight;
   final double duty;
 
   const _ShipmentQtyResult({
     required this.lines,
+    this.packages = const [],
     this.freight = 0,
     this.duty = 0,
   });
+
+  bool get hasWork => lines.isNotEmpty || packages.isNotEmpty;
 }
 
 class _ShipmentQtySheet extends ConsumerStatefulWidget {
   final Order order;
   final List<OrderItem> items;
+  final List<OrderLineGroup> groups;
   /// Resolved once when the sheet opens; compared to deliver qty edits.
   final Map<String, double?> availableByItem;
 
   const _ShipmentQtySheet({
     required this.order,
     required this.items,
+    this.groups = const [],
     this.availableByItem = const {},
   });
 
@@ -2175,6 +2415,7 @@ class _ShipmentQtySheet extends ConsumerStatefulWidget {
 
 class _ShipmentQtySheetState extends ConsumerState<_ShipmentQtySheet> {
   late final Map<String, TextEditingController> _qtyByItem;
+  late final Map<String, TextEditingController> _pkgByGroup;
   final _freight = TextEditingController();
   final _duty = TextEditingController();
 
@@ -2184,7 +2425,25 @@ class _ShipmentQtySheetState extends ConsumerState<_ShipmentQtySheet> {
   void initState() {
     super.initState();
     _qtyByItem = {};
+    _pkgByGroup = {};
+    final groupedItemIds = <String>{};
+    if (_isSale) {
+      for (final g in widget.groups) {
+        final open =
+            (g.packageQty - g.deliveredPackageQty)
+                .clamp(0, double.infinity)
+                .toDouble();
+        if (open <= 1e-9) continue;
+        _pkgByGroup[g.uuid] = TextEditingController(
+          text: AmountFormatter.formatQuantity(open),
+        );
+        for (final item in widget.items) {
+          if (item.groupUuid == g.uuid) groupedItemIds.add(item.uuid);
+        }
+      }
+    }
     for (final item in widget.items) {
+      if (_isSale && groupedItemIds.contains(item.uuid)) continue;
       final done =
           _isSale ? item.deliveredQuantity : item.receivedQuantity;
       final open =
@@ -2204,6 +2463,9 @@ class _ShipmentQtySheetState extends ConsumerState<_ShipmentQtySheet> {
   @override
   void dispose() {
     for (final c in _qtyByItem.values) {
+      c.dispose();
+    }
+    for (final c in _pkgByGroup.values) {
       c.dispose();
     }
     _freight.dispose();
@@ -2238,11 +2500,29 @@ class _ShipmentQtySheetState extends ConsumerState<_ShipmentQtySheet> {
         lines.add((orderItemUuid: entry.key, quantity: qty));
       }
     }
-    if (lines.isEmpty) return;
+    final packages = <({String groupUuid, double packageQty})>[];
+    final byGroup = {for (final g in widget.groups) g.uuid: g};
+    for (final entry in _pkgByGroup.entries) {
+      final raw = double.tryParse(entry.value.text.trim()) ?? 0;
+      if (raw <= 1e-9) continue;
+      final whole = raw.roundToDouble();
+      final g = byGroup[entry.key];
+      final open = g == null
+          ? whole
+          : (g.packageQty - g.deliveredPackageQty)
+              .clamp(0, double.infinity)
+              .toDouble();
+      final qty = whole.clamp(0, open).toDouble();
+      if (qty > 1e-9) {
+        packages.add((groupUuid: entry.key, packageQty: qty));
+      }
+    }
+    if (lines.isEmpty && packages.isEmpty) return;
     Navigator.pop(
       context,
       _ShipmentQtyResult(
         lines: lines,
+        packages: packages,
         freight: double.tryParse(_freight.text.trim()) ?? 0,
         duty: double.tryParse(_duty.text.trim()) ?? 0,
       ),
@@ -2277,13 +2557,252 @@ class _ShipmentQtySheetState extends ConsumerState<_ShipmentQtySheet> {
                   fontWeight: FontWeight.w800,
                 ),
               ),
+              if (_isSale && _pkgByGroup.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  l10n.wholePackagesOnly,
+                  style: theme.textTheme.bodySmall?.copyWith(color: muted),
+                ),
+              ],
               const SizedBox(height: 12),
-              if (_qtyByItem.isEmpty)
+              if (_qtyByItem.isEmpty && _pkgByGroup.isEmpty)
                 Text(
                   l10n.deliveryPending,
                   style: theme.textTheme.bodyMedium,
                 )
-              else
+              else ...[
+                for (final entry in _pkgByGroup.entries) ...[
+                  Builder(
+                    builder: (context) {
+                      final group = widget.groups
+                          .where((g) => g.uuid == entry.key)
+                          .firstOrNull;
+                      if (group == null) return const SizedBox.shrink();
+                      final open = (group.packageQty -
+                              group.deliveredPackageQty)
+                          .clamp(0, double.infinity)
+                          .toDouble();
+                      final qty =
+                          double.tryParse(entry.value.text.trim()) ?? 0;
+                      final accent = orderTypeColor(widget.order.orderType);
+                      final unitLabel = group.unit.trim().isEmpty
+                          ? l10n.bundlePackage
+                          : group.unit.trim();
+                      void setPkg(double next) {
+                        final clamped = next.clamp(0, open).toDouble();
+                        entry.value.text = clamped <= 0
+                            ? ''
+                            : AmountFormatter.formatQuantity(clamped);
+                        setState(() {});
+                      }
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+                          decoration: BoxDecoration(
+                            color: accent.withValues(alpha: 0.07),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: accent.withValues(alpha: 0.28),
+                            ),
+                          ),
+                          child: IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Container(
+                                  width: 3,
+                                  decoration: BoxDecoration(
+                                    color: accent.withValues(alpha: 0.75),
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.inventory_2_outlined,
+                                            size: 16,
+                                            color: accent,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  group.nameSnapshot,
+                                                  maxLines: 2,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: theme
+                                                      .textTheme.titleSmall
+                                                      ?.copyWith(
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  l10n.packagesProgress(
+                                                    AmountFormatter
+                                                        .formatQuantity(
+                                                      group
+                                                          .deliveredPackageQty,
+                                                    ),
+                                                    AmountFormatter
+                                                        .formatQuantity(
+                                                      group.packageQty,
+                                                    ),
+                                                  ),
+                                                  style: theme
+                                                      .textTheme.labelSmall
+                                                      ?.copyWith(
+                                                    color: muted,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          DecoratedBox(
+                                            decoration: BoxDecoration(
+                                              color: theme.colorScheme.surface
+                                                  .withValues(alpha: 0.85),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: theme.dividerColor
+                                                    .withValues(alpha: 0.4),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                IconButton(
+                                                  onPressed: qty <= 0
+                                                      ? null
+                                                      : () => setPkg(qty - 1),
+                                                  visualDensity:
+                                                      VisualDensity.compact,
+                                                  constraints:
+                                                      const BoxConstraints(
+                                                    minWidth: 36,
+                                                    minHeight: 40,
+                                                  ),
+                                                  icon: const Icon(
+                                                    Icons.remove,
+                                                    size: 18,
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  width: 56,
+                                                  child: LtrNumberField(
+                                                    controller: entry.value,
+                                                    textAlign: TextAlign.center,
+                                                    decoration:
+                                                        const InputDecoration(
+                                                      isDense: true,
+                                                      border: InputBorder.none,
+                                                      enabledBorder:
+                                                          InputBorder.none,
+                                                      focusedBorder:
+                                                          InputBorder.none,
+                                                      filled: false,
+                                                      contentPadding:
+                                                          EdgeInsets.symmetric(
+                                                        vertical: 8,
+                                                      ),
+                                                      hintText: '0',
+                                                    ),
+                                                    onChanged: (value) {
+                                                      final parsed =
+                                                          double.tryParse(
+                                                        value.trim(),
+                                                      );
+                                                      if (parsed == null) {
+                                                        setState(() {});
+                                                        return;
+                                                      }
+                                                      if (parsed >
+                                                          open + 1e-9) {
+                                                        setPkg(open);
+                                                      } else {
+                                                        setState(() {});
+                                                      }
+                                                    },
+                                                  ),
+                                                ),
+                                                IconButton(
+                                                  onPressed: qty + 1e-9 >= open
+                                                      ? null
+                                                      : () => setPkg(qty + 1),
+                                                  visualDensity:
+                                                      VisualDensity.compact,
+                                                  constraints:
+                                                      const BoxConstraints(
+                                                    minWidth: 36,
+                                                    minHeight: 40,
+                                                  ),
+                                                  icon: const Icon(
+                                                    Icons.add,
+                                                    size: 18,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        children: [
+                                          Text(
+                                            '${AmountFormatter.formatQuantity(open)} $unitLabel',
+                                            style: theme.textTheme.labelSmall
+                                                ?.copyWith(color: muted),
+                                          ),
+                                          const Spacer(),
+                                          TextButton(
+                                            onPressed: qty + 1e-9 >= open
+                                                ? null
+                                                : () => setPkg(open),
+                                            style: TextButton.styleFrom(
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                              ),
+                                              minimumSize: Size.zero,
+                                              tapTargetSize: MaterialTapTargetSize
+                                                  .shrinkWrap,
+                                            ),
+                                            child: Text(l10n.fillOpenQuantity),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
                 for (final entry in _qtyByItem.entries) ...[
                   Builder(
                     builder: (context) {
@@ -2494,6 +3013,7 @@ class _ShipmentQtySheetState extends ConsumerState<_ShipmentQtySheet> {
                     },
                   ),
                 ],
+              ],
               if (!_isSale && _qtyByItem.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(
@@ -2535,7 +3055,9 @@ class _ShipmentQtySheetState extends ConsumerState<_ShipmentQtySheet> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: FilledButton(
-                      onPressed: _qtyByItem.isEmpty ? null : _submit,
+                      onPressed: (_qtyByItem.isEmpty && _pkgByGroup.isEmpty)
+                          ? null
+                          : _submit,
                       child: Text(
                         _isSale
                             ? l10n.deliverShipment

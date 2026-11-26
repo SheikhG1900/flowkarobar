@@ -18,6 +18,10 @@ class UserPreferencesRepository {
   static const String keyUserEmail = 'user_email';
   static const String keyUserPhone = 'user_phone';
   static const String keyUserAddress = 'user_address';
+  /// Legal / invoice company name (falls back to [keyUserName] when empty).
+  static const String keyCompanyName = 'company_name';
+  /// Absolute path to local company logo image (png/jpg/webp).
+  static const String keyBusinessLogoPath = 'business_logo_path';
   static const String keyBusinessTaxId = 'business_tax_id';
   static const String keyDefaultInvoiceNotes = 'default_invoice_notes';
   /// Default sales tax percent applied on new sale orders (items net only).
@@ -207,6 +211,26 @@ class UserPreferencesRepository {
 
   Future<void> setUserAddress(String address) async {
     await setPreference(keyUserAddress, address);
+  }
+
+  Future<String?> getCompanyName() async {
+    return await getPreference(keyCompanyName);
+  }
+
+  Future<void> setCompanyName(String name) async {
+    await setPreference(keyCompanyName, name);
+  }
+
+  Future<String?> getBusinessLogoPath() async {
+    return await getPreference(keyBusinessLogoPath);
+  }
+
+  Future<void> setBusinessLogoPath(String path) async {
+    await setPreference(keyBusinessLogoPath, path);
+  }
+
+  Future<void> clearBusinessLogoPath() async {
+    await deletePreference(keyBusinessLogoPath);
   }
 
   Future<String?> getBusinessTaxId() async {

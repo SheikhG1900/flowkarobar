@@ -11765,6 +11765,912 @@ class CatalogTieredDiscountsCompanion
   }
 }
 
+class $OrderLineGroupsTable extends OrderLineGroups
+    with TableInfo<$OrderLineGroupsTable, OrderLineGroup> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OrderLineGroupsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+      'uuid', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _orderUuidMeta =
+      const VerificationMeta('orderUuid');
+  @override
+  late final GeneratedColumn<String> orderUuid = GeneratedColumn<String>(
+      'order_uuid', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES orders (uuid)'));
+  static const VerificationMeta _nameSnapshotMeta =
+      const VerificationMeta('nameSnapshot');
+  @override
+  late final GeneratedColumn<String> nameSnapshot = GeneratedColumn<String>(
+      'name_snapshot', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _catalogNameSnapshotMeta =
+      const VerificationMeta('catalogNameSnapshot');
+  @override
+  late final GeneratedColumn<String> catalogNameSnapshot =
+      GeneratedColumn<String>('catalog_name_snapshot', aliasedName, true,
+          type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _catalogItemUuidMeta =
+      const VerificationMeta('catalogItemUuid');
+  @override
+  late final GeneratedColumn<String> catalogItemUuid = GeneratedColumn<String>(
+      'catalog_item_uuid', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES catalog_items (uuid)'));
+  static const VerificationMeta _sellingProductUuidMeta =
+      const VerificationMeta('sellingProductUuid');
+  @override
+  late final GeneratedColumn<String> sellingProductUuid =
+      GeneratedColumn<String>('selling_product_uuid', aliasedName, true,
+          type: DriftSqlType.string,
+          requiredDuringInsert: false,
+          defaultConstraints: GeneratedColumn.constraintIsAlways(
+              'REFERENCES selling_products (uuid)'));
+  static const VerificationMeta _packageQtyMeta =
+      const VerificationMeta('packageQty');
+  @override
+  late final GeneratedColumn<double> packageQty = GeneratedColumn<double>(
+      'package_qty', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _deliveredPackageQtyMeta =
+      const VerificationMeta('deliveredPackageQty');
+  @override
+  late final GeneratedColumn<double> deliveredPackageQty =
+      GeneratedColumn<double>('delivered_package_qty', aliasedName, false,
+          type: DriftSqlType.double,
+          requiredDuringInsert: false,
+          defaultValue: const Constant(0.0));
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+      'unit', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('Pkg'));
+  static const VerificationMeta _unitPriceMeta =
+      const VerificationMeta('unitPrice');
+  @override
+  late final GeneratedColumn<double> unitPrice = GeneratedColumn<double>(
+      'unit_price', aliasedName, false,
+      type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _discountedUnitPriceMeta =
+      const VerificationMeta('discountedUnitPrice');
+  @override
+  late final GeneratedColumn<double> discountedUnitPrice =
+      GeneratedColumn<double>('discounted_unit_price', aliasedName, true,
+          type: DriftSqlType.double, requiredDuringInsert: false);
+  static const VerificationMeta _discountAmountMeta =
+      const VerificationMeta('discountAmount');
+  @override
+  late final GeneratedColumn<double> discountAmount = GeneratedColumn<double>(
+      'discount_amount', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _unitCostSnapshotMeta =
+      const VerificationMeta('unitCostSnapshot');
+  @override
+  late final GeneratedColumn<double> unitCostSnapshot = GeneratedColumn<double>(
+      'unit_cost_snapshot', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _notesMeta = const VerificationMeta('notes');
+  @override
+  late final GeneratedColumn<String> notes = GeneratedColumn<String>(
+      'notes', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _isDeletedMeta =
+      const VerificationMeta('isDeleted');
+  @override
+  late final GeneratedColumn<bool> isDeleted = GeneratedColumn<bool>(
+      'is_deleted', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("is_deleted" IN (0, 1))'),
+      defaultValue: const Constant(false));
+  static const VerificationMeta _isNotSyncedMeta =
+      const VerificationMeta('isNotSynced');
+  @override
+  late final GeneratedColumn<bool> isNotSynced = GeneratedColumn<bool>(
+      'is_not_synced', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("is_not_synced" IN (0, 1))'),
+      defaultValue: const Constant(true));
+  @override
+  List<GeneratedColumn> get $columns => [
+        uuid,
+        orderUuid,
+        nameSnapshot,
+        catalogNameSnapshot,
+        catalogItemUuid,
+        sellingProductUuid,
+        packageQty,
+        deliveredPackageQty,
+        unit,
+        unitPrice,
+        discountedUnitPrice,
+        discountAmount,
+        unitCostSnapshot,
+        notes,
+        createdAt,
+        updatedAt,
+        isDeleted,
+        isNotSynced
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'order_line_groups';
+  @override
+  VerificationContext validateIntegrity(Insertable<OrderLineGroup> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('uuid')) {
+      context.handle(
+          _uuidMeta, uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta));
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('order_uuid')) {
+      context.handle(_orderUuidMeta,
+          orderUuid.isAcceptableOrUnknown(data['order_uuid']!, _orderUuidMeta));
+    } else if (isInserting) {
+      context.missing(_orderUuidMeta);
+    }
+    if (data.containsKey('name_snapshot')) {
+      context.handle(
+          _nameSnapshotMeta,
+          nameSnapshot.isAcceptableOrUnknown(
+              data['name_snapshot']!, _nameSnapshotMeta));
+    } else if (isInserting) {
+      context.missing(_nameSnapshotMeta);
+    }
+    if (data.containsKey('catalog_name_snapshot')) {
+      context.handle(
+          _catalogNameSnapshotMeta,
+          catalogNameSnapshot.isAcceptableOrUnknown(
+              data['catalog_name_snapshot']!, _catalogNameSnapshotMeta));
+    }
+    if (data.containsKey('catalog_item_uuid')) {
+      context.handle(
+          _catalogItemUuidMeta,
+          catalogItemUuid.isAcceptableOrUnknown(
+              data['catalog_item_uuid']!, _catalogItemUuidMeta));
+    }
+    if (data.containsKey('selling_product_uuid')) {
+      context.handle(
+          _sellingProductUuidMeta,
+          sellingProductUuid.isAcceptableOrUnknown(
+              data['selling_product_uuid']!, _sellingProductUuidMeta));
+    }
+    if (data.containsKey('package_qty')) {
+      context.handle(
+          _packageQtyMeta,
+          packageQty.isAcceptableOrUnknown(
+              data['package_qty']!, _packageQtyMeta));
+    } else if (isInserting) {
+      context.missing(_packageQtyMeta);
+    }
+    if (data.containsKey('delivered_package_qty')) {
+      context.handle(
+          _deliveredPackageQtyMeta,
+          deliveredPackageQty.isAcceptableOrUnknown(
+              data['delivered_package_qty']!, _deliveredPackageQtyMeta));
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+          _unitMeta, unit.isAcceptableOrUnknown(data['unit']!, _unitMeta));
+    }
+    if (data.containsKey('unit_price')) {
+      context.handle(_unitPriceMeta,
+          unitPrice.isAcceptableOrUnknown(data['unit_price']!, _unitPriceMeta));
+    } else if (isInserting) {
+      context.missing(_unitPriceMeta);
+    }
+    if (data.containsKey('discounted_unit_price')) {
+      context.handle(
+          _discountedUnitPriceMeta,
+          discountedUnitPrice.isAcceptableOrUnknown(
+              data['discounted_unit_price']!, _discountedUnitPriceMeta));
+    }
+    if (data.containsKey('discount_amount')) {
+      context.handle(
+          _discountAmountMeta,
+          discountAmount.isAcceptableOrUnknown(
+              data['discount_amount']!, _discountAmountMeta));
+    }
+    if (data.containsKey('unit_cost_snapshot')) {
+      context.handle(
+          _unitCostSnapshotMeta,
+          unitCostSnapshot.isAcceptableOrUnknown(
+              data['unit_cost_snapshot']!, _unitCostSnapshotMeta));
+    }
+    if (data.containsKey('notes')) {
+      context.handle(
+          _notesMeta, notes.isAcceptableOrUnknown(data['notes']!, _notesMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    if (data.containsKey('is_deleted')) {
+      context.handle(_isDeletedMeta,
+          isDeleted.isAcceptableOrUnknown(data['is_deleted']!, _isDeletedMeta));
+    }
+    if (data.containsKey('is_not_synced')) {
+      context.handle(
+          _isNotSyncedMeta,
+          isNotSynced.isAcceptableOrUnknown(
+              data['is_not_synced']!, _isNotSyncedMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {uuid};
+  @override
+  OrderLineGroup map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OrderLineGroup(
+      uuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}uuid'])!,
+      orderUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}order_uuid'])!,
+      nameSnapshot: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name_snapshot'])!,
+      catalogNameSnapshot: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}catalog_name_snapshot']),
+      catalogItemUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}catalog_item_uuid']),
+      sellingProductUuid: attachedDatabase.typeMapping.read(
+          DriftSqlType.string, data['${effectivePrefix}selling_product_uuid']),
+      packageQty: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}package_qty'])!,
+      deliveredPackageQty: attachedDatabase.typeMapping.read(
+          DriftSqlType.double,
+          data['${effectivePrefix}delivered_package_qty'])!,
+      unit: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}unit'])!,
+      unitPrice: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}unit_price'])!,
+      discountedUnitPrice: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}discounted_unit_price']),
+      discountAmount: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}discount_amount'])!,
+      unitCostSnapshot: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}unit_cost_snapshot'])!,
+      notes: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}notes']),
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      isDeleted: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_deleted'])!,
+      isNotSynced: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}is_not_synced'])!,
+    );
+  }
+
+  @override
+  $OrderLineGroupsTable createAlias(String alias) {
+    return $OrderLineGroupsTable(attachedDatabase, alias);
+  }
+}
+
+class OrderLineGroup extends DataClass implements Insertable<OrderLineGroup> {
+  final String uuid;
+  final String orderUuid;
+  final String nameSnapshot;
+  final String? catalogNameSnapshot;
+
+  /// Soft refs for audit only — not required after save.
+  final String? catalogItemUuid;
+  final String? sellingProductUuid;
+
+  /// How many packages ordered.
+  final double packageQty;
+
+  /// How many packages already delivered (whole packages only).
+  final double deliveredPackageQty;
+  final String unit;
+
+  /// List price per package (before discount).
+  final double unitPrice;
+
+  /// Price per package after discount.
+  final double? discountedUnitPrice;
+
+  /// Absolute discount for this group (all packages).
+  final double discountAmount;
+
+  /// Sum of component weight costs for one package at save (allocation basis).
+  final double unitCostSnapshot;
+  final String? notes;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final bool isDeleted;
+  final bool isNotSynced;
+  const OrderLineGroup(
+      {required this.uuid,
+      required this.orderUuid,
+      required this.nameSnapshot,
+      this.catalogNameSnapshot,
+      this.catalogItemUuid,
+      this.sellingProductUuid,
+      required this.packageQty,
+      required this.deliveredPackageQty,
+      required this.unit,
+      required this.unitPrice,
+      this.discountedUnitPrice,
+      required this.discountAmount,
+      required this.unitCostSnapshot,
+      this.notes,
+      required this.createdAt,
+      required this.updatedAt,
+      required this.isDeleted,
+      required this.isNotSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['uuid'] = Variable<String>(uuid);
+    map['order_uuid'] = Variable<String>(orderUuid);
+    map['name_snapshot'] = Variable<String>(nameSnapshot);
+    if (!nullToAbsent || catalogNameSnapshot != null) {
+      map['catalog_name_snapshot'] = Variable<String>(catalogNameSnapshot);
+    }
+    if (!nullToAbsent || catalogItemUuid != null) {
+      map['catalog_item_uuid'] = Variable<String>(catalogItemUuid);
+    }
+    if (!nullToAbsent || sellingProductUuid != null) {
+      map['selling_product_uuid'] = Variable<String>(sellingProductUuid);
+    }
+    map['package_qty'] = Variable<double>(packageQty);
+    map['delivered_package_qty'] = Variable<double>(deliveredPackageQty);
+    map['unit'] = Variable<String>(unit);
+    map['unit_price'] = Variable<double>(unitPrice);
+    if (!nullToAbsent || discountedUnitPrice != null) {
+      map['discounted_unit_price'] = Variable<double>(discountedUnitPrice);
+    }
+    map['discount_amount'] = Variable<double>(discountAmount);
+    map['unit_cost_snapshot'] = Variable<double>(unitCostSnapshot);
+    if (!nullToAbsent || notes != null) {
+      map['notes'] = Variable<String>(notes);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['is_deleted'] = Variable<bool>(isDeleted);
+    map['is_not_synced'] = Variable<bool>(isNotSynced);
+    return map;
+  }
+
+  OrderLineGroupsCompanion toCompanion(bool nullToAbsent) {
+    return OrderLineGroupsCompanion(
+      uuid: Value(uuid),
+      orderUuid: Value(orderUuid),
+      nameSnapshot: Value(nameSnapshot),
+      catalogNameSnapshot: catalogNameSnapshot == null && nullToAbsent
+          ? const Value.absent()
+          : Value(catalogNameSnapshot),
+      catalogItemUuid: catalogItemUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(catalogItemUuid),
+      sellingProductUuid: sellingProductUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sellingProductUuid),
+      packageQty: Value(packageQty),
+      deliveredPackageQty: Value(deliveredPackageQty),
+      unit: Value(unit),
+      unitPrice: Value(unitPrice),
+      discountedUnitPrice: discountedUnitPrice == null && nullToAbsent
+          ? const Value.absent()
+          : Value(discountedUnitPrice),
+      discountAmount: Value(discountAmount),
+      unitCostSnapshot: Value(unitCostSnapshot),
+      notes:
+          notes == null && nullToAbsent ? const Value.absent() : Value(notes),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      isDeleted: Value(isDeleted),
+      isNotSynced: Value(isNotSynced),
+    );
+  }
+
+  factory OrderLineGroup.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OrderLineGroup(
+      uuid: serializer.fromJson<String>(json['uuid']),
+      orderUuid: serializer.fromJson<String>(json['orderUuid']),
+      nameSnapshot: serializer.fromJson<String>(json['nameSnapshot']),
+      catalogNameSnapshot:
+          serializer.fromJson<String?>(json['catalogNameSnapshot']),
+      catalogItemUuid: serializer.fromJson<String?>(json['catalogItemUuid']),
+      sellingProductUuid:
+          serializer.fromJson<String?>(json['sellingProductUuid']),
+      packageQty: serializer.fromJson<double>(json['packageQty']),
+      deliveredPackageQty:
+          serializer.fromJson<double>(json['deliveredPackageQty']),
+      unit: serializer.fromJson<String>(json['unit']),
+      unitPrice: serializer.fromJson<double>(json['unitPrice']),
+      discountedUnitPrice:
+          serializer.fromJson<double?>(json['discountedUnitPrice']),
+      discountAmount: serializer.fromJson<double>(json['discountAmount']),
+      unitCostSnapshot: serializer.fromJson<double>(json['unitCostSnapshot']),
+      notes: serializer.fromJson<String?>(json['notes']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      isDeleted: serializer.fromJson<bool>(json['isDeleted']),
+      isNotSynced: serializer.fromJson<bool>(json['isNotSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'uuid': serializer.toJson<String>(uuid),
+      'orderUuid': serializer.toJson<String>(orderUuid),
+      'nameSnapshot': serializer.toJson<String>(nameSnapshot),
+      'catalogNameSnapshot': serializer.toJson<String?>(catalogNameSnapshot),
+      'catalogItemUuid': serializer.toJson<String?>(catalogItemUuid),
+      'sellingProductUuid': serializer.toJson<String?>(sellingProductUuid),
+      'packageQty': serializer.toJson<double>(packageQty),
+      'deliveredPackageQty': serializer.toJson<double>(deliveredPackageQty),
+      'unit': serializer.toJson<String>(unit),
+      'unitPrice': serializer.toJson<double>(unitPrice),
+      'discountedUnitPrice': serializer.toJson<double?>(discountedUnitPrice),
+      'discountAmount': serializer.toJson<double>(discountAmount),
+      'unitCostSnapshot': serializer.toJson<double>(unitCostSnapshot),
+      'notes': serializer.toJson<String?>(notes),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'isDeleted': serializer.toJson<bool>(isDeleted),
+      'isNotSynced': serializer.toJson<bool>(isNotSynced),
+    };
+  }
+
+  OrderLineGroup copyWith(
+          {String? uuid,
+          String? orderUuid,
+          String? nameSnapshot,
+          Value<String?> catalogNameSnapshot = const Value.absent(),
+          Value<String?> catalogItemUuid = const Value.absent(),
+          Value<String?> sellingProductUuid = const Value.absent(),
+          double? packageQty,
+          double? deliveredPackageQty,
+          String? unit,
+          double? unitPrice,
+          Value<double?> discountedUnitPrice = const Value.absent(),
+          double? discountAmount,
+          double? unitCostSnapshot,
+          Value<String?> notes = const Value.absent(),
+          DateTime? createdAt,
+          DateTime? updatedAt,
+          bool? isDeleted,
+          bool? isNotSynced}) =>
+      OrderLineGroup(
+        uuid: uuid ?? this.uuid,
+        orderUuid: orderUuid ?? this.orderUuid,
+        nameSnapshot: nameSnapshot ?? this.nameSnapshot,
+        catalogNameSnapshot: catalogNameSnapshot.present
+            ? catalogNameSnapshot.value
+            : this.catalogNameSnapshot,
+        catalogItemUuid: catalogItemUuid.present
+            ? catalogItemUuid.value
+            : this.catalogItemUuid,
+        sellingProductUuid: sellingProductUuid.present
+            ? sellingProductUuid.value
+            : this.sellingProductUuid,
+        packageQty: packageQty ?? this.packageQty,
+        deliveredPackageQty: deliveredPackageQty ?? this.deliveredPackageQty,
+        unit: unit ?? this.unit,
+        unitPrice: unitPrice ?? this.unitPrice,
+        discountedUnitPrice: discountedUnitPrice.present
+            ? discountedUnitPrice.value
+            : this.discountedUnitPrice,
+        discountAmount: discountAmount ?? this.discountAmount,
+        unitCostSnapshot: unitCostSnapshot ?? this.unitCostSnapshot,
+        notes: notes.present ? notes.value : this.notes,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+        isDeleted: isDeleted ?? this.isDeleted,
+        isNotSynced: isNotSynced ?? this.isNotSynced,
+      );
+  OrderLineGroup copyWithCompanion(OrderLineGroupsCompanion data) {
+    return OrderLineGroup(
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      orderUuid: data.orderUuid.present ? data.orderUuid.value : this.orderUuid,
+      nameSnapshot: data.nameSnapshot.present
+          ? data.nameSnapshot.value
+          : this.nameSnapshot,
+      catalogNameSnapshot: data.catalogNameSnapshot.present
+          ? data.catalogNameSnapshot.value
+          : this.catalogNameSnapshot,
+      catalogItemUuid: data.catalogItemUuid.present
+          ? data.catalogItemUuid.value
+          : this.catalogItemUuid,
+      sellingProductUuid: data.sellingProductUuid.present
+          ? data.sellingProductUuid.value
+          : this.sellingProductUuid,
+      packageQty:
+          data.packageQty.present ? data.packageQty.value : this.packageQty,
+      deliveredPackageQty: data.deliveredPackageQty.present
+          ? data.deliveredPackageQty.value
+          : this.deliveredPackageQty,
+      unit: data.unit.present ? data.unit.value : this.unit,
+      unitPrice: data.unitPrice.present ? data.unitPrice.value : this.unitPrice,
+      discountedUnitPrice: data.discountedUnitPrice.present
+          ? data.discountedUnitPrice.value
+          : this.discountedUnitPrice,
+      discountAmount: data.discountAmount.present
+          ? data.discountAmount.value
+          : this.discountAmount,
+      unitCostSnapshot: data.unitCostSnapshot.present
+          ? data.unitCostSnapshot.value
+          : this.unitCostSnapshot,
+      notes: data.notes.present ? data.notes.value : this.notes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
+      isNotSynced:
+          data.isNotSynced.present ? data.isNotSynced.value : this.isNotSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OrderLineGroup(')
+          ..write('uuid: $uuid, ')
+          ..write('orderUuid: $orderUuid, ')
+          ..write('nameSnapshot: $nameSnapshot, ')
+          ..write('catalogNameSnapshot: $catalogNameSnapshot, ')
+          ..write('catalogItemUuid: $catalogItemUuid, ')
+          ..write('sellingProductUuid: $sellingProductUuid, ')
+          ..write('packageQty: $packageQty, ')
+          ..write('deliveredPackageQty: $deliveredPackageQty, ')
+          ..write('unit: $unit, ')
+          ..write('unitPrice: $unitPrice, ')
+          ..write('discountedUnitPrice: $discountedUnitPrice, ')
+          ..write('discountAmount: $discountAmount, ')
+          ..write('unitCostSnapshot: $unitCostSnapshot, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      uuid,
+      orderUuid,
+      nameSnapshot,
+      catalogNameSnapshot,
+      catalogItemUuid,
+      sellingProductUuid,
+      packageQty,
+      deliveredPackageQty,
+      unit,
+      unitPrice,
+      discountedUnitPrice,
+      discountAmount,
+      unitCostSnapshot,
+      notes,
+      createdAt,
+      updatedAt,
+      isDeleted,
+      isNotSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OrderLineGroup &&
+          other.uuid == this.uuid &&
+          other.orderUuid == this.orderUuid &&
+          other.nameSnapshot == this.nameSnapshot &&
+          other.catalogNameSnapshot == this.catalogNameSnapshot &&
+          other.catalogItemUuid == this.catalogItemUuid &&
+          other.sellingProductUuid == this.sellingProductUuid &&
+          other.packageQty == this.packageQty &&
+          other.deliveredPackageQty == this.deliveredPackageQty &&
+          other.unit == this.unit &&
+          other.unitPrice == this.unitPrice &&
+          other.discountedUnitPrice == this.discountedUnitPrice &&
+          other.discountAmount == this.discountAmount &&
+          other.unitCostSnapshot == this.unitCostSnapshot &&
+          other.notes == this.notes &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.isDeleted == this.isDeleted &&
+          other.isNotSynced == this.isNotSynced);
+}
+
+class OrderLineGroupsCompanion extends UpdateCompanion<OrderLineGroup> {
+  final Value<String> uuid;
+  final Value<String> orderUuid;
+  final Value<String> nameSnapshot;
+  final Value<String?> catalogNameSnapshot;
+  final Value<String?> catalogItemUuid;
+  final Value<String?> sellingProductUuid;
+  final Value<double> packageQty;
+  final Value<double> deliveredPackageQty;
+  final Value<String> unit;
+  final Value<double> unitPrice;
+  final Value<double?> discountedUnitPrice;
+  final Value<double> discountAmount;
+  final Value<double> unitCostSnapshot;
+  final Value<String?> notes;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<bool> isDeleted;
+  final Value<bool> isNotSynced;
+  final Value<int> rowid;
+  const OrderLineGroupsCompanion({
+    this.uuid = const Value.absent(),
+    this.orderUuid = const Value.absent(),
+    this.nameSnapshot = const Value.absent(),
+    this.catalogNameSnapshot = const Value.absent(),
+    this.catalogItemUuid = const Value.absent(),
+    this.sellingProductUuid = const Value.absent(),
+    this.packageQty = const Value.absent(),
+    this.deliveredPackageQty = const Value.absent(),
+    this.unit = const Value.absent(),
+    this.unitPrice = const Value.absent(),
+    this.discountedUnitPrice = const Value.absent(),
+    this.discountAmount = const Value.absent(),
+    this.unitCostSnapshot = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OrderLineGroupsCompanion.insert({
+    required String uuid,
+    required String orderUuid,
+    required String nameSnapshot,
+    this.catalogNameSnapshot = const Value.absent(),
+    this.catalogItemUuid = const Value.absent(),
+    this.sellingProductUuid = const Value.absent(),
+    required double packageQty,
+    this.deliveredPackageQty = const Value.absent(),
+    this.unit = const Value.absent(),
+    required double unitPrice,
+    this.discountedUnitPrice = const Value.absent(),
+    this.discountAmount = const Value.absent(),
+    this.unitCostSnapshot = const Value.absent(),
+    this.notes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.isDeleted = const Value.absent(),
+    this.isNotSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  })  : uuid = Value(uuid),
+        orderUuid = Value(orderUuid),
+        nameSnapshot = Value(nameSnapshot),
+        packageQty = Value(packageQty),
+        unitPrice = Value(unitPrice);
+  static Insertable<OrderLineGroup> custom({
+    Expression<String>? uuid,
+    Expression<String>? orderUuid,
+    Expression<String>? nameSnapshot,
+    Expression<String>? catalogNameSnapshot,
+    Expression<String>? catalogItemUuid,
+    Expression<String>? sellingProductUuid,
+    Expression<double>? packageQty,
+    Expression<double>? deliveredPackageQty,
+    Expression<String>? unit,
+    Expression<double>? unitPrice,
+    Expression<double>? discountedUnitPrice,
+    Expression<double>? discountAmount,
+    Expression<double>? unitCostSnapshot,
+    Expression<String>? notes,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<bool>? isDeleted,
+    Expression<bool>? isNotSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (uuid != null) 'uuid': uuid,
+      if (orderUuid != null) 'order_uuid': orderUuid,
+      if (nameSnapshot != null) 'name_snapshot': nameSnapshot,
+      if (catalogNameSnapshot != null)
+        'catalog_name_snapshot': catalogNameSnapshot,
+      if (catalogItemUuid != null) 'catalog_item_uuid': catalogItemUuid,
+      if (sellingProductUuid != null)
+        'selling_product_uuid': sellingProductUuid,
+      if (packageQty != null) 'package_qty': packageQty,
+      if (deliveredPackageQty != null)
+        'delivered_package_qty': deliveredPackageQty,
+      if (unit != null) 'unit': unit,
+      if (unitPrice != null) 'unit_price': unitPrice,
+      if (discountedUnitPrice != null)
+        'discounted_unit_price': discountedUnitPrice,
+      if (discountAmount != null) 'discount_amount': discountAmount,
+      if (unitCostSnapshot != null) 'unit_cost_snapshot': unitCostSnapshot,
+      if (notes != null) 'notes': notes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (isDeleted != null) 'is_deleted': isDeleted,
+      if (isNotSynced != null) 'is_not_synced': isNotSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OrderLineGroupsCompanion copyWith(
+      {Value<String>? uuid,
+      Value<String>? orderUuid,
+      Value<String>? nameSnapshot,
+      Value<String?>? catalogNameSnapshot,
+      Value<String?>? catalogItemUuid,
+      Value<String?>? sellingProductUuid,
+      Value<double>? packageQty,
+      Value<double>? deliveredPackageQty,
+      Value<String>? unit,
+      Value<double>? unitPrice,
+      Value<double?>? discountedUnitPrice,
+      Value<double>? discountAmount,
+      Value<double>? unitCostSnapshot,
+      Value<String?>? notes,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<bool>? isDeleted,
+      Value<bool>? isNotSynced,
+      Value<int>? rowid}) {
+    return OrderLineGroupsCompanion(
+      uuid: uuid ?? this.uuid,
+      orderUuid: orderUuid ?? this.orderUuid,
+      nameSnapshot: nameSnapshot ?? this.nameSnapshot,
+      catalogNameSnapshot: catalogNameSnapshot ?? this.catalogNameSnapshot,
+      catalogItemUuid: catalogItemUuid ?? this.catalogItemUuid,
+      sellingProductUuid: sellingProductUuid ?? this.sellingProductUuid,
+      packageQty: packageQty ?? this.packageQty,
+      deliveredPackageQty: deliveredPackageQty ?? this.deliveredPackageQty,
+      unit: unit ?? this.unit,
+      unitPrice: unitPrice ?? this.unitPrice,
+      discountedUnitPrice: discountedUnitPrice ?? this.discountedUnitPrice,
+      discountAmount: discountAmount ?? this.discountAmount,
+      unitCostSnapshot: unitCostSnapshot ?? this.unitCostSnapshot,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isNotSynced: isNotSynced ?? this.isNotSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (orderUuid.present) {
+      map['order_uuid'] = Variable<String>(orderUuid.value);
+    }
+    if (nameSnapshot.present) {
+      map['name_snapshot'] = Variable<String>(nameSnapshot.value);
+    }
+    if (catalogNameSnapshot.present) {
+      map['catalog_name_snapshot'] =
+          Variable<String>(catalogNameSnapshot.value);
+    }
+    if (catalogItemUuid.present) {
+      map['catalog_item_uuid'] = Variable<String>(catalogItemUuid.value);
+    }
+    if (sellingProductUuid.present) {
+      map['selling_product_uuid'] = Variable<String>(sellingProductUuid.value);
+    }
+    if (packageQty.present) {
+      map['package_qty'] = Variable<double>(packageQty.value);
+    }
+    if (deliveredPackageQty.present) {
+      map['delivered_package_qty'] =
+          Variable<double>(deliveredPackageQty.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    if (unitPrice.present) {
+      map['unit_price'] = Variable<double>(unitPrice.value);
+    }
+    if (discountedUnitPrice.present) {
+      map['discounted_unit_price'] =
+          Variable<double>(discountedUnitPrice.value);
+    }
+    if (discountAmount.present) {
+      map['discount_amount'] = Variable<double>(discountAmount.value);
+    }
+    if (unitCostSnapshot.present) {
+      map['unit_cost_snapshot'] = Variable<double>(unitCostSnapshot.value);
+    }
+    if (notes.present) {
+      map['notes'] = Variable<String>(notes.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (isDeleted.present) {
+      map['is_deleted'] = Variable<bool>(isDeleted.value);
+    }
+    if (isNotSynced.present) {
+      map['is_not_synced'] = Variable<bool>(isNotSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OrderLineGroupsCompanion(')
+          ..write('uuid: $uuid, ')
+          ..write('orderUuid: $orderUuid, ')
+          ..write('nameSnapshot: $nameSnapshot, ')
+          ..write('catalogNameSnapshot: $catalogNameSnapshot, ')
+          ..write('catalogItemUuid: $catalogItemUuid, ')
+          ..write('sellingProductUuid: $sellingProductUuid, ')
+          ..write('packageQty: $packageQty, ')
+          ..write('deliveredPackageQty: $deliveredPackageQty, ')
+          ..write('unit: $unit, ')
+          ..write('unitPrice: $unitPrice, ')
+          ..write('discountedUnitPrice: $discountedUnitPrice, ')
+          ..write('discountAmount: $discountAmount, ')
+          ..write('unitCostSnapshot: $unitCostSnapshot, ')
+          ..write('notes: $notes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('isDeleted: $isDeleted, ')
+          ..write('isNotSynced: $isNotSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $OrderItemsTable extends OrderItems
     with TableInfo<$OrderItemsTable, OrderItem> {
   @override
@@ -11812,6 +12718,21 @@ class $OrderItemsTable extends OrderItems
           requiredDuringInsert: false,
           defaultConstraints: GeneratedColumn.constraintIsAlways(
               'REFERENCES selling_products (uuid)'));
+  static const VerificationMeta _groupUuidMeta =
+      const VerificationMeta('groupUuid');
+  @override
+  late final GeneratedColumn<String> groupUuid = GeneratedColumn<String>(
+      'group_uuid', aliasedName, true,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'REFERENCES order_line_groups (uuid)'));
+  static const VerificationMeta _bundleComponentQtyMeta =
+      const VerificationMeta('bundleComponentQty');
+  @override
+  late final GeneratedColumn<double> bundleComponentQty =
+      GeneratedColumn<double>('bundle_component_qty', aliasedName, true,
+          type: DriftSqlType.double, requiredDuringInsert: false);
   static const VerificationMeta _productNameSnapshotMeta =
       const VerificationMeta('productNameSnapshot');
   @override
@@ -11941,6 +12862,8 @@ class $OrderItemsTable extends OrderItems
         productUuid,
         catalogItemUuid,
         sellingProductUuid,
+        groupUuid,
+        bundleComponentQty,
         productNameSnapshot,
         quantity,
         unitPrice,
@@ -11997,6 +12920,16 @@ class $OrderItemsTable extends OrderItems
           _sellingProductUuidMeta,
           sellingProductUuid.isAcceptableOrUnknown(
               data['selling_product_uuid']!, _sellingProductUuidMeta));
+    }
+    if (data.containsKey('group_uuid')) {
+      context.handle(_groupUuidMeta,
+          groupUuid.isAcceptableOrUnknown(data['group_uuid']!, _groupUuidMeta));
+    }
+    if (data.containsKey('bundle_component_qty')) {
+      context.handle(
+          _bundleComponentQtyMeta,
+          bundleComponentQty.isAcceptableOrUnknown(
+              data['bundle_component_qty']!, _bundleComponentQtyMeta));
     }
     if (data.containsKey('product_name_snapshot')) {
       context.handle(
@@ -12103,6 +13036,10 @@ class $OrderItemsTable extends OrderItems
           DriftSqlType.string, data['${effectivePrefix}catalog_item_uuid']),
       sellingProductUuid: attachedDatabase.typeMapping.read(
           DriftSqlType.string, data['${effectivePrefix}selling_product_uuid']),
+      groupUuid: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}group_uuid']),
+      bundleComponentQty: attachedDatabase.typeMapping.read(
+          DriftSqlType.double, data['${effectivePrefix}bundle_component_qty']),
       productNameSnapshot: attachedDatabase.typeMapping.read(
           DriftSqlType.string,
           data['${effectivePrefix}product_name_snapshot'])!,
@@ -12150,20 +13087,28 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
   final String uuid;
   final String orderUuid;
 
-  /// Direct product line. Null when the line is a selling-product offer.
+  /// Physical stock/service product. Required for new sale lines (bundles explode).
+  /// Nullable only for legacy pre-v21 selling-product header rows.
   final String? productUuid;
 
-  /// Catalog line this sale was picked from (optional snapshot ref).
+  /// Catalog line this sale was picked from (optional soft ref / audit).
   final String? catalogItemUuid;
 
-  /// Selling-product / bundle line. Null for direct product lines.
+  /// Legacy selling-product header ref. New bundles use [groupUuid] + physical lines.
   final String? sellingProductUuid;
+
+  /// When set, this line belongs to a frozen commercial package on the order.
+  final String? groupUuid;
+
+  /// Qty of this product in **one** package (BOM). Null when not in a group.
+  /// [quantity] is always the expanded physical qty (component × packages).
+  final double? bundleComponentQty;
   final String productNameSnapshot;
 
-  /// Ordered qty (PO/SO commitment).
+  /// Ordered qty (PO/SO commitment). For bundle components: expanded physical qty.
   final double quantity;
 
-  /// List / catalog unit price (before line discount).
+  /// List / catalog unit price (before line discount). Bundle components: allocated.
   final double unitPrice;
 
   /// Unit price after discount (what the customer pays per unit).
@@ -12184,7 +13129,7 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
   final double deliveredQuantity;
   final String? batchUuid;
 
-  /// Planned / stamped unit cost (net of discounts; sales COGS or PO planned cost).
+  /// Weight/estimate at save; sales goods COGS authoritative on delivery lines.
   final double purchasePriceSnapshot;
   final String unit;
   final DateTime createdAt;
@@ -12197,6 +13142,8 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
       this.productUuid,
       this.catalogItemUuid,
       this.sellingProductUuid,
+      this.groupUuid,
+      this.bundleComponentQty,
       required this.productNameSnapshot,
       required this.quantity,
       required this.unitPrice,
@@ -12226,6 +13173,12 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
     }
     if (!nullToAbsent || sellingProductUuid != null) {
       map['selling_product_uuid'] = Variable<String>(sellingProductUuid);
+    }
+    if (!nullToAbsent || groupUuid != null) {
+      map['group_uuid'] = Variable<String>(groupUuid);
+    }
+    if (!nullToAbsent || bundleComponentQty != null) {
+      map['bundle_component_qty'] = Variable<double>(bundleComponentQty);
     }
     map['product_name_snapshot'] = Variable<String>(productNameSnapshot);
     map['quantity'] = Variable<double>(quantity);
@@ -12265,6 +13218,12 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
       sellingProductUuid: sellingProductUuid == null && nullToAbsent
           ? const Value.absent()
           : Value(sellingProductUuid),
+      groupUuid: groupUuid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(groupUuid),
+      bundleComponentQty: bundleComponentQty == null && nullToAbsent
+          ? const Value.absent()
+          : Value(bundleComponentQty),
       productNameSnapshot: Value(productNameSnapshot),
       quantity: Value(quantity),
       unitPrice: Value(unitPrice),
@@ -12300,6 +13259,9 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
       catalogItemUuid: serializer.fromJson<String?>(json['catalogItemUuid']),
       sellingProductUuid:
           serializer.fromJson<String?>(json['sellingProductUuid']),
+      groupUuid: serializer.fromJson<String?>(json['groupUuid']),
+      bundleComponentQty:
+          serializer.fromJson<double?>(json['bundleComponentQty']),
       productNameSnapshot:
           serializer.fromJson<String>(json['productNameSnapshot']),
       quantity: serializer.fromJson<double>(json['quantity']),
@@ -12331,6 +13293,8 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
       'productUuid': serializer.toJson<String?>(productUuid),
       'catalogItemUuid': serializer.toJson<String?>(catalogItemUuid),
       'sellingProductUuid': serializer.toJson<String?>(sellingProductUuid),
+      'groupUuid': serializer.toJson<String?>(groupUuid),
+      'bundleComponentQty': serializer.toJson<double?>(bundleComponentQty),
       'productNameSnapshot': serializer.toJson<String>(productNameSnapshot),
       'quantity': serializer.toJson<double>(quantity),
       'unitPrice': serializer.toJson<double>(unitPrice),
@@ -12356,6 +13320,8 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
           Value<String?> productUuid = const Value.absent(),
           Value<String?> catalogItemUuid = const Value.absent(),
           Value<String?> sellingProductUuid = const Value.absent(),
+          Value<String?> groupUuid = const Value.absent(),
+          Value<double?> bundleComponentQty = const Value.absent(),
           String? productNameSnapshot,
           double? quantity,
           double? unitPrice,
@@ -12382,6 +13348,10 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
         sellingProductUuid: sellingProductUuid.present
             ? sellingProductUuid.value
             : this.sellingProductUuid,
+        groupUuid: groupUuid.present ? groupUuid.value : this.groupUuid,
+        bundleComponentQty: bundleComponentQty.present
+            ? bundleComponentQty.value
+            : this.bundleComponentQty,
         productNameSnapshot: productNameSnapshot ?? this.productNameSnapshot,
         quantity: quantity ?? this.quantity,
         unitPrice: unitPrice ?? this.unitPrice,
@@ -12416,6 +13386,10 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
       sellingProductUuid: data.sellingProductUuid.present
           ? data.sellingProductUuid.value
           : this.sellingProductUuid,
+      groupUuid: data.groupUuid.present ? data.groupUuid.value : this.groupUuid,
+      bundleComponentQty: data.bundleComponentQty.present
+          ? data.bundleComponentQty.value
+          : this.bundleComponentQty,
       productNameSnapshot: data.productNameSnapshot.present
           ? data.productNameSnapshot.value
           : this.productNameSnapshot,
@@ -12458,6 +13432,8 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
           ..write('productUuid: $productUuid, ')
           ..write('catalogItemUuid: $catalogItemUuid, ')
           ..write('sellingProductUuid: $sellingProductUuid, ')
+          ..write('groupUuid: $groupUuid, ')
+          ..write('bundleComponentQty: $bundleComponentQty, ')
           ..write('productNameSnapshot: $productNameSnapshot, ')
           ..write('quantity: $quantity, ')
           ..write('unitPrice: $unitPrice, ')
@@ -12485,6 +13461,8 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
         productUuid,
         catalogItemUuid,
         sellingProductUuid,
+        groupUuid,
+        bundleComponentQty,
         productNameSnapshot,
         quantity,
         unitPrice,
@@ -12511,6 +13489,8 @@ class OrderItem extends DataClass implements Insertable<OrderItem> {
           other.productUuid == this.productUuid &&
           other.catalogItemUuid == this.catalogItemUuid &&
           other.sellingProductUuid == this.sellingProductUuid &&
+          other.groupUuid == this.groupUuid &&
+          other.bundleComponentQty == this.bundleComponentQty &&
           other.productNameSnapshot == this.productNameSnapshot &&
           other.quantity == this.quantity &&
           other.unitPrice == this.unitPrice &&
@@ -12535,6 +13515,8 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
   final Value<String?> productUuid;
   final Value<String?> catalogItemUuid;
   final Value<String?> sellingProductUuid;
+  final Value<String?> groupUuid;
+  final Value<double?> bundleComponentQty;
   final Value<String> productNameSnapshot;
   final Value<double> quantity;
   final Value<double> unitPrice;
@@ -12558,6 +13540,8 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
     this.productUuid = const Value.absent(),
     this.catalogItemUuid = const Value.absent(),
     this.sellingProductUuid = const Value.absent(),
+    this.groupUuid = const Value.absent(),
+    this.bundleComponentQty = const Value.absent(),
     this.productNameSnapshot = const Value.absent(),
     this.quantity = const Value.absent(),
     this.unitPrice = const Value.absent(),
@@ -12582,6 +13566,8 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
     this.productUuid = const Value.absent(),
     this.catalogItemUuid = const Value.absent(),
     this.sellingProductUuid = const Value.absent(),
+    this.groupUuid = const Value.absent(),
+    this.bundleComponentQty = const Value.absent(),
     required String productNameSnapshot,
     required double quantity,
     required double unitPrice,
@@ -12610,6 +13596,8 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
     Expression<String>? productUuid,
     Expression<String>? catalogItemUuid,
     Expression<String>? sellingProductUuid,
+    Expression<String>? groupUuid,
+    Expression<double>? bundleComponentQty,
     Expression<String>? productNameSnapshot,
     Expression<double>? quantity,
     Expression<double>? unitPrice,
@@ -12635,6 +13623,9 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
       if (catalogItemUuid != null) 'catalog_item_uuid': catalogItemUuid,
       if (sellingProductUuid != null)
         'selling_product_uuid': sellingProductUuid,
+      if (groupUuid != null) 'group_uuid': groupUuid,
+      if (bundleComponentQty != null)
+        'bundle_component_qty': bundleComponentQty,
       if (productNameSnapshot != null)
         'product_name_snapshot': productNameSnapshot,
       if (quantity != null) 'quantity': quantity,
@@ -12665,6 +13656,8 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
       Value<String?>? productUuid,
       Value<String?>? catalogItemUuid,
       Value<String?>? sellingProductUuid,
+      Value<String?>? groupUuid,
+      Value<double?>? bundleComponentQty,
       Value<String>? productNameSnapshot,
       Value<double>? quantity,
       Value<double>? unitPrice,
@@ -12688,6 +13681,8 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
       productUuid: productUuid ?? this.productUuid,
       catalogItemUuid: catalogItemUuid ?? this.catalogItemUuid,
       sellingProductUuid: sellingProductUuid ?? this.sellingProductUuid,
+      groupUuid: groupUuid ?? this.groupUuid,
+      bundleComponentQty: bundleComponentQty ?? this.bundleComponentQty,
       productNameSnapshot: productNameSnapshot ?? this.productNameSnapshot,
       quantity: quantity ?? this.quantity,
       unitPrice: unitPrice ?? this.unitPrice,
@@ -12726,6 +13721,12 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
     }
     if (sellingProductUuid.present) {
       map['selling_product_uuid'] = Variable<String>(sellingProductUuid.value);
+    }
+    if (groupUuid.present) {
+      map['group_uuid'] = Variable<String>(groupUuid.value);
+    }
+    if (bundleComponentQty.present) {
+      map['bundle_component_qty'] = Variable<double>(bundleComponentQty.value);
     }
     if (productNameSnapshot.present) {
       map['product_name_snapshot'] =
@@ -12793,6 +13794,8 @@ class OrderItemsCompanion extends UpdateCompanion<OrderItem> {
           ..write('productUuid: $productUuid, ')
           ..write('catalogItemUuid: $catalogItemUuid, ')
           ..write('sellingProductUuid: $sellingProductUuid, ')
+          ..write('groupUuid: $groupUuid, ')
+          ..write('bundleComponentQty: $bundleComponentQty, ')
           ..write('productNameSnapshot: $productNameSnapshot, ')
           ..write('quantity: $quantity, ')
           ..write('unitPrice: $unitPrice, ')
@@ -13734,6 +14737,20 @@ class $GoodsDeliveryLinesTable extends GoodsDeliveryLines
   late final GeneratedColumn<double> quantity = GeneratedColumn<double>(
       'quantity', aliasedName, false,
       type: DriftSqlType.double, requiredDuringInsert: true);
+  static const VerificationMeta _unitCogsMeta =
+      const VerificationMeta('unitCogs');
+  @override
+  late final GeneratedColumn<double> unitCogs = GeneratedColumn<double>(
+      'unit_cogs', aliasedName, false,
+      type: DriftSqlType.double,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0.0));
+  static const VerificationMeta _packageQtyMeta =
+      const VerificationMeta('packageQty');
+  @override
+  late final GeneratedColumn<double> packageQty = GeneratedColumn<double>(
+      'package_qty', aliasedName, true,
+      type: DriftSqlType.double, requiredDuringInsert: false);
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -13777,6 +14794,8 @@ class $GoodsDeliveryLinesTable extends GoodsDeliveryLines
         orderItemUuid,
         productUuid,
         quantity,
+        unitCogs,
+        packageQty,
         createdAt,
         updatedAt,
         isDeleted,
@@ -13826,6 +14845,16 @@ class $GoodsDeliveryLinesTable extends GoodsDeliveryLines
     } else if (isInserting) {
       context.missing(_quantityMeta);
     }
+    if (data.containsKey('unit_cogs')) {
+      context.handle(_unitCogsMeta,
+          unitCogs.isAcceptableOrUnknown(data['unit_cogs']!, _unitCogsMeta));
+    }
+    if (data.containsKey('package_qty')) {
+      context.handle(
+          _packageQtyMeta,
+          packageQty.isAcceptableOrUnknown(
+              data['package_qty']!, _packageQtyMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -13863,6 +14892,10 @@ class $GoodsDeliveryLinesTable extends GoodsDeliveryLines
           .read(DriftSqlType.string, data['${effectivePrefix}product_uuid']),
       quantity: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}quantity'])!,
+      unitCogs: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}unit_cogs'])!,
+      packageQty: attachedDatabase.typeMapping
+          .read(DriftSqlType.double, data['${effectivePrefix}package_qty']),
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -13887,6 +14920,12 @@ class GoodsDeliveryLine extends DataClass
   final String orderItemUuid;
   final String? productUuid;
   final double quantity;
+
+  /// FEFO-weighted unit COGS for this shipment line (authoritative for P&L).
+  final double unitCogs;
+
+  /// Optional: packages represented when this line is part of a whole-package dispatch.
+  final double? packageQty;
   final DateTime createdAt;
   final DateTime updatedAt;
   final bool isDeleted;
@@ -13897,6 +14936,8 @@ class GoodsDeliveryLine extends DataClass
       required this.orderItemUuid,
       this.productUuid,
       required this.quantity,
+      required this.unitCogs,
+      this.packageQty,
       required this.createdAt,
       required this.updatedAt,
       required this.isDeleted,
@@ -13911,6 +14952,10 @@ class GoodsDeliveryLine extends DataClass
       map['product_uuid'] = Variable<String>(productUuid);
     }
     map['quantity'] = Variable<double>(quantity);
+    map['unit_cogs'] = Variable<double>(unitCogs);
+    if (!nullToAbsent || packageQty != null) {
+      map['package_qty'] = Variable<double>(packageQty);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     map['is_deleted'] = Variable<bool>(isDeleted);
@@ -13927,6 +14972,10 @@ class GoodsDeliveryLine extends DataClass
           ? const Value.absent()
           : Value(productUuid),
       quantity: Value(quantity),
+      unitCogs: Value(unitCogs),
+      packageQty: packageQty == null && nullToAbsent
+          ? const Value.absent()
+          : Value(packageQty),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       isDeleted: Value(isDeleted),
@@ -13943,6 +14992,8 @@ class GoodsDeliveryLine extends DataClass
       orderItemUuid: serializer.fromJson<String>(json['orderItemUuid']),
       productUuid: serializer.fromJson<String?>(json['productUuid']),
       quantity: serializer.fromJson<double>(json['quantity']),
+      unitCogs: serializer.fromJson<double>(json['unitCogs']),
+      packageQty: serializer.fromJson<double?>(json['packageQty']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       isDeleted: serializer.fromJson<bool>(json['isDeleted']),
@@ -13958,6 +15009,8 @@ class GoodsDeliveryLine extends DataClass
       'orderItemUuid': serializer.toJson<String>(orderItemUuid),
       'productUuid': serializer.toJson<String?>(productUuid),
       'quantity': serializer.toJson<double>(quantity),
+      'unitCogs': serializer.toJson<double>(unitCogs),
+      'packageQty': serializer.toJson<double?>(packageQty),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'isDeleted': serializer.toJson<bool>(isDeleted),
@@ -13971,6 +15024,8 @@ class GoodsDeliveryLine extends DataClass
           String? orderItemUuid,
           Value<String?> productUuid = const Value.absent(),
           double? quantity,
+          double? unitCogs,
+          Value<double?> packageQty = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt,
           bool? isDeleted,
@@ -13981,6 +15036,8 @@ class GoodsDeliveryLine extends DataClass
         orderItemUuid: orderItemUuid ?? this.orderItemUuid,
         productUuid: productUuid.present ? productUuid.value : this.productUuid,
         quantity: quantity ?? this.quantity,
+        unitCogs: unitCogs ?? this.unitCogs,
+        packageQty: packageQty.present ? packageQty.value : this.packageQty,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
         isDeleted: isDeleted ?? this.isDeleted,
@@ -13998,6 +15055,9 @@ class GoodsDeliveryLine extends DataClass
       productUuid:
           data.productUuid.present ? data.productUuid.value : this.productUuid,
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      unitCogs: data.unitCogs.present ? data.unitCogs.value : this.unitCogs,
+      packageQty:
+          data.packageQty.present ? data.packageQty.value : this.packageQty,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       isDeleted: data.isDeleted.present ? data.isDeleted.value : this.isDeleted,
@@ -14014,6 +15074,8 @@ class GoodsDeliveryLine extends DataClass
           ..write('orderItemUuid: $orderItemUuid, ')
           ..write('productUuid: $productUuid, ')
           ..write('quantity: $quantity, ')
+          ..write('unitCogs: $unitCogs, ')
+          ..write('packageQty: $packageQty, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -14023,8 +15085,18 @@ class GoodsDeliveryLine extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(uuid, deliveryUuid, orderItemUuid,
-      productUuid, quantity, createdAt, updatedAt, isDeleted, isNotSynced);
+  int get hashCode => Object.hash(
+      uuid,
+      deliveryUuid,
+      orderItemUuid,
+      productUuid,
+      quantity,
+      unitCogs,
+      packageQty,
+      createdAt,
+      updatedAt,
+      isDeleted,
+      isNotSynced);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -14034,6 +15106,8 @@ class GoodsDeliveryLine extends DataClass
           other.orderItemUuid == this.orderItemUuid &&
           other.productUuid == this.productUuid &&
           other.quantity == this.quantity &&
+          other.unitCogs == this.unitCogs &&
+          other.packageQty == this.packageQty &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.isDeleted == this.isDeleted &&
@@ -14046,6 +15120,8 @@ class GoodsDeliveryLinesCompanion extends UpdateCompanion<GoodsDeliveryLine> {
   final Value<String> orderItemUuid;
   final Value<String?> productUuid;
   final Value<double> quantity;
+  final Value<double> unitCogs;
+  final Value<double?> packageQty;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<bool> isDeleted;
@@ -14057,6 +15133,8 @@ class GoodsDeliveryLinesCompanion extends UpdateCompanion<GoodsDeliveryLine> {
     this.orderItemUuid = const Value.absent(),
     this.productUuid = const Value.absent(),
     this.quantity = const Value.absent(),
+    this.unitCogs = const Value.absent(),
+    this.packageQty = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -14069,6 +15147,8 @@ class GoodsDeliveryLinesCompanion extends UpdateCompanion<GoodsDeliveryLine> {
     required String orderItemUuid,
     this.productUuid = const Value.absent(),
     required double quantity,
+    this.unitCogs = const Value.absent(),
+    this.packageQty = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.isDeleted = const Value.absent(),
@@ -14084,6 +15164,8 @@ class GoodsDeliveryLinesCompanion extends UpdateCompanion<GoodsDeliveryLine> {
     Expression<String>? orderItemUuid,
     Expression<String>? productUuid,
     Expression<double>? quantity,
+    Expression<double>? unitCogs,
+    Expression<double>? packageQty,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<bool>? isDeleted,
@@ -14096,6 +15178,8 @@ class GoodsDeliveryLinesCompanion extends UpdateCompanion<GoodsDeliveryLine> {
       if (orderItemUuid != null) 'order_item_uuid': orderItemUuid,
       if (productUuid != null) 'product_uuid': productUuid,
       if (quantity != null) 'quantity': quantity,
+      if (unitCogs != null) 'unit_cogs': unitCogs,
+      if (packageQty != null) 'package_qty': packageQty,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (isDeleted != null) 'is_deleted': isDeleted,
@@ -14110,6 +15194,8 @@ class GoodsDeliveryLinesCompanion extends UpdateCompanion<GoodsDeliveryLine> {
       Value<String>? orderItemUuid,
       Value<String?>? productUuid,
       Value<double>? quantity,
+      Value<double>? unitCogs,
+      Value<double?>? packageQty,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<bool>? isDeleted,
@@ -14121,6 +15207,8 @@ class GoodsDeliveryLinesCompanion extends UpdateCompanion<GoodsDeliveryLine> {
       orderItemUuid: orderItemUuid ?? this.orderItemUuid,
       productUuid: productUuid ?? this.productUuid,
       quantity: quantity ?? this.quantity,
+      unitCogs: unitCogs ?? this.unitCogs,
+      packageQty: packageQty ?? this.packageQty,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isDeleted: isDeleted ?? this.isDeleted,
@@ -14146,6 +15234,12 @@ class GoodsDeliveryLinesCompanion extends UpdateCompanion<GoodsDeliveryLine> {
     }
     if (quantity.present) {
       map['quantity'] = Variable<double>(quantity.value);
+    }
+    if (unitCogs.present) {
+      map['unit_cogs'] = Variable<double>(unitCogs.value);
+    }
+    if (packageQty.present) {
+      map['package_qty'] = Variable<double>(packageQty.value);
     }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
@@ -14173,6 +15267,8 @@ class GoodsDeliveryLinesCompanion extends UpdateCompanion<GoodsDeliveryLine> {
           ..write('orderItemUuid: $orderItemUuid, ')
           ..write('productUuid: $productUuid, ')
           ..write('quantity: $quantity, ')
+          ..write('unitCogs: $unitCogs, ')
+          ..write('packageQty: $packageQty, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('isDeleted: $isDeleted, ')
@@ -21724,6 +22820,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $CatalogAssignmentsTable(this);
   late final $CatalogTieredDiscountsTable catalogTieredDiscounts =
       $CatalogTieredDiscountsTable(this);
+  late final $OrderLineGroupsTable orderLineGroups =
+      $OrderLineGroupsTable(this);
   late final $OrderItemsTable orderItems = $OrderItemsTable(this);
   late final $OrderChargesTable orderCharges = $OrderChargesTable(this);
   late final $GoodsDeliveriesTable goodsDeliveries =
@@ -21773,6 +22871,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         catalogItems,
         catalogAssignments,
         catalogTieredDiscounts,
+        orderLineGroups,
         orderItems,
         orderCharges,
         goodsDeliveries,
@@ -23524,6 +24623,22 @@ final class $$OrdersTableReferences
         manager.$state.copyWith(prefetchedData: cache));
   }
 
+  static MultiTypedResultKey<$OrderLineGroupsTable, List<OrderLineGroup>>
+      _orderLineGroupsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.orderLineGroups,
+              aliasName: 'orders__uuid__order_line_groups__order_uuid');
+
+  $$OrderLineGroupsTableProcessedTableManager get orderLineGroupsRefs {
+    final manager =
+        $$OrderLineGroupsTableTableManager($_db, $_db.orderLineGroups).filter(
+            (f) => f.orderUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_orderLineGroupsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
   static MultiTypedResultKey<$OrderItemsTable, List<OrderItem>>
       _orderItemsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.orderItems,
@@ -23706,6 +24821,27 @@ class $$OrdersTableFilterComposer
             $$TransactionsTableFilterComposer(
               $db: $db,
               $table: $db.transactions,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> orderLineGroupsRefs(
+      Expression<bool> Function($$OrderLineGroupsTableFilterComposer f) f) {
+    final $$OrderLineGroupsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.orderLineGroups,
+        getReferencedColumn: (t) => t.orderUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderLineGroupsTableFilterComposer(
+              $db: $db,
+              $table: $db.orderLineGroups,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -24026,6 +25162,27 @@ class $$OrdersTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> orderLineGroupsRefs<T extends Object>(
+      Expression<T> Function($$OrderLineGroupsTableAnnotationComposer a) f) {
+    final $$OrderLineGroupsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.orderLineGroups,
+        getReferencedColumn: (t) => t.orderUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderLineGroupsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.orderLineGroups,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
   Expression<T> orderItemsRefs<T extends Object>(
       Expression<T> Function($$OrderItemsTableAnnotationComposer a) f) {
     final $$OrderItemsTableAnnotationComposer composer = $composerBuilder(
@@ -24146,6 +25303,7 @@ class $$OrdersTableTableManager extends RootTableManager<
     PrefetchHooks Function(
         {bool contactUuid,
         bool transactionsRefs,
+        bool orderLineGroupsRefs,
         bool orderItemsRefs,
         bool orderChargesRefs,
         bool goodsDeliveriesRefs,
@@ -24266,6 +25424,7 @@ class $$OrdersTableTableManager extends RootTableManager<
           prefetchHooksCallback: (
               {contactUuid = false,
               transactionsRefs = false,
+              orderLineGroupsRefs = false,
               orderItemsRefs = false,
               orderChargesRefs = false,
               goodsDeliveriesRefs = false,
@@ -24275,6 +25434,7 @@ class $$OrdersTableTableManager extends RootTableManager<
               db: db,
               explicitlyWatchedTables: [
                 if (transactionsRefs) db.transactions,
+                if (orderLineGroupsRefs) db.orderLineGroups,
                 if (orderItemsRefs) db.orderItems,
                 if (orderChargesRefs) db.orderCharges,
                 if (goodsDeliveriesRefs) db.goodsDeliveries,
@@ -24318,6 +25478,18 @@ class $$OrdersTableTableManager extends RootTableManager<
                         managerFromTypedResult: (p0) =>
                             $$OrdersTableReferences(db, table, p0)
                                 .transactionsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'order_uuid',
+                        typedResults: items),
+                  if (orderLineGroupsRefs)
+                    await $_getPrefetchedDataByColumns<Order, $OrdersTable,
+                            OrderLineGroup, $OrderLineGroupsTable>(
+                        currentTable: table,
+                        referencedTable: $$OrdersTableReferences
+                            ._orderLineGroupsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$OrdersTableReferences(db, table, p0)
+                                .orderLineGroupsRefs,
                         currentColumn: 'uuid',
                         referencedColumn: 'order_uuid',
                         typedResults: items),
@@ -24402,6 +25574,7 @@ typedef $$OrdersTableProcessedTableManager = ProcessedTableManager<
     PrefetchHooks Function(
         {bool contactUuid,
         bool transactionsRefs,
+        bool orderLineGroupsRefs,
         bool orderItemsRefs,
         bool orderChargesRefs,
         bool goodsDeliveriesRefs,
@@ -28566,6 +29739,25 @@ final class $$SellingProductsTableReferences extends BaseReferences<
         manager.$state.copyWith(prefetchedData: cache));
   }
 
+  static MultiTypedResultKey<$OrderLineGroupsTable,
+      List<OrderLineGroup>> _orderLineGroupsRefsTable(
+          _$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(db.orderLineGroups,
+          aliasName:
+              'selling_products__uuid__order_line_groups__selling_product_uuid');
+
+  $$OrderLineGroupsTableProcessedTableManager get orderLineGroupsRefs {
+    final manager = $$OrderLineGroupsTableTableManager(
+            $_db, $_db.orderLineGroups)
+        .filter((f) =>
+            f.sellingProductUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_orderLineGroupsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
   static MultiTypedResultKey<$OrderItemsTable, List<OrderItem>>
       _orderItemsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.orderItems,
@@ -28675,6 +29867,27 @@ class $$SellingProductsTableFilterComposer
             $$CatalogItemsTableFilterComposer(
               $db: $db,
               $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
+  Expression<bool> orderLineGroupsRefs(
+      Expression<bool> Function($$OrderLineGroupsTableFilterComposer f) f) {
+    final $$OrderLineGroupsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.orderLineGroups,
+        getReferencedColumn: (t) => t.sellingProductUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderLineGroupsTableFilterComposer(
+              $db: $db,
+              $table: $db.orderLineGroups,
               $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
               joinBuilder: joinBuilder,
               $removeJoinBuilderFromRootComposer:
@@ -28864,6 +30077,27 @@ class $$SellingProductsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> orderLineGroupsRefs<T extends Object>(
+      Expression<T> Function($$OrderLineGroupsTableAnnotationComposer a) f) {
+    final $$OrderLineGroupsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.orderLineGroups,
+        getReferencedColumn: (t) => t.sellingProductUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderLineGroupsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.orderLineGroups,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
   Expression<T> orderItemsRefs<T extends Object>(
       Expression<T> Function($$OrderItemsTableAnnotationComposer a) f) {
     final $$OrderItemsTableAnnotationComposer composer = $composerBuilder(
@@ -28901,6 +30135,7 @@ class $$SellingProductsTableTableManager extends RootTableManager<
         {bool categoryUuid,
         bool sellingProductComponentsRefs,
         bool catalogItemsRefs,
+        bool orderLineGroupsRefs,
         bool orderItemsRefs})> {
   $$SellingProductsTableTableManager(
       _$AppDatabase db, $SellingProductsTable table)
@@ -28975,12 +30210,14 @@ class $$SellingProductsTableTableManager extends RootTableManager<
               {categoryUuid = false,
               sellingProductComponentsRefs = false,
               catalogItemsRefs = false,
+              orderLineGroupsRefs = false,
               orderItemsRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (sellingProductComponentsRefs) db.sellingProductComponents,
                 if (catalogItemsRefs) db.catalogItems,
+                if (orderLineGroupsRefs) db.orderLineGroups,
                 if (orderItemsRefs) db.orderItems
               ],
               addJoins: <
@@ -29042,6 +30279,21 @@ class $$SellingProductsTableTableManager extends RootTableManager<
                         currentColumn: 'uuid',
                         referencedColumn: 'selling_product_uuid',
                         typedResults: items),
+                  if (orderLineGroupsRefs)
+                    await $_getPrefetchedDataByColumns<
+                            SellingProduct,
+                            $SellingProductsTable,
+                            OrderLineGroup,
+                            $OrderLineGroupsTable>(
+                        currentTable: table,
+                        referencedTable: $$SellingProductsTableReferences
+                            ._orderLineGroupsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$SellingProductsTableReferences(db, table, p0)
+                                .orderLineGroupsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'selling_product_uuid',
+                        typedResults: items),
                   if (orderItemsRefs)
                     await $_getPrefetchedDataByColumns<SellingProduct,
                             $SellingProductsTable, OrderItem, $OrderItemsTable>(
@@ -29076,6 +30328,7 @@ typedef $$SellingProductsTableProcessedTableManager = ProcessedTableManager<
         {bool categoryUuid,
         bool sellingProductComponentsRefs,
         bool catalogItemsRefs,
+        bool orderLineGroupsRefs,
         bool orderItemsRefs})>;
 typedef $$SellingProductComponentsTableCreateCompanionBuilder
     = SellingProductComponentsCompanion Function({
@@ -30091,6 +31344,24 @@ final class $$CatalogItemsTableReferences
         manager.$state.copyWith(prefetchedData: cache));
   }
 
+  static MultiTypedResultKey<$OrderLineGroupsTable, List<OrderLineGroup>>
+      _orderLineGroupsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.orderLineGroups,
+              aliasName:
+                  'catalog_items__uuid__order_line_groups__catalog_item_uuid');
+
+  $$OrderLineGroupsTableProcessedTableManager get orderLineGroupsRefs {
+    final manager = $$OrderLineGroupsTableTableManager(
+            $_db, $_db.orderLineGroups)
+        .filter((f) =>
+            f.catalogItemUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache =
+        $_typedResult.readTableOrNull(_orderLineGroupsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+
   static MultiTypedResultKey<$OrderItemsTable, List<OrderItem>>
       _orderItemsRefsTable(_$AppDatabase db) =>
           MultiTypedResultKey.fromTable(db.orderItems,
@@ -30273,6 +31544,27 @@ class $$CatalogItemsTableFilterComposer
                   $removeJoinBuilderFromRootComposer:
                       $removeJoinBuilderFromRootComposer,
                 ));
+    return f(composer);
+  }
+
+  Expression<bool> orderLineGroupsRefs(
+      Expression<bool> Function($$OrderLineGroupsTableFilterComposer f) f) {
+    final $$OrderLineGroupsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.orderLineGroups,
+        getReferencedColumn: (t) => t.catalogItemUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderLineGroupsTableFilterComposer(
+              $db: $db,
+              $table: $db.orderLineGroups,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
     return f(composer);
   }
 
@@ -30610,6 +31902,27 @@ class $$CatalogItemsTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> orderLineGroupsRefs<T extends Object>(
+      Expression<T> Function($$OrderLineGroupsTableAnnotationComposer a) f) {
+    final $$OrderLineGroupsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.orderLineGroups,
+        getReferencedColumn: (t) => t.catalogItemUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderLineGroupsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.orderLineGroups,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+
   Expression<T> orderItemsRefs<T extends Object>(
       Expression<T> Function($$OrderItemsTableAnnotationComposer a) f) {
     final $$OrderItemsTableAnnotationComposer composer = $composerBuilder(
@@ -30649,6 +31962,7 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
         bool sellingProductUuid,
         bool batchUuid,
         bool catalogTieredDiscountsRefs,
+        bool orderLineGroupsRefs,
         bool orderItemsRefs})> {
   $$CatalogItemsTableTableManager(_$AppDatabase db, $CatalogItemsTable table)
       : super(TableManagerState(
@@ -30768,11 +32082,13 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
               sellingProductUuid = false,
               batchUuid = false,
               catalogTieredDiscountsRefs = false,
+              orderLineGroupsRefs = false,
               orderItemsRefs = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [
                 if (catalogTieredDiscountsRefs) db.catalogTieredDiscounts,
+                if (orderLineGroupsRefs) db.orderLineGroups,
                 if (orderItemsRefs) db.orderItems
               ],
               addJoins: <
@@ -30851,6 +32167,21 @@ class $$CatalogItemsTableTableManager extends RootTableManager<
                         currentColumn: 'uuid',
                         referencedColumn: 'catalog_item_uuid',
                         typedResults: items),
+                  if (orderLineGroupsRefs)
+                    await $_getPrefetchedDataByColumns<
+                            CatalogItem,
+                            $CatalogItemsTable,
+                            OrderLineGroup,
+                            $OrderLineGroupsTable>(
+                        currentTable: table,
+                        referencedTable: $$CatalogItemsTableReferences
+                            ._orderLineGroupsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$CatalogItemsTableReferences(db, table, p0)
+                                .orderLineGroupsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'catalog_item_uuid',
+                        typedResults: items),
                   if (orderItemsRefs)
                     await $_getPrefetchedDataByColumns<CatalogItem,
                             $CatalogItemsTable, OrderItem, $OrderItemsTable>(
@@ -30887,6 +32218,7 @@ typedef $$CatalogItemsTableProcessedTableManager = ProcessedTableManager<
         bool sellingProductUuid,
         bool batchUuid,
         bool catalogTieredDiscountsRefs,
+        bool orderLineGroupsRefs,
         bool orderItemsRefs})>;
 typedef $$CatalogAssignmentsTableCreateCompanionBuilder
     = CatalogAssignmentsCompanion Function({
@@ -31621,12 +32953,733 @@ typedef $$CatalogTieredDiscountsTableProcessedTableManager
         (CatalogTieredDiscount, $$CatalogTieredDiscountsTableReferences),
         CatalogTieredDiscount,
         PrefetchHooks Function({bool catalogItemUuid})>;
+typedef $$OrderLineGroupsTableCreateCompanionBuilder = OrderLineGroupsCompanion
+    Function({
+  required String uuid,
+  required String orderUuid,
+  required String nameSnapshot,
+  Value<String?> catalogNameSnapshot,
+  Value<String?> catalogItemUuid,
+  Value<String?> sellingProductUuid,
+  required double packageQty,
+  Value<double> deliveredPackageQty,
+  Value<String> unit,
+  required double unitPrice,
+  Value<double?> discountedUnitPrice,
+  Value<double> discountAmount,
+  Value<double> unitCostSnapshot,
+  Value<String?> notes,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+typedef $$OrderLineGroupsTableUpdateCompanionBuilder = OrderLineGroupsCompanion
+    Function({
+  Value<String> uuid,
+  Value<String> orderUuid,
+  Value<String> nameSnapshot,
+  Value<String?> catalogNameSnapshot,
+  Value<String?> catalogItemUuid,
+  Value<String?> sellingProductUuid,
+  Value<double> packageQty,
+  Value<double> deliveredPackageQty,
+  Value<String> unit,
+  Value<double> unitPrice,
+  Value<double?> discountedUnitPrice,
+  Value<double> discountAmount,
+  Value<double> unitCostSnapshot,
+  Value<String?> notes,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<bool> isDeleted,
+  Value<bool> isNotSynced,
+  Value<int> rowid,
+});
+
+final class $$OrderLineGroupsTableReferences extends BaseReferences<
+    _$AppDatabase, $OrderLineGroupsTable, OrderLineGroup> {
+  $$OrderLineGroupsTableReferences(
+      super.$_db, super.$_table, super.$_typedResult);
+
+  static $OrdersTable _orderUuidTable(_$AppDatabase db) =>
+      db.orders.createAlias('order_line_groups__order_uuid__orders__uuid');
+
+  $$OrdersTableProcessedTableManager get orderUuid {
+    final $_column = $_itemColumn<String>('order_uuid')!;
+
+    final manager = $$OrdersTableTableManager($_db, $_db.orders)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_orderUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $CatalogItemsTable _catalogItemUuidTable(_$AppDatabase db) => db
+      .catalogItems
+      .createAlias('order_line_groups__catalog_item_uuid__catalog_items__uuid');
+
+  $$CatalogItemsTableProcessedTableManager? get catalogItemUuid {
+    final $_column = $_itemColumn<String>('catalog_item_uuid');
+    if ($_column == null) return null;
+    final manager = $$CatalogItemsTableTableManager($_db, $_db.catalogItems)
+        .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_catalogItemUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static $SellingProductsTable _sellingProductUuidTable(_$AppDatabase db) =>
+      db.sellingProducts.createAlias(
+          'order_line_groups__selling_product_uuid__selling_products__uuid');
+
+  $$SellingProductsTableProcessedTableManager? get sellingProductUuid {
+    final $_column = $_itemColumn<String>('selling_product_uuid');
+    if ($_column == null) return null;
+    final manager =
+        $$SellingProductsTableTableManager($_db, $_db.sellingProducts)
+            .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_sellingProductUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
+  static MultiTypedResultKey<$OrderItemsTable, List<OrderItem>>
+      _orderItemsRefsTable(_$AppDatabase db) =>
+          MultiTypedResultKey.fromTable(db.orderItems,
+              aliasName: 'order_line_groups__uuid__order_items__group_uuid');
+
+  $$OrderItemsTableProcessedTableManager get orderItemsRefs {
+    final manager = $$OrderItemsTableTableManager($_db, $_db.orderItems).filter(
+        (f) => f.groupUuid.uuid.sqlEquals($_itemColumn<String>('uuid')!));
+
+    final cache = $_typedResult.readTableOrNull(_orderItemsRefsTable($_db));
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: cache));
+  }
+}
+
+class $$OrderLineGroupsTableFilterComposer
+    extends Composer<_$AppDatabase, $OrderLineGroupsTable> {
+  $$OrderLineGroupsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get nameSnapshot => $composableBuilder(
+      column: $table.nameSnapshot, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get catalogNameSnapshot => $composableBuilder(
+      column: $table.catalogNameSnapshot,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get packageQty => $composableBuilder(
+      column: $table.packageQty, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get deliveredPackageQty => $composableBuilder(
+      column: $table.deliveredPackageQty,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get unitPrice => $composableBuilder(
+      column: $table.unitPrice, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get discountedUnitPrice => $composableBuilder(
+      column: $table.discountedUnitPrice,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get discountAmount => $composableBuilder(
+      column: $table.discountAmount,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get unitCostSnapshot => $composableBuilder(
+      column: $table.unitCostSnapshot,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get notes => $composableBuilder(
+      column: $table.notes, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnFilters(column));
+
+  $$OrdersTableFilterComposer get orderUuid {
+    final $$OrdersTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.orderUuid,
+        referencedTable: $db.orders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrdersTableFilterComposer(
+              $db: $db,
+              $table: $db.orders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CatalogItemsTableFilterComposer get catalogItemUuid {
+    final $$CatalogItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogItemUuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SellingProductsTableFilterComposer get sellingProductUuid {
+    final $$SellingProductsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableFilterComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<bool> orderItemsRefs(
+      Expression<bool> Function($$OrderItemsTableFilterComposer f) f) {
+    final $$OrderItemsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.orderItems,
+        getReferencedColumn: (t) => t.groupUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderItemsTableFilterComposer(
+              $db: $db,
+              $table: $db.orderItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$OrderLineGroupsTableOrderingComposer
+    extends Composer<_$AppDatabase, $OrderLineGroupsTable> {
+  $$OrderLineGroupsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get uuid => $composableBuilder(
+      column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get nameSnapshot => $composableBuilder(
+      column: $table.nameSnapshot,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get catalogNameSnapshot => $composableBuilder(
+      column: $table.catalogNameSnapshot,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get packageQty => $composableBuilder(
+      column: $table.packageQty, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get deliveredPackageQty => $composableBuilder(
+      column: $table.deliveredPackageQty,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+      column: $table.unit, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get unitPrice => $composableBuilder(
+      column: $table.unitPrice, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get discountedUnitPrice => $composableBuilder(
+      column: $table.discountedUnitPrice,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get discountAmount => $composableBuilder(
+      column: $table.discountAmount,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get unitCostSnapshot => $composableBuilder(
+      column: $table.unitCostSnapshot,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get notes => $composableBuilder(
+      column: $table.notes, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isDeleted => $composableBuilder(
+      column: $table.isDeleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => ColumnOrderings(column));
+
+  $$OrdersTableOrderingComposer get orderUuid {
+    final $$OrdersTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.orderUuid,
+        referencedTable: $db.orders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrdersTableOrderingComposer(
+              $db: $db,
+              $table: $db.orders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CatalogItemsTableOrderingComposer get catalogItemUuid {
+    final $$CatalogItemsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogItemUuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableOrderingComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SellingProductsTableOrderingComposer get sellingProductUuid {
+    final $$SellingProductsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableOrderingComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+}
+
+class $$OrderLineGroupsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OrderLineGroupsTable> {
+  $$OrderLineGroupsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get nameSnapshot => $composableBuilder(
+      column: $table.nameSnapshot, builder: (column) => column);
+
+  GeneratedColumn<String> get catalogNameSnapshot => $composableBuilder(
+      column: $table.catalogNameSnapshot, builder: (column) => column);
+
+  GeneratedColumn<double> get packageQty => $composableBuilder(
+      column: $table.packageQty, builder: (column) => column);
+
+  GeneratedColumn<double> get deliveredPackageQty => $composableBuilder(
+      column: $table.deliveredPackageQty, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<double> get unitPrice =>
+      $composableBuilder(column: $table.unitPrice, builder: (column) => column);
+
+  GeneratedColumn<double> get discountedUnitPrice => $composableBuilder(
+      column: $table.discountedUnitPrice, builder: (column) => column);
+
+  GeneratedColumn<double> get discountAmount => $composableBuilder(
+      column: $table.discountAmount, builder: (column) => column);
+
+  GeneratedColumn<double> get unitCostSnapshot => $composableBuilder(
+      column: $table.unitCostSnapshot, builder: (column) => column);
+
+  GeneratedColumn<String> get notes =>
+      $composableBuilder(column: $table.notes, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isDeleted =>
+      $composableBuilder(column: $table.isDeleted, builder: (column) => column);
+
+  GeneratedColumn<bool> get isNotSynced => $composableBuilder(
+      column: $table.isNotSynced, builder: (column) => column);
+
+  $$OrdersTableAnnotationComposer get orderUuid {
+    final $$OrdersTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.orderUuid,
+        referencedTable: $db.orders,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrdersTableAnnotationComposer(
+              $db: $db,
+              $table: $db.orders,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$CatalogItemsTableAnnotationComposer get catalogItemUuid {
+    final $$CatalogItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.catalogItemUuid,
+        referencedTable: $db.catalogItems,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$CatalogItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.catalogItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  $$SellingProductsTableAnnotationComposer get sellingProductUuid {
+    final $$SellingProductsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.sellingProductUuid,
+        referencedTable: $db.sellingProducts,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$SellingProductsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.sellingProducts,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
+  Expression<T> orderItemsRefs<T extends Object>(
+      Expression<T> Function($$OrderItemsTableAnnotationComposer a) f) {
+    final $$OrderItemsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.uuid,
+        referencedTable: $db.orderItems,
+        getReferencedColumn: (t) => t.groupUuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderItemsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.orderItems,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return f(composer);
+  }
+}
+
+class $$OrderLineGroupsTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $OrderLineGroupsTable,
+    OrderLineGroup,
+    $$OrderLineGroupsTableFilterComposer,
+    $$OrderLineGroupsTableOrderingComposer,
+    $$OrderLineGroupsTableAnnotationComposer,
+    $$OrderLineGroupsTableCreateCompanionBuilder,
+    $$OrderLineGroupsTableUpdateCompanionBuilder,
+    (OrderLineGroup, $$OrderLineGroupsTableReferences),
+    OrderLineGroup,
+    PrefetchHooks Function(
+        {bool orderUuid,
+        bool catalogItemUuid,
+        bool sellingProductUuid,
+        bool orderItemsRefs})> {
+  $$OrderLineGroupsTableTableManager(
+      _$AppDatabase db, $OrderLineGroupsTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OrderLineGroupsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$OrderLineGroupsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$OrderLineGroupsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> uuid = const Value.absent(),
+            Value<String> orderUuid = const Value.absent(),
+            Value<String> nameSnapshot = const Value.absent(),
+            Value<String?> catalogNameSnapshot = const Value.absent(),
+            Value<String?> catalogItemUuid = const Value.absent(),
+            Value<String?> sellingProductUuid = const Value.absent(),
+            Value<double> packageQty = const Value.absent(),
+            Value<double> deliveredPackageQty = const Value.absent(),
+            Value<String> unit = const Value.absent(),
+            Value<double> unitPrice = const Value.absent(),
+            Value<double?> discountedUnitPrice = const Value.absent(),
+            Value<double> discountAmount = const Value.absent(),
+            Value<double> unitCostSnapshot = const Value.absent(),
+            Value<String?> notes = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              OrderLineGroupsCompanion(
+            uuid: uuid,
+            orderUuid: orderUuid,
+            nameSnapshot: nameSnapshot,
+            catalogNameSnapshot: catalogNameSnapshot,
+            catalogItemUuid: catalogItemUuid,
+            sellingProductUuid: sellingProductUuid,
+            packageQty: packageQty,
+            deliveredPackageQty: deliveredPackageQty,
+            unit: unit,
+            unitPrice: unitPrice,
+            discountedUnitPrice: discountedUnitPrice,
+            discountAmount: discountAmount,
+            unitCostSnapshot: unitCostSnapshot,
+            notes: notes,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String uuid,
+            required String orderUuid,
+            required String nameSnapshot,
+            Value<String?> catalogNameSnapshot = const Value.absent(),
+            Value<String?> catalogItemUuid = const Value.absent(),
+            Value<String?> sellingProductUuid = const Value.absent(),
+            required double packageQty,
+            Value<double> deliveredPackageQty = const Value.absent(),
+            Value<String> unit = const Value.absent(),
+            required double unitPrice,
+            Value<double?> discountedUnitPrice = const Value.absent(),
+            Value<double> discountAmount = const Value.absent(),
+            Value<double> unitCostSnapshot = const Value.absent(),
+            Value<String?> notes = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<bool> isDeleted = const Value.absent(),
+            Value<bool> isNotSynced = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              OrderLineGroupsCompanion.insert(
+            uuid: uuid,
+            orderUuid: orderUuid,
+            nameSnapshot: nameSnapshot,
+            catalogNameSnapshot: catalogNameSnapshot,
+            catalogItemUuid: catalogItemUuid,
+            sellingProductUuid: sellingProductUuid,
+            packageQty: packageQty,
+            deliveredPackageQty: deliveredPackageQty,
+            unit: unit,
+            unitPrice: unitPrice,
+            discountedUnitPrice: discountedUnitPrice,
+            discountAmount: discountAmount,
+            unitCostSnapshot: unitCostSnapshot,
+            notes: notes,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            isDeleted: isDeleted,
+            isNotSynced: isNotSynced,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (
+                    e.readTable<$OrderLineGroupsTable, OrderLineGroup>(table),
+                    $$OrderLineGroupsTableReferences(db, table, e)
+                  ))
+              .toList(),
+          prefetchHooksCallback: (
+              {orderUuid = false,
+              catalogItemUuid = false,
+              sellingProductUuid = false,
+              orderItemsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (orderItemsRefs) db.orderItems],
+              addJoins: <
+                  T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic>>(state) {
+                if (orderUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.orderUuid,
+                    referencedTable:
+                        $$OrderLineGroupsTableReferences._orderUuidTable(db),
+                    referencedColumn: $$OrderLineGroupsTableReferences
+                        ._orderUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (catalogItemUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.catalogItemUuid,
+                    referencedTable: $$OrderLineGroupsTableReferences
+                        ._catalogItemUuidTable(db),
+                    referencedColumn: $$OrderLineGroupsTableReferences
+                        ._catalogItemUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+                if (sellingProductUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.sellingProductUuid,
+                    referencedTable: $$OrderLineGroupsTableReferences
+                        ._sellingProductUuidTable(db),
+                    referencedColumn: $$OrderLineGroupsTableReferences
+                        ._sellingProductUuidTable(db)
+                        .uuid,
+                  ) as T;
+                }
+
+                return state;
+              },
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (orderItemsRefs)
+                    await $_getPrefetchedDataByColumns<OrderLineGroup,
+                            $OrderLineGroupsTable, OrderItem, $OrderItemsTable>(
+                        currentTable: table,
+                        referencedTable: $$OrderLineGroupsTableReferences
+                            ._orderItemsRefsTable(db),
+                        managerFromTypedResult: (p0) =>
+                            $$OrderLineGroupsTableReferences(db, table, p0)
+                                .orderItemsRefs,
+                        currentColumn: 'uuid',
+                        referencedColumn: 'group_uuid',
+                        typedResults: items)
+                ];
+              },
+            );
+          },
+        ));
+}
+
+typedef $$OrderLineGroupsTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $OrderLineGroupsTable,
+    OrderLineGroup,
+    $$OrderLineGroupsTableFilterComposer,
+    $$OrderLineGroupsTableOrderingComposer,
+    $$OrderLineGroupsTableAnnotationComposer,
+    $$OrderLineGroupsTableCreateCompanionBuilder,
+    $$OrderLineGroupsTableUpdateCompanionBuilder,
+    (OrderLineGroup, $$OrderLineGroupsTableReferences),
+    OrderLineGroup,
+    PrefetchHooks Function(
+        {bool orderUuid,
+        bool catalogItemUuid,
+        bool sellingProductUuid,
+        bool orderItemsRefs})>;
 typedef $$OrderItemsTableCreateCompanionBuilder = OrderItemsCompanion Function({
   required String uuid,
   required String orderUuid,
   Value<String?> productUuid,
   Value<String?> catalogItemUuid,
   Value<String?> sellingProductUuid,
+  Value<String?> groupUuid,
+  Value<double?> bundleComponentQty,
   required String productNameSnapshot,
   required double quantity,
   required double unitPrice,
@@ -31651,6 +33704,8 @@ typedef $$OrderItemsTableUpdateCompanionBuilder = OrderItemsCompanion Function({
   Value<String?> productUuid,
   Value<String?> catalogItemUuid,
   Value<String?> sellingProductUuid,
+  Value<String?> groupUuid,
+  Value<double?> bundleComponentQty,
   Value<String> productNameSnapshot,
   Value<double> quantity,
   Value<double> unitPrice,
@@ -31733,6 +33788,22 @@ final class $$OrderItemsTableReferences
         manager.$state.copyWith(prefetchedData: [item]));
   }
 
+  static $OrderLineGroupsTable _groupUuidTable(_$AppDatabase db) =>
+      db.orderLineGroups
+          .createAlias('order_items__group_uuid__order_line_groups__uuid');
+
+  $$OrderLineGroupsTableProcessedTableManager? get groupUuid {
+    final $_column = $_itemColumn<String>('group_uuid');
+    if ($_column == null) return null;
+    final manager =
+        $$OrderLineGroupsTableTableManager($_db, $_db.orderLineGroups)
+            .filter((f) => f.uuid.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_groupUuidTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+        manager.$state.copyWith(prefetchedData: [item]));
+  }
+
   static $ProductBatchesTable _batchUuidTable(_$AppDatabase db) =>
       db.productBatches
           .createAlias('order_items__batch_uuid__product_batches__uuid');
@@ -31796,6 +33867,10 @@ class $$OrderItemsTableFilterComposer
   });
   ColumnFilters<String> get uuid => $composableBuilder(
       column: $table.uuid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get bundleComponentQty => $composableBuilder(
+      column: $table.bundleComponentQty,
+      builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get productNameSnapshot => $composableBuilder(
       column: $table.productNameSnapshot,
@@ -31929,6 +34004,26 @@ class $$OrderItemsTableFilterComposer
     return composer;
   }
 
+  $$OrderLineGroupsTableFilterComposer get groupUuid {
+    final $$OrderLineGroupsTableFilterComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupUuid,
+        referencedTable: $db.orderLineGroups,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderLineGroupsTableFilterComposer(
+              $db: $db,
+              $table: $db.orderLineGroups,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
   $$ProductBatchesTableFilterComposer get batchUuid {
     final $$ProductBatchesTableFilterComposer composer = $composerBuilder(
         composer: this,
@@ -32003,6 +34098,10 @@ class $$OrderItemsTableOrderingComposer
   });
   ColumnOrderings<String> get uuid => $composableBuilder(
       column: $table.uuid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get bundleComponentQty => $composableBuilder(
+      column: $table.bundleComponentQty,
+      builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get productNameSnapshot => $composableBuilder(
       column: $table.productNameSnapshot,
@@ -32136,6 +34235,26 @@ class $$OrderItemsTableOrderingComposer
     return composer;
   }
 
+  $$OrderLineGroupsTableOrderingComposer get groupUuid {
+    final $$OrderLineGroupsTableOrderingComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupUuid,
+        referencedTable: $db.orderLineGroups,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderLineGroupsTableOrderingComposer(
+              $db: $db,
+              $table: $db.orderLineGroups,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
   $$ProductBatchesTableOrderingComposer get batchUuid {
     final $$ProductBatchesTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -32168,6 +34287,9 @@ class $$OrderItemsTableAnnotationComposer
   });
   GeneratedColumn<String> get uuid =>
       $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<double> get bundleComponentQty => $composableBuilder(
+      column: $table.bundleComponentQty, builder: (column) => column);
 
   GeneratedColumn<String> get productNameSnapshot => $composableBuilder(
       column: $table.productNameSnapshot, builder: (column) => column);
@@ -32294,6 +34416,26 @@ class $$OrderItemsTableAnnotationComposer
     return composer;
   }
 
+  $$OrderLineGroupsTableAnnotationComposer get groupUuid {
+    final $$OrderLineGroupsTableAnnotationComposer composer = $composerBuilder(
+        composer: this,
+        getCurrentColumn: (t) => t.groupUuid,
+        referencedTable: $db.orderLineGroups,
+        getReferencedColumn: (t) => t.uuid,
+        builder: (joinBuilder,
+                {$addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer}) =>
+            $$OrderLineGroupsTableAnnotationComposer(
+              $db: $db,
+              $table: $db.orderLineGroups,
+              $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+              joinBuilder: joinBuilder,
+              $removeJoinBuilderFromRootComposer:
+                  $removeJoinBuilderFromRootComposer,
+            ));
+    return composer;
+  }
+
   $$ProductBatchesTableAnnotationComposer get batchUuid {
     final $$ProductBatchesTableAnnotationComposer composer = $composerBuilder(
         composer: this,
@@ -32375,6 +34517,7 @@ class $$OrderItemsTableTableManager extends RootTableManager<
         bool productUuid,
         bool catalogItemUuid,
         bool sellingProductUuid,
+        bool groupUuid,
         bool batchUuid,
         bool goodsDeliveryLinesRefs,
         bool goodsReceiptLinesRefs})> {
@@ -32394,6 +34537,8 @@ class $$OrderItemsTableTableManager extends RootTableManager<
             Value<String?> productUuid = const Value.absent(),
             Value<String?> catalogItemUuid = const Value.absent(),
             Value<String?> sellingProductUuid = const Value.absent(),
+            Value<String?> groupUuid = const Value.absent(),
+            Value<double?> bundleComponentQty = const Value.absent(),
             Value<String> productNameSnapshot = const Value.absent(),
             Value<double> quantity = const Value.absent(),
             Value<double> unitPrice = const Value.absent(),
@@ -32418,6 +34563,8 @@ class $$OrderItemsTableTableManager extends RootTableManager<
             productUuid: productUuid,
             catalogItemUuid: catalogItemUuid,
             sellingProductUuid: sellingProductUuid,
+            groupUuid: groupUuid,
+            bundleComponentQty: bundleComponentQty,
             productNameSnapshot: productNameSnapshot,
             quantity: quantity,
             unitPrice: unitPrice,
@@ -32442,6 +34589,8 @@ class $$OrderItemsTableTableManager extends RootTableManager<
             Value<String?> productUuid = const Value.absent(),
             Value<String?> catalogItemUuid = const Value.absent(),
             Value<String?> sellingProductUuid = const Value.absent(),
+            Value<String?> groupUuid = const Value.absent(),
+            Value<double?> bundleComponentQty = const Value.absent(),
             required String productNameSnapshot,
             required double quantity,
             required double unitPrice,
@@ -32466,6 +34615,8 @@ class $$OrderItemsTableTableManager extends RootTableManager<
             productUuid: productUuid,
             catalogItemUuid: catalogItemUuid,
             sellingProductUuid: sellingProductUuid,
+            groupUuid: groupUuid,
+            bundleComponentQty: bundleComponentQty,
             productNameSnapshot: productNameSnapshot,
             quantity: quantity,
             unitPrice: unitPrice,
@@ -32495,6 +34646,7 @@ class $$OrderItemsTableTableManager extends RootTableManager<
               productUuid = false,
               catalogItemUuid = false,
               sellingProductUuid = false,
+              groupUuid = false,
               batchUuid = false,
               goodsDeliveryLinesRefs = false,
               goodsReceiptLinesRefs = false}) {
@@ -32557,6 +34709,16 @@ class $$OrderItemsTableTableManager extends RootTableManager<
                     referencedColumn: $$OrderItemsTableReferences
                         ._sellingProductUuidTable(db)
                         .uuid,
+                  ) as T;
+                }
+                if (groupUuid) {
+                  state = state.withJoin(
+                    currentTable: table,
+                    currentColumn: table.groupUuid,
+                    referencedTable:
+                        $$OrderItemsTableReferences._groupUuidTable(db),
+                    referencedColumn:
+                        $$OrderItemsTableReferences._groupUuidTable(db).uuid,
                   ) as T;
                 }
                 if (batchUuid) {
@@ -32627,6 +34789,7 @@ typedef $$OrderItemsTableProcessedTableManager = ProcessedTableManager<
         bool productUuid,
         bool catalogItemUuid,
         bool sellingProductUuid,
+        bool groupUuid,
         bool batchUuid,
         bool goodsDeliveryLinesRefs,
         bool goodsReceiptLinesRefs})>;
@@ -33359,6 +35522,8 @@ typedef $$GoodsDeliveryLinesTableCreateCompanionBuilder
   required String orderItemUuid,
   Value<String?> productUuid,
   required double quantity,
+  Value<double> unitCogs,
+  Value<double?> packageQty,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -33372,6 +35537,8 @@ typedef $$GoodsDeliveryLinesTableUpdateCompanionBuilder
   Value<String> orderItemUuid,
   Value<String?> productUuid,
   Value<double> quantity,
+  Value<double> unitCogs,
+  Value<double?> packageQty,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<bool> isDeleted,
@@ -33443,6 +35610,12 @@ class $$GoodsDeliveryLinesTableFilterComposer
 
   ColumnFilters<double> get quantity => $composableBuilder(
       column: $table.quantity, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get unitCogs => $composableBuilder(
+      column: $table.unitCogs, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get packageQty => $composableBuilder(
+      column: $table.packageQty, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -33532,6 +35705,12 @@ class $$GoodsDeliveryLinesTableOrderingComposer
   ColumnOrderings<double> get quantity => $composableBuilder(
       column: $table.quantity, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<double> get unitCogs => $composableBuilder(
+      column: $table.unitCogs, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get packageQty => $composableBuilder(
+      column: $table.packageQty, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -33619,6 +35798,12 @@ class $$GoodsDeliveryLinesTableAnnotationComposer
 
   GeneratedColumn<double> get quantity =>
       $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<double> get unitCogs =>
+      $composableBuilder(column: $table.unitCogs, builder: (column) => column);
+
+  GeneratedColumn<double> get packageQty => $composableBuilder(
+      column: $table.packageQty, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -33724,6 +35909,8 @@ class $$GoodsDeliveryLinesTableTableManager extends RootTableManager<
             Value<String> orderItemUuid = const Value.absent(),
             Value<String?> productUuid = const Value.absent(),
             Value<double> quantity = const Value.absent(),
+            Value<double> unitCogs = const Value.absent(),
+            Value<double?> packageQty = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -33736,6 +35923,8 @@ class $$GoodsDeliveryLinesTableTableManager extends RootTableManager<
             orderItemUuid: orderItemUuid,
             productUuid: productUuid,
             quantity: quantity,
+            unitCogs: unitCogs,
+            packageQty: packageQty,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,
@@ -33748,6 +35937,8 @@ class $$GoodsDeliveryLinesTableTableManager extends RootTableManager<
             required String orderItemUuid,
             Value<String?> productUuid = const Value.absent(),
             required double quantity,
+            Value<double> unitCogs = const Value.absent(),
+            Value<double?> packageQty = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<bool> isDeleted = const Value.absent(),
@@ -33760,6 +35951,8 @@ class $$GoodsDeliveryLinesTableTableManager extends RootTableManager<
             orderItemUuid: orderItemUuid,
             productUuid: productUuid,
             quantity: quantity,
+            unitCogs: unitCogs,
+            packageQty: packageQty,
             createdAt: createdAt,
             updatedAt: updatedAt,
             isDeleted: isDeleted,
@@ -40379,6 +42572,8 @@ class $AppDatabaseManager {
   $$CatalogTieredDiscountsTableTableManager get catalogTieredDiscounts =>
       $$CatalogTieredDiscountsTableTableManager(
           _db, _db.catalogTieredDiscounts);
+  $$OrderLineGroupsTableTableManager get orderLineGroups =>
+      $$OrderLineGroupsTableTableManager(_db, _db.orderLineGroups);
   $$OrderItemsTableTableManager get orderItems =>
       $$OrderItemsTableTableManager(_db, _db.orderItems);
   $$OrderChargesTableTableManager get orderCharges =>

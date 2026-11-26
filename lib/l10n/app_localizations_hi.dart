@@ -30,7 +30,27 @@ class AppLocalizationsHi extends AppLocalizations {
   String get orderItems => 'ऑर्डर आइटम';
 
   @override
+  String get orderLineGroups => 'ऑर्डर बंडल';
+
+  @override
   String get orderCharges => 'ऑर्डर शुल्क';
+
+  @override
+  String get bundlePackage => 'पैकेज';
+
+  @override
+  String packagesProgress(String delivered, String ordered) {
+    return '$delivered / $ordered पैकेज';
+  }
+
+  @override
+  String get qtyToDeliverPackages => 'डिलीवर करने के पैकेज';
+
+  @override
+  String get bundleComponents => 'शामिल';
+
+  @override
+  String get wholePackagesOnly => 'केवल पूरे पैकेज डिलीवर करें';
 
   @override
   String get salesTax => 'बिक्री कर';
@@ -276,6 +296,42 @@ class AppLocalizationsHi extends AppLocalizations {
 
   @override
   String get purchaseReceipt => 'खरीद रसीद';
+
+  @override
+  String get billTo => 'बिल प्राप्तकर्ता';
+
+  @override
+  String get productDescription => 'उत्पाद विवरण';
+
+  @override
+  String get qtyShort => 'मात्रा';
+
+  @override
+  String get rate => 'दर';
+
+  @override
+  String get discShort => 'छूट';
+
+  @override
+  String get total => 'कुल';
+
+  @override
+  String get tax => 'कर';
+
+  @override
+  String get grandTotal => 'कुल योग';
+
+  @override
+  String get termsAndNotes => 'शर्तें और नोट्स';
+
+  @override
+  String get thankYouForBusiness => 'आपके व्यवसाय के लिए धन्यवाद!';
+
+  @override
+  String get clientTaxId => 'क्लाइंट कर ID';
+
+  @override
+  String get packageUnitShort => 'पैक';
 
   @override
   String get reconcileInventory => 'इन्वेंटरी मिलान करें';
@@ -1258,7 +1314,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get refresh => 'ताज़ा करें';
 
   @override
-  String get appTitle => 'फ्लोपैसा';
+  String get appTitle => 'फ्लोकारोबार';
 
   @override
   String get backgroundActivityStarted => 'गतिविधि बैकग्राउंड में शुरू हुई';
@@ -2092,6 +2148,42 @@ class AppLocalizationsHi extends AppLocalizations {
   String get profileUpdated => 'प्रोफ़ाइल सफलतापूर्वक अपडेट किया गया';
 
   @override
+  String get invoiceBrandingSection => 'इनवॉइस और व्यवसाय';
+
+  @override
+  String get invoiceBrandingHint => 'इनवॉइस और साझा PDF पर दिखेगा';
+
+  @override
+  String get companyName => 'कंपनी का नाम';
+
+  @override
+  String get enterCompanyName => 'कंपनी या व्यवसाय का नाम दर्ज करें';
+
+  @override
+  String get companyLogo => 'कंपनी लोगो';
+
+  @override
+  String get changeCompanyLogo => 'लोगो बदलें';
+
+  @override
+  String get removeCompanyLogo => 'लोगो हटाएँ';
+
+  @override
+  String get companyLogoHint => 'PNG या JPG, इनवॉइस पर उपयोग';
+
+  @override
+  String get businessTaxId => 'कर ID (GSTIN / VAT)';
+
+  @override
+  String get enterBusinessTaxId => 'वैकल्पिक कर पंजीकरण संख्या';
+
+  @override
+  String get defaultInvoiceNotes => 'डिफ़ॉल्ट इनवॉइस नोट्स';
+
+  @override
+  String get enterDefaultInvoiceNotes => 'इनवॉइस पर धन्यवाद या शर्तें';
+
+  @override
   String get selectDateFormat => 'तारीख का प्रारूप चुनें';
 
   @override
@@ -2309,7 +2401,7 @@ class AppLocalizationsHi extends AppLocalizations {
   String get debugToggleMode => 'डिबग: मोड टॉगल करें';
 
   @override
-  String get premiumTitle => 'फ्लोपैसा प्रीमियम';
+  String get premiumTitle => 'FlowKarobar प्रीमियम';
 
   @override
   String get unlockAllFeatures => 'सभी सुविधाएं अनलॉक करें';

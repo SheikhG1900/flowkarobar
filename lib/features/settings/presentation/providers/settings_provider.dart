@@ -124,6 +124,10 @@ class UserProfileState {
   final String? email;
   final String? phone;
   final String? address;
+  final String? companyName;
+  final String? businessLogoPath;
+  final String? businessTaxId;
+  final String? invoiceNotes;
   final String currency;
   final String dateFormat;
 
@@ -132,23 +136,47 @@ class UserProfileState {
     this.email,
     this.phone,
     this.address,
+    this.companyName,
+    this.businessLogoPath,
+    this.businessTaxId,
+    this.invoiceNotes,
     this.currency = 'INR',
     this.dateFormat = 'MMM dd, yyyy',
   });
+
+  /// Display name for invoices: company → personal name.
+  String get invoiceCompanyName {
+    final company = companyName?.trim();
+    if (company != null && company.isNotEmpty) return company;
+    final personal = name?.trim();
+    if (personal != null && personal.isNotEmpty) return personal;
+    return '';
+  }
 
   UserProfileState copyWith({
     String? name,
     String? email,
     String? phone,
     String? address,
+    String? companyName,
+    String? businessLogoPath,
+    String? businessTaxId,
+    String? invoiceNotes,
     String? currency,
     String? dateFormat,
+    bool clearBusinessLogoPath = false,
   }) {
     return UserProfileState(
       name: name ?? this.name,
       email: email ?? this.email,
       phone: phone ?? this.phone,
       address: address ?? this.address,
+      companyName: companyName ?? this.companyName,
+      businessLogoPath: clearBusinessLogoPath
+          ? null
+          : (businessLogoPath ?? this.businessLogoPath),
+      businessTaxId: businessTaxId ?? this.businessTaxId,
+      invoiceNotes: invoiceNotes ?? this.invoiceNotes,
       currency: currency ?? this.currency,
       dateFormat: dateFormat ?? this.dateFormat,
     );
@@ -171,6 +199,10 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
     final email = await _repository.getUserEmail();
     final phone = await _repository.getUserPhone();
     final address = await _repository.getUserAddress();
+    final companyName = await _repository.getCompanyName();
+    final businessLogoPath = await _repository.getBusinessLogoPath();
+    final businessTaxId = await _repository.getBusinessTaxId();
+    final invoiceNotes = await _repository.getDefaultInvoiceNotes();
     final currency = await _repository.getCurrency();
     final dateFormat = await _repository.getDateFormat();
 
@@ -179,6 +211,10 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
       email: email,
       phone: phone,
       address: address,
+      companyName: companyName,
+      businessLogoPath: businessLogoPath,
+      businessTaxId: businessTaxId,
+      invoiceNotes: invoiceNotes,
       currency: currency,
       dateFormat: dateFormat,
     );
@@ -202,6 +238,31 @@ class UserProfileNotifier extends Notifier<UserProfileState> {
   Future<void> updateAddress(String address) async {
     await _repository.setUserAddress(address);
     state = state.copyWith(address: address);
+  }
+
+  Future<void> updateCompanyName(String companyName) async {
+    await _repository.setCompanyName(companyName);
+    state = state.copyWith(companyName: companyName);
+  }
+
+  Future<void> updateBusinessLogoPath(String path) async {
+    await _repository.setBusinessLogoPath(path);
+    state = state.copyWith(businessLogoPath: path);
+  }
+
+  Future<void> clearBusinessLogo() async {
+    await _repository.clearBusinessLogoPath();
+    state = state.copyWith(clearBusinessLogoPath: true);
+  }
+
+  Future<void> updateBusinessTaxId(String taxId) async {
+    await _repository.setBusinessTaxId(taxId);
+    state = state.copyWith(businessTaxId: taxId);
+  }
+
+  Future<void> updateInvoiceNotes(String notes) async {
+    await _repository.setDefaultInvoiceNotes(notes);
+    state = state.copyWith(invoiceNotes: notes);
   }
 
   Future<void> updateCurrency(String currency) async {

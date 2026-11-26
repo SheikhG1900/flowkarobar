@@ -4,6 +4,7 @@ import 'package:flowpaisa/features/catalog/domain/catalog_pricing.dart';
 import 'package:flowpaisa/features/inventory/data/inventory_repository.dart';
 import 'package:flowpaisa/features/inventory/domain/batch_models.dart';
 import 'package:flowpaisa/features/inventory/domain/order_costing.dart';
+import 'package:flowpaisa/features/orders/domain/bundle_pricing.dart';
 import 'package:flowpaisa/features/orders/domain/order_shipment.dart';
 import 'package:uuid/uuid.dart';
 
@@ -361,12 +362,29 @@ class OrdersRepository {
       return;
     }
 
+    // Bundle groups: deliver remaining whole packages first.
+    final groups = await getGroupsForOrder(orderUuid);
+    for (final g in groups) {
+      final openPkgs = g.packageQty - g.deliveredPackageQty;
+      if (openPkgs > 1e-9) {
+        await deliverSalePackages(
+          orderUuid: orderUuid,
+          groupUuid: g.uuid,
+          packageQty: openPkgs,
+        );
+      }
+    }
+
+    // Standalone (non-group) lines only.
     final items = await (_db.select(_db.orderItems)
           ..where((oi) =>
               oi.orderUuid.equals(orderUuid) & oi.isDeleted.equals(false)))
         .get();
     final lines = <({String orderItemUuid, double quantity})>[];
     for (final item in items) {
+      if (item.groupUuid != null && item.groupUuid!.trim().isNotEmpty) {
+        continue;
+      }
       final open = item.quantity - item.deliveredQuantity;
       if (open > 1e-9) {
         lines.add((orderItemUuid: item.uuid, quantity: open));
@@ -382,6 +400,7 @@ class OrdersRepository {
     required List<({String orderItemUuid, double quantity})> lines,
     DateTime? deliveredAt,
     String? notes,
+    double? packageQty,
   }) async {
     if (lines.isEmpty) {
       throw ArgumentError('delivery lines required');
@@ -427,6 +446,9 @@ class OrdersRepository {
           );
         }
 
+        final unitCogs =
+            await _applySaleStockForQuantity(item, line.quantity);
+
         await _db.into(_db.goodsDeliveryLines).insert(
               GoodsDeliveryLinesCompanion.insert(
                 uuid: const Uuid().v4(),
@@ -434,10 +456,10 @@ class OrdersRepository {
                 orderItemUuid: item.uuid,
                 productUuid: Value(item.productUuid),
                 quantity: line.quantity,
+                unitCogs: Value(unitCogs),
+                packageQty: Value(packageQty),
               ),
             );
-
-        await _applySaleStockForQuantity(item, line.quantity);
 
         final nextDelivered = item.deliveredQuantity + line.quantity;
         await (_db.update(_db.orderItems)
@@ -454,6 +476,91 @@ class OrdersRepository {
       }
 
       await _refreshSaleDeliveryStatus(orderUuid);
+    });
+  }
+
+  /// Delivers whole packages for a bundle group (all components in BOM proportion).
+  Future<void> deliverSalePackages({
+    required String orderUuid,
+    required String groupUuid,
+    required double packageQty,
+    DateTime? deliveredAt,
+    String? notes,
+  }) async {
+    if (packageQty <= 1e-9) {
+      throw ArgumentError('packageQty must be > 0');
+    }
+    // Whole packages only (allow small float noise).
+    final whole = packageQty.roundToDouble();
+    if ((packageQty - whole).abs() > 1e-6) {
+      throw ArgumentError('Bundle dispatch must be whole packages');
+    }
+
+    await _db.transaction(() async {
+      final group = await (_db.select(_db.orderLineGroups)
+            ..where((g) =>
+                g.uuid.equals(groupUuid) &
+                g.orderUuid.equals(orderUuid) &
+                g.isDeleted.equals(false)))
+          .getSingleOrNull();
+      if (group == null) {
+        throw StateError('Order line group not found: $groupUuid');
+      }
+      final openPkgs = group.packageQty - group.deliveredPackageQty;
+      if (whole > openPkgs + 1e-9) {
+        throw StateError(
+          'Deliver $whole packages exceeds open $openPkgs for ${group.nameSnapshot}',
+        );
+      }
+
+      final items = await (_db.select(_db.orderItems)
+            ..where((oi) =>
+                oi.orderUuid.equals(orderUuid) &
+                oi.groupUuid.equals(groupUuid) &
+                oi.isDeleted.equals(false)))
+          .get();
+      if (items.isEmpty) {
+        throw StateError('No lines for group $groupUuid');
+      }
+
+      final lines = <({String orderItemUuid, double quantity})>[];
+      for (final item in items) {
+        final perPkg = item.bundleComponentQty;
+        if (perPkg == null || perPkg <= 1e-9) {
+          throw StateError(
+            'Missing bundleComponentQty on ${item.productNameSnapshot}',
+          );
+        }
+        // Guard: delivered must stay a multiple of per-package qty.
+        final addQty = perPkg * whole;
+        final next = item.deliveredQuantity + addQty;
+        final packagesAlongLine = next / perPkg;
+        if ((packagesAlongLine - packagesAlongLine.roundToDouble()).abs() >
+            1e-6) {
+          throw StateError(
+            'Delivered qty for ${item.productNameSnapshot} must stay a multiple of $perPkg',
+          );
+        }
+        lines.add((orderItemUuid: item.uuid, quantity: addQty));
+      }
+
+      await deliverSaleShipment(
+        orderUuid: orderUuid,
+        lines: lines,
+        deliveredAt: deliveredAt,
+        notes: notes,
+        packageQty: whole,
+      );
+
+      await (_db.update(_db.orderLineGroups)
+            ..where((g) => g.uuid.equals(groupUuid)))
+          .write(
+        OrderLineGroupsCompanion(
+          deliveredPackageQty: Value(group.deliveredPackageQty + whole),
+          isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     });
   }
 
@@ -525,6 +632,22 @@ class OrdersRepository {
     return (_db.select(_db.orderItems)
           ..where((oi) =>
               oi.orderUuid.equals(orderUuid) & oi.isDeleted.equals(false)))
+        .get();
+  }
+
+  Stream<List<OrderLineGroup>> watchGroupsForOrder(String orderUuid) {
+    return (_db.select(_db.orderLineGroups)
+          ..where((g) =>
+              g.orderUuid.equals(orderUuid) & g.isDeleted.equals(false))
+          ..orderBy([(g) => OrderingTerm.asc(g.createdAt)]))
+        .watch();
+  }
+
+  Future<List<OrderLineGroup>> getGroupsForOrder(String orderUuid) {
+    return (_db.select(_db.orderLineGroups)
+          ..where((g) =>
+              g.orderUuid.equals(orderUuid) & g.isDeleted.equals(false))
+          ..orderBy([(g) => OrderingTerm.asc(g.createdAt)]))
         .get();
   }
 
@@ -715,8 +838,16 @@ class OrdersRepository {
             );
       }
 
+      // Sales: explode selling-product / bundle picks into group + physical lines.
+      final toInsert = isSale
+          ? await _expandSaleItemsForInsert(
+              orderUuid: uuid,
+              items: itemsWithIds,
+            )
+          : itemsWithIds;
+
       final inserted = <OrderItem>[];
-      for (final item in itemsWithIds) {
+      for (final item in toInsert) {
         // Purchase: planned landed unit cost from PO pricing.
         // Sale: keep caller COGS (service unit cost / product WAC); FEFO
         // overwrites goods on deliver. Never stamp sell price as COGS.
@@ -729,6 +860,9 @@ class OrdersRepository {
           orderUuid: Value(uuid),
           purchasePriceSnapshot: Value(isSale ? saleCogs : plannedCost),
           receivedQuantity: const Value(0.0),
+          deliveredQuantity: item.deliveredQuantity.present
+              ? item.deliveredQuantity
+              : const Value(0.0),
           isNotSynced: const Value(true),
           // Explicit timestamps: some migrated DBs lack SQL DEFAULT on these cols.
           createdAt: item.createdAt.present ? item.createdAt : Value(now),
@@ -744,13 +878,8 @@ class OrdersRepository {
 
       if (appliesStock) {
         if (isSale) {
-          await deliverSaleShipment(
-            orderUuid: uuid,
-            lines: [
-              for (final item in inserted)
-                (orderItemUuid: item.uuid, quantity: item.quantity),
-            ],
-          );
+          // Whole packages for groups + remaining standalone lines.
+          await markDelivered(uuid);
         } else {
           await _receiveRemainingPurchase(
             orderUuid: uuid,
@@ -835,23 +964,29 @@ class OrdersRepository {
   }
 
   /// Consume stock for [quantity] on this sale line and refresh weighted COGS.
-  Future<void> _applySaleStockForQuantity(
+  /// Returns shipment unit COGS for the delivery line.
+  Future<double> _applySaleStockForQuantity(
     OrderItem item,
     double quantity,
   ) async {
-    if (quantity <= 1e-9) return;
+    if (quantity <= 1e-9) return 0;
 
+    // Legacy pre-v21 header lines (no product, selling-product ref only).
     final spUuid = item.sellingProductUuid?.trim();
-    if (spUuid != null && spUuid.isNotEmpty) {
-      await _applySellingProductSaleStock(item, spUuid, quantity);
-      return;
+    final hasProduct =
+        item.productUuid != null && item.productUuid!.trim().isNotEmpty;
+    if (!hasProduct && spUuid != null && spUuid.isNotEmpty) {
+      return _applySellingProductSaleStock(item, spUuid, quantity);
     }
 
     final productUuid = item.productUuid;
-    if (productUuid == null || productUuid.isEmpty) return;
+    if (productUuid == null || productUuid.isEmpty) return 0;
 
     final product = await _inventory.getProduct(productUuid);
-    if (product == null || product.isService) return;
+    if (product == null) return 0;
+    if (product.isService) {
+      return item.purchasePriceSnapshot;
+    }
 
     String? batchUuid = item.batchUuid;
     double shipmentUnitCogs = item.purchasePriceSnapshot;
@@ -871,7 +1006,7 @@ class OrdersRepository {
         productUuid: productUuid,
         quantity: quantity,
       );
-      if (allocations.isEmpty) return;
+      if (allocations.isEmpty) return shipmentUnitCogs;
       batchUuid = allocations.first.batchUuid;
       final costSum = allocations.fold<double>(
         0,
@@ -896,10 +1031,11 @@ class OrdersRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
+    return shipmentUnitCogs;
   }
 
-  /// Explode selling-product components and FEFO/BATCH-consume each for [quantity].
-  Future<void> _applySellingProductSaleStock(
+  /// Legacy: explode selling-product components and FEFO/BATCH-consume each.
+  Future<double> _applySellingProductSaleStock(
     OrderItem item,
     String sellingProductUuid,
     double quantity,
@@ -909,7 +1045,7 @@ class OrdersRepository {
               c.sellingProductUuid.equals(sellingProductUuid) &
               c.isDeleted.equals(false)))
         .get();
-    if (components.isEmpty) return;
+    if (components.isEmpty) return item.purchasePriceSnapshot;
 
     var costSum = 0.0;
     for (final component in components) {
@@ -953,11 +1089,274 @@ class OrdersRepository {
         updatedAt: Value(DateTime.now()),
       ),
     );
+    return shipmentUnitCogs;
+  }
+
+  /// Turns selling-product sale lines into [OrderLineGroups] + physical items.
+  Future<List<OrderItemsCompanion>> _expandSaleItemsForInsert({
+    required String orderUuid,
+    required List<OrderItemsCompanion> items,
+  }) async {
+    final out = <OrderItemsCompanion>[];
+    for (final item in items) {
+      final spUuid = item.sellingProductUuid.present
+          ? item.sellingProductUuid.value?.trim()
+          : null;
+      final productUuid = item.productUuid.present
+          ? item.productUuid.value?.trim()
+          : null;
+
+      // Direct product (or already-expanded) line.
+      if (spUuid == null || spUuid.isEmpty) {
+        out.add(item);
+        continue;
+      }
+      // Catalog pin: selling product that is a single product link may also
+      // set productUuid — still explode from BOM so stock is always physical.
+      final components = await (_db.select(_db.sellingProductComponents)
+            ..where((c) =>
+                c.sellingProductUuid.equals(spUuid) &
+                c.isDeleted.equals(false)))
+          .get();
+      if (components.isEmpty) {
+        // No BOM: keep as soft-ref line if it already has a product.
+        if (productUuid != null && productUuid.isNotEmpty) {
+          out.add(item.copyWith(sellingProductUuid: const Value(null)));
+        } else {
+          throw StateError(
+            'Selling product $spUuid has no components to explode',
+          );
+        }
+        continue;
+      }
+
+      final packageQty = item.quantity.value;
+      final bundleList = item.unitPrice.value;
+      final bundleDisc = item.discountedUnitPrice.present
+          ? item.discountedUnitPrice.value
+          : null;
+      final bundleDiscountAmt =
+          item.discountAmount.present ? item.discountAmount.value : 0.0;
+
+      final sellingProduct = await (_db.select(_db.sellingProducts)
+            ..where((s) =>
+                s.uuid.equals(spUuid) & s.isDeleted.equals(false)))
+          .getSingleOrNull();
+      final spUnit = sellingProduct?.unit?.trim();
+      final packageUnit =
+          (spUnit != null && spUnit.isNotEmpty) ? spUnit : 'Pkg';
+
+      final inputs = <BundleComponentInput>[];
+      for (final c in components) {
+        final product = await _inventory.getProduct(c.productUuid);
+        if (product == null) {
+          throw StateError('Component product missing: ${c.productUuid}');
+        }
+        inputs.add(
+          BundleComponentInput(
+            productUuid: product.uuid,
+            productName: product.name,
+            unit: product.unit,
+            isService: product.isService,
+            bundleComponentQty: c.quantity,
+            // Simple weight for allocation — not authoritative COGS.
+            individualUnitCost: product.purchasePrice,
+            consumeMode: c.consumeMode,
+            batchNumber: c.batchNumber,
+          ),
+        );
+      }
+
+      final allocated = allocateBundlePrices(
+        components: inputs,
+        packageQty: packageQty,
+        bundleUnitPrice: bundleList,
+        bundleDiscountedUnitPrice: bundleDisc,
+        bundleDiscountAmount: bundleDiscountAmt,
+      );
+      final unitCostSnap = bundleUnitCostOf(inputs);
+      final groupUuid = const Uuid().v4();
+      final now = DateTime.now();
+      final name = item.productNameSnapshot.value;
+      final catalogName = item.catalogNameSnapshot.present
+          ? item.catalogNameSnapshot.value
+          : null;
+      final catalogItemUuid =
+          item.catalogItemUuid.present ? item.catalogItemUuid.value : null;
+
+      await _db.into(_db.orderLineGroups).insert(
+            OrderLineGroupsCompanion.insert(
+              uuid: groupUuid,
+              orderUuid: orderUuid,
+              nameSnapshot: name,
+              catalogNameSnapshot: Value(catalogName),
+              catalogItemUuid: Value(catalogItemUuid),
+              sellingProductUuid: Value(spUuid),
+              packageQty: packageQty,
+              unit: Value(packageUnit),
+              unitPrice: bundleList,
+              discountedUnitPrice: Value(bundleDisc),
+              discountAmount: Value(bundleDiscountAmt),
+              unitCostSnapshot: Value(unitCostSnap),
+              createdAt: Value(now),
+              updatedAt: Value(now),
+            ),
+          );
+
+      for (final a in allocated) {
+        if (a.quantity <= 1e-12) continue;
+        out.add(
+          OrderItemsCompanion.insert(
+            uuid: const Uuid().v4(),
+            orderUuid: orderUuid,
+            productUuid: Value(a.productUuid),
+            catalogItemUuid: Value(catalogItemUuid),
+            sellingProductUuid: const Value(null),
+            groupUuid: Value(groupUuid),
+            bundleComponentQty: Value(a.bundleComponentQty),
+            productNameSnapshot: a.productName,
+            quantity: a.quantity,
+            unitPrice: a.unitPrice,
+            discountedUnitPrice: Value(a.discountedUnitPrice),
+            discountAmount: Value(a.discountAmount),
+            catalogNameSnapshot: Value(catalogName),
+            purchasePriceSnapshot: Value(a.individualUnitCost),
+            unit: Value(a.unit),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+          ),
+        );
+      }
+    }
+    return out;
   }
 
   // ==========================================
   // Returns & Refunds
   // ==========================================
+
+  /// Returns whole packages for a sale bundle group (stock restore + refund line).
+  /// Refund amount defaults to [packageQty] × group discounted package price.
+  Future<void> returnSalePackages({
+    required String orderUuid,
+    required String groupUuid,
+    required double packageQty,
+    required String? accountUuid,
+    DateTime? date,
+    String? notes,
+    double? refundAmountOverride,
+  }) async {
+    if (packageQty <= 1e-9) {
+      throw ArgumentError('packageQty must be > 0');
+    }
+    final whole = packageQty.roundToDouble();
+    if ((packageQty - whole).abs() > 1e-6) {
+      throw ArgumentError('Bundle return must be whole packages');
+    }
+
+    await _db.transaction(() async {
+      final order = await getOrder(orderUuid);
+      if (order == null || order.orderType != 'SALE') {
+        throw StateError('Sale order not found: $orderUuid');
+      }
+      final group = await (_db.select(_db.orderLineGroups)
+            ..where((g) =>
+                g.uuid.equals(groupUuid) &
+                g.orderUuid.equals(orderUuid) &
+                g.isDeleted.equals(false)))
+          .getSingleOrNull();
+      if (group == null) {
+        throw StateError('Order line group not found: $groupUuid');
+      }
+      if (whole > group.deliveredPackageQty + 1e-9) {
+        throw StateError(
+          'Return $whole packages exceeds delivered ${group.deliveredPackageQty}',
+        );
+      }
+
+      final items = await (_db.select(_db.orderItems)
+            ..where((oi) =>
+                oi.orderUuid.equals(orderUuid) &
+                oi.groupUuid.equals(groupUuid) &
+                oi.isDeleted.equals(false)))
+          .get();
+      if (items.isEmpty) {
+        throw StateError('No lines for group $groupUuid');
+      }
+
+      final when = date ?? DateTime.now();
+      final discUnit = group.discountedUnitPrice ?? group.unitPrice;
+      final refund = refundAmountOverride ?? (discUnit * whole);
+      final returnUuid = const Uuid().v4();
+      final returnNumber =
+          'RET-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+
+      final returnItems = <OrderReturnItemsCompanion>[];
+      for (final item in items) {
+        final perPkg = item.bundleComponentQty;
+        if (perPkg == null || perPkg <= 1e-9) {
+          throw StateError(
+            'Missing bundleComponentQty on ${item.productNameSnapshot}',
+          );
+        }
+        final qty = perPkg * whole;
+        if (qty > item.deliveredQuantity + 1e-9) {
+          throw StateError(
+            'Return qty $qty exceeds delivered ${item.deliveredQuantity} for ${item.productNameSnapshot}',
+          );
+        }
+        final productUuid = item.productUuid;
+        if (productUuid == null || productUuid.isEmpty) continue;
+
+        // refundUnitPrice here is inventory cost hint when restoring without a lot.
+        returnItems.add(
+          OrderReturnItemsCompanion.insert(
+            uuid: const Uuid().v4(),
+            returnUuid: returnUuid,
+            productUuid: productUuid,
+            quantity: qty,
+            refundUnitPrice: item.purchasePriceSnapshot,
+            batchUuid: Value(item.batchUuid),
+          ),
+        );
+
+        await (_db.update(_db.orderItems)..where((oi) => oi.uuid.equals(item.uuid)))
+            .write(
+          OrderItemsCompanion(
+            deliveredQuantity: Value(item.deliveredQuantity - qty),
+            isNotSynced: const Value(true),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+
+      await createReturn(
+        returnOrder: OrderReturnsCompanion.insert(
+          uuid: returnUuid,
+          returnNumber: returnNumber,
+          orderType: 'SALE',
+          date: when,
+          contactUuid: Value(order.contactUuid),
+          orderUuid: orderUuid,
+          notes: Value(notes),
+        ),
+        returnItems: returnItems,
+        refundAmount: refund,
+        accountUuid: accountUuid,
+      );
+
+      await (_db.update(_db.orderLineGroups)..where((g) => g.uuid.equals(groupUuid)))
+          .write(
+        OrderLineGroupsCompanion(
+          deliveredPackageQty: Value(group.deliveredPackageQty - whole),
+          isNotSynced: const Value(true),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
+      await _refreshSaleDeliveryStatus(orderUuid);
+    });
+  }
 
   Future<void> createReturn({
     required OrderReturnsCompanion returnOrder,

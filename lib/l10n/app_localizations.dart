@@ -142,11 +142,47 @@ abstract class AppLocalizations {
   /// **'Order Items'**
   String get orderItems;
 
+  /// No description provided for @orderLineGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Order bundles'**
+  String get orderLineGroups;
+
   /// No description provided for @orderCharges.
   ///
   /// In en, this message translates to:
   /// **'Order Charges'**
   String get orderCharges;
+
+  /// No description provided for @bundlePackage.
+  ///
+  /// In en, this message translates to:
+  /// **'Package'**
+  String get bundlePackage;
+
+  /// No description provided for @packagesProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{delivered} / {ordered} packages'**
+  String packagesProgress(String delivered, String ordered);
+
+  /// No description provided for @qtyToDeliverPackages.
+  ///
+  /// In en, this message translates to:
+  /// **'Packages to deliver'**
+  String get qtyToDeliverPackages;
+
+  /// No description provided for @bundleComponents.
+  ///
+  /// In en, this message translates to:
+  /// **'Includes'**
+  String get bundleComponents;
+
+  /// No description provided for @wholePackagesOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Deliver whole packages only'**
+  String get wholePackagesOnly;
 
   /// No description provided for @salesTax.
   ///
@@ -609,6 +645,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Purchase Receipt'**
   String get purchaseReceipt;
+
+  /// No description provided for @billTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill To'**
+  String get billTo;
+
+  /// No description provided for @productDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Product Description'**
+  String get productDescription;
+
+  /// No description provided for @qtyShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Qty'**
+  String get qtyShort;
+
+  /// No description provided for @rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate'**
+  String get rate;
+
+  /// No description provided for @discShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Disc.'**
+  String get discShort;
+
+  /// No description provided for @total.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get total;
+
+  /// No description provided for @tax.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax'**
+  String get tax;
+
+  /// No description provided for @grandTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Grand Total'**
+  String get grandTotal;
+
+  /// No description provided for @termsAndNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & Notes'**
+  String get termsAndNotes;
+
+  /// No description provided for @thankYouForBusiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you for your business!'**
+  String get thankYouForBusiness;
+
+  /// No description provided for @clientTaxId.
+  ///
+  /// In en, this message translates to:
+  /// **'Client Tax ID'**
+  String get clientTaxId;
+
+  /// No description provided for @packageUnitShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Pkg'**
+  String get packageUnitShort;
 
   /// No description provided for @reconcileInventory.
   ///
@@ -3946,6 +4054,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile updated successfully'**
   String get profileUpdated;
+
+  /// No description provided for @invoiceBrandingSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Invoice & business'**
+  String get invoiceBrandingSection;
+
+  /// No description provided for @invoiceBrandingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Shown on invoices and shared PDFs'**
+  String get invoiceBrandingHint;
+
+  /// No description provided for @companyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Company name'**
+  String get companyName;
+
+  /// No description provided for @enterCompanyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter company or business name'**
+  String get enterCompanyName;
+
+  /// No description provided for @companyLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Company logo'**
+  String get companyLogo;
+
+  /// No description provided for @changeCompanyLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Change logo'**
+  String get changeCompanyLogo;
+
+  /// No description provided for @removeCompanyLogo.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove logo'**
+  String get removeCompanyLogo;
+
+  /// No description provided for @companyLogoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'PNG or JPG, used on invoices'**
+  String get companyLogoHint;
+
+  /// No description provided for @businessTaxId.
+  ///
+  /// In en, this message translates to:
+  /// **'Tax ID (GSTIN / VAT)'**
+  String get businessTaxId;
+
+  /// No description provided for @enterBusinessTaxId.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional tax registration number'**
+  String get enterBusinessTaxId;
+
+  /// No description provided for @defaultInvoiceNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Default invoice notes'**
+  String get defaultInvoiceNotes;
+
+  /// No description provided for @enterDefaultInvoiceNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Thank you note or terms on invoices'**
+  String get enterDefaultInvoiceNotes;
 
   /// No description provided for @selectDateFormat.
   ///
